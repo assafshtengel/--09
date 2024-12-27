@@ -80,7 +80,10 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
         description: "הפרטים נשמרו בהצלחה",
       });
 
-      onSubmit();
+      // Wait a bit for the toast to be visible before navigating
+      setTimeout(() => {
+        onSubmit();
+      }, 1000);
     } catch (error) {
       console.error('Error:', error);
       toast({

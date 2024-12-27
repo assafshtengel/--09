@@ -20,13 +20,16 @@ const Player = () => {
           return;
         }
 
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from("profiles")
-          .select()
+          .select("*")
           .eq("id", user.id)
           .maybeSingle();
 
-        if (profile?.full_name) {
+        if (error) throw error;
+
+        // Check if profile exists and has required fields
+        if (profile && profile.full_name && profile.roles && profile.roles.length > 0) {
           setHasProfile(true);
           navigate("/dashboard");
         }
@@ -45,12 +48,12 @@ const Player = () => {
     checkProfile();
   }, [navigate, toast]);
 
-  const handleFormSubmit = async () => {
+  const handleFormSubmit = () => {
     navigate("/dashboard");
   };
 
   if (isLoading) {
-    return <div>טוען...</div>;
+    return <div className="flex justify-center items-center min-h-screen">טוען...</div>;
   }
 
   if (!hasProfile) {
