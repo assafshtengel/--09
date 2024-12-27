@@ -243,6 +243,8 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
             generalNotes={generalNotes}
             substitutions={substitutions}
             onClose={() => setShowSummary(false)}
+            gamePhase={gamePhase === "halftime" ? "halftime" : "ended"}
+            onContinueGame={gamePhase === "halftime" ? startSecondHalf : undefined}
           />
         </DialogContent>
       </Dialog>
