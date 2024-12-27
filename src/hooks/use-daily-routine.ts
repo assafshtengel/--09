@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export interface DailyRoutine {
   sleep_hours: number;
@@ -19,9 +19,17 @@ export const useDailyRoutine = () => {
   const saveDailyRoutine = async (routine: DailyRoutine) => {
     try {
       setIsLoading(true);
+      
+      // Get the current user's ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
       const { error } = await supabase
         .from('daily_routines')
-        .insert([routine]);
+        .insert({
+          ...routine,
+          player_id: user.id
+        });
 
       if (error) throw error;
 
