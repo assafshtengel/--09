@@ -9,30 +9,79 @@ import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryD
 import { DailyRoutineForm } from "@/components/daily-routine/DailyRoutineForm";
 import { WeeklyScheduleWizard } from "@/components/schedule/WeeklyScheduleWizard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2 } from "lucide-react";
 
 const Player = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState(null);
-  const [showPreMatch, setShowPreMatch] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session) {
+        fetchProfile(session.user.id);
+      } else {
+        setIsLoading(false);
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session) {
+        fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
+        setIsLoading(false);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const handlePlayerFormSubmit = (data: PlayerFormData) => {
-    console.log("Form submitted:", data);
-    setShowPreMatch(true);
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const handlePlayerFormSubmit = async (data: PlayerFormData) => {
+    setIsLoading(true);
+    try {
+      if (!session?.user) throw new Error('No user session found');
+      
+      // Wait for the form submission to complete
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Give time for Supabase to process
+      await fetchProfile(session.user.id);
+      
+    } catch (error) {
+      console.error('Error handling form submission:', error);
+      setIsLoading(false);
+      return;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   if (!session) {
     return (
@@ -81,11 +130,11 @@ const Player = () => {
     );
   }
 
-  if (!showPreMatch) {
+  if (!profile?.full_name) {
     return <PlayerForm onSubmit={handlePlayerFormSubmit} />;
   }
 
-return (
+  return (
     <Tabs defaultValue="dashboard" dir="rtl">
       <TabsList className="w-full justify-end mb-6">
         <TabsTrigger value="dashboard">דשבורד</TabsTrigger>

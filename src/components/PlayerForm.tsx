@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,6 +20,7 @@ export interface PlayerFormData {
 
 export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<PlayerFormData>({
     fullName: "",
     roles: [],
@@ -43,6 +43,8 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
       });
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       let profilePictureUrl = null;
@@ -67,12 +69,7 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        toast({
-          title: "שגיאה",
-          description: "לא נמצא משתמש מחובר",
-          variant: "destructive",
-        });
-        return;
+        throw new Error('לא נמצא משתמש מחובר');
       }
 
       const { error: updateError } = await supabase
@@ -95,14 +92,17 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
         description: "הפרטים נשמרו בהצלחה",
       });
 
-      onSubmit(formData);
+      // Only call onSubmit after successful save
+      await onSubmit(formData);
     } catch (error) {
       console.error('Error:', error);
       toast({
         title: "שגיאה",
-        description: "אירעה שגיאה בשמירת הפרטים",
+        description: error.message || "אירעה שגיאה בשמירת הפרטים",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -208,8 +208,8 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
         </div>
       </div>
 
-      <Button type="submit" className="w-full">
-        שמור פרטים
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? "שומר..." : "שמור פרטים"}
       </Button>
     </form>
   );
