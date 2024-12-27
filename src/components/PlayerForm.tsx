@@ -64,7 +64,8 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: user.id,
           full_name: formData.fullName,
           roles: selectedRoles,
           phone_number: formData.phoneNumber,
@@ -72,8 +73,7 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
           club: formData.club,
           team_year: parseInt(formData.teamYear),
           date_of_birth: formData.dateOfBirth,
-        })
-        .eq('id', user.id);
+        });
 
       if (updateError) throw updateError;
 
@@ -84,7 +84,7 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
         description: "הפרטים נשמרו בהצלחה",
       });
 
-      // Call onSubmit after successful update
+      // קריאה ל-onSubmit רק לאחר עדכון מוצלח
       await onSubmit();
     } catch (error) {
       console.error('Error:', error);

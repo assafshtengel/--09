@@ -26,7 +26,7 @@ const Player = () => {
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching profile:", error);
@@ -35,7 +35,17 @@ const Player = () => {
 
       console.log("Profile data:", profile);
 
-      if (profile?.full_name && profile?.roles?.length > 0) {
+      // בדיקה אם יש פרופיל מלא
+      const hasCompleteProfile = profile && 
+        profile.full_name && 
+        profile.roles && 
+        profile.roles.length > 0 && 
+        profile.phone_number && 
+        profile.club && 
+        profile.team_year && 
+        profile.date_of_birth;
+
+      if (hasCompleteProfile) {
         console.log("Valid profile found, navigating to dashboard");
         setHasProfile(true);
         navigate("/dashboard");
