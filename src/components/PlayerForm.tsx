@@ -56,8 +56,8 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
 
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        throw new Error('לא נמצא משתמש מחובר');
+      if (!user || !user.email) {
+        throw new Error('לא נמצא משתמש מחובר או אימייל');
       }
 
       console.log("Updating profile for user:", user.id);
@@ -66,6 +66,7 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
         .from('profiles')
         .upsert({
           id: user.id,
+          email: user.email,
           full_name: formData.fullName,
           roles: selectedRoles,
           phone_number: formData.phoneNumber,
