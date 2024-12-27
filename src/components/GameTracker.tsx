@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
-import html2canvas from "html2canvas";
+import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
 import { ActionItem } from "./game/ActionItem";
 import { GameStats } from "./game/GameStats";
 import { GameSummary } from "./game/GameSummary";
-import { AdditionalActions } from "./game/AdditionalActions";
+import { GamePreview } from "./game/GamePreview";
+import { GamePhaseManager } from "./game/GamePhaseManager";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
-import { GameInsights } from "./game/GameInsights";
 
 interface GameTrackerProps {
   actions: Action[];
@@ -124,29 +123,6 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
     }]);
   };
 
-  const takeScreenshot = async () => {
-    try {
-      const element = document.getElementById('goals-preview');
-      if (element) {
-        const canvas = await html2canvas(element);
-        const link = document.createElement('a');
-        link.download = 'game-goals.png';
-        link.href = canvas.toDataURL();
-        link.click();
-        toast({
-          title: "צילום מסך הושלם",
-          description: "התמונה נשמרה בהצלחה",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן היה לצלם את המסך",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <div className="space-y-4 p-4 max-w-md mx-auto">
       {/* Timer Display */}
@@ -156,34 +132,13 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
         </div>
       )}
 
-      {/* Goals Preview */}
+      {/* Game Preview */}
       {gamePhase === "preview" && (
-        <div id="goals-preview" className="space-y-4">
-          <div className="bg-white rounded-lg shadow-md p-4">
-            <h2 className="text-xl font-bold text-right mb-4">יעדי המשחק</h2>
-            <div className="grid gap-3">
-              {actions.map(action => (
-                <div key={action.id} className="border p-3 rounded-lg text-right hover:bg-gray-50 transition-colors">
-                  <h3 className="font-semibold">{action.name}</h3>
-                  {action.goal && (
-                    <p className="text-sm text-gray-600 mt-1">יעד: {action.goal}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <AdditionalActions onActionSelect={handleAddAction} />
-          
-          <div className="flex gap-3 justify-end">
-            <Button onClick={takeScreenshot} variant="outline" size="sm">
-              צלם מסך
-            </Button>
-            <Button onClick={startMatch} size="sm">
-              התחל משחק
-            </Button>
-          </div>
-        </div>
+        <GamePreview
+          actions={actions}
+          onActionAdd={handleAddAction}
+          onStartMatch={startMatch}
+        />
       )}
 
       {/* Game Actions */}
@@ -220,17 +175,13 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
             onSubstitution={handleSubstitution}
           />
           
-          <div className="flex justify-end gap-3">
-            {gamePhase === "playing" ? (
-              <Button onClick={endHalf} size="sm">
-                סיום מחצית ראשונה
-              </Button>
-            ) : (
-              <Button onClick={endMatch} size="sm">
-                סיום משחק
-              </Button>
-            )}
-          </div>
+          <GamePhaseManager
+            gamePhase={gamePhase}
+            onStartMatch={startMatch}
+            onEndHalf={endHalf}
+            onStartSecondHalf={startSecondHalf}
+            onEndMatch={endMatch}
+          />
         </div>
       )}
 

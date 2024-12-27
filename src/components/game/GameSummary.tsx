@@ -48,7 +48,7 @@ export const GameSummary = ({
 }: GameSummaryProps) => {
   const takeScreenshot = async () => {
     try {
-      const element = document.getElementById('game-summary');
+      const element = document.getElementById('game-summary-content');
       if (element) {
         const canvas = await html2canvas(element);
         const link = document.createElement('a');
@@ -76,94 +76,100 @@ export const GameSummary = ({
     : actionLogs;
 
   return (
-    <div id="game-summary" className="space-y-6 p-4 bg-background">
-      {/* Header */}
-      <div className="text-right border-b pb-4">
-        <h2 className="text-2xl font-bold mb-2">
-          {gamePhase === "halftime" ? "סיכום מחצית" : "סיכום משחק"}
-        </h2>
-        <p className="text-muted-foreground">
-          {format(new Date(), 'dd/MM/yyyy')}
-        </p>
-      </div>
-
-      {/* Initial Goals */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-semibold text-right">יעדי המשחק</h3>
-        <div className="grid gap-3">
-          {actions.map(action => (
-            <div key={action.id} className="border p-3 rounded-lg text-right">
-              <h4 className="font-medium">{action.name}</h4>
-              {action.goal && (
-                <p className="text-sm text-muted-foreground">יעד: {action.goal}</p>
-              )}
-            </div>
-          ))}
+    <div className="space-y-6 p-4 bg-background">
+      <div id="game-summary-content">
+        {/* Header */}
+        <div className="text-right border-b pb-4">
+          <h2 className="text-2xl font-bold mb-2">
+            {gamePhase === "halftime" ? "סיכום מחצית" : "סיכום משחק"}
+          </h2>
+          <p className="text-muted-foreground">
+            {format(new Date(), 'dd/MM/yyyy')}
+          </p>
         </div>
-      </div>
 
-      {/* Overall Stats */}
-      <GameStats actions={actions} actionLogs={currentLogs} />
+        {/* Initial Goals */}
+        <div className="space-y-4 mt-6">
+          <h3 className="text-xl font-semibold text-right">יעדי המשחק</h3>
+          <div className="grid gap-3">
+            {actions.map(action => (
+              <div key={action.id} className="border p-3 rounded-lg text-right">
+                <h4 className="font-medium">{action.name}</h4>
+                {action.goal && (
+                  <p className="text-sm text-muted-foreground">יעד: {action.goal}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
 
-      {/* Game Insights */}
-      <GameInsights actionLogs={currentLogs} />
+        {/* General Notes */}
+        {generalNotes.length > 0 && (
+          <div className="space-y-4 mt-6">
+            <h3 className="text-xl font-semibold text-right">הערות כלליות</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-right">דקה</TableHead>
+                  <TableHead className="text-right">הערה</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {generalNotes.map((note, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{note.minute}'</TableCell>
+                    <TableCell className="text-right">{note.text}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
 
-      {/* Score */}
-      <div className="p-4 border rounded-lg bg-primary/10">
-        <h3 className="text-xl font-semibold text-right mb-2">ציון</h3>
-        <p className="text-3xl font-bold text-center">{calculateScore()}</p>
-      </div>
+        {/* Overall Stats */}
+        <div className="mt-6">
+          <GameStats actions={actions} actionLogs={currentLogs} />
+        </div>
 
-      {/* General Notes */}
-      {generalNotes.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-right">הערות כלליות</h3>
+        {/* Game Insights */}
+        <div className="mt-6">
+          <GameInsights actionLogs={currentLogs} />
+        </div>
+
+        {/* Score */}
+        <div className="p-4 border rounded-lg bg-primary/10 mt-6">
+          <h3 className="text-xl font-semibold text-right mb-2">ציון</h3>
+          <p className="text-3xl font-bold text-center">{calculateScore()}</p>
+        </div>
+
+        {/* Action Logs Table */}
+        <div className="space-y-4 mt-6">
+          <h3 className="text-xl font-semibold text-right">פעולות</h3>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="text-right">דקה</TableHead>
+                <TableHead className="text-right">פעולה</TableHead>
+                <TableHead className="text-right">תוצאה</TableHead>
                 <TableHead className="text-right">הערה</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {generalNotes.map((note, index) => (
+              {currentLogs.map((log, index) => (
                 <TableRow key={index}>
-                  <TableCell>{note.minute}'</TableCell>
-                  <TableCell className="text-right">{note.text}</TableCell>
+                  <TableCell>{log.minute}'</TableCell>
+                  <TableCell className="text-right">
+                    {actions.find(a => a.id === log.actionId)?.name}
+                  </TableCell>
+                  <TableCell>
+                    {log.result === "success" ? "✅" : "❌"}
+                  </TableCell>
+                  <TableCell className="text-right">{log.note || "-"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
-      )}
-
-      {/* Action Logs Table */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-semibold text-right">פעולות</h3>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-right">דקה</TableHead>
-              <TableHead className="text-right">פעולה</TableHead>
-              <TableHead className="text-right">תוצאה</TableHead>
-              <TableHead className="text-right">הערה</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {currentLogs.map((log, index) => (
-              <TableRow key={index}>
-                <TableCell>{log.minute}'</TableCell>
-                <TableCell className="text-right">
-                  {actions.find(a => a.id === log.actionId)?.name}
-                </TableCell>
-                <TableCell>
-                  {log.result === "success" ? "✅" : "❌"}
-                </TableCell>
-                <TableCell className="text-right">{log.note || "-"}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
       </div>
 
       {/* Export Options */}
