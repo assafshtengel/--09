@@ -1,22 +1,10 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-interface PlayerFormProps {
-  onSubmit: () => void;
-}
-
-export interface PlayerFormData {
-  fullName: string;
-  roles: string[];
-  phoneNumber: string;
-  club: string;
-  teamYear: string;
-  dateOfBirth: string;
-  profilePicture?: File;
-}
+import { FormField } from "./player-form/FormField";
+import { RoleSelector } from "./player-form/RoleSelector";
+import type { PlayerFormData, PlayerFormProps } from "./player-form/types";
 
 export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
   const { toast } = useToast();
@@ -92,7 +80,6 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
         description: "הפרטים נשמרו בהצלחה",
       });
 
-      // קורא ל-onSubmit רק לאחר שמירה מוצלחת
       onSubmit();
     } catch (error) {
       console.error('Error:', error);
@@ -101,6 +88,7 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
         description: error.message || "אירעה שגיאה בשמירת הפרטים",
         variant: "destructive",
       });
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -122,89 +110,61 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-md mx-auto p-6">
       <div className="space-y-4">
-        <div>
-          <label htmlFor="fullName" className="block text-right mb-2">שם מלא</label>
-          <Input
-            id="fullName"
-            value={formData.fullName}
-            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-            className="text-right"
-            placeholder="הכנס את שמך המלא"
-          />
-        </div>
+        <FormField
+          id="fullName"
+          label="שם מלא"
+          value={formData.fullName}
+          onChange={(value) => setFormData({ ...formData, fullName: value })}
+          placeholder="הכנס את שמך המלא"
+        />
 
-        <div>
-          <label className="block text-right mb-2">תפקידים</label>
-          <div className="space-y-2">
-            {["מאמן", "שחקן", "אנליסט", "מאמן מנטלי"].map((role) => (
-              <Button
-                key={role}
-                type="button"
-                variant={selectedRoles.includes(role) ? "default" : "outline"}
-                className="ml-2 mb-2"
-                onClick={() => toggleRole(role)}
-              >
-                {role}
-              </Button>
-            ))}
-          </div>
-        </div>
+        <RoleSelector
+          selectedRoles={selectedRoles}
+          onToggleRole={toggleRole}
+        />
 
-        <div>
-          <label htmlFor="phoneNumber" className="block text-right mb-2">מספר טלפון</label>
-          <Input
-            id="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-            className="text-right"
-            placeholder="הכנס את מספר הטלפון שלך"
-          />
-        </div>
+        <FormField
+          id="phoneNumber"
+          label="מספר טלפון"
+          value={formData.phoneNumber}
+          onChange={(value) => setFormData({ ...formData, phoneNumber: value })}
+          placeholder="הכנס את מספר הטלפון שלך"
+        />
 
-        <div>
-          <label htmlFor="profilePicture" className="block text-right mb-2">תמונת פרופיל</label>
-          <Input
-            id="profilePicture"
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="text-right"
-          />
-        </div>
+        <FormField
+          id="profilePicture"
+          label="תמונת פרופיל"
+          value=""
+          type="file"
+          accept="image/*"
+          onFileChange={handleFileChange}
+          onChange={() => {}}
+        />
 
-        <div>
-          <label htmlFor="club" className="block text-right mb-2">מועדון</label>
-          <Input
-            id="club"
-            value={formData.club}
-            onChange={(e) => setFormData({ ...formData, club: e.target.value })}
-            className="text-right"
-            placeholder="הכנס את שם המועדון שלך"
-          />
-        </div>
+        <FormField
+          id="club"
+          label="מועדון"
+          value={formData.club}
+          onChange={(value) => setFormData({ ...formData, club: value })}
+          placeholder="הכנס את שם המועדון שלך"
+        />
 
-        <div>
-          <label htmlFor="teamYear" className="block text-right mb-2">שנת קבוצה</label>
-          <Input
-            id="teamYear"
-            type="number"
-            value={formData.teamYear}
-            onChange={(e) => setFormData({ ...formData, teamYear: e.target.value })}
-            className="text-right"
-            placeholder="הכנס את שנת הקבוצה"
-          />
-        </div>
+        <FormField
+          id="teamYear"
+          label="שנת קבוצה"
+          value={formData.teamYear}
+          onChange={(value) => setFormData({ ...formData, teamYear: value })}
+          type="number"
+          placeholder="הכנס את שנת הקבוצה"
+        />
 
-        <div>
-          <label htmlFor="dateOfBirth" className="block text-right mb-2">תאריך לידה</label>
-          <Input
-            id="dateOfBirth"
-            type="date"
-            value={formData.dateOfBirth}
-            onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-            className="text-right"
-          />
-        </div>
+        <FormField
+          id="dateOfBirth"
+          label="תאריך לידה"
+          value={formData.dateOfBirth}
+          onChange={(value) => setFormData({ ...formData, dateOfBirth: value })}
+          type="date"
+        />
       </div>
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>
