@@ -56,12 +56,19 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
 
   const createMatch = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('No authenticated user found');
+      }
+
       const { data: match, error } = await supabase
         .from('matches')
         .insert([
           { 
             match_date: new Date().toISOString().split('T')[0],
-            status: 'preview'
+            status: 'preview',
+            player_id: user.id
           }
         ])
         .select()
