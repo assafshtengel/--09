@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
 import { Action } from "@/components/ActionSelector";
 import { ActionItem } from "./game/ActionItem";
 import { GameStats } from "./game/GameStats";
 import { GameSummary } from "./game/GameSummary";
+import { AdditionalActions } from "./game/AdditionalActions";
 
 interface GameTrackerProps {
   actions: Action[];
@@ -22,12 +23,13 @@ interface ActionLog {
   note?: string;
 }
 
-export const GameTracker = ({ actions }: GameTrackerProps) => {
+export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
   const [gamePhase, setGamePhase] = useState<GamePhase>("preview");
   const [minute, setMinute] = useState(0);
   const [actionLogs, setActionLogs] = useState<ActionLog[]>([]);
   const [showSummary, setShowSummary] = useState(false);
   const [timerInterval, setTimerInterval] = useState<number | null>(null);
+  const [actions, setActions] = useState<Action[]>(initialActions);
 
   useEffect(() => {
     return () => {
@@ -36,6 +38,14 @@ export const GameTracker = ({ actions }: GameTrackerProps) => {
       }
     };
   }, [timerInterval]);
+
+  const handleAddAction = (newAction: Action) => {
+    setActions(prev => [...prev, newAction]);
+    toast({
+      title: "פעולה נוספה",
+      description: `הפעולה ${newAction.name} נוספה למעקב`,
+    });
+  };
 
   const startMatch = () => {
     setGamePhase("playing");
@@ -104,30 +114,35 @@ export const GameTracker = ({ actions }: GameTrackerProps) => {
   };
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-6 p-4 max-w-4xl mx-auto">
       {/* Timer Display */}
       {gamePhase !== "preview" && (
-        <div className="fixed top-4 left-4 bg-primary text-white px-4 py-2 rounded-full">
+        <div className="fixed top-4 left-4 bg-primary text-white px-4 py-2 rounded-full shadow-lg">
           דקה: {minute}
         </div>
       )}
 
       {/* Goals Preview */}
       {gamePhase === "preview" && (
-        <div id="goals-preview" className="space-y-4">
-          <h2 className="text-2xl font-bold text-right">יעדי המשחק</h2>
-          <div className="grid gap-4">
-            {actions.map(action => (
-              <div key={action.id} className="border p-4 rounded-lg text-right">
-                <h3 className="font-semibold">{action.name}</h3>
-                {action.goal && (
-                  <p className="text-sm text-gray-600">יעד: {action.goal}</p>
-                )}
-              </div>
-            ))}
+        <div id="goals-preview" className="space-y-6">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-bold text-right mb-6">יעדי המשחק</h2>
+            <div className="grid gap-4">
+              {actions.map(action => (
+                <div key={action.id} className="border p-4 rounded-lg text-right hover:bg-gray-50 transition-colors">
+                  <h3 className="font-semibold">{action.name}</h3>
+                  {action.goal && (
+                    <p className="text-sm text-gray-600 mt-1">יעד: {action.goal}</p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-4 justify-end">
-            <Button onClick={takeScreenshot}>
+
+          <AdditionalActions onActionSelect={handleAddAction} />
+          
+          <div className="flex gap-4 justify-end mt-6">
+            <Button onClick={takeScreenshot} variant="outline">
               צלם מסך
             </Button>
             <Button onClick={startMatch}>
