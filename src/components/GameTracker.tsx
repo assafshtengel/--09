@@ -6,6 +6,7 @@ import html2canvas from "html2canvas";
 import { Action } from "@/components/ActionSelector";
 import { ActionItem } from "./game/ActionItem";
 import { GameStats } from "./game/GameStats";
+import { GameSummary } from "./game/GameSummary";
 
 interface GameTrackerProps {
   actions: Action[];
