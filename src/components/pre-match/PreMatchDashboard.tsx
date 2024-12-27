@@ -1,21 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { FileText, FileChartLine, Activity, Sun } from "lucide-react";
+import { Trophy, Timer, BarChart, FileText, FileChartLine, Activity, Sun } from "lucide-react";
 
 export const PreMatchDashboard = () => {
   const navigate = useNavigate();
 
   const buttons = [
     {
-      id: "pre-match-report",
-      label: "דוח טרום משחק",
-      icon: <FileText className="ml-2" />,
+      id: "pre-match-goals",
+      label: "יעדי טרום משחק",
+      icon: <Trophy className="ml-2" />,
       onClick: () => navigate("/player/pre-match-report")
+    },
+    {
+      id: "match-tracking",
+      label: "מעקב משחק בזמן אמת",
+      icon: <Timer className="ml-2" />,
+      onClick: () => navigate("/player/match-tracking")
     },
     {
       id: "match-summary",
       label: "סיכום משחק",
-      icon: <FileChartLine className="ml-2" />,
+      icon: <BarChart className="ml-2" />,
       onClick: () => navigate("/player/match-summary")
     },
     {
