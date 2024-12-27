@@ -235,6 +235,50 @@ export type Database = {
         }
         Relationships: []
       }
+      schedule_activities: {
+        Row: {
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          notes: string | null
+          schedule_id: string
+          start_time: string
+          title: string | null
+        }
+        Insert: {
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          notes?: string | null
+          schedule_id: string
+          start_time: string
+          title?: string | null
+        }
+        Update: {
+          activity_type?: Database["public"]["Enums"]["activity_type"]
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          notes?: string | null
+          schedule_id?: string
+          start_time?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_activities_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_summaries: {
         Row: {
           challenge_handling_rating: number
@@ -279,6 +323,38 @@ export type Database = {
           },
         ]
       }
+      weekly_schedules: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          player_id: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          player_id: string
+          start_date: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          player_id?: string
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_schedules_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -287,7 +363,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      activity_type:
+        | "school"
+        | "team_training"
+        | "personal_training"
+        | "mental_training"
+        | "other"
+        | "free_time"
+        | "lunch"
+        | "wake_up"
+        | "departure"
     }
     CompositeTypes: {
       [_ in never]: never

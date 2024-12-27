@@ -84,12 +84,13 @@ const Player = () => {
     return <PlayerForm onSubmit={handlePlayerFormSubmit} />;
   }
 
-  return (
+return (
     <Tabs defaultValue="dashboard" dir="rtl">
       <TabsList className="w-full justify-end mb-6">
         <TabsTrigger value="dashboard">דשבורד</TabsTrigger>
         <TabsTrigger value="training">סיכום אימון</TabsTrigger>
         <TabsTrigger value="daily-routine">תזונה ושינה</TabsTrigger>
+        <TabsTrigger value="schedule">מערכת שבועית</TabsTrigger>
       </TabsList>
 
       <TabsContent value="dashboard">
@@ -102,6 +103,10 @@ const Player = () => {
 
       <TabsContent value="daily-routine">
         <DailyRoutineForm />
+      </TabsContent>
+
+      <TabsContent value="schedule">
+        <WeeklyScheduleWizard />
       </TabsContent>
     </Tabs>
   );
