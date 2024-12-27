@@ -167,20 +167,12 @@ export const GameTracker = ({ actions }: GameTrackerProps) => {
 
       {/* Summary Dialog */}
       <Dialog open={showSummary} onOpenChange={setShowSummary}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-right">
-              {gamePhase === "halftime" ? "סיכום מחצית" : "סיכום משחק"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <GameStats actions={actions} actionLogs={actionLogs} />
-          </div>
-          {gamePhase === "halftime" && (
-            <Button onClick={startSecondHalf} className="w-full">
-              התחל מחצית שנייה
-            </Button>
-          )}
+        <DialogContent className="max-w-4xl">
+          <GameSummary 
+            actions={actions}
+            actionLogs={actionLogs}
+            onClose={() => setShowSummary(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>
