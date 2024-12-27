@@ -87,6 +87,21 @@ export const GameSummary = ({
         </p>
       </div>
 
+      {/* Initial Goals */}
+      <div className="space-y-4">
+        <h3 className="text-xl font-semibold text-right">יעדי המשחק</h3>
+        <div className="grid gap-3">
+          {actions.map(action => (
+            <div key={action.id} className="border p-3 rounded-lg text-right">
+              <h4 className="font-medium">{action.name}</h4>
+              {action.goal && (
+                <p className="text-sm text-muted-foreground">יעד: {action.goal}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Overall Stats */}
       <GameStats actions={actions} actionLogs={currentLogs} />
 
@@ -114,7 +129,7 @@ export const GameSummary = ({
               {generalNotes.map((note, index) => (
                 <TableRow key={index}>
                   <TableCell>{note.minute}'</TableCell>
-                  <TableCell>{note.text}</TableCell>
+                  <TableCell className="text-right">{note.text}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -138,13 +153,13 @@ export const GameSummary = ({
             {currentLogs.map((log, index) => (
               <TableRow key={index}>
                 <TableCell>{log.minute}'</TableCell>
-                <TableCell>
+                <TableCell className="text-right">
                   {actions.find(a => a.id === log.actionId)?.name}
                 </TableCell>
                 <TableCell>
                   {log.result === "success" ? "✅" : "❌"}
                 </TableCell>
-                <TableCell>{log.note || "-"}</TableCell>
+                <TableCell className="text-right">{log.note || "-"}</TableCell>
               </TableRow>
             ))}
           </TableBody>
