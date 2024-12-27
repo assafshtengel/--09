@@ -7,6 +7,7 @@ import { PlayerForm, PlayerFormData } from "@/components/PlayerForm";
 import { PreMatchDashboard } from "@/components/pre-match/PreMatchDashboard";
 import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryDashboard";
 import { DailyRoutineForm } from "@/components/daily-routine/DailyRoutineForm";
+import { WeeklyScheduleWizard } from "@/components/schedule/WeeklyScheduleWizard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Player = () => {
