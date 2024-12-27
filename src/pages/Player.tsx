@@ -4,18 +4,19 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { PlayerForm, PlayerFormData } from "@/components/PlayerForm";
+import { PreMatchDashboard } from "@/components/pre-match/PreMatchDashboard";
+import { PreMatchReport } from "@/components/pre-match/PreMatchReport";
 
 const Player = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState(null);
+  const [showPreMatch, setShowPreMatch] = useState(false);
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -27,7 +28,7 @@ const Player = () => {
 
   const handlePlayerFormSubmit = (data: PlayerFormData) => {
     console.log("Form submitted:", data);
-    // Handle form submission logic here
+    setShowPreMatch(true);
   };
 
   if (!session) {
@@ -77,7 +78,11 @@ const Player = () => {
     );
   }
 
-  return <PlayerForm onSubmit={handlePlayerFormSubmit} />;
+  if (!showPreMatch) {
+    return <PlayerForm onSubmit={handlePlayerFormSubmit} />;
+  }
+
+  return <PreMatchDashboard />;
 };
 
 export default Player;
