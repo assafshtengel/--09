@@ -5,7 +5,8 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { PlayerForm, PlayerFormData } from "@/components/PlayerForm";
 import { PreMatchDashboard } from "@/components/pre-match/PreMatchDashboard";
-import { PreMatchReport } from "@/components/pre-match/PreMatchReport";
+import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryDashboard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Player = () => {
   const navigate = useNavigate();
@@ -82,7 +83,22 @@ const Player = () => {
     return <PlayerForm onSubmit={handlePlayerFormSubmit} />;
   }
 
-  return <PreMatchDashboard />;
+  return (
+    <Tabs defaultValue="dashboard" dir="rtl">
+      <TabsList className="w-full justify-end mb-6">
+        <TabsTrigger value="dashboard">דשבורד</TabsTrigger>
+        <TabsTrigger value="training">סיכום אימון</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="dashboard">
+        <PreMatchDashboard />
+      </TabsContent>
+
+      <TabsContent value="training">
+        <TrainingSummaryDashboard />
+      </TabsContent>
+    </Tabs>
+  );
 };
 
 export default Player;
