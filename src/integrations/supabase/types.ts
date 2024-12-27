@@ -9,6 +9,56 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      daily_routines: {
+        Row: {
+          breakfast: string | null
+          created_at: string
+          date: string
+          dinner: string | null
+          id: string
+          lunch: string | null
+          notes: string | null
+          player_id: string
+          sleep_hours: number
+          snacks: string | null
+          water_intake: number | null
+        }
+        Insert: {
+          breakfast?: string | null
+          created_at?: string
+          date?: string
+          dinner?: string | null
+          id?: string
+          lunch?: string | null
+          notes?: string | null
+          player_id: string
+          sleep_hours: number
+          snacks?: string | null
+          water_intake?: number | null
+        }
+        Update: {
+          breakfast?: string | null
+          created_at?: string
+          date?: string
+          dinner?: string | null
+          id?: string
+          lunch?: string | null
+          notes?: string | null
+          player_id?: string
+          sleep_hours?: number
+          snacks?: string | null
+          water_intake?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_routines_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_actions: {
         Row: {
           action_id: string

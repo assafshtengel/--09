@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PlayerForm, PlayerFormData } from "@/components/PlayerForm";
 import { PreMatchDashboard } from "@/components/pre-match/PreMatchDashboard";
 import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryDashboard";
+import { DailyRoutineForm } from "@/components/daily-routine/DailyRoutineForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Player = () => {
@@ -88,6 +89,7 @@ const Player = () => {
       <TabsList className="w-full justify-end mb-6">
         <TabsTrigger value="dashboard">דשבורד</TabsTrigger>
         <TabsTrigger value="training">סיכום אימון</TabsTrigger>
+        <TabsTrigger value="daily-routine">תזונה ושינה</TabsTrigger>
       </TabsList>
 
       <TabsContent value="dashboard">
@@ -96,6 +98,10 @@ const Player = () => {
 
       <TabsContent value="training">
         <TrainingSummaryDashboard />
+      </TabsContent>
+
+      <TabsContent value="daily-routine">
+        <DailyRoutineForm />
       </TabsContent>
     </Tabs>
   );
