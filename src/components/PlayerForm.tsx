@@ -5,9 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { FormField } from "./player-form/FormField";
 import { RoleSelector } from "./player-form/RoleSelector";
 import type { PlayerFormData, PlayerFormProps } from "./player-form/types";
+import { useNavigate } from "react-router-dom";
 
 export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<PlayerFormData>({
     fullName: "",
@@ -45,7 +47,10 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
           .from('profile-pictures')
           .upload(filePath, profilePicture);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          throw uploadError;
+        }
 
         const { data: { publicUrl } } = supabase.storage
           .from('profile-pictures')
@@ -54,13 +59,19 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
         profilePictureUrl = publicUrl;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       
-      if (!user || !user.email) {
-        throw new Error('לא נמצא משתמש מחובר או אימייל');
+      if (userError) {
+        console.error('User error:', userError);
+        throw new Error('אירעה שגיאה בקבלת פרטי המשתמש');
       }
 
-      console.log("Updating profile for user:", user.id);
+      if (!user?.id || !user?.email) {
+        console.error('Missing user data:', user);
+        throw new Error('חסרים פרטי משתמש חיוניים');
+      }
+
+      console.log("Updating profile for user:", { id: user.id, email: user.email });
 
       const { error: updateError } = await supabase
         .from('profiles')
@@ -76,7 +87,10 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
           date_of_birth: formData.dateOfBirth,
         });
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Profile update error:', updateError);
+        throw updateError;
+      }
 
       console.log("Profile updated successfully");
 
@@ -85,10 +99,18 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
         description: "הפרטים נשמרו בהצלחה",
       });
 
-      // קריאה ל-onSubmit רק לאחר עדכון מוצלח
-      await onSubmit();
+      // Wait a moment before navigating
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Navigate to dashboard
+      navigate("/dashboard");
+      
+      // Call onSubmit callback if provided
+      if (onSubmit) {
+        await onSubmit();
+      }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error in form submission:', error);
       toast({
         title: "שגיאה",
         description: error.message || "אירעה שגיאה בשמירת הפרטים",
