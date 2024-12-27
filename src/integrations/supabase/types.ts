@@ -185,6 +185,50 @@ export type Database = {
         }
         Relationships: []
       }
+      training_summaries: {
+        Row: {
+          challenge_handling_rating: number
+          created_at: string
+          energy_focus_rating: number
+          id: string
+          player_id: string
+          questions_answers: Json
+          satisfaction_rating: number
+          training_date: string
+          training_time: string
+        }
+        Insert: {
+          challenge_handling_rating: number
+          created_at?: string
+          energy_focus_rating: number
+          id?: string
+          player_id: string
+          questions_answers: Json
+          satisfaction_rating: number
+          training_date: string
+          training_time: string
+        }
+        Update: {
+          challenge_handling_rating?: number
+          created_at?: string
+          energy_focus_rating?: number
+          id?: string
+          player_id?: string
+          questions_answers?: Json
+          satisfaction_rating?: number
+          training_date?: string
+          training_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_summaries_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

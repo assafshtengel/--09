@@ -17,6 +17,9 @@ import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { QuestionSelector } from "./QuestionSelector";
+import type { Database } from "@/integrations/supabase/types";
+
+type TrainingSummary = Database['public']['Tables']['training_summaries']['Insert']
 
 interface TrainingSummaryFormData {
   trainingDate: Date;
@@ -49,7 +52,7 @@ export const TrainingSummaryForm = () => {
         throw new Error("לא נמצא משתמש מחובר");
       }
 
-      const { error } = await supabase.from("training_summaries").insert({
+      const summary: TrainingSummary = {
         player_id: user.id,
         training_date: format(data.trainingDate, "yyyy-MM-dd"),
         training_time: data.trainingTime,
@@ -57,7 +60,11 @@ export const TrainingSummaryForm = () => {
         challenge_handling_rating: data.challengeHandlingRating,
         energy_focus_rating: data.energyFocusRating,
         questions_answers: data.answers,
-      });
+      };
+
+      const { error } = await supabase
+        .from('training_summaries')
+        .insert(summary);
 
       if (error) throw error;
 
