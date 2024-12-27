@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
 import { Action } from "@/components/ActionSelector";
+import { ActionItem } from "./game/ActionItem";
+import { GameStats } from "./game/GameStats";
 
 interface GameTrackerProps {
   actions: Action[];
@@ -38,7 +40,7 @@ export const GameTracker = ({ actions }: GameTrackerProps) => {
     setGamePhase("playing");
     const interval = setInterval(() => {
       setMinute(prev => prev + 1);
-    }, 60000); // Update every minute
+    }, 60000);
     setTimerInterval(Number(interval));
   };
 
@@ -100,26 +102,6 @@ export const GameTracker = ({ actions }: GameTrackerProps) => {
     }
   };
 
-  const calculateStats = () => {
-    const stats = actions.map(action => {
-      const actionResults = actionLogs.filter(log => log.actionId === action.id);
-      const successes = actionResults.filter(log => log.result === "success").length;
-      const failures = actionResults.filter(log => log.result === "failure").length;
-      const total = successes + failures;
-      const successRate = total > 0 ? (successes / total) * 100 : 0;
-
-      return {
-        action,
-        successes,
-        failures,
-        total,
-        successRate
-      };
-    });
-
-    return stats;
-  };
-
   return (
     <div className="space-y-6 p-4">
       {/* Timer Display */}
@@ -157,33 +139,18 @@ export const GameTracker = ({ actions }: GameTrackerProps) => {
       {/* Game Actions */}
       {(gamePhase === "playing" || gamePhase === "secondHalf") && (
         <div className="space-y-6">
+          <GameStats actions={actions} actionLogs={actionLogs} />
+          
           <div className="grid gap-4">
             {actions.map(action => (
-              <div key={action.id} className="border p-4 rounded-lg">
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-green-500 hover:bg-green-500 hover:text-white"
-                      onClick={() => logAction(action.id, "success")}
-                    >
-                      ✓
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-red-500 hover:bg-red-500 hover:text-white"
-                      onClick={() => logAction(action.id, "failure")}
-                    >
-                      ✗
-                    </Button>
-                  </div>
-                  <span className="font-medium">{action.name}</span>
-                </div>
-              </div>
+              <ActionItem
+                key={action.id}
+                action={action}
+                onLog={logAction}
+              />
             ))}
           </div>
+          
           <div className="flex justify-end gap-4">
             {gamePhase === "playing" ? (
               <Button onClick={endHalf}>
@@ -207,19 +174,7 @@ export const GameTracker = ({ actions }: GameTrackerProps) => {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {calculateStats().map(({ action, successes, failures, successRate }) => (
-              <div key={action.id} className="border p-4 rounded-lg text-right">
-                <h3 className="font-semibold">{action.name}</h3>
-                <div className="text-sm space-y-1">
-                  <p>הצלחות: {successes}</p>
-                  <p>כשלונות: {failures}</p>
-                  <p>אחוז הצלחה: {successRate.toFixed(1)}%</p>
-                  {action.goal && (
-                    <p className="text-gray-600">יעד: {action.goal}</p>
-                  )}
-                </div>
-              </div>
-            ))}
+            <GameStats actions={actions} actionLogs={actionLogs} />
           </div>
           {gamePhase === "halftime" && (
             <Button onClick={startSecondHalf} className="w-full">
