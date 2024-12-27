@@ -10,6 +10,8 @@ import { GameSummary } from "./game/GameSummary";
 import { GamePreview } from "./game/GamePreview";
 import { GamePhaseManager } from "./game/GamePhaseManager";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface GameTrackerProps {
   actions: Action[];
@@ -32,6 +34,8 @@ interface SubstitutionLog {
 }
 
 export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
+  const { toast } = useToast();
+  const [matchId, setMatchId] = useState<string | null>(null);
   const [gamePhase, setGamePhase] = useState<GamePhase>("preview");
   const [minute, setMinute] = useState(0);
   const [actionLogs, setActionLogs] = useState<ActionLog[]>([]);
@@ -50,6 +54,132 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
     };
   }, [timerInterval]);
 
+  const createMatch = async () => {
+    try {
+      const { data: match, error } = await supabase
+        .from('matches')
+        .insert([
+          { 
+            match_date: new Date().toISOString().split('T')[0],
+            status: 'preview'
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setMatchId(match.id);
+      return match.id;
+    } catch (error) {
+      console.error('Error creating match:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן ליצור משחק חדש",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
+  const saveActionLog = async (actionId: string, result: ActionResult, note?: string) => {
+    if (!matchId) return;
+
+    try {
+      const { error } = await supabase
+        .from('match_actions')
+        .insert([
+          {
+            match_id: matchId,
+            action_id: actionId,
+            minute,
+            result,
+            note
+          }
+        ]);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving action:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את הפעולה",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveNote = async (note: string) => {
+    if (!matchId) return;
+
+    try {
+      const { error } = await supabase
+        .from('match_notes')
+        .insert([
+          {
+            match_id: matchId,
+            minute,
+            note
+          }
+        ]);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving note:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את ההערה",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveSubstitution = async (sub: SubstitutionLog) => {
+    if (!matchId) return;
+
+    try {
+      const { error } = await supabase
+        .from('match_substitutions')
+        .insert([
+          {
+            match_id: matchId,
+            minute: sub.minute,
+            player_in: sub.playerIn,
+            player_out: sub.playerOut
+          }
+        ]);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving substitution:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את החילוף",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateMatchStatus = async (status: GamePhase) => {
+    if (!matchId) return;
+
+    try {
+      const { error } = await supabase
+        .from('matches')
+        .update({ status })
+        .eq('id', matchId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating match status:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לעדכן את סטטוס המשחק",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleAddAction = (newAction: Action) => {
     setActions(prev => [...prev, newAction]);
     toast({
@@ -58,7 +188,7 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
     });
   };
 
-  const handleAddGeneralNote = () => {
+  const handleAddGeneralNote = async () => {
     if (!generalNote.trim()) {
       toast({
         title: "שגיאה",
@@ -68,6 +198,7 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
       return;
     }
 
+    await saveNote(generalNote);
     setGeneralNotes(prev => [...prev, { text: generalNote, minute }]);
     setGeneralNote("");
     toast({
@@ -76,28 +207,36 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
     });
   };
 
-  const handleSubstitution = (sub: SubstitutionLog) => {
+  const handleSubstitution = async (sub: SubstitutionLog) => {
+    await saveSubstitution(sub);
     setSubstitutions(prev => [...prev, sub]);
   };
 
-  const startMatch = () => {
+  const startMatch = async () => {
+    const newMatchId = await createMatch();
+    if (!newMatchId) return;
+    
     setGamePhase("playing");
+    await updateMatchStatus("playing");
+    
     const interval = setInterval(() => {
       setMinute(prev => prev + 1);
     }, 60000);
     setTimerInterval(Number(interval));
   };
 
-  const endHalf = () => {
+  const endHalf = async () => {
     if (timerInterval) {
       clearInterval(timerInterval);
     }
     setGamePhase("halftime");
+    await updateMatchStatus("halftime");
     setShowSummary(true);
   };
 
-  const startSecondHalf = () => {
+  const startSecondHalf = async () => {
     setGamePhase("secondHalf");
+    await updateMatchStatus("secondHalf");
     setMinute(45);
     const interval = setInterval(() => {
       setMinute(prev => prev + 1);
@@ -106,15 +245,17 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
     setShowSummary(false);
   };
 
-  const endMatch = () => {
+  const endMatch = async () => {
     if (timerInterval) {
       clearInterval(timerInterval);
     }
     setGamePhase("ended");
+    await updateMatchStatus("ended");
     setShowSummary(true);
   };
 
-  const logAction = (actionId: string, result: ActionResult, note?: string) => {
+  const logAction = async (actionId: string, result: ActionResult, note?: string) => {
+    await saveActionLog(actionId, result, note);
     setActionLogs(prev => [...prev, {
       actionId,
       minute,
