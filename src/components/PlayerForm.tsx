@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { FormField } from "./player-form/FormField";
 import { RoleSelector } from "./player-form/RoleSelector";
+import { ProfilePictureUpload } from "./player-form/ProfilePictureUpload";
+import { ProfileUpdateService } from "./player-form/ProfileUpdateService";
 import type { PlayerFormData, PlayerFormProps } from "./player-form/types";
 import { useNavigate } from "react-router-dom";
 
@@ -20,7 +21,7 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
     dateOfBirth: "",
   });
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-  const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,62 +38,10 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
     setIsSubmitting(true);
 
     try {
-      let profilePictureUrl = null;
-      
-      if (profilePicture) {
-        const fileExt = profilePicture.name.split('.').pop();
-        const filePath = `${crypto.randomUUID()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('profile-pictures')
-          .upload(filePath, profilePicture);
-
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
-          throw uploadError;
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('profile-pictures')
-          .getPublicUrl(filePath);
-
-        profilePictureUrl = publicUrl;
-      }
-
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError) {
-        console.error('User error:', userError);
-        throw new Error('אירעה שגיאה בקבלת פרטי המשתמש');
-      }
-
-      if (!user?.id || !user?.email) {
-        console.error('Missing user data:', user);
-        throw new Error('חסרים פרטי משתמש חיוניים');
-      }
-
-      console.log("Updating profile for user:", { id: user.id, email: user.email });
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          email: user.email,
-          full_name: formData.fullName,
-          roles: selectedRoles,
-          phone_number: formData.phoneNumber,
-          profile_picture_url: profilePictureUrl,
-          club: formData.club,
-          team_year: parseInt(formData.teamYear),
-          date_of_birth: formData.dateOfBirth,
-        });
-
-      if (updateError) {
-        console.error('Profile update error:', updateError);
-        throw updateError;
-      }
-
-      console.log("Profile updated successfully");
+      await ProfileUpdateService.updateProfile(
+        { ...formData, roles: selectedRoles },
+        profilePictureUrl
+      );
 
       toast({
         title: "הצלחה",
@@ -118,12 +67,6 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setProfilePicture(e.target.files[0]);
     }
   };
 
@@ -159,15 +102,19 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
           placeholder="הכנס את מספר הטלפון שלך"
         />
 
-        <FormField
-          id="profilePicture"
-          label="תמונת פרופיל"
-          value=""
-          type="file"
-          accept="image/*"
-          onFileChange={handleFileChange}
-          onChange={() => {}}
-        />
+        <div className="space-y-2">
+          <label className="block text-right">תמונת פרופיל</label>
+          <ProfilePictureUpload
+            onUploadComplete={setProfilePictureUrl}
+            onUploadError={(error) => {
+              toast({
+                title: "שגיאה",
+                description: error.message || "אירעה שגיאה בהעלאת התמונה",
+                variant: "destructive",
+              });
+            }}
+          />
+        </div>
 
         <FormField
           id="club"
