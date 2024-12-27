@@ -148,22 +148,22 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
   };
 
   return (
-    <div className="space-y-6 p-4 max-w-4xl mx-auto">
+    <div className="space-y-4 p-4 max-w-md mx-auto">
       {/* Timer Display */}
       {gamePhase !== "preview" && (
-        <div className="fixed top-4 left-4 bg-primary text-white px-4 py-2 rounded-full shadow-lg">
+        <div className="fixed top-4 left-4 bg-primary text-white px-4 py-2 rounded-full shadow-lg z-50">
           דקה: {minute}
         </div>
       )}
 
       {/* Goals Preview */}
       {gamePhase === "preview" && (
-        <div id="goals-preview" className="space-y-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold text-right mb-6">יעדי המשחק</h2>
-            <div className="grid gap-4">
+        <div id="goals-preview" className="space-y-4">
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <h2 className="text-xl font-bold text-right mb-4">יעדי המשחק</h2>
+            <div className="grid gap-3">
               {actions.map(action => (
-                <div key={action.id} className="border p-4 rounded-lg text-right hover:bg-gray-50 transition-colors">
+                <div key={action.id} className="border p-3 rounded-lg text-right hover:bg-gray-50 transition-colors">
                   <h3 className="font-semibold">{action.name}</h3>
                   {action.goal && (
                     <p className="text-sm text-gray-600 mt-1">יעד: {action.goal}</p>
@@ -175,11 +175,11 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
 
           <AdditionalActions onActionSelect={handleAddAction} />
           
-          <div className="flex gap-4 justify-end mt-6">
-            <Button onClick={takeScreenshot} variant="outline">
+          <div className="flex gap-3 justify-end">
+            <Button onClick={takeScreenshot} variant="outline" size="sm">
               צלם מסך
             </Button>
-            <Button onClick={startMatch}>
+            <Button onClick={startMatch} size="sm">
               התחל משחק
             </Button>
           </div>
@@ -188,10 +188,10 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
 
       {/* Game Actions */}
       {(gamePhase === "playing" || gamePhase === "secondHalf") && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <GameStats actions={actions} actionLogs={actionLogs} />
           
-          <div className="grid gap-4">
+          <div className="grid gap-3">
             {actions.map(action => (
               <ActionItem
                 key={action.id}
@@ -202,15 +202,15 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
           </div>
 
           {/* General Note */}
-          <div className="flex gap-2">
-            <Button onClick={handleAddGeneralNote}>
+          <div className="flex gap-2 items-center">
+            <Button onClick={handleAddGeneralNote} size="sm">
               הוסף הערה
             </Button>
             <Input
               value={generalNote}
               onChange={(e) => setGeneralNote(e.target.value)}
               placeholder="הערה כללית..."
-              className="text-right"
+              className="text-right text-sm"
             />
           </div>
 
@@ -220,13 +220,13 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
             onSubstitution={handleSubstitution}
           />
           
-          <div className="flex justify-end gap-4">
+          <div className="flex justify-end gap-3">
             {gamePhase === "playing" ? (
-              <Button onClick={endHalf}>
+              <Button onClick={endHalf} size="sm">
                 סיום מחצית ראשונה
               </Button>
             ) : (
-              <Button onClick={endMatch}>
+              <Button onClick={endMatch} size="sm">
                 סיום משחק
               </Button>
             )}
@@ -236,7 +236,7 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
 
       {/* Summary Dialog */}
       <Dialog open={showSummary} onOpenChange={setShowSummary}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-md mx-auto">
           <GameSummary 
             actions={actions}
             actionLogs={actionLogs}
