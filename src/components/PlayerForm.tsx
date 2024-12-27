@@ -60,7 +60,7 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
         throw new Error('לא נמצא משתמש מחובר');
       }
 
-      console.log("Updating profile for user:", user.id); // Debug log
+      console.log("Updating profile for user:", user.id);
 
       const { error: updateError } = await supabase
         .from('profiles')
@@ -77,15 +77,15 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
 
       if (updateError) throw updateError;
 
-      console.log("Profile updated successfully"); // Debug log
+      console.log("Profile updated successfully");
 
       toast({
         title: "הצלחה",
         description: "הפרטים נשמרו בהצלחה",
       });
 
-      // Call onSubmit immediately after successful update
-      onSubmit();
+      // Call onSubmit after successful update
+      await onSubmit();
     } catch (error) {
       console.error('Error:', error);
       toast({

@@ -15,23 +15,33 @@ const Player = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
+        console.log("No user found, redirecting to home");
         navigate("/");
         return;
       }
+
+      console.log("Checking profile for user:", user.id);
 
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .maybeSingle();
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching profile:", error);
+        throw error;
+      }
 
-      console.log("Profile data:", profile); // Debug log
+      console.log("Profile data:", profile);
 
-      if (profile && profile.full_name && profile.roles && profile.roles.length > 0) {
+      if (profile?.full_name && profile?.roles?.length > 0) {
+        console.log("Valid profile found, navigating to dashboard");
         setHasProfile(true);
         navigate("/dashboard");
+      } else {
+        console.log("Incomplete profile, staying on form");
+        setHasProfile(false);
       }
     } catch (error) {
       console.error("Error checking profile:", error);
@@ -47,12 +57,10 @@ const Player = () => {
 
   useEffect(() => {
     checkProfile();
-  }, [navigate, toast]);
+  }, []);
 
   const handleFormSubmit = async () => {
-    // Wait a bit for the Supabase update to complete
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    // Check profile again after submission
+    console.log("Form submitted, checking profile");
     await checkProfile();
   };
 
