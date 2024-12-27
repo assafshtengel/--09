@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PlayerFormProps {
-  onSubmit: (data: PlayerFormData) => void;
+  onSubmit: () => void;
 }
 
 export interface PlayerFormData {
@@ -92,8 +92,8 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
         description: "הפרטים נשמרו בהצלחה",
       });
 
-      // Only call onSubmit after successful save
-      await onSubmit(formData);
+      // קורא ל-onSubmit רק לאחר שמירה מוצלחת
+      onSubmit();
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -101,7 +101,6 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
         description: error.message || "אירעה שגיאה בשמירת הפרטים",
         variant: "destructive",
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
