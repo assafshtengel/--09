@@ -10,9 +10,11 @@ import { DailyRoutineForm } from "@/components/daily-routine/DailyRoutineForm";
 import { WeeklyScheduleWizard } from "@/components/schedule/WeeklyScheduleWizard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Player = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,12 +50,20 @@ const Player = () => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
+      
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בטעינת הפרופיל",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -62,16 +72,22 @@ const Player = () => {
   const handlePlayerFormSubmit = async (data: PlayerFormData) => {
     setIsLoading(true);
     try {
-      if (!session?.user) throw new Error('No user session found');
+      if (!session?.user) {
+        throw new Error('לא נמצא משתמש מחובר');
+      }
       
       // Wait for the form submission to complete
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Give time for Supabase to process
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       await fetchProfile(session.user.id);
       
     } catch (error) {
       console.error('Error handling form submission:', error);
+      toast({
+        title: "שגיאה",
+        description: error.message || "אירעה שגיאה בשמירת הפרטים",
+        variant: "destructive",
+      });
       setIsLoading(false);
-      return;
     }
   };
 
