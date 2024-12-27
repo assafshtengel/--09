@@ -9,6 +9,140 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      match_actions: {
+        Row: {
+          action_id: string
+          id: string
+          match_id: string
+          minute: number
+          note: string | null
+          result: string
+        }
+        Insert: {
+          action_id: string
+          id?: string
+          match_id: string
+          minute: number
+          note?: string | null
+          result: string
+        }
+        Update: {
+          action_id?: string
+          id?: string
+          match_id?: string
+          minute?: number
+          note?: string | null
+          result?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_actions_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_notes: {
+        Row: {
+          id: string
+          match_id: string
+          minute: number
+          note: string
+        }
+        Insert: {
+          id?: string
+          match_id: string
+          minute: number
+          note: string
+        }
+        Update: {
+          id?: string
+          match_id?: string
+          minute?: number
+          note?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_notes_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_substitutions: {
+        Row: {
+          id: string
+          match_id: string
+          minute: number
+          player_in: string
+          player_out: string
+        }
+        Insert: {
+          id?: string
+          match_id: string
+          minute: number
+          player_in: string
+          player_out: string
+        }
+        Update: {
+          id?: string
+          match_id?: string
+          minute?: number
+          player_in?: string
+          player_out?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_substitutions_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matches: {
+        Row: {
+          created_at: string
+          id: string
+          location: string | null
+          match_date: string
+          opponent: string | null
+          player_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location?: string | null
+          match_date: string
+          opponent?: string | null
+          player_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location?: string | null
+          match_date?: string
+          opponent?: string | null
+          player_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           club: string | null
