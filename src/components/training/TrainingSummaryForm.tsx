@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { QuestionSelector } from "./QuestionSelector";
 import type { Database } from "@/integrations/supabase/types";
 
-type TrainingSummary = Database['public']['Tables']['training_summaries']['Insert']
+type TrainingSummary = Database['public']['Tables']['training_summaries']['Insert'];
 
 interface TrainingSummaryFormData {
   trainingDate: Date;
