@@ -2,12 +2,15 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 import html2canvas from "html2canvas";
 import { Action } from "@/components/ActionSelector";
 import { ActionItem } from "./game/ActionItem";
 import { GameStats } from "./game/GameStats";
 import { GameSummary } from "./game/GameSummary";
 import { AdditionalActions } from "./game/AdditionalActions";
+import { PlayerSubstitution } from "./game/PlayerSubstitution";
+import { GameInsights } from "./game/GameInsights";
 
 interface GameTrackerProps {
   actions: Action[];
@@ -23,6 +26,12 @@ interface ActionLog {
   note?: string;
 }
 
+interface SubstitutionLog {
+  playerIn: string;
+  playerOut: string;
+  minute: number;
+}
+
 export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
   const [gamePhase, setGamePhase] = useState<GamePhase>("preview");
   const [minute, setMinute] = useState(0);
@@ -30,6 +39,9 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
   const [showSummary, setShowSummary] = useState(false);
   const [timerInterval, setTimerInterval] = useState<number | null>(null);
   const [actions, setActions] = useState<Action[]>(initialActions);
+  const [generalNote, setGeneralNote] = useState("");
+  const [generalNotes, setGeneralNotes] = useState<Array<{ text: string; minute: number }>>([]);
+  const [substitutions, setSubstitutions] = useState<SubstitutionLog[]>([]);
 
   useEffect(() => {
     return () => {
@@ -45,6 +57,28 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
       title: "פעולה נוספה",
       description: `הפעולה ${newAction.name} נוספה למעקב`,
     });
+  };
+
+  const handleAddGeneralNote = () => {
+    if (!generalNote.trim()) {
+      toast({
+        title: "שגיאה",
+        description: "יש להזין טקסט להערה",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setGeneralNotes(prev => [...prev, { text: generalNote, minute }]);
+    setGeneralNote("");
+    toast({
+      title: "הערה נוספה",
+      description: "ההערה נשמרה בהצלחה",
+    });
+  };
+
+  const handleSubstitution = (sub: SubstitutionLog) => {
+    setSubstitutions(prev => [...prev, sub]);
   };
 
   const startMatch = () => {
@@ -166,6 +200,25 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
               />
             ))}
           </div>
+
+          {/* General Note */}
+          <div className="flex gap-2">
+            <Button onClick={handleAddGeneralNote}>
+              הוסף הערה
+            </Button>
+            <Input
+              value={generalNote}
+              onChange={(e) => setGeneralNote(e.target.value)}
+              placeholder="הערה כללית..."
+              className="text-right"
+            />
+          </div>
+
+          {/* Player Substitution */}
+          <PlayerSubstitution
+            minute={minute}
+            onSubstitution={handleSubstitution}
+          />
           
           <div className="flex justify-end gap-4">
             {gamePhase === "playing" ? (
@@ -187,6 +240,8 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
           <GameSummary 
             actions={actions}
             actionLogs={actionLogs}
+            generalNotes={generalNotes}
+            substitutions={substitutions}
             onClose={() => setShowSummary(false)}
           />
         </DialogContent>

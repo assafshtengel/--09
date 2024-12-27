@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import { GameStats } from "./GameStats";
+import { GameInsights } from "./GameInsights";
 
 interface ActionLog {
   actionId: string;
@@ -20,13 +21,27 @@ interface ActionLog {
   note?: string;
 }
 
+interface SubstitutionLog {
+  playerIn: string;
+  playerOut: string;
+  minute: number;
+}
+
 interface GameSummaryProps {
   actions: Action[];
   actionLogs: ActionLog[];
+  generalNotes: Array<{ text: string; minute: number }>;
+  substitutions: SubstitutionLog[];
   onClose: () => void;
 }
 
-export const GameSummary = ({ actions, actionLogs, onClose }: GameSummaryProps) => {
+export const GameSummary = ({ 
+  actions, 
+  actionLogs, 
+  generalNotes,
+  substitutions,
+  onClose 
+}: GameSummaryProps) => {
   const takeScreenshot = async () => {
     try {
       const element = document.getElementById('game-summary');
@@ -68,11 +83,62 @@ export const GameSummary = ({ actions, actionLogs, onClose }: GameSummaryProps) 
       {/* Overall Stats */}
       <GameStats actions={actions} actionLogs={actionLogs} />
 
+      {/* Game Insights */}
+      <GameInsights actionLogs={actionLogs} />
+
       {/* Score */}
       <div className="p-4 border rounded-lg bg-primary/10">
         <h3 className="text-xl font-semibold text-right mb-2">ציון משחק</h3>
         <p className="text-3xl font-bold text-center">{calculateScore()}</p>
       </div>
+
+      {/* General Notes */}
+      {generalNotes.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-xl font-semibold text-right">הערות כלליות</h3>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-right">דקה</TableHead>
+                <TableHead className="text-right">הערה</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {generalNotes.map((note, index) => (
+                <TableRow key={index}>
+                  <TableCell>{note.minute}'</TableCell>
+                  <TableCell>{note.text}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {/* Substitutions */}
+      {substitutions.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-xl font-semibold text-right">חילופים</h3>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-right">דקה</TableHead>
+                <TableHead className="text-right">שחקן יוצא</TableHead>
+                <TableHead className="text-right">שחקן נכנס</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {substitutions.map((sub, index) => (
+                <TableRow key={index}>
+                  <TableCell>{sub.minute}'</TableCell>
+                  <TableCell>{sub.playerOut}</TableCell>
+                  <TableCell>{sub.playerIn}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {/* Action Logs Table */}
       <div className="space-y-4">
