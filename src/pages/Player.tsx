@@ -1,48 +1,83 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Auth } from "@supabase/auth-ui-react";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
+import { supabase } from "@/integrations/supabase/client";
 import { PlayerForm, PlayerFormData } from "@/components/PlayerForm";
-import { ActionSelector } from "@/components/ActionSelector";
-import { GameTracker } from "@/components/GameTracker";
-import type { Action } from "@/components/ActionSelector";
-
-type Phase = "form" | "actions" | "game";
 
 const Player = () => {
-  const [phase, setPhase] = useState<Phase>("form");
-  const [playerData, setPlayerData] = useState<PlayerFormData | null>(null);
-  const [selectedActions, setSelectedActions] = useState<Action[]>([]);
+  const navigate = useNavigate();
+  const [session, setSession] = useState(null);
 
-  const handleFormSubmit = (data: PlayerFormData) => {
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handlePlayerFormSubmit = (data: PlayerFormData) => {
     console.log("Form submitted:", data);
-    setPlayerData(data);
-    setPhase("actions");
+    // Handle form submission logic here
   };
 
-  const handleActionSubmit = (actions: Action[]) => {
-    console.log("Selected actions:", actions);
-    setSelectedActions(actions);
-    setPhase("game");
-  };
+  if (!session) {
+    return (
+      <div className="max-w-md mx-auto p-6">
+        <h1 className="text-2xl font-bold mb-6 text-right">הרשמה / התחברות</h1>
+        <Auth
+          supabaseClient={supabase}
+          appearance={{
+            theme: ThemeSupa,
+            variables: {
+              default: {
+                colors: {
+                  brand: '#3b82f6',
+                  brandAccent: '#2563eb',
+                },
+              },
+            },
+            style: {
+              button: { width: '100%' },
+              anchor: { color: '#2563eb' },
+              container: { width: '100%' },
+              message: { textAlign: 'right' },
+              label: { textAlign: 'right' },
+            },
+          }}
+          localization={{
+            variables: {
+              sign_up: {
+                email_label: 'אימייל',
+                password_label: 'סיסמה',
+                button_label: 'הרשמה',
+                link_text: 'אין לך חשבון? הירשם',
+              },
+              sign_in: {
+                email_label: 'אימייל',
+                password_label: 'סיסמה',
+                button_label: 'התחברות',
+                link_text: 'יש לך כבר חשבון? התחבר',
+              },
+            },
+          }}
+          theme="light"
+          providers={[]}
+        />
+      </div>
+    );
+  }
 
-  return (
-    <div className="container mx-auto py-8">
-      {phase === "form" ? (
-        <>
-          <h1 className="text-3xl font-bold text-center mb-8">פרטי משחק</h1>
-          <PlayerForm onSubmit={handleFormSubmit} />
-        </>
-      ) : phase === "actions" ? (
-        <>
-          <h1 className="text-3xl font-bold text-center mb-8">בחירת פעולות</h1>
-          <ActionSelector 
-            position={playerData?.position || ""}
-            onSubmit={handleActionSubmit}
-          />
-        </>
-      ) : (
-        <GameTracker actions={selectedActions} />
-      )}
-    </div>
-  );
+  return <PlayerForm onSubmit={handlePlayerFormSubmit} />;
 };
 
 export default Player;
