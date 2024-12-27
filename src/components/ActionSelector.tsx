@@ -12,34 +12,63 @@ interface Action {
 }
 
 const getPositionActions = (position: string): Action[] => {
-  const actions: { [key: string]: Action[] } = {
+  const actions: { [key: string]: string[] } = {
+    forward: [
+      "בעיטה לשער",
+      "תנועה ללא כדור",
+      "נוכחות ברחבה",
+      "לחץ על ההגנה",
+      "דריבל מוצלח",
+      "הורדת כדור בנגיעה",
+      "מסירה מקדמת",
+      "ריצה לעומק",
+      "סגירה הגנתית",
+      "שיפור מיקום בסיום"
+    ],
     goalkeeper: [
-      { id: "1", name: "הצלות", isSelected: false },
-      { id: "2", name: "יציאות מהשער", isSelected: false },
-      { id: "3", name: "מסירות מדויקות", isSelected: false },
-      { id: "4", name: "תפיסות כדור", isSelected: false },
+      "יציאה נכונה",
+      "עצירה 1 על 1",
+      "הגנה בקו",
+      "משחק רגל",
+      "תקשורת עם ההגנה",
+      "עצירת בעיטות מרחוק",
+      "עצירת קרנות",
+      "צמצום זוויות",
+      "התחלת התקפה מהירה",
+      "קבלת החלטות תחת לחץ"
     ],
     defender: [
-      { id: "1", name: "חטיפות כדור", isSelected: false },
-      { id: "2", name: "ניקוי כדורים", isSelected: false },
-      { id: "3", name: "מסירות מדויקות", isSelected: false },
-      { id: "4", name: "קרבות אוויר", isSelected: false },
+      "תיקול מוצלח",
+      "הרחקת כדור",
+      "יצירת רוחב",
+      "מניעת הגבהה",
+      "תמיכה בהתקפה",
+      "סגירה נכונה בקו",
+      "חיפוי על בלמים",
+      "מסירות רוחב מדויקות",
+      "נוכחות באגף",
+      "התמודדות עם שחקן כנף"
     ],
     midfielder: [
-      { id: "1", name: "מסירות מדויקות", isSelected: false },
-      { id: "2", name: "כדורים שנחטפו", isSelected: false },
-      { id: "3", name: "אסיסטים", isSelected: false },
-      { id: "4", name: "התקפות שנבנו", isSelected: false },
-    ],
-    forward: [
-      { id: "1", name: "בעיטות לשער", isSelected: false },
-      { id: "2", name: "גולים", isSelected: false },
-      { id: "3", name: "תנועה ללא כדור", isSelected: false },
-      { id: "4", name: "לחץ על ההגנה", isSelected: false },
-    ],
+      "חילוץ בקישור",
+      "מסירה קדימה",
+      "ניהול קצב",
+      "הרמת הראש",
+      "תמיכה בהתקפה",
+      "חילוץ כדורים גבוה",
+      "מסירה ארוכה מדויקת",
+      "תנועה בין הקווים",
+      "שמירה על פוזשן",
+      "יצירת יתרון מספרי"
+    ]
   };
-  
-  return actions[position] || [];
+
+  const positionActions = actions[position] || [];
+  return positionActions.map((name, index) => ({
+    id: (index + 1).toString(),
+    name,
+    isSelected: false
+  }));
 };
 
 interface ActionSelectorProps {
