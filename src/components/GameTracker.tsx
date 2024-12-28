@@ -2,10 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
-import { ActionItem } from "./game/ActionItem";
 import { GameStats } from "./game/GameStats";
 import { GameSummary } from "./game/GameSummary";
 import { GamePreview } from "./game/GamePreview";
@@ -13,7 +10,9 @@ import { GamePhaseManager } from "./game/GamePhaseManager";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { GameTimer } from "./game/GameTimer";
 import { HalftimeSummary } from "./game/HalftimeSummary";
-import { GoalsAchievement } from "./game/GoalsAchievement"; // New import
+import { GoalsAchievement } from "./game/GoalsAchievement";
+import { GameActionsList } from "./game/GameActionsList";
+import { GameNotes } from "./game/GameNotes";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -234,7 +233,7 @@ export const GameTracker = () => {
 
   const handlePlayerExit = async (playerName: string, canReturn: boolean) => {
     const sub: SubstitutionLog = {
-      playerIn: "",  // Empty string for exit
+      playerIn: "",
       playerOut: playerName,
       minute
     };
@@ -250,7 +249,7 @@ export const GameTracker = () => {
   const handlePlayerReturn = async (playerName: string) => {
     const sub: SubstitutionLog = {
       playerIn: playerName,
-      playerOut: "",  // Empty string for return
+      playerOut: "",
       minute
     };
 
@@ -305,7 +304,6 @@ export const GameTracker = () => {
 
   return (
     <div className="space-y-4 p-4 max-w-md mx-auto">
-      {/* Timer Display */}
       {gamePhase !== "preview" && (
         <GameTimer
           isRunning={isTimerRunning}
@@ -314,7 +312,6 @@ export const GameTracker = () => {
         />
       )}
 
-      {/* Game Preview */}
       {gamePhase === "preview" && (
         <GamePreview
           actions={actions}
@@ -323,35 +320,18 @@ export const GameTracker = () => {
         />
       )}
 
-      {/* Game Actions */}
       {(gamePhase === "playing" || gamePhase === "secondHalf") && (
         <div className="space-y-4">
           <GameStats actions={actions} actionLogs={actionLogs} />
           
-          <div className="grid gap-3">
-            {actions.map(action => (
-              <ActionItem
-                key={action.id}
-                action={action}
-                onLog={logAction}
-              />
-            ))}
-          </div>
+          <GameActionsList actions={actions} onLog={logAction} />
 
-          {/* General Note */}
-          <div className="flex gap-2 items-center">
-            <Button onClick={handleAddGeneralNote} size="sm">
-              הוסף הערה
-            </Button>
-            <Input
-              value={generalNote}
-              onChange={(e) => setGeneralNote(e.target.value)}
-              placeholder="הערה כללית..."
-              className="text-right text-sm"
-            />
-          </div>
+          <GameNotes
+            generalNote={generalNote}
+            onNoteChange={setGeneralNote}
+            onAddNote={handleAddGeneralNote}
+          />
 
-          {/* Player Substitution */}
           <PlayerSubstitution
             minute={minute}
             onPlayerExit={handlePlayerExit}
@@ -368,10 +348,8 @@ export const GameTracker = () => {
         </div>
       )}
 
-      {/* Goals Achievement Section */}
       <GoalsAchievement actions={actions} actionLogs={actionLogs} />
 
-      {/* Halftime Summary */}
       <HalftimeSummary
         isOpen={gamePhase === "halftime" && showSummary}
         onClose={() => setShowSummary(false)}
@@ -380,7 +358,6 @@ export const GameTracker = () => {
         actionLogs={actionLogs}
       />
 
-      {/* Final Summary Dialog */}
       <Dialog open={gamePhase === "ended" && showSummary} onOpenChange={setShowSummary}>
         <DialogContent className="max-w-md mx-auto">
           <GameSummary 
