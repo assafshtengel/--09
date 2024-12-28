@@ -49,13 +49,14 @@ export const GameSelection = () => {
 
         if (error) throw error;
 
-        const formattedGames = data?.map(game => ({
+        const formattedGames: Game[] = (data || []).map(game => ({
           id: game.id,
           match_date: game.match_date,
           opponent: game.opponent,
           match_id: game.matches?.[0]?.id,
+          // Ensure status is either "completed" or "preview"
           status: game.matches?.[0]?.status === "ended" ? "completed" : "preview"
-        })) || [];
+        }));
 
         setGames(formattedGames);
       } catch (error) {
