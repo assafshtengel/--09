@@ -62,7 +62,8 @@ export const GameTracker = () => {
         if (matchError) throw matchError;
 
         if (match?.pre_match_reports?.actions) {
-          setActions(match.pre_match_reports.actions);
+          const matchActions = match.pre_match_reports.actions as Action[];
+          setActions(matchActions);
         }
 
         setGamePhase(match.status as GamePhase);
@@ -86,41 +87,6 @@ export const GameTracker = () => {
       }
     };
   }, [timerInterval]);
-
-  const createMatch = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('No authenticated user found');
-      }
-
-      const { data: match, error } = await supabase
-        .from('matches')
-        .insert([
-          { 
-            match_date: new Date().toISOString().split('T')[0],
-            status: 'preview',
-            player_id: user.id
-          }
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      setMatchId(match.id);
-      return match.id;
-    } catch (error) {
-      console.error('Error creating match:', error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן ליצור משחק חדש",
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
 
   const saveActionLog = async (actionId: string, result: ActionResult, note?: string) => {
     if (!matchId) return;

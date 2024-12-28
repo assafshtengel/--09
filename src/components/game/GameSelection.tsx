@@ -48,6 +48,9 @@ export const GameSelection = () => {
 
   const handleGameSelect = async (gameId: string) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No authenticated user");
+
       // Check if a match already exists for this pre-match report
       const { data: existingMatch, error: matchError } = await supabase
         .from("matches")
@@ -74,6 +77,7 @@ export const GameSelection = () => {
               match_date: game.match_date,
               opponent: game.opponent,
               pre_match_report_id: gameId,
+              player_id: user.id,  // Add player_id here
               status: "preview"
             })
             .select()
