@@ -69,13 +69,26 @@ export const GameTracker = () => {
         if (matchError) throw matchError;
 
         if (match?.pre_match_reports?.actions) {
-          const preMatchActions = match.pre_match_reports.actions as PreMatchReportActions[];
-          const validActions = preMatchActions.map(action => ({
-            id: action.id,
-            name: action.name,
-            goal: action.goal,
-            isSelected: action.isSelected
-          }));
+          // First cast to unknown, then to our specific type
+          const rawActions = match.pre_match_reports.actions as unknown;
+          const preMatchActions = rawActions as PreMatchReportActions[];
+          
+          // Validate and map the actions
+          const validActions = preMatchActions
+            .filter(action => 
+              typeof action === 'object' && 
+              action !== null && 
+              'id' in action && 
+              'name' in action && 
+              'isSelected' in action
+            )
+            .map(action => ({
+              id: action.id,
+              name: action.name,
+              goal: action.goal,
+              isSelected: action.isSelected
+            }));
+            
           setActions(validActions);
         }
 
