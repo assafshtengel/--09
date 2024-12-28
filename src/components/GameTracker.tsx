@@ -11,6 +11,8 @@ import { GameSummary } from "./game/GameSummary";
 import { GamePreview } from "./game/GamePreview";
 import { GamePhaseManager } from "./game/GamePhaseManager";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
+import { GameTimer } from "./game/GameTimer";
+import { HalftimeSummary } from "./game/HalftimeSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -44,11 +46,11 @@ export const GameTracker = () => {
   const [minute, setMinute] = useState(0);
   const [actionLogs, setActionLogs] = useState<ActionLog[]>([]);
   const [showSummary, setShowSummary] = useState(false);
-  const [timerInterval, setTimerInterval] = useState<number | null>(null);
   const [actions, setActions] = useState<Action[]>([]);
   const [generalNote, setGeneralNote] = useState("");
   const [generalNotes, setGeneralNotes] = useState<Array<{ text: string; minute: number }>>([]);
   const [substitutions, setSubstitutions] = useState<SubstitutionLog[]>([]);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
 
   useEffect(() => {
     const loadMatchData = async () => {
@@ -105,14 +107,6 @@ export const GameTracker = () => {
 
     loadMatchData();
   }, [matchId]);
-
-  useEffect(() => {
-    return () => {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-      }
-    };
-  }, [timerInterval]);
 
   const saveActionLog = async (actionId: string, result: ActionResult, note?: string) => {
     if (!matchId) return;
@@ -247,17 +241,12 @@ export const GameTracker = () => {
   const startMatch = async () => {
     setGamePhase("playing");
     await updateMatchStatus("playing");
-    
-    const interval = setInterval(() => {
-      setMinute(prev => prev + 1);
-    }, 60000);
-    setTimerInterval(Number(interval));
+    setMinute(0);
+    setIsTimerRunning(true);
   };
 
   const endHalf = async () => {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-    }
+    setIsTimerRunning(false);
     setGamePhase("halftime");
     await updateMatchStatus("halftime");
     setShowSummary(true);
@@ -267,17 +256,12 @@ export const GameTracker = () => {
     setGamePhase("secondHalf");
     await updateMatchStatus("secondHalf");
     setMinute(45);
-    const interval = setInterval(() => {
-      setMinute(prev => prev + 1);
-    }, 60000);
-    setTimerInterval(Number(interval));
+    setIsTimerRunning(true);
     setShowSummary(false);
   };
 
   const endMatch = async () => {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-    }
+    setIsTimerRunning(false);
     setGamePhase("ended");
     await updateMatchStatus("ended");
     setShowSummary(true);
@@ -291,15 +275,24 @@ export const GameTracker = () => {
       result,
       note
     }]);
+
+    // Show success/failure toast with appropriate color
+    toast({
+      title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
+      className: result === "success" ? "bg-green-500" : "bg-red-500",
+      duration: 1000,
+    });
   };
 
   return (
     <div className="space-y-4 p-4 max-w-md mx-auto">
       {/* Timer Display */}
       {gamePhase !== "preview" && (
-        <div className="fixed top-4 left-4 bg-primary text-white px-4 py-2 rounded-full shadow-lg z-50">
-          דקה: {minute}
-        </div>
+        <GameTimer
+          isRunning={isTimerRunning}
+          minute={minute}
+          onMinuteChange={setMinute}
+        />
       )}
 
       {/* Game Preview */}
@@ -355,8 +348,17 @@ export const GameTracker = () => {
         </div>
       )}
 
-      {/* Summary Dialog */}
-      <Dialog open={showSummary} onOpenChange={setShowSummary}>
+      {/* Halftime Summary */}
+      <HalftimeSummary
+        isOpen={gamePhase === "halftime" && showSummary}
+        onClose={() => setShowSummary(false)}
+        onStartSecondHalf={startSecondHalf}
+        actions={actions}
+        actionLogs={actionLogs}
+      />
+
+      {/* Final Summary Dialog */}
+      <Dialog open={gamePhase === "ended" && showSummary} onOpenChange={setShowSummary}>
         <DialogContent className="max-w-md mx-auto">
           <GameSummary 
             actions={actions}
@@ -364,8 +366,7 @@ export const GameTracker = () => {
             generalNotes={generalNotes}
             substitutions={substitutions}
             onClose={() => setShowSummary(false)}
-            gamePhase={gamePhase === "halftime" ? "halftime" : "ended"}
-            onContinueGame={gamePhase === "halftime" ? startSecondHalf : undefined}
+            gamePhase="ended"
           />
         </DialogContent>
       </Dialog>
