@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Player from "./pages/Player";
 import Dashboard from "./pages/Dashboard";
+import { PreMatchReport } from "@/components/pre-match/PreMatchReport";
+import { WeeklyScheduleWizard } from "@/components/schedule/WeeklyScheduleWizard";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +22,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/player" element={<Player />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/pre-match-report" element={<PreMatchReport />} />
+            <Route path="/schedule" element={<WeeklyScheduleWizard />} />
             <Route path="/coach" element={<Navigate to="/" replace />} />
             <Route path="/analyst" element={<Navigate to="/" replace />} />
           </Routes>

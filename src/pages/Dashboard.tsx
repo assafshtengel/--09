@@ -62,13 +62,13 @@ const Dashboard = () => {
       title: "יעדי טרום משחק",
       icon: <Trophy className="h-8 w-8 text-primary" />,
       description: "הגדר יעדים ומטרות למשחק הבא",
-      onClick: () => navigate("/player/pre-match-report")
+      onClick: () => navigate("/pre-match-report")
     },
     {
       title: "מעקב משחק",
       icon: <Timer className="h-8 w-8 text-primary" />,
       description: "עקוב אחר ביצועים במהלך המשחק",
-      onClick: () => navigate("/player/match-tracking")
+      onClick: () => navigate("/player")
     },
     {
       title: "סיכום אימון",
@@ -80,19 +80,19 @@ const Dashboard = () => {
       title: "מערכת שעות שבועית",
       icon: <Calendar className="h-8 w-8 text-primary" />,
       description: "נהל את לוח הזמנים השבועי שלך",
-      onClick: () => navigate("/player/schedule")
+      onClick: () => navigate("/schedule")
     },
     {
       title: "תזונה ושינה",
       icon: <Apple className="h-8 w-8 text-primary" />,
       description: "עקוב אחר התזונה ושעות השינה שלך",
-      onClick: () => navigate("/player/daily-routine")
+      onClick: () => navigate("/daily-routine")
     },
     {
       title: "סטטיסטיקות וביצועים",
       icon: <Activity className="h-8 w-8 text-primary" />,
       description: "צפה בנתוני הביצועים והסטטיסטיקות שלך",
-      onClick: () => navigate("/player/statistics")
+      onClick: () => navigate("/statistics")
     }
   ];
 
