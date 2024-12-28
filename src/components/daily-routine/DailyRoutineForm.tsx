@@ -6,8 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDailyRoutine } from "@/hooks/use-daily-routine";
 import { DailyRoutineHistory } from "./DailyRoutineHistory";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export const DailyRoutineForm = () => {
+  const navigate = useNavigate();
   const { saveDailyRoutine, isLoading } = useDailyRoutine();
   const [sleepHours, setSleepHours] = useState("");
   const [breakfast, setBreakfast] = useState("");
@@ -19,15 +22,29 @@ export const DailyRoutineForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await saveDailyRoutine({
-      sleep_hours: Number(sleepHours),
-      breakfast,
-      lunch,
-      dinner,
-      snacks,
-      water_intake: waterIntake ? Number(waterIntake) : undefined,
-      notes
-    });
+    try {
+      await saveDailyRoutine({
+        sleep_hours: Number(sleepHours),
+        breakfast,
+        lunch,
+        dinner,
+        snacks,
+        water_intake: waterIntake ? Number(waterIntake) : undefined,
+        notes
+      });
+      
+      // Show success toast
+      toast.success("הנתונים נשמרו בהצלחה", {
+        duration: 1500,
+      });
+
+      // Redirect to dashboard after 1.5 seconds
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1500);
+    } catch (error) {
+      toast.error("שגיאה בשמירת הנתונים");
+    }
   };
 
   return (
