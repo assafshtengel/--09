@@ -17,6 +17,7 @@ export const PlayerSubstitution = ({
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [waitingForReturn, setWaitingForReturn] = useState<string | null>(null);
+  const [hasEndedGame, setHasEndedGame] = useState(false);
 
   const handlePlayerExit = () => {
     setShowExitDialog(true);
@@ -29,6 +30,8 @@ export const PlayerSubstitution = ({
     if (canReturn) {
       setWaitingForReturn(playerName);
       setShowReturnDialog(true);
+    } else {
+      setHasEndedGame(true); // Set game as ended when player won't return
     }
     
     setShowExitDialog(false);
@@ -45,6 +48,11 @@ export const PlayerSubstitution = ({
       });
     }
   };
+
+  // Don't show anything if game has ended
+  if (hasEndedGame) {
+    return null;
+  }
 
   return (
     <div className="space-y-4 p-4 border rounded-lg">
