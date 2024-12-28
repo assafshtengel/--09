@@ -51,12 +51,20 @@ export const PreMatchReport = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No authenticated user");
 
+      // Convert Action[] to a plain object array for JSON storage
+      const actionsForStorage = selectedActions.map(({ id, name, goal, isSelected }) => ({
+        id,
+        name,
+        goal,
+        isSelected
+      }));
+
       const { error } = await supabase.from("pre_match_reports").insert({
         player_id: user.id,
         match_date: matchDetails.date,
         match_time: matchDetails.time || null,
         opponent: matchDetails.opponent,
-        actions: selectedActions,
+        actions: actionsForStorage,
         questions_answers: answers,
         ai_insights: insights,
         status: "completed"
