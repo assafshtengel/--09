@@ -28,9 +28,9 @@ interface ActionLog {
 }
 
 interface SubstitutionLog {
+  playerIn: string;
   playerOut: string;
   minute: number;
-  canReturnLater?: boolean;
 }
 
 interface PreMatchReportActions {
@@ -169,8 +169,8 @@ export const GameTracker = () => {
           {
             match_id: matchId,
             minute: sub.minute,
-            player_out: sub.playerOut,
-            can_return_later: sub.canReturnLater
+            player_in: sub.playerIn,
+            player_out: sub.playerOut
           }
         ]);
 
@@ -234,9 +234,9 @@ export const GameTracker = () => {
 
   const handlePlayerExit = async (playerName: string, canReturn: boolean) => {
     const sub: SubstitutionLog = {
+      playerIn: "",  // Empty string for exit
       playerOut: playerName,
-      minute,
-      canReturnLater: canReturn
+      minute
     };
 
     await saveSubstitution(sub);
@@ -249,8 +249,9 @@ export const GameTracker = () => {
 
   const handlePlayerReturn = async (playerName: string) => {
     const sub: SubstitutionLog = {
-      playerOut: "",  // Empty since it's a return
-      minute,
+      playerIn: playerName,
+      playerOut: "",  // Empty string for return
+      minute
     };
 
     await saveSubstitution(sub);
@@ -353,7 +354,6 @@ export const GameTracker = () => {
           {/* Player Substitution */}
           <PlayerSubstitution
             minute={minute}
-            onSubstitution={handleSubstitution}
             onPlayerExit={handlePlayerExit}
             onPlayerReturn={handlePlayerReturn}
           />

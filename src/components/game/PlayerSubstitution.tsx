@@ -4,22 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 
-interface SubstitutionLog {
-  playerOut: string;
-  minute: number;
-  canReturnLater?: boolean;
-}
-
 interface PlayerSubstitutionProps {
   minute: number;
-  onSubstitution: (sub: SubstitutionLog) => void;
   onPlayerExit: (playerName: string, canReturn: boolean) => void;
   onPlayerReturn: (playerName: string) => void;
 }
 
 export const PlayerSubstitution = ({ 
-  minute, 
-  onSubstitution,
+  minute,
   onPlayerExit,
   onPlayerReturn
 }: PlayerSubstitutionProps) => {
