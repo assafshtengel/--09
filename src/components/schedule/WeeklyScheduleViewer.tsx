@@ -14,7 +14,8 @@ interface WeeklyScheduleViewerProps {
 
 export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) => {
   const days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
-  const hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+  // Generate hours from 06:00 to 23:00
+  const hours = Array.from({ length: 18 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
 
   const getActivityColor = (type: string) => {
     switch (type) {
@@ -56,7 +57,7 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
           {days.map((day, dayIndex) => (
             <div key={day} className="min-w-[120px]">
               <div className="font-bold mb-2 text-center">{day}</div>
-              <div className="relative h-[1200px]"> {/* 24 hours * 50px */}
+              <div className="relative h-[900px]"> {/* Adjusted height for 18 hours * 50px */}
                 {activities
                   .filter((activity) => activity.day_of_week === dayIndex)
                   .map((activity, activityIndex) => {
@@ -65,7 +66,8 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
                     const endHour = parseInt(activity.end_time.split(':')[0]);
                     const endMinute = parseInt(activity.end_time.split(':')[1]);
                     
-                    const top = (startHour * 60 + startMinute) * (50 / 60);
+                    // Adjust the position calculation to account for the 6am start
+                    const top = ((startHour - 6) * 60 + startMinute) * (50 / 60);
                     const height = ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) * (50 / 60);
                     
                     return (
