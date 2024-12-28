@@ -367,6 +367,7 @@ export const GameTracker = () => {
             substitutions={substitutions}
             onClose={() => setShowSummary(false)}
             gamePhase="ended"
+            matchId={matchId}
           />
         </DialogContent>
       </Dialog>

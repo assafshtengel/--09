@@ -208,12 +208,10 @@ export const GameSummary = ({
     <ScrollArea className="h-[600px]">
       <div className="space-y-6 p-4 bg-background">
         <div id="game-summary-content">
-          <SummaryHeader gamePhase={gamePhase} />
+          <SummaryHeader gamePhase={gamePhase} matchId={matchId} />
           
-          {/* Goals Achievement Section */}
           <GoalsAchievement actions={actions} actionLogs={actionLogs} />
 
-          {/* Post Game Questions */}
           {gamePhase === "ended" && (
             <QuestionsSection
               answers={answers}
@@ -221,7 +219,6 @@ export const GameSummary = ({
             />
           )}
 
-          {/* Performance Ratings */}
           {gamePhase === "ended" && (
             <PerformanceTable
               ratings={performanceRatings}
@@ -229,30 +226,24 @@ export const GameSummary = ({
             />
           )}
 
-          {/* General Notes */}
           <NotesSection notes={generalNotes} />
 
-          {/* Overall Stats */}
           <div className="mt-6">
             <GameStats actions={actions} actionLogs={actionLogs} />
           </div>
 
-          {/* Game Insights */}
           <div className="mt-6">
             <GameInsights actionLogs={actionLogs} />
           </div>
 
-          {/* Score */}
           <div className="p-4 border rounded-lg bg-primary/10 mt-6">
             <h3 className="text-xl font-semibold text-right mb-2">ציון</h3>
             <p className="text-3xl font-bold text-center">{calculateScore(actionLogs)}</p>
           </div>
 
-          {/* Action Logs */}
           <ActionsLogSection actions={actions} actionLogs={actionLogs} />
         </div>
 
-        {/* Actions */}
         <SummaryActions
           gamePhase={gamePhase}
           isSendingEmail={isSendingEmail}
