@@ -148,10 +148,26 @@ export const GameSummary = ({
   const handleQuestionSubmit = async (answers: Record<string, string | number>) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No authenticated user");
+      if (!user) {
+        showToast({
+          title: "שגיאה",
+          description: "משתמש לא מחובר",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!matchId) {
+        showToast({
+          title: "שגיאה",
+          description: "לא נמצא מזהה משחק",
+          variant: "destructive",
+        });
+        return;
+      }
 
       // Save feedback to database
-      const { error } = await supabase
+      const { error: feedbackError } = await supabase
         .from('post_game_feedback')
         .insert([
           {
@@ -162,9 +178,17 @@ export const GameSummary = ({
           }
         ]);
 
-      if (error) throw error;
+      if (feedbackError) {
+        console.error('Error saving feedback:', feedbackError);
+        showToast({
+          title: "שגיאה בשמירת המשוב",
+          description: "אנא נסה שנית",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      // Send email with feedback
+      // Only proceed with email if feedback was saved successfully
       await sendEmail();
       
       setShowQuestions(false);
@@ -173,9 +197,10 @@ export const GameSummary = ({
         description: "סיכום המשחק נשלח למייל",
       });
     } catch (error) {
-      console.error('Error saving feedback:', error);
+      console.error('Error in handleQuestionSubmit:', error);
       showToast({
         title: "שגיאה בשמירת המשוב",
+        description: "אנא נסה שנית",
         variant: "destructive",
       });
     }
