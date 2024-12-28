@@ -30,6 +30,13 @@ interface SubstitutionLog {
   minute: number;
 }
 
+interface PreMatchReportActions {
+  id: string;
+  name: string;
+  goal?: string;
+  isSelected: boolean;
+}
+
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
   const { toast } = useToast();
@@ -62,8 +69,14 @@ export const GameTracker = () => {
         if (matchError) throw matchError;
 
         if (match?.pre_match_reports?.actions) {
-          const matchActions = match.pre_match_reports.actions as Action[];
-          setActions(matchActions);
+          const preMatchActions = match.pre_match_reports.actions as PreMatchReportActions[];
+          const validActions = preMatchActions.map(action => ({
+            id: action.id,
+            name: action.name,
+            goal: action.goal,
+            isSelected: action.isSelected
+          }));
+          setActions(validActions);
         }
 
         setGamePhase(match.status as GamePhase);
