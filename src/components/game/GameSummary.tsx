@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Action } from "@/components/ActionSelector";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,8 @@ import { GameInsights } from "./GameInsights";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PostGameQuestions } from "./PostGameQuestions";
 import { PerformanceTable } from "./PerformanceTable";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface ActionLog {
   actionId: string;
@@ -39,6 +42,17 @@ interface GameSummaryProps {
   gamePhase?: "halftime" | "ended";
   onContinueGame?: () => void;
 }
+
+const calculateScore = (actionLogs: ActionLog[]) => {
+  const successPoints = 10;
+  const failurePoints = -5;
+  
+  const score = actionLogs.reduce((total, log) => {
+    return total + (log.result === "success" ? successPoints : failurePoints);
+  }, 0);
+
+  return Math.max(0, score); // Score cannot be negative
+};
 
 export const GameSummary = ({ 
   actions, 
@@ -185,7 +199,7 @@ export const GameSummary = ({
           {/* Score */}
           <div className="p-4 border rounded-lg bg-primary/10 mt-6">
             <h3 className="text-xl font-semibold text-right mb-2">ציון</h3>
-            <p className="text-3xl font-bold text-center">{calculateScore()}</p>
+            <p className="text-3xl font-bold text-center">{calculateScore(actionLogs)}</p>
           </div>
 
           {/* Action Logs Table */}
