@@ -29,18 +29,59 @@ export const SchoolHoursStep = ({ onAddActivity }: SchoolHoursStepProps) => {
       return;
     }
 
-    // Create an activity for each selected day
     selectedDays.forEach((day) => {
+      // Add wake up time 1.5 hours before school
+      const wakeUpTime = new Date(`2000-01-01T${startTime}`);
+      wakeUpTime.setHours(wakeUpTime.getHours() - 1);
+      wakeUpTime.setMinutes(wakeUpTime.getMinutes() - 30);
+      
+      onAddActivity({
+        day_of_week: day,
+        start_time: wakeUpTime.toTimeString().slice(0, 5),
+        end_time: wakeUpTime.toTimeString().slice(0, 5),
+        activity_type: "wake_up",
+        title: "השכמה",
+        priority: 1
+      });
+
+      // Add departure time 30 minutes before school
+      const departureTime = new Date(`2000-01-01T${startTime}`);
+      departureTime.setMinutes(departureTime.getMinutes() - 30);
+      
+      onAddActivity({
+        day_of_week: day,
+        start_time: departureTime.toTimeString().slice(0, 5),
+        end_time: departureTime.toTimeString().slice(0, 5),
+        activity_type: "departure",
+        title: "יציאה לבית ספר",
+        priority: 2
+      });
+
+      // Add school hours
       onAddActivity({
         day_of_week: day,
         start_time: startTime,
         end_time: endTime,
         activity_type: "school",
         title: "בית ספר",
+        priority: 3
+      });
+
+      // Add lunch break in the middle of the school day
+      const lunchTime = new Date(`2000-01-01T${startTime}`);
+      const endTimeDate = new Date(`2000-01-01T${endTime}`);
+      const middleTime = new Date((lunchTime.getTime() + endTimeDate.getTime()) / 2);
+      
+      onAddActivity({
+        day_of_week: day,
+        start_time: middleTime.toTimeString().slice(0, 5),
+        end_time: new Date(middleTime.getTime() + 30 * 60000).toTimeString().slice(0, 5),
+        activity_type: "lunch",
+        title: "ארוחת צהריים",
+        priority: 4
       });
     });
 
-    // Show success message
     toast.success(`נוספו שעות בית ספר ל-${selectedDays.length} ימים`);
   };
 

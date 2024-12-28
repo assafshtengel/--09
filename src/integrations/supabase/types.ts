@@ -345,6 +345,7 @@ export type Database = {
           end_time: string
           id: string
           notes: string | null
+          priority: number | null
           schedule_id: string
           start_time: string
           title: string | null
@@ -356,6 +357,7 @@ export type Database = {
           end_time: string
           id?: string
           notes?: string | null
+          priority?: number | null
           schedule_id: string
           start_time: string
           title?: string | null
@@ -367,6 +369,7 @@ export type Database = {
           end_time?: string
           id?: string
           notes?: string | null
+          priority?: number | null
           schedule_id?: string
           start_time?: string
           title?: string | null
