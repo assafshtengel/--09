@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Action } from "@/components/ActionSelector";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -14,9 +15,8 @@ import html2canvas from "html2canvas";
 import { GameStats } from "./GameStats";
 import { GameInsights } from "./GameInsights";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PostGameQuestions } from "./PostGameQuestions";
 import { PerformanceTable } from "./PerformanceTable";
-import { GoalsAchievement } from "./GoalsAchievement"; // Import the new GoalsAchievement component
+import { GoalsAchievement } from "./GoalsAchievement";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Share2 } from "lucide-react";
@@ -33,6 +33,12 @@ interface SubstitutionLog {
   playerOut: string;
   minute: number;
 }
+
+const POST_GAME_QUESTIONS = [
+  "תאר אתגר ספציפי שנתקלת בו במשחק ואיך התמודדת איתו",
+  "איזה לקח עיקרי למדת מהמשחק היום?",
+  "מה הלקח העיקרי שלמדת מהמחצית היום?"
+];
 
 interface GameSummaryProps {
   actions: Action[];
@@ -55,10 +61,18 @@ export const GameSummary = ({
   onContinueGame,
   matchId
 }: GameSummaryProps) => {
-  const [showQuestions, setShowQuestions] = useState(false);
-  const [performanceRatings, setPerformanceRatings] = useState<Record<string, number>>({});
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [performanceRatings, setPerformanceRatings] = useState<Record<string, number>>({});
+  const [showQuestions, setShowQuestions] = useState(false);
   const { toast: showToast } = useToast();
+
+  const handleAnswerChange = (question: string, answer: string) => {
+    setAnswers(prev => ({
+      ...prev,
+      [question]: answer
+    }));
+  };
 
   const handlePerformanceRating = (aspect: string, rating: number) => {
     setPerformanceRatings(prev => ({
@@ -67,7 +81,7 @@ export const GameSummary = ({
     }));
   };
 
-  const handleQuestionSubmit = async (answers: Record<string, string | number>) => {
+  const handleSubmit = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -110,16 +124,14 @@ export const GameSummary = ({
         return;
       }
 
-      // Only proceed with email if feedback was saved successfully
       await sendEmail();
-      
-      setShowQuestions(false);
       showToast({
         title: "המשוב נשמר בהצלחה",
         description: "סיכום המשחק נשלח למייל",
       });
+      onClose();
     } catch (error) {
-      console.error('Error in handleQuestionSubmit:', error);
+      console.error('Error in handleSubmit:', error);
       showToast({
         title: "שגיאה בשמירת המשוב",
         description: "אנא נסה שנית",
@@ -160,7 +172,7 @@ export const GameSummary = ({
     } else if (platform === 'instagram') {
       await navigator.clipboard.writeText(shareText);
       showToast({
-        title: "טקסט הועק ללוח",
+        title: "טקסט הועתק ללוח",
         description: "כעת תוכל להדביק אותו באינסטגרם",
       });
     }
@@ -246,6 +258,36 @@ export const GameSummary = ({
             </div>
           </div>
 
+          {/* Post Game Questions */}
+          {gamePhase === "ended" && (
+            <div className="space-y-4 mt-6">
+              <h3 className="text-xl font-semibold text-right">שאלות סיכום</h3>
+              <div className="space-y-4">
+                {POST_GAME_QUESTIONS.map((question, index) => (
+                  <div key={index} className="space-y-2">
+                    <label className="block text-right font-medium">
+                      {question}
+                    </label>
+                    <Textarea
+                      value={answers[question] || ""}
+                      onChange={(e) => handleAnswerChange(question, e.target.value)}
+                      className="w-full text-right"
+                      placeholder="הכנס את תשובתך כאן..."
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Performance Ratings */}
+          {gamePhase === "ended" && (
+            <PerformanceTable
+              ratings={performanceRatings}
+              onRatingChange={handlePerformanceRating}
+            />
+          )}
+
           {/* General Notes */}
           {generalNotes.length > 0 && (
             <div className="space-y-4 mt-6">
@@ -313,11 +355,6 @@ export const GameSummary = ({
               </TableBody>
             </Table>
           </div>
-
-          <PerformanceTable
-            ratings={performanceRatings}
-            onRatingChange={handlePerformanceRating}
-          />
         </div>
 
         <div className="flex flex-wrap justify-end gap-4">
@@ -332,8 +369,11 @@ export const GameSummary = ({
           
           {gamePhase === "ended" && (
             <>
-              <Button onClick={() => setShowQuestions(true)} variant="default">
-                המשך לשאלון
+              <Button 
+                onClick={handleSubmit}
+                variant="default"
+              >
+                שמור וסיים
               </Button>
               <Button 
                 onClick={sendEmail} 
