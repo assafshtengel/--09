@@ -13,6 +13,7 @@ import { GamePhaseManager } from "./game/GamePhaseManager";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { GameTimer } from "./game/GameTimer";
 import { HalftimeSummary } from "./game/HalftimeSummary";
+import { GoalsAchievement } from "./game/GoalsAchievement"; // New import
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -27,9 +28,9 @@ interface ActionLog {
 }
 
 interface SubstitutionLog {
-  playerIn: string;
   playerOut: string;
   minute: number;
+  canReturnLater?: boolean;
 }
 
 interface PreMatchReportActions {
@@ -71,11 +72,9 @@ export const GameTracker = () => {
         if (matchError) throw matchError;
 
         if (match?.pre_match_reports?.actions) {
-          // First cast to unknown, then to our specific type
           const rawActions = match.pre_match_reports.actions as unknown;
           const preMatchActions = rawActions as PreMatchReportActions[];
           
-          // Validate and map the actions
           const validActions = preMatchActions
             .filter(action => 
               typeof action === 'object' && 
@@ -170,8 +169,8 @@ export const GameTracker = () => {
           {
             match_id: matchId,
             minute: sub.minute,
-            player_in: sub.playerIn,
-            player_out: sub.playerOut
+            player_out: sub.playerOut,
+            can_return_later: sub.canReturnLater
           }
         ]);
 
@@ -233,7 +232,27 @@ export const GameTracker = () => {
     });
   };
 
-  const handleSubstitution = async (sub: SubstitutionLog) => {
+  const handlePlayerExit = async (playerName: string, canReturn: boolean) => {
+    const sub: SubstitutionLog = {
+      playerOut: playerName,
+      minute,
+      canReturnLater: canReturn
+    };
+
+    await saveSubstitution(sub);
+    setSubstitutions(prev => [...prev, sub]);
+
+    if (!canReturn) {
+      endMatch();
+    }
+  };
+
+  const handlePlayerReturn = async (playerName: string) => {
+    const sub: SubstitutionLog = {
+      playerOut: "",  // Empty since it's a return
+      minute,
+    };
+
     await saveSubstitution(sub);
     setSubstitutions(prev => [...prev, sub]);
   };
@@ -276,7 +295,6 @@ export const GameTracker = () => {
       note
     }]);
 
-    // Show success/failure toast with appropriate color
     toast({
       title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
       className: result === "success" ? "bg-green-500" : "bg-red-500",
@@ -336,6 +354,8 @@ export const GameTracker = () => {
           <PlayerSubstitution
             minute={minute}
             onSubstitution={handleSubstitution}
+            onPlayerExit={handlePlayerExit}
+            onPlayerReturn={handlePlayerReturn}
           />
           
           <GamePhaseManager
@@ -347,6 +367,9 @@ export const GameTracker = () => {
           />
         </div>
       )}
+
+      {/* Goals Achievement Section */}
+      <GoalsAchievement actions={actions} actionLogs={actionLogs} />
 
       {/* Halftime Summary */}
       <HalftimeSummary

@@ -16,6 +16,7 @@ import { GameInsights } from "./GameInsights";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PostGameQuestions } from "./PostGameQuestions";
 import { PerformanceTable } from "./PerformanceTable";
+import { GoalsAchievement } from "./GoalsAchievement"; // Import the new GoalsAchievement component
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Share2 } from "lucide-react";
@@ -127,12 +128,6 @@ export const GameSummary = ({
     }
   };
 
-  if (showQuestions) {
-    return (
-      <PostGameQuestions onSubmit={handleQuestionSubmit} />
-    );
-  }
-
   const takeScreenshot = async () => {
     try {
       const element = document.getElementById('game-summary-content');
@@ -232,6 +227,9 @@ export const GameSummary = ({
               {format(new Date(), 'dd/MM/yyyy')}
             </p>
           </div>
+
+          {/* Goals Achievement Section */}
+          <GoalsAchievement actions={actions} actionLogs={actionLogs} />
 
           {/* Initial Goals */}
           <div className="space-y-4 mt-6">
