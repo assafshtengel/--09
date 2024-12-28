@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 
@@ -15,25 +14,16 @@ export const PlayerSubstitution = ({
   onPlayerExit,
   onPlayerReturn
 }: PlayerSubstitutionProps) => {
-  const [playerName, setPlayerName] = useState("");
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [waitingForReturn, setWaitingForReturn] = useState<string | null>(null);
 
   const handlePlayerExit = () => {
-    if (!playerName) {
-      toast({
-        title: "שגיאה",
-        description: "יש להזין את שם השחקן",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setShowExitDialog(true);
   };
 
   const handleExitConfirmation = (canReturn: boolean) => {
+    const playerName = "שחקן"; // Default player name since we're not collecting it anymore
     onPlayerExit(playerName, canReturn);
     
     if (canReturn) {
@@ -42,7 +32,6 @@ export const PlayerSubstitution = ({
     }
     
     setShowExitDialog(false);
-    setPlayerName("");
   };
 
   const handlePlayerReturn = () => {
@@ -52,7 +41,7 @@ export const PlayerSubstitution = ({
       setShowReturnDialog(false);
       toast({
         title: "השחקן חזר למשחק",
-        description: `${waitingForReturn} חזר למשחק`,
+        description: `השחקן חזר למשחק`,
       });
     }
   };
@@ -61,19 +50,13 @@ export const PlayerSubstitution = ({
     <div className="space-y-4 p-4 border rounded-lg">
       <h3 className="font-semibold text-right">חילופי שחקנים</h3>
       <div className="space-y-2">
-        <Input
-          value={playerName}
-          onChange={(e) => setPlayerName(e.target.value)}
-          placeholder="שם השחקן"
-          className="text-right"
-        />
         <Button onClick={handlePlayerExit} className="w-full">
           יציאת שחקן
         </Button>
         
         {waitingForReturn && (
           <Button onClick={handlePlayerReturn} variant="outline" className="w-full">
-            {`${waitingForReturn} חוזר למשחק`}
+            החזר שחקן למשחק
           </Button>
         )}
       </div>
