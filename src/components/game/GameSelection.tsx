@@ -45,7 +45,7 @@ export const GameSelection = () => {
           .eq("player_id", user.id)
           .eq("status", "completed")
           .order("match_date", { ascending: false })
-          .limit(3);
+          .limit(10); // Changed from 3 to 10
 
         if (error) throw error;
 
@@ -54,7 +54,6 @@ export const GameSelection = () => {
           match_date: game.match_date,
           opponent: game.opponent,
           match_id: game.matches?.[0]?.id,
-          // Ensure status is either "completed" or "preview"
           status: game.matches?.[0]?.status === "ended" ? "completed" : "preview"
         }));
 
