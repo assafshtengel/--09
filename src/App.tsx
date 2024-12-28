@@ -8,6 +8,7 @@ import Player from "./pages/Player";
 import Dashboard from "./pages/Dashboard";
 import { PreMatchReport } from "@/components/pre-match/PreMatchReport";
 import { WeeklyScheduleWizard } from "@/components/schedule/WeeklyScheduleWizard";
+import { DailyRoutineForm } from "@/components/daily-routine/DailyRoutineForm";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/pre-match-report" element={<PreMatchReport />} />
             <Route path="/schedule" element={<WeeklyScheduleWizard />} />
+            <Route path="/daily-routine" element={<DailyRoutineForm />} />
             <Route path="/coach" element={<Navigate to="/" replace />} />
             <Route path="/analyst" element={<Navigate to="/" replace />} />
           </Routes>
