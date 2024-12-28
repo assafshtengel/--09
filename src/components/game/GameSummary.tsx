@@ -41,7 +41,7 @@ interface GameSummaryProps {
   onClose: () => void;
   gamePhase?: "halftime" | "ended";
   onContinueGame?: () => void;
-  matchId?: string; // Add matchId to props
+  matchId?: string;
 }
 
 export const GameSummary = ({ 
@@ -59,16 +59,72 @@ export const GameSummary = ({
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const { toast: showToast } = useToast();
 
-  const calculateScore = (actionLogs: ActionLog[]) => {
-    const successPoints = 10;
-    const failurePoints = -5;
-    
-    const score = actionLogs.reduce((total, log) => {
-      return total + (log.result === "success" ? successPoints : failurePoints);
-    }, 0);
+  const handleQuestionSubmit = async (answers: Record<string, string | number>) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        showToast({
+          title: "שגיאה",
+          description: "משתמש לא מחובר",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    return Math.max(0, score);
+      if (!matchId) {
+        showToast({
+          title: "שגיאה",
+          description: "לא נמצא מזהה משחק",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Save feedback to database
+      const { error: feedbackError } = await supabase
+        .from('post_game_feedback')
+        .insert([
+          {
+            player_id: user.id,
+            match_id: matchId,
+            questions_answers: answers,
+            performance_ratings: performanceRatings,
+          }
+        ]);
+
+      if (feedbackError) {
+        console.error('Error saving feedback:', feedbackError);
+        showToast({
+          title: "שגיאה בשמירת המשוב",
+          description: "אנא נסה שנית",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Only proceed with email if feedback was saved successfully
+      await sendEmail();
+      
+      setShowQuestions(false);
+      showToast({
+        title: "המשוב נשמר בהצלחה",
+        description: "סיכום המשחק נשלח למייל",
+      });
+    } catch (error) {
+      console.error('Error in handleQuestionSubmit:', error);
+      showToast({
+        title: "שגיאה בשמירת המשוב",
+        description: "אנא נסה שנית",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (showQuestions) {
+    return (
+      <PostGameQuestions onSubmit={handleQuestionSubmit} />
+    );
+  }
 
   const takeScreenshot = async () => {
     try {
@@ -145,79 +201,16 @@ export const GameSummary = ({
     }
   };
 
-  const handleQuestionSubmit = async (answers: Record<string, string | number>) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        showToast({
-          title: "שגיאה",
-          description: "משתמש לא מחובר",
-          variant: "destructive",
-        });
-        return;
-      }
+  const calculateScore = (actionLogs: ActionLog[]) => {
+    const successPoints = 10;
+    const failurePoints = -5;
+    
+    const score = actionLogs.reduce((total, log) => {
+      return total + (log.result === "success" ? successPoints : failurePoints);
+    }, 0);
 
-      if (!matchId) {
-        showToast({
-          title: "שגיאה",
-          description: "לא נמצא מזהה משחק",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Save feedback to database
-      const { error: feedbackError } = await supabase
-        .from('post_game_feedback')
-        .insert([
-          {
-            player_id: user.id,
-            match_id: matchId,
-            questions_answers: answers,
-            performance_ratings: performanceRatings,
-          }
-        ]);
-
-      if (feedbackError) {
-        console.error('Error saving feedback:', feedbackError);
-        showToast({
-          title: "שגיאה בשמירת המשוב",
-          description: "אנא נסה שנית",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Only proceed with email if feedback was saved successfully
-      await sendEmail();
-      
-      setShowQuestions(false);
-      showToast({
-        title: "המשוב נשמר בהצלחה",
-        description: "סיכום המשחק נשלח למייל",
-      });
-    } catch (error) {
-      console.error('Error in handleQuestionSubmit:', error);
-      showToast({
-        title: "שגיאה בשמירת המשוב",
-        description: "אנא נסה שנית",
-        variant: "destructive",
-      });
-    }
+    return Math.max(0, score);
   };
-
-  const handlePerformanceRating = (aspect: string, rating: number) => {
-    setPerformanceRatings(prev => ({
-      ...prev,
-      [aspect]: rating
-    }));
-  };
-
-  if (showQuestions) {
-    return (
-      <PostGameQuestions onSubmit={handleQuestionSubmit} />
-    );
-  }
 
   return (
     <ScrollArea className="h-[600px]">
