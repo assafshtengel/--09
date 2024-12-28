@@ -1,25 +1,19 @@
 import React, { useState } from 'react';
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Action } from "@/components/ActionSelector";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { format } from "date-fns";
-import html2canvas from "html2canvas";
 import { GameStats } from "./GameStats";
 import { GameInsights } from "./GameInsights";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { PerformanceTable } from "./PerformanceTable";
 import { GoalsAchievement } from "./GoalsAchievement";
+import { PerformanceTable } from "./PerformanceTable";
+import { SummaryHeader } from "./summary/SummaryHeader";
+import { QuestionsSection } from "./summary/QuestionsSection";
+import { NotesSection } from "./summary/NotesSection";
+import { ActionsLogSection } from "./summary/ActionsLogSection";
+import { SummaryActions } from "./summary/SummaryActions";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Share2 } from "lucide-react";
+import html2canvas from "html2canvas";
+import { format } from "date-fns";
 
 interface ActionLog {
   actionId: string;
@@ -33,12 +27,6 @@ interface SubstitutionLog {
   playerOut: string;
   minute: number;
 }
-
-const POST_GAME_QUESTIONS = [
-  "תאר אתגר ספציפי שנתקלת בו במשחק ואיך התמודדת איתו",
-  "איזה לקח עיקרי למדת מהמשחק היום?",
-  "מה הלקח העיקרי שלמדת מהמחצית היום?"
-];
 
 interface GameSummaryProps {
   actions: Action[];
@@ -57,15 +45,14 @@ export const GameSummary = ({
   generalNotes,
   substitutions,
   onClose,
-  gamePhase,
+  gamePhase = "ended",
   onContinueGame,
   matchId
 }: GameSummaryProps) => {
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [performanceRatings, setPerformanceRatings] = useState<Record<string, number>>({});
-  const [showQuestions, setShowQuestions] = useState(false);
-  const { toast: showToast } = useToast();
+  const { toast } = useToast();
 
   const handleAnswerChange = (question: string, answer: string) => {
     setAnswers(prev => ({
@@ -81,11 +68,22 @@ export const GameSummary = ({
     }));
   };
 
+  const calculateScore = (actionLogs: ActionLog[]) => {
+    const successPoints = 10;
+    const failurePoints = -5;
+    
+    const score = actionLogs.reduce((total, log) => {
+      return total + (log.result === "success" ? successPoints : failurePoints);
+    }, 0);
+
+    return Math.max(0, score);
+  };
+
   const handleSubmit = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        showToast({
+        toast({
           title: "שגיאה",
           description: "משתמש לא מחובר",
           variant: "destructive",
@@ -94,7 +92,7 @@ export const GameSummary = ({
       }
 
       if (!matchId) {
-        showToast({
+        toast({
           title: "שגיאה",
           description: "לא נמצא מזהה משחק",
           variant: "destructive",
@@ -102,7 +100,6 @@ export const GameSummary = ({
         return;
       }
 
-      // Save feedback to database
       const { error: feedbackError } = await supabase
         .from('post_game_feedback')
         .insert([
@@ -114,25 +111,17 @@ export const GameSummary = ({
           }
         ]);
 
-      if (feedbackError) {
-        console.error('Error saving feedback:', feedbackError);
-        showToast({
-          title: "שגיאה בשמירת המשוב",
-          description: "אנא נסה שנית",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (feedbackError) throw feedbackError;
 
       await sendEmail();
-      showToast({
+      toast({
         title: "המשוב נשמר בהצלחה",
         description: "סיכום המשחק נשלח למייל",
       });
       onClose();
     } catch (error) {
       console.error('Error in handleSubmit:', error);
-      showToast({
+      toast({
         title: "שגיאה בשמירת המשוב",
         description: "אנא נסה שנית",
         variant: "destructive",
@@ -149,14 +138,14 @@ export const GameSummary = ({
         link.download = `game-summary-${format(new Date(), 'yyyy-MM-dd')}.png`;
         link.href = canvas.toDataURL();
         link.click();
-        showToast({
+        toast({
           title: "צילום מסך נשמר בהצלחה",
           variant: "default",
         });
       }
     } catch (error) {
       console.error('Error taking screenshot:', error);
-      showToast({
+      toast({
         title: "שגיאה בשמירת צילום המסך",
         variant: "destructive",
       });
@@ -171,7 +160,7 @@ export const GameSummary = ({
       window.open(`https://www.facebook.com/sharer/sharer.php?u=${window.location.href}&quote=${encodeURIComponent(shareText)}`, '_blank');
     } else if (platform === 'instagram') {
       await navigator.clipboard.writeText(shareText);
-      showToast({
+      toast({
         title: "טקסט הועתק ללוח",
         description: "כעת תוכל להדביק אותו באינסטגרם",
       });
@@ -200,13 +189,13 @@ export const GameSummary = ({
       });
 
       if (error) throw error;
-      showToast({
+      toast({
         title: "הסיכום נשלח בהצלחה למייל",
         variant: "default",
       });
     } catch (error) {
       console.error('Error sending email:', error);
-      showToast({
+      toast({
         title: "שגיאה בשליחת המייל",
         variant: "destructive",
       });
@@ -215,69 +204,21 @@ export const GameSummary = ({
     }
   };
 
-  const calculateScore = (actionLogs: ActionLog[]) => {
-    const successPoints = 10;
-    const failurePoints = -5;
-    
-    const score = actionLogs.reduce((total, log) => {
-      return total + (log.result === "success" ? successPoints : failurePoints);
-    }, 0);
-
-    return Math.max(0, score);
-  };
-
   return (
     <ScrollArea className="h-[600px]">
       <div className="space-y-6 p-4 bg-background">
         <div id="game-summary-content">
-          {/* Header */}
-          <div className="text-right border-b pb-4">
-            <h2 className="text-2xl font-bold mb-2">
-              {gamePhase === "halftime" ? "סיכום מחצית" : "סיכום משחק"}
-            </h2>
-            <p className="text-muted-foreground">
-              {format(new Date(), 'dd/MM/yyyy')}
-            </p>
-          </div>
-
+          <SummaryHeader gamePhase={gamePhase} />
+          
           {/* Goals Achievement Section */}
           <GoalsAchievement actions={actions} actionLogs={actionLogs} />
 
-          {/* Initial Goals */}
-          <div className="space-y-4 mt-6">
-            <h3 className="text-xl font-semibold text-right">יעדי המשחק</h3>
-            <div className="grid gap-3">
-              {actions.map(action => (
-                <div key={action.id} className="border p-3 rounded-lg text-right">
-                  <h4 className="font-medium">{action.name}</h4>
-                  {action.goal && (
-                    <p className="text-sm text-muted-foreground">יעד: {action.goal}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Post Game Questions */}
           {gamePhase === "ended" && (
-            <div className="space-y-4 mt-6">
-              <h3 className="text-xl font-semibold text-right">שאלות סיכום</h3>
-              <div className="space-y-4">
-                {POST_GAME_QUESTIONS.map((question, index) => (
-                  <div key={index} className="space-y-2">
-                    <label className="block text-right font-medium">
-                      {question}
-                    </label>
-                    <Textarea
-                      value={answers[question] || ""}
-                      onChange={(e) => handleAnswerChange(question, e.target.value)}
-                      className="w-full text-right"
-                      placeholder="הכנס את תשובתך כאן..."
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+            <QuestionsSection
+              answers={answers}
+              onAnswerChange={handleAnswerChange}
+            />
           )}
 
           {/* Performance Ratings */}
@@ -289,27 +230,7 @@ export const GameSummary = ({
           )}
 
           {/* General Notes */}
-          {generalNotes.length > 0 && (
-            <div className="space-y-4 mt-6">
-              <h3 className="text-xl font-semibold text-right">הערות כלליות</h3>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-right">דקה</TableHead>
-                    <TableHead className="text-right">הערה</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {generalNotes.map((note, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{note.minute}'</TableCell>
-                      <TableCell className="text-right">{note.text}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+          <NotesSection notes={generalNotes} />
 
           {/* Overall Stats */}
           <div className="mt-6">
@@ -327,89 +248,21 @@ export const GameSummary = ({
             <p className="text-3xl font-bold text-center">{calculateScore(actionLogs)}</p>
           </div>
 
-          {/* Action Logs Table */}
-          <div className="space-y-4 mt-6">
-            <h3 className="text-xl font-semibold text-right">פעולות</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-right">דקה</TableHead>
-                  <TableHead className="text-right">פעולה</TableHead>
-                  <TableHead className="text-right">תוצאה</TableHead>
-                  <TableHead className="text-right">הערה</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {actionLogs.map((log, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{log.minute}'</TableCell>
-                    <TableCell className="text-right">
-                      {actions.find(a => a.id === log.actionId)?.name}
-                    </TableCell>
-                    <TableCell>
-                      {log.result === "success" ? "✅" : "❌"}
-                    </TableCell>
-                    <TableCell className="text-right">{log.note || "-"}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          {/* Action Logs */}
+          <ActionsLogSection actions={actions} actionLogs={actionLogs} />
         </div>
 
-        <div className="flex flex-wrap justify-end gap-4">
-          {gamePhase === "halftime" && onContinueGame && (
-            <Button onClick={() => {
-              onContinueGame();
-              onClose();
-            }} variant="default">
-              המשך למחצית שנייה
-            </Button>
-          )}
-          
-          {gamePhase === "ended" && (
-            <>
-              <Button 
-                onClick={handleSubmit}
-                variant="default"
-              >
-                שמור וסיים
-              </Button>
-              <Button 
-                onClick={sendEmail} 
-                variant="outline"
-                disabled={isSendingEmail}
-              >
-                {isSendingEmail ? "שולח..." : "שלח למייל"}
-              </Button>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => shareToSocial('facebook')}
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <Share2 className="h-4 w-4" />
-                  שתף בפייסבוק
-                </Button>
-                <Button
-                  onClick={() => shareToSocial('instagram')}
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <Share2 className="h-4 w-4" />
-                  שתף באינסטגרם
-                </Button>
-              </div>
-            </>
-          )}
-          
-          <Button onClick={takeScreenshot} variant="outline">
-            שמור צילום מסך
-          </Button>
-          <Button onClick={onClose} variant="outline">
-            סגור
-          </Button>
-        </div>
+        {/* Actions */}
+        <SummaryActions
+          gamePhase={gamePhase}
+          isSendingEmail={isSendingEmail}
+          onSubmit={handleSubmit}
+          onSendEmail={sendEmail}
+          onShareSocial={shareToSocial}
+          onScreenshot={takeScreenshot}
+          onClose={onClose}
+          onContinueGame={onContinueGame}
+        />
       </div>
     </ScrollArea>
   );
