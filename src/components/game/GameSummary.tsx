@@ -66,7 +66,7 @@ export const GameSummary = ({
   const [showQuestions, setShowQuestions] = useState(false);
   const [performanceRatings, setPerformanceRatings] = useState<Record<string, number>>({});
   const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const { toast } = useToast();
+  const { toast: showToast } = useToast();
 
   const takeScreenshot = async () => {
     try {
@@ -77,10 +77,16 @@ export const GameSummary = ({
         link.download = `game-summary-${format(new Date(), 'yyyy-MM-dd')}.png`;
         link.href = canvas.toDataURL();
         link.click();
-        toast.success("צילום מסך נשמר בהצלחה");
+        showToast({
+          title: "צילום מסך נשמר בהצלחה",
+          variant: "default",
+        });
       }
     } catch (error) {
-      toast.error("שגיאה בשמירת צילום המסך");
+      showToast({
+        title: "שגיאה בשמירת צילום המסך",
+        variant: "destructive",
+      });
     }
   };
 
@@ -106,10 +112,16 @@ export const GameSummary = ({
       });
 
       if (error) throw error;
-      toast.success("הסיכום נשלח בהצלחה למייל");
+      showToast({
+        title: "הסיכום נשלח בהצלחה למייל",
+        variant: "default",
+      });
     } catch (error) {
       console.error('Error sending email:', error);
-      toast.error("שגיאה בשליחת המייל");
+      showToast({
+        title: "שגיאה בשליחת המייל",
+        variant: "destructive",
+      });
     } finally {
       setIsSendingEmail(false);
     }
