@@ -6,14 +6,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+interface Game {
+  id: string;
+  match_date: string;
+  opponent: string | null;
+  match_id?: string;
+  status: "completed" | "preview";
+}
 
 export const GameSelection = () => {
   const navigate = useNavigate();
-  const [games, setGames] = useState<Array<{
-    id: string;
-    match_date: string;
-    opponent: string | null;
-  }>>([]);
+  const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -25,16 +30,34 @@ export const GameSelection = () => {
           return;
         }
 
+        // Fetch pre-match reports and their associated matches
         const { data, error } = await supabase
           .from("pre_match_reports")
-          .select("id, match_date, opponent")
+          .select(`
+            id,
+            match_date,
+            opponent,
+            matches (
+              id,
+              status
+            )
+          `)
           .eq("player_id", user.id)
           .eq("status", "completed")
           .order("match_date", { ascending: false })
           .limit(3);
 
         if (error) throw error;
-        setGames(data || []);
+
+        const formattedGames = data?.map(game => ({
+          id: game.id,
+          match_date: game.match_date,
+          opponent: game.opponent,
+          match_id: game.matches?.[0]?.id,
+          status: game.matches?.[0]?.status === "ended" ? "completed" : "preview"
+        })) || [];
+
+        setGames(formattedGames);
       } catch (error) {
         console.error("Error fetching games:", error);
         toast.error("שגיאה בטעינת המשחקים");
@@ -46,48 +69,33 @@ export const GameSelection = () => {
     fetchGames();
   }, [navigate]);
 
-  const handleGameSelect = async (gameId: string) => {
+  const handleGameSelect = async (game: Game) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No authenticated user");
 
-      // Check if a match already exists for this pre-match report
-      const { data: existingMatch, error: matchError } = await supabase
+      if (game.status === "completed" && game.match_id) {
+        // Navigate to existing match summary
+        navigate(`/match/${game.match_id}`);
+        return;
+      }
+
+      // Create a new match for non-completed games
+      const { data: newMatch, error: createError } = await supabase
         .from("matches")
-        .select("id")
-        .eq("pre_match_report_id", gameId)
-        .maybeSingle();
+        .insert({
+          match_date: game.match_date,
+          opponent: game.opponent,
+          pre_match_report_id: game.id,
+          player_id: user.id,
+          status: "preview"
+        })
+        .select()
+        .single();
 
-      if (matchError) throw matchError;
-
-      if (existingMatch?.id) {
-        navigate(`/match/${existingMatch.id}`);
-      } else {
-        // Create a new match
-        const { data: game } = await supabase
-          .from("pre_match_reports")
-          .select("match_date, opponent, actions")
-          .eq("id", gameId)
-          .single();
-
-        if (game) {
-          const { data: newMatch, error: createError } = await supabase
-            .from("matches")
-            .insert({
-              match_date: game.match_date,
-              opponent: game.opponent,
-              pre_match_report_id: gameId,
-              player_id: user.id,  // Add player_id here
-              status: "preview"
-            })
-            .select()
-            .single();
-
-          if (createError) throw createError;
-          if (newMatch) {
-            navigate(`/match/${newMatch.id}`);
-          }
-        }
+      if (createError) throw createError;
+      if (newMatch) {
+        navigate(`/match/${newMatch.id}`);
       }
     } catch (error) {
       console.error("Error handling game selection:", error);
@@ -111,12 +119,18 @@ export const GameSelection = () => {
         {games.map((game) => (
           <Card 
             key={game.id}
-            className="cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => handleGameSelect(game.id)}
+            className={cn(
+              "cursor-pointer hover:shadow-lg transition-shadow",
+              game.status === "completed" ? "bg-red-100" : ""
+            )}
+            onClick={() => handleGameSelect(game)}
           >
             <CardHeader>
-              <CardTitle className="text-right">
-                {format(new Date(game.match_date), "dd/MM/yyyy", { locale: he })}
+              <CardTitle className="text-right flex justify-between items-center">
+                <span>{format(new Date(game.match_date), "dd/MM/yyyy", { locale: he })}</span>
+                {game.status === "completed" && (
+                  <span className="text-sm text-red-600">הושלם</span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
