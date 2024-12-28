@@ -20,22 +20,45 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
   const getActivityColor = (type: string) => {
     switch (type) {
       case "school":
-        return "bg-blue-100";
+        return "bg-blue-100 border-blue-200";
       case "team_training":
-        return "bg-green-100";
+        return "bg-green-100 border-green-200";
       case "personal_training":
       case "mental_training":
-        return "bg-purple-100";
+        return "bg-purple-100 border-purple-200";
       case "lunch":
-        return "bg-yellow-100";
+        return "bg-yellow-100 border-yellow-200";
       case "free_time":
-        return "bg-gray-100";
+        return "bg-gray-100 border-gray-200";
       case "wake_up":
-        return "bg-orange-100";
+        return "bg-orange-100 border-orange-200";
       case "departure":
-        return "bg-red-100";
+        return "bg-red-100 border-red-200";
       default:
-        return "bg-gray-100";
+        return "bg-gray-100 border-gray-200";
+    }
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case "school":
+        return "🏫";
+      case "team_training":
+        return "⚽";
+      case "personal_training":
+        return "🏃";
+      case "mental_training":
+        return "🧠";
+      case "lunch":
+        return "🍽️";
+      case "free_time":
+        return "🎮";
+      case "wake_up":
+        return "⏰";
+      case "departure":
+        return "🚗";
+      default:
+        return "📝";
     }
   };
 
@@ -44,7 +67,7 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
       <h3 className="text-xl font-bold mb-4 text-right">תצוגת מערכת שבועית</h3>
       <div className="flex">
         {/* Time grid */}
-        <div className="w-20 flex-shrink-0">
+        <div className="w-16 flex-shrink-0">
           {hours.map((hour) => (
             <div key={hour} className="h-20 border-b border-gray-200 text-sm text-gray-500 text-center">
               {hour}
@@ -53,11 +76,11 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
         </div>
         
         {/* Days grid */}
-        <div className="flex-1 grid grid-cols-7 gap-2">
+        <div className="flex-1 grid grid-cols-7 gap-1">
           {days.map((day, dayIndex) => (
             <div key={day} className="min-w-[120px]">
-              <div className="font-bold mb-2 text-center">{day}</div>
-              <div className="relative h-[900px]"> {/* Adjusted height for 18 hours * 50px */}
+              <div className="font-bold mb-2 text-center bg-gray-50 p-2 rounded">{day}</div>
+              <div className="relative h-[900px] border-r border-gray-100"> {/* Adjusted height for 18 hours * 50px */}
                 {activities
                   .filter((activity) => activity.day_of_week === dayIndex)
                   .map((activity, activityIndex) => {
@@ -73,15 +96,18 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
                     return (
                       <div
                         key={activityIndex}
-                        className={`${getActivityColor(activity.activity_type)} absolute w-full p-2 rounded text-sm overflow-hidden`}
+                        className={`${getActivityColor(activity.activity_type)} absolute w-[95%] p-2 rounded-md border text-sm overflow-hidden transition-all hover:shadow-md`}
                         style={{
                           top: `${top}px`,
                           height: `${height}px`,
-                          minHeight: '20px'
+                          minHeight: '24px'
                         }}
                       >
-                        <div className="font-semibold">{activity.title}</div>
-                        <div className="text-xs">
+                        <div className="flex items-center gap-1 font-medium">
+                          <span>{getActivityIcon(activity.activity_type)}</span>
+                          <span className="truncate">{activity.title}</span>
+                        </div>
+                        <div className="text-xs text-gray-600 mt-0.5">
                           {activity.start_time} - {activity.end_time}
                         </div>
                       </div>
