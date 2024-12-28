@@ -68,7 +68,7 @@ const Dashboard = () => {
       title: "מעקב משחק",
       icon: <Timer className="h-8 w-8 text-primary" />,
       description: "עקוב אחר ביצועים במהלך המשחק",
-      onClick: () => navigate("/player")
+      onClick: () => navigate("/game-selection")
     },
     {
       title: "סיכום אימון",
