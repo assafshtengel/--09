@@ -59,6 +59,13 @@ export const GameSummary = ({
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const { toast: showToast } = useToast();
 
+  const handlePerformanceRating = (aspect: string, rating: number) => {
+    setPerformanceRatings(prev => ({
+      ...prev,
+      [aspect]: rating
+    }));
+  };
+
   const handleQuestionSubmit = async (answers: Record<string, string | number>) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
