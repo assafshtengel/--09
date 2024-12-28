@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 
 interface SchoolHoursStepProps {
   onAddActivity: (activity: any) => void;
@@ -23,6 +24,12 @@ export const SchoolHoursStep = ({ onAddActivity }: SchoolHoursStepProps) => {
   ];
 
   const handleAddSchoolHours = () => {
+    if (selectedDays.length === 0) {
+      toast.error("יש לבחור לפחות יום אחד");
+      return;
+    }
+
+    // Create an activity for each selected day
     selectedDays.forEach((day) => {
       onAddActivity({
         day_of_week: day,
@@ -32,6 +39,9 @@ export const SchoolHoursStep = ({ onAddActivity }: SchoolHoursStepProps) => {
         title: "בית ספר",
       });
     });
+
+    // Show success message
+    toast.success(`נוספו שעות בית ספר ל-${selectedDays.length} ימים`);
   };
 
   return (
@@ -40,7 +50,7 @@ export const SchoolHoursStep = ({ onAddActivity }: SchoolHoursStepProps) => {
         <Label>ימי לימודים</Label>
         <div className="grid grid-cols-3 gap-4">
           {days.map((day) => (
-            <div key={day.id} className="flex items-center space-x-2">
+            <div key={day.id} className="flex items-center space-x-2 space-x-reverse">
               <Checkbox
                 id={`day-${day.id}`}
                 checked={selectedDays.includes(day.id)}
