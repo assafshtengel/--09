@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -12,10 +13,6 @@ import { GamePhaseManager } from "./game/GamePhaseManager";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-
-interface GameTrackerProps {
-  actions: Action[];
-}
 
 type GamePhase = "preview" | "playing" | "halftime" | "secondHalf" | "ended";
 type ActionResult = "success" | "failure";
@@ -33,18 +30,54 @@ interface SubstitutionLog {
   minute: number;
 }
 
-export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
+export const GameTracker = () => {
+  const { id: matchId } = useParams<{ id: string }>();
   const { toast } = useToast();
-  const [matchId, setMatchId] = useState<string | null>(null);
   const [gamePhase, setGamePhase] = useState<GamePhase>("preview");
   const [minute, setMinute] = useState(0);
   const [actionLogs, setActionLogs] = useState<ActionLog[]>([]);
   const [showSummary, setShowSummary] = useState(false);
   const [timerInterval, setTimerInterval] = useState<number | null>(null);
-  const [actions, setActions] = useState<Action[]>(initialActions);
+  const [actions, setActions] = useState<Action[]>([]);
   const [generalNote, setGeneralNote] = useState("");
   const [generalNotes, setGeneralNotes] = useState<Array<{ text: string; minute: number }>>([]);
   const [substitutions, setSubstitutions] = useState<SubstitutionLog[]>([]);
+
+  useEffect(() => {
+    const loadMatchData = async () => {
+      if (!matchId) return;
+
+      try {
+        const { data: match, error: matchError } = await supabase
+          .from("matches")
+          .select(`
+            *,
+            pre_match_reports (
+              actions
+            )
+          `)
+          .eq("id", matchId)
+          .single();
+
+        if (matchError) throw matchError;
+
+        if (match?.pre_match_reports?.actions) {
+          setActions(match.pre_match_reports.actions);
+        }
+
+        setGamePhase(match.status as GamePhase);
+      } catch (error) {
+        console.error("Error loading match data:", error);
+        toast({
+          title: "שגיאה",
+          description: "לא ניתן לטעון את נתוני המשחק",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadMatchData();
+  }, [matchId]);
 
   useEffect(() => {
     return () => {
@@ -220,9 +253,6 @@ export const GameTracker = ({ actions: initialActions }: GameTrackerProps) => {
   };
 
   const startMatch = async () => {
-    const newMatchId = await createMatch();
-    if (!newMatchId) return;
-    
     setGamePhase("playing");
     await updateMatchStatus("playing");
     

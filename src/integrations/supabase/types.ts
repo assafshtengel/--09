@@ -163,6 +163,7 @@ export type Database = {
           match_date: string
           opponent: string | null
           player_id: string
+          pre_match_report_id: string | null
           status: string
         }
         Insert: {
@@ -172,6 +173,7 @@ export type Database = {
           match_date: string
           opponent?: string | null
           player_id: string
+          pre_match_report_id?: string | null
           status?: string
         }
         Update: {
@@ -181,6 +183,7 @@ export type Database = {
           match_date?: string
           opponent?: string | null
           player_id?: string
+          pre_match_report_id?: string | null
           status?: string
         }
         Relationships: [
@@ -189,6 +192,13 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_pre_match_report_id_fkey"
+            columns: ["pre_match_report_id"]
+            isOneToOne: false
+            referencedRelation: "pre_match_reports"
             referencedColumns: ["id"]
           },
         ]
