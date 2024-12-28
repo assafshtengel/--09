@@ -13,17 +13,19 @@ export const RoleCard = ({ title, description, icon, path }: RoleCardProps) => {
   const navigate = useNavigate();
 
   return (
-    <Card className="w-full max-w-sm hover:shadow-lg transition-shadow duration-300">
-      <CardHeader>
-        <div className="flex items-center gap-4">
+    <Card className="w-full transition-shadow duration-300 hover:shadow-lg">
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-full">{icon}</div>
-          <CardTitle className="text-xl">{title}</CardTitle>
+          <CardTitle className="text-lg md:text-xl">{title}</CardTitle>
         </div>
       </CardHeader>
       <CardContent>
-        <CardDescription className="mb-4 text-right">{description}</CardDescription>
+        <CardDescription className="mb-4 text-right text-sm md:text-base">
+          {description}
+        </CardDescription>
         <Button 
-          className="w-full" 
+          className="w-full h-10 text-sm md:text-base" 
           onClick={() => navigate(path)}
         >
           התחל
