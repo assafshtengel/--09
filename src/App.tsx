@@ -17,23 +17,25 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <div dir="rtl">
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/player" element={<Player />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/pre-match-report" element={<PreMatchReport />} />
-            <Route path="/schedule" element={<WeeklyScheduleWizard />} />
-            <Route path="/daily-routine" element={<DailyRoutineForm />} />
-            <Route path="/game-selection" element={<GameSelection />} />
-            <Route path="/match/:id" element={<GameTracker />} />
-            <Route path="/coach" element={<Navigate to="/" replace />} />
-            <Route path="/analyst" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
+      <div dir="rtl" className="min-h-screen bg-gray-50">
+        <div className="max-w-md mx-auto min-h-screen bg-white">
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/player" element={<Player />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/pre-match-report" element={<PreMatchReport />} />
+              <Route path="/schedule" element={<WeeklyScheduleWizard />} />
+              <Route path="/daily-routine" element={<DailyRoutineForm />} />
+              <Route path="/game-selection" element={<GameSelection />} />
+              <Route path="/match/:id" element={<GameTracker />} />
+              <Route path="/coach" element={<Navigate to="/" replace />} />
+              <Route path="/analyst" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </div>
       </div>
     </TooltipProvider>
   </QueryClientProvider>

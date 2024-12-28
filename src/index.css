@@ -6,6 +6,15 @@
 
 :root {
   direction: rtl;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overscroll-behavior: none;
 }
 
 @layer base {
@@ -38,5 +47,16 @@
 
   body {
     @apply bg-background text-foreground font-heebo;
+  }
+
+  /* Mobile optimizations */
+  input, textarea, select, button {
+    @apply text-base;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  /* Improve touch targets */
+  button, a {
+    @apply min-h-[44px] min-w-[44px];
   }
 }
