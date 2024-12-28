@@ -203,6 +203,48 @@ export type Database = {
           },
         ]
       }
+      post_game_feedback: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          performance_ratings: Json
+          player_id: string
+          questions_answers: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          performance_ratings?: Json
+          player_id: string
+          questions_answers?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          performance_ratings?: Json
+          player_id?: string
+          questions_answers?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_game_feedback_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: true
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_game_feedback_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pre_match_reports: {
         Row: {
           actions: Json

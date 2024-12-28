@@ -19,6 +19,7 @@ import { PostGameQuestions } from "./PostGameQuestions";
 import { PerformanceTable } from "./PerformanceTable";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Share2 } from "lucide-react";
 
 interface ActionLog {
   actionId: string;
@@ -43,17 +44,6 @@ interface GameSummaryProps {
   onContinueGame?: () => void;
 }
 
-const calculateScore = (actionLogs: ActionLog[]) => {
-  const successPoints = 10;
-  const failurePoints = -5;
-  
-  const score = actionLogs.reduce((total, log) => {
-    return total + (log.result === "success" ? successPoints : failurePoints);
-  }, 0);
-
-  return Math.max(0, score); // Score cannot be negative
-};
-
 export const GameSummary = ({ 
   actions, 
   actionLogs, 
@@ -68,24 +58,28 @@ export const GameSummary = ({
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const { toast: showToast } = useToast();
 
-  const takeScreenshot = async () => {
-    try {
-      const element = document.getElementById('game-summary-content');
-      if (element) {
-        const canvas = await html2canvas(element);
-        const link = document.createElement('a');
-        link.download = `game-summary-${format(new Date(), 'yyyy-MM-dd')}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-        showToast({
-          title: "צילום מסך נשמר בהצלחה",
-          variant: "default",
-        });
-      }
-    } catch (error) {
+  const calculateScore = (actionLogs: ActionLog[]) => {
+    const successPoints = 10;
+    const failurePoints = -5;
+    
+    const score = actionLogs.reduce((total, log) => {
+      return total + (log.result === "success" ? successPoints : failurePoints);
+    }, 0);
+
+    return Math.max(0, score);
+  };
+
+  const shareToSocial = async (platform: 'facebook' | 'instagram') => {
+    const score = calculateScore(actionLogs);
+    const shareText = `Just finished a game with a performance score of ${score}! 🎯⚽️ #SoccerPerformance #Training`;
+    
+    if (platform === 'facebook') {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${window.location.href}&quote=${encodeURIComponent(shareText)}`, '_blank');
+    } else if (platform === 'instagram') {
+      await navigator.clipboard.writeText(shareText);
       showToast({
-        title: "שגיאה בשמירת צילום המסך",
-        variant: "destructive",
+        title: "טקסט הועק ללוח",
+        description: "כעת תוכל להדביק אותו באינסטגרם",
       });
     }
   };
@@ -127,10 +121,40 @@ export const GameSummary = ({
     }
   };
 
-  const handleQuestionSubmit = (answers: Record<string, string | number>) => {
-    // Here you would typically save the answers to your database
-    setShowQuestions(false);
-    // Continue with the regular summary view
+  const handleQuestionSubmit = async (answers: Record<string, string | number>) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No authenticated user");
+
+      // Save feedback to database
+      const { error } = await supabase
+        .from('post_game_feedback')
+        .insert([
+          {
+            player_id: user.id,
+            match_id: matchId,
+            questions_answers: answers,
+            performance_ratings: performanceRatings,
+          }
+        ]);
+
+      if (error) throw error;
+
+      // Send email with feedback
+      await sendEmail();
+      
+      setShowQuestions(false);
+      showToast({
+        title: "המשוב נשמר בהצלחה",
+        description: "סיכום המשחק נשלח למייל",
+      });
+    } catch (error) {
+      console.error('Error saving feedback:', error);
+      showToast({
+        title: "שגיאה בשמירת המשוב",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePerformanceRating = (aspect: string, rating: number) => {
@@ -249,7 +273,7 @@ export const GameSummary = ({
           />
         </div>
 
-        <div className="flex justify-end gap-4">
+        <div className="flex flex-wrap justify-end gap-4">
           {gamePhase === "halftime" && onContinueGame && (
             <Button onClick={() => {
               onContinueGame();
@@ -271,6 +295,24 @@ export const GameSummary = ({
               >
                 {isSendingEmail ? "שולח..." : "שלח למייל"}
               </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => shareToSocial('facebook')}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Share2 className="h-4 w-4" />
+                  שתף בפייסבוק
+                </Button>
+                <Button
+                  onClick={() => shareToSocial('instagram')}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Share2 className="h-4 w-4" />
+                  שתף באינסטגרם
+                </Button>
+              </div>
             </>
           )}
           
