@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/hooks/use-toast";
-import html2canvas from "html2canvas";
 
-const questions = [
-  "מהי המטרה העיקרית שלך במשחק הקרוב (לא קשור לתוצאה)?",
+const allQuestions = [
+  "מהי המטרה העיקרית שלך במשחק הקרוב?",
   "מהן שלוש החוזקות שלך כשחקן?",
   "איך אתה מתמודד עם לחץ במהלך משחק?",
   "באיזה תחום היית רוצה להשתפר משמעותית במשחק הבא?",
@@ -15,11 +13,40 @@ const questions = [
   "איך אתה מתמודד עם טעויות במהלך משחק?",
   "מה עוזר לך להישאר ממוקד במהלך המשחק?",
   "איך אתה מתקשר עם חברי הקבוצה שלך?",
+  "מה הציפיות שלך מעצמך במשחק הזה?",
+  "איך אתה מתכוון להתמודד עם אתגרים במשחק?",
+  "מה תעשה אם תרגיש שאתה מאבד ריכוז?",
+  "איך אתה מתכנן לתרום לקבוצה במשחק הזה?",
+  "מה יעזור לך להצליח במשחק הזה?",
+  "איך אתה מתכונן פיזית למשחק?",
+  "מה המחשבות שלך על היריב?",
+  "איך אתה מתמודד עם שינויים בתכנית המשחק?",
+  "מה עוזר לך להירגע לפני משחק?",
+  "איך אתה שומר על אנרגיה במהלך המשחק?",
+  "מה אתה עושה כשאתה מרגיש עייף?",
+  "איך אתה מתמודד עם ביקורת?",
+  "מה מניע אותך להצליח?",
+  "איך אתה מתכנן להתאושש אחרי המשחק?",
+  "מה אתה עושה כשאתה מרגיש חוסר ביטחון?",
+  "איך אתה מתמודד עם כישלון?",
+  "מה עוזר לך להתרכז בזמן אימונים?",
+  "איך אתה מתכונן ליום המשחק?",
+  "מה אתה עושה כשאתה מרגיש לחוץ?",
+  "איך אתה מתמודד עם הצלחה?"
 ];
 
-export const PreMatchQuestionnaire = () => {
-  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
-  const selectedQuestions = questions.slice(0, 6); // Take first 6 questions for now
+interface PreMatchQuestionnaireProps {
+  onSubmit: (answers: Record<string, string>) => void;
+}
+
+export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) => {
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  
+  // Select 5 random questions
+  const selectedQuestions = useState(() => {
+    const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 5);
+  })[0];
 
   const handleAnswerChange = (question: string, answer: string) => {
     setAnswers(prev => ({
@@ -28,32 +55,14 @@ export const PreMatchQuestionnaire = () => {
     }));
   };
 
-  const takeScreenshot = async () => {
-    try {
-      const element = document.getElementById('questionnaire');
-      if (element) {
-        const canvas = await html2canvas(element);
-        const link = document.createElement('a');
-        link.download = 'pre-match-questionnaire.png';
-        link.href = canvas.toDataURL();
-        link.click();
-        toast({
-          title: "צילום מסך הושלם",
-          description: "התמונה נשמרה בהצלחה",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן היה לצלם את המסך",
-        variant: "destructive",
-      });
-    }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(answers);
   };
 
   return (
-    <div className="space-y-6">
-      <div id="questionnaire" className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-6">
         {selectedQuestions.map((question, index) => (
           <div key={index} className="space-y-2">
             <label className="block text-right font-medium">
@@ -64,16 +73,15 @@ export const PreMatchQuestionnaire = () => {
               onChange={(e) => handleAnswerChange(question, e.target.value)}
               className="w-full text-right"
               placeholder="הכנס את תשובתך כאן..."
+              required
             />
           </div>
         ))}
       </div>
 
-      <div className="flex justify-end gap-4">
-        <Button onClick={takeScreenshot}>
-          צלם מסך
-        </Button>
+      <div className="flex justify-end">
+        <Button type="submit">המשך</Button>
       </div>
-    </div>
+    </form>
   );
 };

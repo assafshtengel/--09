@@ -193,6 +193,56 @@ export type Database = {
           },
         ]
       }
+      pre_match_reports: {
+        Row: {
+          actions: Json
+          ai_insights: string[] | null
+          created_at: string
+          id: string
+          match_date: string
+          match_time: string | null
+          opponent: string | null
+          player_id: string
+          questions_answers: Json
+          status: Database["public"]["Enums"]["report_status"]
+          updated_at: string
+        }
+        Insert: {
+          actions?: Json
+          ai_insights?: string[] | null
+          created_at?: string
+          id?: string
+          match_date: string
+          match_time?: string | null
+          opponent?: string | null
+          player_id: string
+          questions_answers?: Json
+          status?: Database["public"]["Enums"]["report_status"]
+          updated_at?: string
+        }
+        Update: {
+          actions?: Json
+          ai_insights?: string[] | null
+          created_at?: string
+          id?: string
+          match_date?: string
+          match_time?: string | null
+          opponent?: string | null
+          player_id?: string
+          questions_answers?: Json
+          status?: Database["public"]["Enums"]["report_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pre_match_reports_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           club: string | null
@@ -373,6 +423,7 @@ export type Database = {
         | "lunch"
         | "wake_up"
         | "departure"
+      report_status: "draft" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
