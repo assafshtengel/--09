@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/table";
 import { format } from "date-fns";
 import html2canvas from "html2canvas";
-import { toast } from "sonner";
 import { GameStats } from "./GameStats";
 import { GameInsights } from "./GameInsights";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -42,6 +41,7 @@ interface GameSummaryProps {
   onClose: () => void;
   gamePhase?: "halftime" | "ended";
   onContinueGame?: () => void;
+  matchId?: string; // Add matchId to props
 }
 
 export const GameSummary = ({ 
@@ -51,7 +51,8 @@ export const GameSummary = ({
   substitutions,
   onClose,
   gamePhase,
-  onContinueGame
+  onContinueGame,
+  matchId
 }: GameSummaryProps) => {
   const [showQuestions, setShowQuestions] = useState(false);
   const [performanceRatings, setPerformanceRatings] = useState<Record<string, number>>({});
@@ -67,6 +68,29 @@ export const GameSummary = ({
     }, 0);
 
     return Math.max(0, score);
+  };
+
+  const takeScreenshot = async () => {
+    try {
+      const element = document.getElementById('game-summary-content');
+      if (element) {
+        const canvas = await html2canvas(element);
+        const link = document.createElement('a');
+        link.download = `game-summary-${format(new Date(), 'yyyy-MM-dd')}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+        showToast({
+          title: "צילום מסך נשמר בהצלחה",
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error('Error taking screenshot:', error);
+      showToast({
+        title: "שגיאה בשמירת צילום המסך",
+        variant: "destructive",
+      });
+    }
   };
 
   const shareToSocial = async (platform: 'facebook' | 'instagram') => {
