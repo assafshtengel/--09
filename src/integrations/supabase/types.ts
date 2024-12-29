@@ -203,6 +203,57 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          condition: Json | null
+          created_at: string
+          id: string
+          message: string
+          recipient_id: string | null
+          scheduled_for: string | null
+          sender_id: string
+          status: string | null
+          type: Database["public"]["Enums"]["notification_type"]
+        }
+        Insert: {
+          condition?: Json | null
+          created_at?: string
+          id?: string
+          message: string
+          recipient_id?: string | null
+          scheduled_for?: string | null
+          sender_id: string
+          status?: string | null
+          type: Database["public"]["Enums"]["notification_type"]
+        }
+        Update: {
+          condition?: Json | null
+          created_at?: string
+          id?: string
+          message?: string
+          recipient_id?: string | null
+          scheduled_for?: string | null
+          sender_id?: string
+          status?: string | null
+          type?: Database["public"]["Enums"]["notification_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_game_feedback: {
         Row: {
           created_at: string
@@ -481,6 +532,7 @@ export type Database = {
         | "lunch"
         | "wake_up"
         | "departure"
+      notification_type: "pre_match" | "weekly" | "mental_tip" | "custom"
       report_status: "draft" | "completed"
     }
     CompositeTypes: {
