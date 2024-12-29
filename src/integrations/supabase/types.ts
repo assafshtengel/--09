@@ -580,6 +580,7 @@ export type Database = {
         | "lunch"
         | "wake_up"
         | "departure"
+        | "team_game"
       message_type: "incoming" | "outgoing"
       notification_type: "pre_match" | "weekly" | "mental_tip" | "custom"
       report_status: "draft" | "completed"

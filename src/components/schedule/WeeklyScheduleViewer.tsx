@@ -52,6 +52,8 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
         return "bg-blue-100 border-blue-200";
       case "team_training":
         return "bg-green-100 border-green-200";
+      case "team_game":
+        return "bg-red-100 border-red-200";
       case "personal_training":
       case "mental_training":
         return "bg-purple-100 border-purple-200";
@@ -62,8 +64,6 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
       case "wake_up":
         return "bg-orange-100 border-orange-200";
       case "departure":
-        return "bg-red-100 border-red-200";
-      case "team_game":
         return "bg-red-100 border-red-200";
       default:
         return "bg-gray-100 border-gray-200";
@@ -76,6 +76,8 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
         return "🏫";
       case "team_training":
         return "⚽";
+      case "team_game":
+        return "🏆";
       case "personal_training":
         return "🏃";
       case "mental_training":
@@ -88,8 +90,6 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
         return "⏰";
       case "departure":
         return "🚗";
-      case "team_game":
-        return "⚽";
       default:
         return "📝";
     }

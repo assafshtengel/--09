@@ -39,8 +39,39 @@ export const useWeeklySchedule = () => {
     }
   };
 
+  const updateSchedule = async (scheduleId: string, activities: any[]) => {
+    setIsLoading(true);
+    try {
+      const { error: deleteError } = await supabase
+        .from("schedule_activities")
+        .delete()
+        .eq("schedule_id", scheduleId);
+
+      if (deleteError) throw deleteError;
+
+      const { error: insertError } = await supabase
+        .from("schedule_activities")
+        .insert(
+          activities.map(activity => ({
+            schedule_id: scheduleId,
+            ...activity
+          }))
+        );
+
+      if (insertError) throw insertError;
+
+      toast.success("המערכת עודכנה בהצלחה");
+    } catch (error) {
+      toast.error("שגיאה בעדכון המערכת");
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     saveSchedule,
+    updateSchedule,
     isLoading,
   };
 };
