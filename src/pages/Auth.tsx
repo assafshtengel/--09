@@ -19,10 +19,10 @@ const Auth = () => {
   }, [navigate]);
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-md">
-      <Card>
+    <div className="container mx-auto px-4 py-8 max-w-md min-h-screen flex items-center justify-center">
+      <Card className="w-full">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">ברוך הבא</CardTitle>
+          <CardTitle className="text-2xl font-bold">ברוך הבא</CardTitle>
         </CardHeader>
         <CardContent>
           <SupabaseAuth
@@ -37,6 +37,12 @@ const Auth = () => {
                   },
                 },
               },
+              className: {
+                container: 'flex flex-col gap-4',
+                label: 'text-right block mb-2',
+                button: 'w-full',
+                input: 'text-right',
+              },
             }}
             localization={{
               variables: {
@@ -44,11 +50,24 @@ const Auth = () => {
                   email_label: "אימייל",
                   password_label: "סיסמה",
                   button_label: "התחבר",
+                  loading_button_label: "מתחבר...",
+                  social_provider_text: "התחבר באמצעות {{provider}}",
+                  link_text: "כבר יש לך חשבון? התחבר",
                 },
                 sign_up: {
                   email_label: "אימייל",
                   password_label: "סיסמה",
-                  button_label: "הירשם",
+                  button_label: "הרשם",
+                  loading_button_label: "נרשם...",
+                  social_provider_text: "הרשם באמצעות {{provider}}",
+                  link_text: "אין לך חשבון? הרשם",
+                },
+                forgotten_password: {
+                  email_label: "אימייל",
+                  password_label: "סיסמה",
+                  button_label: "שלח הוראות איפוס סיסמה",
+                  loading_button_label: "שולח הוראות...",
+                  link_text: "שכחת סיסמה?",
                 },
               },
             }}
