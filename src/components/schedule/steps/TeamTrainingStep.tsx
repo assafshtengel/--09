@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface TeamTrainingStepProps {
   onAddActivity: (activity: any) => void;
@@ -12,6 +13,7 @@ export const TeamTrainingStep = ({ onAddActivity }: TeamTrainingStepProps) => {
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [startTime, setStartTime] = useState("17:00");
   const [endTime, setEndTime] = useState("19:00");
+  const [activityType, setActivityType] = useState<"team_training" | "team_game">("team_training");
 
   const days = [
     { id: 0, label: "ראשון" },
@@ -23,17 +25,17 @@ export const TeamTrainingStep = ({ onAddActivity }: TeamTrainingStepProps) => {
     { id: 6, label: "שבת" },
   ];
 
-  const handleAddTeamTraining = () => {
+  const handleAddTeamActivity = () => {
     selectedDays.forEach((day) => {
       onAddActivity({
         day_of_week: day,
         start_time: startTime,
         end_time: endTime,
-        activity_type: "team_training",
-        title: "אימון קבוצה",
+        activity_type: activityType,
+        title: activityType === "team_training" ? "אימון קבוצה" : "משחק קבוצה",
       });
 
-      // Add lunch reminder 1:40 hours before training
+      // Add lunch reminder 1:40 hours before activity
       const lunchTime = new Date(`2000-01-01T${startTime}`);
       lunchTime.setHours(lunchTime.getHours() - 1);
       lunchTime.setMinutes(lunchTime.getMinutes() - 40);
@@ -51,10 +53,21 @@ export const TeamTrainingStep = ({ onAddActivity }: TeamTrainingStepProps) => {
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <Label>ימי אימון קבוצתי</Label>
+        <Label>סוג פעילות</Label>
+        <Select value={activityType} onValueChange={(value: "team_training" | "team_game") => setActivityType(value)}>
+          <SelectTrigger>
+            <SelectValue placeholder="בחר סוג פעילות" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="team_training">אימון קבוצה</SelectItem>
+            <SelectItem value="team_game">משחק קבוצה</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Label>ימי פעילות</Label>
         <div className="grid grid-cols-3 gap-4">
           {days.map((day) => (
-            <div key={day.id} className="flex items-center space-x-2">
+            <div key={day.id} className="flex items-center space-x-2 space-x-reverse">
               <Checkbox
                 id={`training-day-${day.id}`}
                 checked={selectedDays.includes(day.id)}
@@ -91,8 +104,8 @@ export const TeamTrainingStep = ({ onAddActivity }: TeamTrainingStepProps) => {
         </div>
       </div>
 
-      <Button onClick={handleAddTeamTraining} className="w-full">
-        הוסף אימוני קבוצה
+      <Button onClick={handleAddTeamActivity} className="w-full">
+        {activityType === "team_training" ? "הוסף אימוני קבוצה" : "הוסף משחקי קבוצה"}
       </Button>
     </div>
   );
