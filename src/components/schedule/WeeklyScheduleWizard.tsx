@@ -18,19 +18,31 @@ export const WeeklyScheduleWizard = () => {
   const steps = [
     {
       title: "שעות בית ספר",
-      component: <SchoolHoursStep onAddActivity={(activity) => setActivities([...activities, activity])} />,
+      component: <SchoolHoursStep onAddActivity={(activity) => {
+        console.log("Adding activity:", activity);
+        setActivities(prev => [...prev, activity]);
+      }} />,
     },
     {
       title: "אימוני קבוצה",
-      component: <TeamTrainingStep onAddActivity={(activity) => setActivities([...activities, activity])} />,
+      component: <TeamTrainingStep onAddActivity={(activity) => {
+        console.log("Adding activity:", activity);
+        setActivities(prev => [...prev, activity]);
+      }} />,
     },
     {
       title: "אימונים אישיים ומנטליים",
-      component: <PersonalTrainingStep onAddActivity={(activity) => setActivities([...activities, activity])} />,
+      component: <PersonalTrainingStep onAddActivity={(activity) => {
+        console.log("Adding activity:", activity);
+        setActivities(prev => [...prev, activity]);
+      }} />,
     },
     {
       title: "שגרה יומית",
-      component: <DailyRoutineStep onAddActivity={(activity) => setActivities([...activities, activity])} />,
+      component: <DailyRoutineStep onAddActivity={(activity) => {
+        console.log("Adding activity:", activity);
+        setActivities(prev => [...prev, activity]);
+      }} />,
     },
   ];
 
@@ -51,6 +63,7 @@ export const WeeklyScheduleWizard = () => {
       await saveSchedule(activities);
       toast.success("המערכת השבועית נשמרה בהצלחה");
     } catch (error) {
+      console.error("Error saving schedule:", error);
       toast.error("אירעה שגיאה בשמירת המערכת השבועית");
     }
   };
