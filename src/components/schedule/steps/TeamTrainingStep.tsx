@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 interface TeamTrainingStepProps {
   onAddActivity: (activity: any) => void;
@@ -26,28 +27,45 @@ export const TeamTrainingStep = ({ onAddActivity }: TeamTrainingStepProps) => {
   ];
 
   const handleAddTeamActivity = () => {
-    selectedDays.forEach((day) => {
-      onAddActivity({
-        day_of_week: day,
-        start_time: startTime,
-        end_time: endTime,
-        activity_type: activityType,
-        title: activityType === "team_training" ? "אימון קבוצה" : "משחק קבוצה",
-      });
+    if (selectedDays.length === 0) {
+      toast.error("יש לבחור לפחות יום אחד");
+      return;
+    }
 
+    const activities = [];
+
+    selectedDays.forEach((day) => {
       // Add lunch reminder 1:40 hours before activity
       const lunchTime = new Date(`2000-01-01T${startTime}`);
       lunchTime.setHours(lunchTime.getHours() - 1);
       lunchTime.setMinutes(lunchTime.getMinutes() - 40);
       
-      onAddActivity({
+      activities.push({
         day_of_week: day,
         start_time: lunchTime.toTimeString().slice(0, 5),
         end_time: lunchTime.toTimeString().slice(0, 5),
         activity_type: "lunch",
         title: "תזכורת ארוחת צהריים",
       });
+
+      activities.push({
+        day_of_week: day,
+        start_time: startTime,
+        end_time: endTime,
+        activity_type: activityType,
+        title: activityType === "team_training" ? "אימון קבוצה" : "משחק קבוצה",
+      });
     });
+
+    // Add all activities at once
+    activities.forEach(activity => {
+      onAddActivity(activity);
+    });
+
+    toast.success(`נוספו ${activityType === "team_training" ? "אימוני" : "משחקי"} קבוצה ל-${selectedDays.length} ימים`);
+    
+    // Reset form
+    setSelectedDays([]);
   };
 
   return (
