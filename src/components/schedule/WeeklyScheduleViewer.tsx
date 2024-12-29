@@ -2,14 +2,17 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, ChevronLeft, Printer, Camera } from "lucide-react";
-import html2canvas from "html2canvas";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { ScheduleHeader } from "./components/ScheduleHeader";
+import { ActivityBlock } from "./components/ActivityBlock";
 
 interface Activity {
+  id?: string;
   day_of_week: number;
   start_time: string;
-  end_time: string | number;
+  end_time: string;
   activity_type: string;
   title?: string;
 }
@@ -36,19 +39,94 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
     toast.success("המערכת נשלחה להדפסה");
   };
 
-  const handleScreenshot = async () => {
+  const handleDeleteActivity = async (activityId?: string) => {
+    if (!activityId) {
+      toast.error("לא ניתן למחוק את הפעילות");
+      return;
+    }
+
     try {
-      const element = document.getElementById('weekly-schedule');
-      if (element) {
-        const canvas = await html2canvas(element);
-        const link = document.createElement('a');
-        link.download = `weekly-schedule-${new Date().toISOString().split('T')[0]}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-        toast.success("צילום המסך נשמר בהצלחה");
-      }
+      const { error } = await supabase
+        .from('schedule_activities')
+        .delete()
+        .eq('id', activityId);
+
+      if (error) throw error;
+      toast.success("הפעילות נמחקה בהצלחה");
+      // Refresh the page to update the schedule
+      window.location.reload();
     } catch (error) {
-      toast.error("שגיאה בשמירת צילום המסך");
+      console.error("Error deleting activity:", error);
+      toast.error("שגיאה במחיקת הפעילות");
+    }
+  };
+
+  const handleCopyLastWeek = async () => {
+    try {
+      // Get the current user's ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No authenticated user");
+
+      // Get the last week's schedule
+      const { data: lastWeekSchedule, error: scheduleError } = await supabase
+        .from('weekly_schedules')
+        .select('id')
+        .eq('player_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (scheduleError) throw scheduleError;
+
+      if (!lastWeekSchedule) {
+        toast.error("לא נמצא לוח זמנים קודם");
+        return;
+      }
+
+      // Get the activities from the last week
+      const { data: lastWeekActivities, error: activitiesError } = await supabase
+        .from('schedule_activities')
+        .select('*')
+        .eq('schedule_id', lastWeekSchedule.id);
+
+      if (activitiesError) throw activitiesError;
+
+      if (!lastWeekActivities || lastWeekActivities.length === 0) {
+        toast.error("לא נמצאו פעילויות בלוח הזמנים הקודם");
+        return;
+      }
+
+      // Create a new schedule for this week
+      const { data: newSchedule, error: newScheduleError } = await supabase
+        .from('weekly_schedules')
+        .insert({
+          player_id: user.id,
+          start_date: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (newScheduleError) throw newScheduleError;
+
+      // Copy all activities to the new schedule
+      const { error: copyError } = await supabase
+        .from('schedule_activities')
+        .insert(
+          lastWeekActivities.map(activity => ({
+            ...activity,
+            id: undefined, // Remove the old ID to generate a new one
+            schedule_id: newSchedule.id,
+          }))
+        );
+
+      if (copyError) throw copyError;
+
+      toast.success("לוח הזמנים הועתק בהצלחה");
+      // Refresh the page to show the new schedule
+      window.location.reload();
+    } catch (error) {
+      console.error("Error copying last week's schedule:", error);
+      toast.error("שגיאה בהעתקת לוח הזמנים");
     }
   };
 
@@ -120,23 +198,18 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
             const height = ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) * (50 / 60);
             
             return (
-              <div
+              <ActivityBlock
                 key={activityIndex}
-                className={`${getActivityColor(activity.activity_type)} absolute w-[95%] p-2 rounded-md border text-sm overflow-hidden transition-all hover:shadow-md`}
+                activity={activity}
                 style={{
                   top: `${top}px`,
                   height: `${height}px`,
                   minHeight: '24px'
                 }}
-              >
-                <div className="flex items-center gap-1 font-medium">
-                  <span>{getActivityIcon(activity.activity_type)}</span>
-                  <span className="truncate">{activity.title}</span>
-                </div>
-                <div className="text-xs text-gray-600 mt-0.5">
-                  {startTime} - {endTime}
-                </div>
-              </div>
+                colorClass={getActivityColor(activity.activity_type)}
+                icon={getActivityIcon(activity.activity_type)}
+                onDelete={() => handleDeleteActivity(activity.id)}
+              />
             );
           })}
       </div>
@@ -145,19 +218,7 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
 
   return (
     <Card className="p-4 overflow-x-auto">
-      <div className="flex justify-between items-center mb-4 print:hidden">
-        <h3 className="text-xl font-bold">תצוגת מערכת שבועית</h3>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handlePrint}>
-            <Printer className="h-4 w-4 ml-2" />
-            הדפס
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleScreenshot}>
-            <Camera className="h-4 w-4 ml-2" />
-            צלם מסך
-          </Button>
-        </div>
-      </div>
+      <ScheduleHeader onPrint={handlePrint} onCopyLastWeek={handleCopyLastWeek} />
       
       <div id="weekly-schedule" className="print:p-4">
         {isMobile ? (
@@ -194,49 +255,7 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
             </div>
             
             <div className="flex-1 grid grid-cols-7 gap-1">
-              {days.map((day, dayIndex) => (
-                <div key={dayIndex} className="min-w-[120px] print:min-w-[100px]">
-                  <div className="font-bold mb-2 text-center bg-gray-50 p-2 rounded print:text-sm print:p-1">
-                    {day}
-                  </div>
-                  <div className="relative h-[900px] border-r border-gray-100 print:h-[720px]">
-                    {activities
-                      .filter((activity) => activity.day_of_week === dayIndex)
-                      .map((activity, activityIndex) => {
-                        const startTime = formatTime(activity.start_time);
-                        const endTime = formatTime(activity.end_time);
-                        
-                        const startHour = parseInt(startTime.split(':')[0]);
-                        const startMinute = parseInt(startTime.split(':')[1]);
-                        const endHour = parseInt(endTime.split(':')[0]);
-                        const endMinute = parseInt(endTime.split(':')[1]);
-                        
-                        const top = ((startHour - 6) * 60 + startMinute) * (40 / 60);
-                        const height = ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) * (40 / 60);
-                        
-                        return (
-                          <div
-                            key={activityIndex}
-                            className={`${getActivityColor(activity.activity_type)} absolute w-[95%] p-2 rounded-md border text-sm overflow-hidden transition-all hover:shadow-md print:text-xs print:p-1`}
-                            style={{
-                              top: `${top}px`,
-                              height: `${height}px`,
-                              minHeight: '20px'
-                            }}
-                          >
-                            <div className="flex items-center gap-1 font-medium print:text-xs">
-                              <span>{getActivityIcon(activity.activity_type)}</span>
-                              <span className="truncate">{activity.title}</span>
-                            </div>
-                            <div className="text-xs text-gray-600 mt-0.5 print:text-[10px]">
-                              {startTime} - {endTime}
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-              ))}
+              {days.map((day, dayIndex) => renderDayView(dayIndex))}
             </div>
           </div>
         )}
