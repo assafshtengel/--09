@@ -1,4 +1,8 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 
 interface Activity {
   day_of_week: number;
@@ -13,8 +17,10 @@ interface WeeklyScheduleViewerProps {
 }
 
 export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) => {
+  const isMobile = useIsMobile();
+  const [selectedDay, setSelectedDay] = useState(0);
+  
   const days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
-  // Generate hours from 06:00 to 23:00
   const hours = Array.from({ length: 18 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
 
   const getActivityColor = (type: string) => {
@@ -62,62 +68,95 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
     }
   };
 
+  const handlePrevDay = () => {
+    setSelectedDay((prev) => (prev > 0 ? prev - 1 : 6));
+  };
+
+  const handleNextDay = () => {
+    setSelectedDay((prev) => (prev < 6 ? prev + 1 : 0));
+  };
+
+  const renderDayView = (dayIndex: number) => (
+    <div className="min-w-[120px]">
+      <div className="font-bold mb-2 text-center bg-gray-50 p-2 rounded">{days[dayIndex]}</div>
+      <div className="relative h-[900px] border-r border-gray-100">
+        {activities
+          .filter((activity) => activity.day_of_week === dayIndex)
+          .map((activity, activityIndex) => {
+            const startHour = parseInt(activity.start_time.split(':')[0]);
+            const startMinute = parseInt(activity.start_time.split(':')[1]);
+            const endHour = parseInt(activity.end_time.split(':')[0]);
+            const endMinute = parseInt(activity.end_time.split(':')[1]);
+            
+            const top = ((startHour - 6) * 60 + startMinute) * (50 / 60);
+            const height = ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) * (50 / 60);
+            
+            return (
+              <div
+                key={activityIndex}
+                className={`${getActivityColor(activity.activity_type)} absolute w-[95%] p-2 rounded-md border text-sm overflow-hidden transition-all hover:shadow-md`}
+                style={{
+                  top: `${top}px`,
+                  height: `${height}px`,
+                  minHeight: '24px'
+                }}
+              >
+                <div className="flex items-center gap-1 font-medium">
+                  <span>{getActivityIcon(activity.activity_type)}</span>
+                  <span className="truncate">{activity.title}</span>
+                </div>
+                <div className="text-xs text-gray-600 mt-0.5">
+                  {activity.start_time} - {activity.end_time}
+                </div>
+              </div>
+            );
+          })}
+      </div>
+    </div>
+  );
+
   return (
     <Card className="p-4 overflow-x-auto">
       <h3 className="text-xl font-bold mb-4 text-right">תצוגת מערכת שבועית</h3>
-      <div className="flex">
-        {/* Time grid */}
-        <div className="w-16 flex-shrink-0">
-          {hours.map((hour) => (
-            <div key={hour} className="h-20 border-b border-gray-200 text-sm text-gray-500 text-center">
-              {hour}
+      
+      {isMobile ? (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-4">
+            <Button variant="outline" size="icon" onClick={handlePrevDay}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <h4 className="text-lg font-semibold">{days[selectedDay]}</h4>
+            <Button variant="outline" size="icon" onClick={handleNextDay}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="flex">
+            <div className="w-16 flex-shrink-0">
+              {hours.map((hour) => (
+                <div key={hour} className="h-20 border-b border-gray-200 text-sm text-gray-500 text-center">
+                  {hour}
+                </div>
+              ))}
             </div>
-          ))}
+            {renderDayView(selectedDay)}
+          </div>
         </div>
-        
-        {/* Days grid */}
-        <div className="flex-1 grid grid-cols-7 gap-1">
-          {days.map((day, dayIndex) => (
-            <div key={day} className="min-w-[120px]">
-              <div className="font-bold mb-2 text-center bg-gray-50 p-2 rounded">{day}</div>
-              <div className="relative h-[900px] border-r border-gray-100"> {/* Adjusted height for 18 hours * 50px */}
-                {activities
-                  .filter((activity) => activity.day_of_week === dayIndex)
-                  .map((activity, activityIndex) => {
-                    const startHour = parseInt(activity.start_time.split(':')[0]);
-                    const startMinute = parseInt(activity.start_time.split(':')[1]);
-                    const endHour = parseInt(activity.end_time.split(':')[0]);
-                    const endMinute = parseInt(activity.end_time.split(':')[1]);
-                    
-                    // Adjust the position calculation to account for the 6am start
-                    const top = ((startHour - 6) * 60 + startMinute) * (50 / 60);
-                    const height = ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) * (50 / 60);
-                    
-                    return (
-                      <div
-                        key={activityIndex}
-                        className={`${getActivityColor(activity.activity_type)} absolute w-[95%] p-2 rounded-md border text-sm overflow-hidden transition-all hover:shadow-md`}
-                        style={{
-                          top: `${top}px`,
-                          height: `${height}px`,
-                          minHeight: '24px'
-                        }}
-                      >
-                        <div className="flex items-center gap-1 font-medium">
-                          <span>{getActivityIcon(activity.activity_type)}</span>
-                          <span className="truncate">{activity.title}</span>
-                        </div>
-                        <div className="text-xs text-gray-600 mt-0.5">
-                          {activity.start_time} - {activity.end_time}
-                        </div>
-                      </div>
-                    );
-                  })}
+      ) : (
+        <div className="flex">
+          <div className="w-16 flex-shrink-0">
+            {hours.map((hour) => (
+              <div key={hour} className="h-20 border-b border-gray-200 text-sm text-gray-500 text-center">
+                {hour}
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          
+          <div className="flex-1 grid grid-cols-7 gap-1">
+            {days.map((day, dayIndex) => renderDayView(dayIndex))}
+          </div>
         </div>
-      </div>
+      )}
     </Card>
   );
 };
