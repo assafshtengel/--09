@@ -205,28 +205,36 @@ export const GameSummary = ({
   };
 
   return (
-    <ScrollArea className="h-[600px]">
-      <div className="space-y-6 p-4 bg-background">
-        <div id="game-summary-content">
+    <ScrollArea className="h-[80vh] md:h-[600px]">
+      <div className="space-y-4 p-2 md:p-4 bg-background">
+        <div id="game-summary-content" className="space-y-4">
           <SummaryHeader gamePhase={gamePhase} matchId={matchId} />
           
-          <GoalsAchievement actions={actions} actionLogs={actionLogs} />
+          <div className="mt-4">
+            <GoalsAchievement actions={actions} actionLogs={actionLogs} />
+          </div>
 
           {gamePhase === "ended" && (
-            <QuestionsSection
-              answers={answers}
-              onAnswerChange={handleAnswerChange}
-            />
+            <div className="mt-6">
+              <QuestionsSection
+                answers={answers}
+                onAnswerChange={handleAnswerChange}
+              />
+            </div>
           )}
 
           {gamePhase === "ended" && (
-            <PerformanceTable
-              ratings={performanceRatings}
-              onRatingChange={handlePerformanceRating}
-            />
+            <div className="mt-6">
+              <PerformanceTable
+                ratings={performanceRatings}
+                onRatingChange={handlePerformanceRating}
+              />
+            </div>
           )}
 
-          <NotesSection notes={generalNotes} />
+          <div className="mt-6">
+            <NotesSection notes={generalNotes} />
+          </div>
 
           <div className="mt-6">
             <GameStats actions={actions} actionLogs={actionLogs} />
@@ -237,11 +245,15 @@ export const GameSummary = ({
           </div>
 
           <div className="p-4 border rounded-lg bg-primary/10 mt-6">
-            <h3 className="text-xl font-semibold text-right mb-2">ציון</h3>
-            <p className="text-3xl font-bold text-center">{calculateScore(actionLogs)}</p>
+            <h3 className="text-lg md:text-xl font-semibold text-right mb-2">ציון</h3>
+            <p className="text-2xl md:text-3xl font-bold text-center">
+              {calculateScore(actionLogs)}
+            </p>
           </div>
 
-          <ActionsLogSection actions={actions} actionLogs={actionLogs} />
+          <div className="mt-6">
+            <ActionsLogSection actions={actions} actionLogs={actionLogs} />
+          </div>
         </div>
 
         <SummaryActions

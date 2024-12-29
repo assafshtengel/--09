@@ -1,5 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Action } from "@/components/ActionSelector";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ActionLog {
   actionId: string;
@@ -15,32 +16,36 @@ interface ActionsLogSectionProps {
 
 export const ActionsLogSection = ({ actions, actionLogs }: ActionsLogSectionProps) => {
   return (
-    <div className="space-y-4 mt-6">
-      <h3 className="text-xl font-semibold text-right">פעולות</h3>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="text-right">דקה</TableHead>
-            <TableHead className="text-right">פעולה</TableHead>
-            <TableHead className="text-right">תוצאה</TableHead>
-            <TableHead className="text-right">הערה</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {actionLogs.map((log, index) => (
-            <TableRow key={index}>
-              <TableCell>{log.minute}'</TableCell>
-              <TableCell className="text-right">
-                {actions.find(a => a.id === log.actionId)?.name}
-              </TableCell>
-              <TableCell>
-                {log.result === "success" ? "✅" : "❌"}
-              </TableCell>
-              <TableCell className="text-right">{log.note || "-"}</TableCell>
+    <div className="space-y-2">
+      <h3 className="text-lg md:text-xl font-semibold text-right">פעולות</h3>
+      <ScrollArea className="h-[300px] w-full rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-right whitespace-nowrap px-2 md:px-4">דקה</TableHead>
+              <TableHead className="text-right whitespace-nowrap px-2 md:px-4">פעולה</TableHead>
+              <TableHead className="text-right whitespace-nowrap px-2 md:px-4">תוצאה</TableHead>
+              <TableHead className="text-right hidden md:table-cell">הערה</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {actionLogs.map((log, index) => (
+              <TableRow key={index}>
+                <TableCell className="px-2 md:px-4">{log.minute}'</TableCell>
+                <TableCell className="text-right px-2 md:px-4 text-sm md:text-base">
+                  {actions.find(a => a.id === log.actionId)?.name}
+                </TableCell>
+                <TableCell className="px-2 md:px-4">
+                  {log.result === "success" ? "✅" : "❌"}
+                </TableCell>
+                <TableCell className="text-right hidden md:table-cell">
+                  {log.note || "-"}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollArea>
     </div>
   );
 };
