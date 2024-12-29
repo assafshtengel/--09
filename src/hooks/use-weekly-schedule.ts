@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfWeek } from "date-fns";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export const useWeeklySchedule = () => {
   const [isLoading, setIsLoading] = useState(false);
