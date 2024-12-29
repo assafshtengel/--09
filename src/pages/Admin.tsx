@@ -30,6 +30,13 @@ interface LearningResource {
   url: string;
 }
 
+interface NewLearningResource {
+  title: string;
+  description: string;
+  type: 'video' | 'article';
+  url: string;
+}
+
 const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -38,7 +45,7 @@ const Admin = () => {
   const [notifications, setNotifications] = useState([]);
   const [usageStats, setUsageStats] = useState([]);
   const [resources, setResources] = useState<LearningResource[]>([]);
-  const [newResource, setNewResource] = useState<Partial<LearningResource>>({
+  const [newResource, setNewResource] = useState<NewLearningResource>({
     title: '',
     description: '',
     type: 'video',
@@ -127,17 +134,32 @@ const Admin = () => {
   }, [isAdmin]);
 
   const handleAddResource = async () => {
+    // Validate all required fields are present
+    if (!newResource.title || !newResource.description || !newResource.type || !newResource.url) {
+      toast({
+        title: "שגיאה",
+        description: "נא למלא את כל השדות",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from("learning_resources")
-        .insert([newResource])
+        .insert(newResource)
         .select()
         .single();
 
       if (error) throw error;
 
       setResources([data, ...resources]);
-      setNewResource({ title: '', description: '', type: 'video', url: '' });
+      setNewResource({
+        title: '',
+        description: '',
+        type: 'video',
+        url: ''
+      });
       
       toast({
         title: "המשאב נוסף בהצלחה",
