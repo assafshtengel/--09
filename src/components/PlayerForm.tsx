@@ -7,6 +7,13 @@ import { ProfilePictureUpload } from "./player-form/ProfilePictureUpload";
 import { ProfileUpdateService } from "./player-form/ProfileUpdateService";
 import type { PlayerFormData, PlayerFormProps } from "./player-form/types";
 import { useNavigate } from "react-router-dom";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
   const { toast } = useToast();
@@ -19,14 +26,28 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
     club: "",
     teamYear: "",
     dateOfBirth: "",
+    ageCategory: "",
   });
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
 
+  const ageCategories = [
+    "טרום א'",
+    "טרום ב'",
+    "ילדים א'",
+    "ילדים ב'",
+    "ילדים ג'",
+    "נערים א'",
+    "נערים ב'",
+    "נערים ג'",
+    "נוער",
+    "בוגרים",
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.fullName || !formData.phoneNumber || !formData.club || !formData.teamYear || !formData.dateOfBirth || selectedRoles.length === 0) {
+    if (!formData.fullName || !formData.phoneNumber || !formData.club || !formData.teamYear || !formData.dateOfBirth || !formData.ageCategory || selectedRoles.length === 0) {
       toast({
         title: "שגיאה",
         description: "אנא מלא את כל השדות",
@@ -48,13 +69,10 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
         description: "הפרטים נשמרו בהצלחה",
       });
 
-      // Wait a moment before navigating
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Navigate to dashboard
       navigate("/dashboard");
       
-      // Call onSubmit callback if provided
       if (onSubmit) {
         await onSubmit();
       }
@@ -123,6 +141,25 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
           onChange={(value) => setFormData({ ...formData, club: value })}
           placeholder="הכנס את שם המועדון שלך"
         />
+
+        <div className="space-y-2">
+          <label className="block text-right">קטגוריית גיל</label>
+          <Select
+            value={formData.ageCategory}
+            onValueChange={(value) => setFormData({ ...formData, ageCategory: value })}
+          >
+            <SelectTrigger className="w-full text-right">
+              <SelectValue placeholder="בחר קטגוריית גיל" />
+            </SelectTrigger>
+            <SelectContent>
+              {ageCategories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         <FormField
           id="teamYear"
