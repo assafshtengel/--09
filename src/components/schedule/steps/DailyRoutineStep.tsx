@@ -56,6 +56,16 @@ export const DailyRoutineStep = ({ onAddActivity }: DailyRoutineStepProps) => {
         priority: 1
       });
 
+      // Sleep time
+      onAddActivity({
+        day_of_week: day,
+        start_time: formatTimeForDatabase(bedTime),
+        end_time: "23:59",
+        activity_type: "wake_up",
+        title: "זמן שינה",
+        priority: 1
+      });
+
       // Breakfast
       const breakfastEndTime = calculateEndTime(breakfastTime, 30);
       onAddActivity({
@@ -92,7 +102,7 @@ export const DailyRoutineStep = ({ onAddActivity }: DailyRoutineStepProps) => {
       // Free time blocks
       const freeTimeBlocks = [
         { start: "16:00", end: "18:00", title: "זמן חופשי" },
-        { start: dinnerTime, end: bedTime, title: "זמן חופשי לפני השינה" }
+        { start: dinnerEndTime, end: bedTime, title: "זמן חופשי לפני השינה" }
       ];
 
       freeTimeBlocks.forEach((block, index) => {
