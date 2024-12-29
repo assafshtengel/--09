@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryDashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trophy, Timer, FileText, Calendar, Apple, Activity } from "lucide-react";
+import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
+import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
+import { StatsOverview } from "@/components/dashboard/StatsOverview";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
-  const [showTrainingSummary, setShowTrainingSummary] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -53,10 +54,6 @@ const Dashboard = () => {
     return null;
   }
 
-  if (showTrainingSummary) {
-    return <TrainingSummaryDashboard />;
-  }
-
   const dashboardOptions = [
     {
       title: "יעדי טרום משחק",
@@ -74,36 +71,31 @@ const Dashboard = () => {
       title: "סיכום אימון",
       icon: <FileText className="h-8 w-8 text-primary" />,
       description: "תעד ונתח את האימון שלך",
-      onClick: () => setShowTrainingSummary(true)
+      onClick: () => navigate("/training-summary")
     },
     {
       title: "מערכת שעות שבועית",
       icon: <Calendar className="h-8 w-8 text-primary" />,
       description: "נהל את לוח הזמנים השבועי שלך",
       onClick: () => navigate("/schedule")
-    },
-    {
-      title: "תזונה ושינה",
-      icon: <Apple className="h-8 w-8 text-primary" />,
-      description: "עקוב אחר התזונה ושעות השינה שלך",
-      onClick: () => navigate("/daily-routine")
-    },
-    {
-      title: "סטטיסטיקות וביצועים",
-      icon: <Activity className="h-8 w-8 text-primary" />,
-      description: "צפה בנתוני הביצועים והסטטיסטיקות שלך",
-      onClick: () => navigate("/statistics")
     }
   ];
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="text-right mb-8">
+    <div className="container mx-auto p-4 space-y-6">
+      <div className="text-right">
         <h1 className="text-3xl font-bold mb-2">ברוך הבא, {profile.full_name}</h1>
         <p className="text-muted-foreground">בחר באפשרות כדי להתחיל</p>
       </div>
+
+      <StatsOverview />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <PerformanceChart />
+        <GoalsProgress />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {dashboardOptions.map((option, index) => (
           <Card 
             key={index}
