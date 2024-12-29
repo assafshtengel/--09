@@ -23,6 +23,11 @@ export const SchoolHoursStep = ({ onAddActivity }: SchoolHoursStepProps) => {
     { id: 5, label: "שישי" },
   ];
 
+  const formatTimeForDatabase = (timeString: string): string => {
+    // Ensure the time is in HH:mm format
+    return timeString.split(':').slice(0, 2).join(':');
+  };
+
   const handleAddSchoolHours = () => {
     if (selectedDays.length === 0) {
       toast.error("יש לבחור לפחות יום אחד");
@@ -36,11 +41,12 @@ export const SchoolHoursStep = ({ onAddActivity }: SchoolHoursStepProps) => {
       const wakeUpTime = new Date(`2000-01-01T${startTime}`);
       wakeUpTime.setHours(wakeUpTime.getHours() - 1);
       wakeUpTime.setMinutes(wakeUpTime.getMinutes() - 30);
+      const formattedWakeUpTime = formatTimeForDatabase(wakeUpTime.toTimeString());
       
       activities.push({
         day_of_week: day,
-        start_time: wakeUpTime.toTimeString().slice(0, 5),
-        end_time: wakeUpTime.toTimeString().slice(0, 5),
+        start_time: formattedWakeUpTime,
+        end_time: formattedWakeUpTime,
         activity_type: "wake_up",
         title: "השכמה",
         priority: 1
@@ -49,11 +55,12 @@ export const SchoolHoursStep = ({ onAddActivity }: SchoolHoursStepProps) => {
       // Add departure time 30 minutes before school
       const departureTime = new Date(`2000-01-01T${startTime}`);
       departureTime.setMinutes(departureTime.getMinutes() - 30);
+      const formattedDepartureTime = formatTimeForDatabase(departureTime.toTimeString());
       
       activities.push({
         day_of_week: day,
-        start_time: departureTime.toTimeString().slice(0, 5),
-        end_time: departureTime.toTimeString().slice(0, 5),
+        start_time: formattedDepartureTime,
+        end_time: formattedDepartureTime,
         activity_type: "departure",
         title: "יציאה לבית ספר",
         priority: 2
@@ -62,8 +69,8 @@ export const SchoolHoursStep = ({ onAddActivity }: SchoolHoursStepProps) => {
       // Add school hours
       activities.push({
         day_of_week: day,
-        start_time: startTime,
-        end_time: endTime,
+        start_time: formatTimeForDatabase(startTime),
+        end_time: formatTimeForDatabase(endTime),
         activity_type: "school",
         title: "בית ספר",
         priority: 3
@@ -73,11 +80,15 @@ export const SchoolHoursStep = ({ onAddActivity }: SchoolHoursStepProps) => {
       const lunchTime = new Date(`2000-01-01T${startTime}`);
       const endTimeDate = new Date(`2000-01-01T${endTime}`);
       const middleTime = new Date((lunchTime.getTime() + endTimeDate.getTime()) / 2);
+      const formattedLunchTime = formatTimeForDatabase(middleTime.toTimeString());
+      const formattedLunchEndTime = formatTimeForDatabase(
+        new Date(middleTime.getTime() + 30 * 60000).toTimeString()
+      );
       
       activities.push({
         day_of_week: day,
-        start_time: middleTime.toTimeString().slice(0, 5),
-        end_time: new Date(middleTime.getTime() + 30 * 60000).toTimeString().slice(0, 5),
+        start_time: formattedLunchTime,
+        end_time: formattedLunchEndTime,
         activity_type: "lunch",
         title: "ארוחת צהריים",
         priority: 4

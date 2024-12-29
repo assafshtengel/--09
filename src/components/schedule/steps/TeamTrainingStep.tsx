@@ -26,6 +26,11 @@ export const TeamTrainingStep = ({ onAddActivity }: TeamTrainingStepProps) => {
     { id: 6, label: "שבת" },
   ];
 
+  const formatTimeForDatabase = (timeString: string): string => {
+    // Ensure the time is in HH:mm format
+    return timeString.split(':').slice(0, 2).join(':');
+  };
+
   const handleAddTeamActivity = () => {
     if (selectedDays.length === 0) {
       toast.error("יש לבחור לפחות יום אחד");
@@ -39,19 +44,20 @@ export const TeamTrainingStep = ({ onAddActivity }: TeamTrainingStepProps) => {
       const lunchTime = new Date(`2000-01-01T${startTime}`);
       lunchTime.setHours(lunchTime.getHours() - 1);
       lunchTime.setMinutes(lunchTime.getMinutes() - 40);
+      const formattedLunchTime = formatTimeForDatabase(lunchTime.toTimeString());
       
       activities.push({
         day_of_week: day,
-        start_time: lunchTime.toTimeString().slice(0, 5),
-        end_time: lunchTime.toTimeString().slice(0, 5),
+        start_time: formattedLunchTime,
+        end_time: formattedLunchTime,
         activity_type: "lunch",
         title: "תזכורת ארוחת צהריים",
       });
 
       activities.push({
         day_of_week: day,
-        start_time: startTime,
-        end_time: endTime,
+        start_time: formatTimeForDatabase(startTime),
+        end_time: formatTimeForDatabase(endTime),
         activity_type: activityType,
         title: activityType === "team_training" ? "אימון קבוצה" : "משחק קבוצה",
       });
