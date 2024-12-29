@@ -159,7 +159,7 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
         </div>
       </div>
       
-      <div id="weekly-schedule" className="print:p-0">
+      <div id="weekly-schedule" className="print:p-4">
         {isMobile ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between px-4 print:hidden">
@@ -184,17 +184,59 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
             </div>
           </div>
         ) : (
-          <div className="flex print:scale-90 print:transform print:origin-top-right">
-            <div className="w-16 flex-shrink-0">
+          <div className="flex print:scale-100 print:transform-none">
+            <div className="w-16 flex-shrink-0 print:w-12">
               {hours.map((hour) => (
-                <div key={hour} className="h-20 border-b border-gray-200 text-sm text-gray-500 text-center">
+                <div key={hour} className="h-20 border-b border-gray-200 text-sm text-gray-500 text-center print:h-16 print:text-xs">
                   {hour}
                 </div>
               ))}
             </div>
             
             <div className="flex-1 grid grid-cols-7 gap-1">
-              {days.map((day, dayIndex) => renderDayView(dayIndex))}
+              {days.map((day, dayIndex) => (
+                <div key={dayIndex} className="min-w-[120px] print:min-w-[100px]">
+                  <div className="font-bold mb-2 text-center bg-gray-50 p-2 rounded print:text-sm print:p-1">
+                    {day}
+                  </div>
+                  <div className="relative h-[900px] border-r border-gray-100 print:h-[720px]">
+                    {activities
+                      .filter((activity) => activity.day_of_week === dayIndex)
+                      .map((activity, activityIndex) => {
+                        const startTime = formatTime(activity.start_time);
+                        const endTime = formatTime(activity.end_time);
+                        
+                        const startHour = parseInt(startTime.split(':')[0]);
+                        const startMinute = parseInt(startTime.split(':')[1]);
+                        const endHour = parseInt(endTime.split(':')[0]);
+                        const endMinute = parseInt(endTime.split(':')[1]);
+                        
+                        const top = ((startHour - 6) * 60 + startMinute) * (40 / 60);
+                        const height = ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) * (40 / 60);
+                        
+                        return (
+                          <div
+                            key={activityIndex}
+                            className={`${getActivityColor(activity.activity_type)} absolute w-[95%] p-2 rounded-md border text-sm overflow-hidden transition-all hover:shadow-md print:text-xs print:p-1`}
+                            style={{
+                              top: `${top}px`,
+                              height: `${height}px`,
+                              minHeight: '20px'
+                            }}
+                          >
+                            <div className="flex items-center gap-1 font-medium print:text-xs">
+                              <span>{getActivityIcon(activity.activity_type)}</span>
+                              <span className="truncate">{activity.title}</span>
+                            </div>
+                            <div className="text-xs text-gray-600 mt-0.5 print:text-[10px]">
+                              {startTime} - {endTime}
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -209,10 +251,34 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
           body {
             print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
+            background: white;
           }
           .print\\:hidden {
             display: none !important;
           }
+          #weekly-schedule {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding: 1cm;
+            background: white;
+            box-shadow: none;
+          }
+          .Card {
+            box-shadow: none;
+            border: none;
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .bg-blue-100 { background-color: #dbeafe !important; }
+          .bg-green-100 { background-color: #dcfce7 !important; }
+          .bg-red-100 { background-color: #fee2e2 !important; }
+          .bg-purple-100 { background-color: #f3e8ff !important; }
+          .bg-yellow-100 { background-color: #fef9c3 !important; }
+          .bg-gray-100 { background-color: #f3f4f6 !important; }
+          .bg-orange-100 { background-color: #ffedd5 !important; }
         }
       `}</style>
     </Card>
