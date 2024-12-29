@@ -349,6 +349,7 @@ export type Database = {
           actions: Json
           ai_insights: string[] | null
           created_at: string
+          havaya: string | null
           id: string
           match_date: string
           match_time: string | null
@@ -362,6 +363,7 @@ export type Database = {
           actions?: Json
           ai_insights?: string[] | null
           created_at?: string
+          havaya?: string | null
           id?: string
           match_date: string
           match_time?: string | null
@@ -375,6 +377,7 @@ export type Database = {
           actions?: Json
           ai_insights?: string[] | null
           created_at?: string
+          havaya?: string | null
           id?: string
           match_date?: string
           match_time?: string | null

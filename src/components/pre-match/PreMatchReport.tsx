@@ -5,6 +5,7 @@ import { MatchDetailsForm } from "./MatchDetailsForm";
 import { PreMatchSummary } from "./PreMatchSummary";
 import { PreMatchDashboard } from "./PreMatchDashboard";
 import { SocialShareGoals } from "./SocialShareGoals";
+import { HavayaSelector } from "./HavayaSelector";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,13 +18,18 @@ interface MatchDetails {
 }
 
 export const PreMatchReport = () => {
-  const [currentStep, setCurrentStep] = useState<"dashboard" | "details" | "actions" | "questions" | "summary">("dashboard");
-  const [matchDetails, setMatchDetails] = useState<MatchDetails>({ 
-    date: new Date().toISOString().split('T')[0],
-    position: "forward" // Set a default position
+  const [currentStep, setCurrentStep] = useState<
+    "dashboard" | "details" | "actions" | "questions" | "summary"
+  >("dashboard");
+  const [matchDetails, setMatchDetails] = useState<MatchDetails>({
+    date: new Date().toISOString().split("T")[0],
+    position: "forward",
   });
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
-  const [questionsAnswers, setQuestionsAnswers] = useState<Record<string, string>>({});
+  const [questionsAnswers, setQuestionsAnswers] = useState<Record<string, string>>(
+    {}
+  );
+  const [havaya, setHavaya] = useState("");
   const { toast } = useToast();
 
   const handleMatchDetailsSubmit = (details: MatchDetails) => {
@@ -55,7 +61,7 @@ export const PreMatchReport = () => {
       )}
 
       {currentStep === "details" && (
-        <MatchDetailsForm 
+        <MatchDetailsForm
           onSubmit={handleMatchDetailsSubmit}
           initialData={matchDetails}
         />
@@ -63,10 +69,13 @@ export const PreMatchReport = () => {
 
       {currentStep === "actions" && (
         <>
-          <ActionSelector
-            position={matchDetails.position || "forward"}
-            onSubmit={handleActionsSubmit}
-          />
+          <HavayaSelector value={havaya} onChange={setHavaya} />
+          <div className="mt-6">
+            <ActionSelector
+              position={matchDetails.position || "forward"}
+              onSubmit={handleActionsSubmit}
+            />
+          </div>
           <SocialShareGoals goals={selectedActions} />
         </>
       )}
@@ -80,6 +89,7 @@ export const PreMatchReport = () => {
           matchDetails={matchDetails}
           actions={selectedActions}
           answers={questionsAnswers}
+          havaya={havaya}
           aiInsights={[]}
           onFinish={handleFinalSubmit}
         />
