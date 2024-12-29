@@ -12,6 +12,7 @@ import Player from "./pages/Player";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
+import MentalLearning from "./pages/MentalLearning";
 import { PreMatchReport } from "@/components/pre-match/PreMatchReport";
 import { WeeklyScheduleWizard } from "@/components/schedule/WeeklyScheduleWizard";
 import { DailyRoutineForm } from "@/components/daily-routine/DailyRoutineForm";
@@ -102,6 +103,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/mental-learning"
+                element={
+                  <ProtectedRoute>
+                    <MentalLearning />
                   </ProtectedRoute>
                 }
               />
