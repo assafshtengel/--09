@@ -332,6 +332,147 @@ export type Database = {
           },
         ]
       }
+      player_achievements: {
+        Row: {
+          achievement_date: string | null
+          achievement_type: string
+          created_at: string
+          description: string | null
+          id: string
+          player_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          achievement_date?: string | null
+          achievement_type: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          player_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          achievement_date?: string | null
+          achievement_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          player_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_achievements_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_media: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          media_type: string
+          player_id: string
+          thumbnail_url: string | null
+          title: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          media_type: string
+          player_id: string
+          thumbnail_url?: string | null
+          title: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          media_type?: string
+          player_id?: string
+          thumbnail_url?: string | null
+          title?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_media_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_stats: {
+        Row: {
+          assists: number | null
+          created_at: string
+          defensive_actions: number | null
+          endurance_score: number | null
+          goals: number | null
+          id: string
+          jump_height: number | null
+          minutes_played: number | null
+          pass_success_rate: number | null
+          player_id: string
+          season: string
+          shots_on_target: number | null
+          speed_record: number | null
+          updated_at: string
+        }
+        Insert: {
+          assists?: number | null
+          created_at?: string
+          defensive_actions?: number | null
+          endurance_score?: number | null
+          goals?: number | null
+          id?: string
+          jump_height?: number | null
+          minutes_played?: number | null
+          pass_success_rate?: number | null
+          player_id: string
+          season: string
+          shots_on_target?: number | null
+          speed_record?: number | null
+          updated_at?: string
+        }
+        Update: {
+          assists?: number | null
+          created_at?: string
+          defensive_actions?: number | null
+          endurance_score?: number | null
+          goals?: number | null
+          id?: string
+          jump_height?: number | null
+          minutes_played?: number | null
+          pass_success_rate?: number | null
+          player_id?: string
+          season?: string
+          shots_on_target?: number | null
+          speed_record?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_stats_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_game_feedback: {
         Row: {
           created_at: string
@@ -420,6 +561,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "pre_match_reports_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          player_id: string
+          review_date: string
+          review_text: string
+          reviewer_name: string
+          reviewer_role: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          player_id: string
+          review_date: string
+          review_text: string
+          reviewer_name: string
+          reviewer_role: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          player_id?: string
+          review_date?: string
+          review_text?: string
+          reviewer_name?: string
+          reviewer_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_reviews_player_id_fkey"
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "profiles"

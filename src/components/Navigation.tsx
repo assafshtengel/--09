@@ -60,6 +60,9 @@ export const Navigation = () => {
           <Button variant="ghost" onClick={() => navigate("/profile")}>
             פרופיל
           </Button>
+          <Button variant="ghost" onClick={() => navigate("/portfolio")}>
+            תיק שחקן
+          </Button>
           <Button variant="ghost" onClick={() => navigate("/dashboard")}>
             לוח בקרה
           </Button>

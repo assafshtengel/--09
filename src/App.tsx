@@ -19,6 +19,7 @@ import { DailyRoutineForm } from "@/components/daily-routine/DailyRoutineForm";
 import { GameSelection } from "@/components/game/GameSelection";
 import { GameTracker } from "@/components/GameTracker";
 import NotificationsManager from "./pages/NotificationsManager";
+import PlayerPortfolio from "./pages/PlayerPortfolio";
 
 const queryClient = new QueryClient();
 
@@ -159,6 +160,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <NotificationsManager />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/portfolio"
+                element={
+                  <ProtectedRoute>
+                    <PlayerPortfolio />
                   </ProtectedRoute>
                 }
               />
