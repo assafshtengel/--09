@@ -8,6 +8,7 @@
   direction: rtl;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
 }
 
 html, body {
@@ -46,7 +47,7 @@ html, body {
   }
 
   body {
-    @apply bg-background text-foreground font-heebo;
+    @apply bg-background text-foreground font-heebo antialiased;
   }
 
   /* Mobile optimizations */
@@ -58,5 +59,29 @@ html, body {
   /* Improve touch targets */
   button, a {
     @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Prevent text selection during touch interactions */
+  * {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Enable text selection in inputs and textareas */
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Smooth scrolling */
+  * {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Better tap highlights */
+  a:active, button:active {
+    @apply bg-primary/5;
   }
 }
