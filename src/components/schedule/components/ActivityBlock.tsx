@@ -17,13 +17,13 @@ interface ActivityBlockProps {
 export const ActivityBlock = ({ activity, style, colorClass, icon, onDelete }: ActivityBlockProps) => {
   return (
     <div
-      className={`${colorClass} absolute w-[95%] p-2 rounded-md border text-sm overflow-hidden transition-all hover:shadow-md group`}
+      className={`${colorClass} absolute w-[95%] p-2 rounded-md border text-sm overflow-hidden transition-all hover:shadow-md group print:hover:shadow-none`}
       style={style}
     >
       <Button
         variant="ghost"
         size="icon"
-        className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 h-6 w-6"
+        className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 h-6 w-6 print:hidden"
         onClick={(e) => {
           e.stopPropagation();
           onDelete();
