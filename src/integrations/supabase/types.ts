@@ -203,6 +203,54 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          recipient_id: string | null
+          sender_id: string | null
+          type: Database["public"]["Enums"]["message_type"]
+          whatsapp_message_id: string | null
+          whatsapp_status: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          recipient_id?: string | null
+          sender_id?: string | null
+          type: Database["public"]["Enums"]["message_type"]
+          whatsapp_message_id?: string | null
+          whatsapp_status?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          recipient_id?: string | null
+          sender_id?: string | null
+          type?: Database["public"]["Enums"]["message_type"]
+          whatsapp_message_id?: string | null
+          whatsapp_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           condition: Json | null
@@ -532,6 +580,7 @@ export type Database = {
         | "lunch"
         | "wake_up"
         | "departure"
+      message_type: "incoming" | "outgoing"
       notification_type: "pre_match" | "weekly" | "mental_tip" | "custom"
       report_status: "draft" | "completed"
     }
