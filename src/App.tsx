@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import Player from "./pages/Player";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
+import Admin from "./pages/Admin";
 import { PreMatchReport } from "@/components/pre-match/PreMatchReport";
 import { WeeklyScheduleWizard } from "@/components/schedule/WeeklyScheduleWizard";
 import { DailyRoutineForm } from "@/components/daily-routine/DailyRoutineForm";
@@ -69,6 +70,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Index />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <Admin />
                   </ProtectedRoute>
                 }
               />

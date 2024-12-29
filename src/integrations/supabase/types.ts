@@ -405,6 +405,7 @@ export type Database = {
           id: string
           phone_number: string | null
           profile_picture_url: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
           roles: string[] | null
           team_year: number | null
           updated_at: string
@@ -419,6 +420,7 @@ export type Database = {
           id: string
           phone_number?: string | null
           profile_picture_url?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
           roles?: string[] | null
           team_year?: number | null
           updated_at?: string
@@ -433,6 +435,7 @@ export type Database = {
           id?: string
           phone_number?: string | null
           profile_picture_url?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
           roles?: string[] | null
           team_year?: number | null
           updated_at?: string
@@ -584,6 +587,7 @@ export type Database = {
       message_type: "incoming" | "outgoing"
       notification_type: "pre_match" | "weekly" | "mental_tip" | "custom"
       report_status: "draft" | "completed"
+      user_role: "admin" | "player" | "coach" | "analyst"
     }
     CompositeTypes: {
       [_ in never]: never

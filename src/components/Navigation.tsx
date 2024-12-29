@@ -2,10 +2,29 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
 
 export const Navigation = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", session.user.id)
+        .single();
+
+      setIsAdmin(profile?.role === "admin");
+    };
+
+    checkAdminStatus();
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -44,6 +63,11 @@ export const Navigation = () => {
           <Button variant="ghost" onClick={() => navigate("/dashboard")}>
             לוח בקרה
           </Button>
+          {isAdmin && (
+            <Button variant="ghost" onClick={() => navigate("/admin")}>
+              ניהול
+            </Button>
+          )}
         </div>
       </div>
     </nav>
