@@ -1,6 +1,6 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import twilio from 'https://esm.sh/twilio@4.22.0';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
+import { Twilio } from "npm:twilio@4.19.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,7 +36,7 @@ serve(async (req) => {
       throw new Error('Missing Twilio credentials');
     }
 
-    const client = twilio(accountSid, authToken);
+    const client = new Twilio(accountSid, authToken);
 
     // If recipientId is provided, get the recipient's phone number
     let toNumber;

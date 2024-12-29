@@ -1,6 +1,6 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import twilio from 'https://esm.sh/twilio@4.22.0';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
+import { Twilio } from "npm:twilio@4.19.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -35,7 +35,7 @@ serve(async (req) => {
       paramObj[key] = value.toString();
     });
 
-    const twilioClient = twilio();
+    const twilioClient = new Twilio(undefined, twilioAuthToken);
     const isValid = twilioClient.validateRequest(
       twilioAuthToken,
       signature ?? '',
