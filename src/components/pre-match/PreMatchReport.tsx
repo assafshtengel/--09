@@ -13,11 +13,15 @@ interface MatchDetails {
   time?: string;
   opponent?: string;
   location?: string;
+  position?: string;
 }
 
 export const PreMatchReport = () => {
   const [currentStep, setCurrentStep] = useState<"dashboard" | "details" | "actions" | "questions" | "summary">("dashboard");
-  const [matchDetails, setMatchDetails] = useState<MatchDetails>({ date: new Date().toISOString().split('T')[0] });
+  const [matchDetails, setMatchDetails] = useState<MatchDetails>({ 
+    date: new Date().toISOString().split('T')[0],
+    position: "forward" // Set a default position
+  });
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
   const [questionsAnswers, setQuestionsAnswers] = useState<Record<string, string>>({});
   const { toast } = useToast();
@@ -38,7 +42,6 @@ export const PreMatchReport = () => {
   };
 
   const handleFinalSubmit = async () => {
-    // Logic to handle final submission
     toast({
       title: "הדוח נשלח בהצלחה",
       description: "תודה על השיתוף!",

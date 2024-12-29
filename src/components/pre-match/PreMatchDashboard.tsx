@@ -1,59 +1,18 @@
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { Trophy, Timer, BarChart, FileText, FileChartLine, Activity, Sun } from "lucide-react";
+interface PreMatchDashboardProps {
+  onCreateNew: () => void;
+}
 
-export const PreMatchDashboard = () => {
-  const navigate = useNavigate();
-
-  const buttons = [
-    {
-      id: "pre-match-goals",
-      label: "יעדי טרום משחק",
-      icon: <Trophy className="ml-2" />,
-      onClick: () => navigate("/player/pre-match-report")
-    },
-    {
-      id: "match-tracking",
-      label: "מעקב משחק בזמן אמת",
-      icon: <Timer className="ml-2" />,
-      onClick: () => navigate("/player/match-tracking")
-    },
-    {
-      id: "match-summary",
-      label: "סיכום משחק",
-      icon: <BarChart className="ml-2" />,
-      onClick: () => navigate("/player/match-summary")
-    },
-    {
-      id: "training-summaries",
-      label: "סיכומי אימונים",
-      icon: <Activity className="ml-2" />,
-      onClick: () => navigate("/player/training-summaries")
-    },
-    {
-      id: "daily-routine",
-      label: "תזונה/שינה ושגרה יומית",
-      icon: <Sun className="ml-2" />,
-      onClick: () => navigate("/player/daily-routine")
-    }
-  ];
-
+export const PreMatchDashboard = ({ onCreateNew }: PreMatchDashboardProps) => {
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6 text-right">הכנה למשחק</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {buttons.map((button) => (
-          <Button
-            key={button.id}
-            onClick={button.onClick}
-            className="h-24 text-lg justify-center items-center flex flex-row-reverse"
-            variant="outline"
-          >
-            {button.icon}
-            {button.label}
-          </Button>
-        ))}
-      </div>
+    <div className="p-4 bg-white rounded-lg shadow">
+      <h2 className="text-xl font-bold mb-4">דוח טרום משחק</h2>
+      <p className="mb-4">ברוך הבא לדוח הטרום משחק שלך. כאן תוכל להוסיף פרטים על המשחק הקרוב שלך.</p>
+      <button
+        onClick={onCreateNew}
+        className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+      >
+        צור דוח חדש
+      </button>
     </div>
   );
 };

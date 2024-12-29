@@ -2,19 +2,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
+interface MatchDetails {
+  date: string;
+  time?: string;
+  opponent?: string;
+  location?: string;
+  position?: string;
+}
+
 interface MatchDetailsFormProps {
-  onSubmit: (details: { date: string; time: string; opponent: string }) => void;
-  initialData: { date: string; time: string; opponent: string };
+  onSubmit: (details: MatchDetails) => void;
+  initialData: MatchDetails;
 }
 
 export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProps) => {
   const [date, setDate] = useState(initialData.date);
-  const [time, setTime] = useState(initialData.time);
-  const [opponent, setOpponent] = useState(initialData.opponent);
+  const [time, setTime] = useState(initialData.time || "");
+  const [opponent, setOpponent] = useState(initialData.opponent || "");
+  const [position, setPosition] = useState(initialData.position || "forward");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ date, time, opponent });
+    onSubmit({ date, time, opponent, position });
   };
 
   return (
@@ -50,10 +59,24 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
             type="text"
             value={opponent}
             onChange={(e) => setOpponent(e.target.value)}
-            required
             className="text-right"
             placeholder="שם הקבוצה היריבה"
           />
+        </div>
+
+        <div>
+          <label htmlFor="position" className="block text-right mb-2">עמדה</label>
+          <select
+            id="position"
+            value={position}
+            onChange={(e) => setPosition(e.target.value)}
+            className="w-full p-2 border rounded text-right"
+          >
+            <option value="forward">חלוץ</option>
+            <option value="midfielder">קשר</option>
+            <option value="defender">מגן</option>
+            <option value="goalkeeper">שוער</option>
+          </select>
         </div>
       </div>
 
