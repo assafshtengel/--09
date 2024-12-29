@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Player from "./pages/Player";
+import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import { PreMatchReport } from "@/components/pre-match/PreMatchReport";
 import { WeeklyScheduleWizard } from "@/components/schedule/WeeklyScheduleWizard";
@@ -69,6 +70,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Player />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
                   </ProtectedRoute>
                 }
               />
