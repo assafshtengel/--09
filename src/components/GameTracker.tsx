@@ -344,7 +344,7 @@ export const GameTracker = () => {
               generalNotes={generalNotes}
               substitutions={substitutions}
               onClose={() => setShowSummary(false)}
-              gamePhase={gamePhase}
+              gamePhase={gamePhase === "halftime" || gamePhase === "ended" ? gamePhase : "ended"}
               matchId={matchId}
             />
           </DialogContent>
