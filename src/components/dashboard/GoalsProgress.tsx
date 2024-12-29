@@ -23,7 +23,7 @@ export const GoalsProgress = () => {
       if (preMatchReports?.[0]?.actions) {
         // Ensure we're working with an array and cast it to our Goal type
         const actionsArray = Array.isArray(preMatchReports[0].actions) 
-          ? preMatchReports[0].actions as Goal[]
+          ? (preMatchReports[0].actions as unknown as Goal[])
           : [];
         setGoals(actionsArray);
       }

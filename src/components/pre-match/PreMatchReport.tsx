@@ -8,14 +8,21 @@ import { SocialShareGoals } from "./SocialShareGoals";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface MatchDetails {
+  date: string;
+  time?: string;
+  opponent?: string;
+  location?: string;
+}
+
 export const PreMatchReport = () => {
   const [currentStep, setCurrentStep] = useState<"dashboard" | "details" | "actions" | "questions" | "summary">("dashboard");
-  const [matchDetails, setMatchDetails] = useState<any>({});
+  const [matchDetails, setMatchDetails] = useState<MatchDetails>({ date: new Date().toISOString().split('T')[0] });
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
   const [questionsAnswers, setQuestionsAnswers] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
-  const handleMatchDetailsSubmit = (details: any) => {
+  const handleMatchDetailsSubmit = (details: MatchDetails) => {
     setMatchDetails(details);
     setCurrentStep("actions");
   };
@@ -45,7 +52,10 @@ export const PreMatchReport = () => {
       )}
 
       {currentStep === "details" && (
-        <MatchDetailsForm onSubmit={handleMatchDetailsSubmit} />
+        <MatchDetailsForm 
+          onSubmit={handleMatchDetailsSubmit}
+          initialData={matchDetails}
+        />
       )}
 
       {currentStep === "actions" && (
@@ -65,10 +75,10 @@ export const PreMatchReport = () => {
       {currentStep === "summary" && (
         <PreMatchSummary
           matchDetails={matchDetails}
-          selectedActions={selectedActions}
-          questionsAnswers={questionsAnswers}
-          onSubmit={handleFinalSubmit}
-          onBack={() => setCurrentStep("questions")}
+          actions={selectedActions}
+          answers={questionsAnswers}
+          aiInsights={[]}
+          onFinish={handleFinalSubmit}
         />
       )}
     </div>

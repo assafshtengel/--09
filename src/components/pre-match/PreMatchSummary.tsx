@@ -8,8 +8,8 @@ import type { Action } from "@/components/ActionSelector";
 interface PreMatchSummaryProps {
   matchDetails: {
     date: string;
-    time: string;
-    opponent: string;
+    time?: string;
+    opponent?: string;
   };
   actions: Action[];
   answers: Record<string, string>;
@@ -106,7 +106,7 @@ export const PreMatchSummary = ({
             <h3 className="text-xl font-semibold mb-2">פרטי המשחק</h3>
             <p>תאריך: {matchDetails.date}</p>
             {matchDetails.time && <p>שעה: {matchDetails.time}</p>}
-            <p>יריב: {matchDetails.opponent}</p>
+            {matchDetails.opponent && <p>יריב: {matchDetails.opponent}</p>}
           </div>
 
           <div className="mb-6">
@@ -145,11 +145,11 @@ export const PreMatchSummary = ({
       </div>
 
       <div className="flex justify-end gap-4">
-        <Button onClick={takeScreenshot} variant="outline">
+        <Button onClick={() => takeScreenshot()} variant="outline">
           צלם מסך
         </Button>
         <Button 
-          onClick={sendEmail} 
+          onClick={() => sendEmail()} 
           variant="outline"
           disabled={isSending}
         >
