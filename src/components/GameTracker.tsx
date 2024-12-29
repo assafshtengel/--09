@@ -3,26 +3,22 @@ import { useParams } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Action } from "@/components/ActionSelector";
-import { GameStats } from "./game/GameStats";
-import { GameSummary } from "./game/GameSummary";
 import { GamePreview } from "./game/GamePreview";
-import { GamePhaseManager } from "./game/GamePhaseManager";
-import { PlayerSubstitution } from "./game/PlayerSubstitution";
-import { GameTimer } from "./game/GameTimer";
-import { HalftimeSummary } from "./game/HalftimeSummary";
-import { GoalsAchievement } from "./game/GoalsAchievement";
-import { GameActionsList } from "./game/GameActionsList";
+import { GameSummary } from "./game/GameSummary";
+import { GameHeader } from "./game/mobile/GameHeader";
+import { GameControls } from "./game/mobile/GameControls";
+import { ActionButtons } from "./game/mobile/ActionButtons";
 import { GameNotes } from "./game/GameNotes";
+import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
 type GamePhase = "preview" | "playing" | "halftime" | "secondHalf" | "ended";
-type ActionResult = "success" | "failure";
 
 interface ActionLog {
   actionId: string;
   minute: number;
-  result: ActionResult;
+  result: "success" | "failure";
   note?: string;
 }
 
@@ -30,13 +26,6 @@ interface SubstitutionLog {
   playerIn: string;
   playerOut: string;
   minute: number;
-}
-
-interface PreMatchReportActions {
-  id: string;
-  name: string;
-  goal?: string;
-  isSelected: boolean;
 }
 
 export const GameTracker = () => {
@@ -53,60 +42,60 @@ export const GameTracker = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
   useEffect(() => {
-    const loadMatchData = async () => {
-      if (!matchId) return;
-
-      try {
-        const { data: match, error: matchError } = await supabase
-          .from("matches")
-          .select(`
-            *,
-            pre_match_reports (
-              actions
-            )
-          `)
-          .eq("id", matchId)
-          .single();
-
-        if (matchError) throw matchError;
-
-        if (match?.pre_match_reports?.actions) {
-          const rawActions = match.pre_match_reports.actions as unknown;
-          const preMatchActions = rawActions as PreMatchReportActions[];
-          
-          const validActions = preMatchActions
-            .filter(action => 
-              typeof action === 'object' && 
-              action !== null && 
-              'id' in action && 
-              'name' in action && 
-              'isSelected' in action
-            )
-            .map(action => ({
-              id: action.id,
-              name: action.name,
-              goal: action.goal,
-              isSelected: action.isSelected
-            }));
-            
-          setActions(validActions);
-        }
-
-        setGamePhase(match.status as GamePhase);
-      } catch (error) {
-        console.error("Error loading match data:", error);
-        toast({
-          title: "שגיאה",
-          description: "לא ניתן לטעון את נתוני המשחק",
-          variant: "destructive",
-        });
-      }
-    };
-
     loadMatchData();
   }, [matchId]);
 
-  const saveActionLog = async (actionId: string, result: ActionResult, note?: string) => {
+  const loadMatchData = async () => {
+    if (!matchId) return;
+
+    try {
+      const { data: match, error: matchError } = await supabase
+        .from("matches")
+        .select(`
+          *,
+          pre_match_reports (
+            actions
+          )
+        `)
+        .eq("id", matchId)
+        .single();
+
+      if (matchError) throw matchError;
+
+      if (match?.pre_match_reports?.actions) {
+        const rawActions = match.pre_match_reports.actions as unknown;
+        const preMatchActions = rawActions as PreMatchReportActions[];
+        
+        const validActions = preMatchActions
+          .filter(action => 
+            typeof action === 'object' && 
+            action !== null && 
+            'id' in action && 
+            'name' in action && 
+            'isSelected' in action
+          )
+          .map(action => ({
+            id: action.id,
+            name: action.name,
+            goal: action.goal,
+            isSelected: action.isSelected
+          }));
+          
+        setActions(validActions);
+      }
+
+      setGamePhase(match.status as GamePhase);
+    } catch (error) {
+      console.error("Error loading match data:", error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לטעון את נתוני המשחק",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveActionLog = async (actionId: string, result: "success" | "failure", note?: string) => {
     if (!matchId) return;
 
     try {
@@ -226,7 +215,7 @@ export const GameTracker = () => {
     setGeneralNotes(prev => [...prev, { text: generalNote, minute }]);
     setGeneralNote("");
     toast({
-      title: "הערה נוספה",
+      title: "ההערה נשמרה",
       description: "ההערה נשמרה בהצלחה",
     });
   };
@@ -286,7 +275,7 @@ export const GameTracker = () => {
     setShowSummary(true);
   };
 
-  const logAction = async (actionId: string, result: ActionResult, note?: string) => {
+  const logAction = async (actionId: string, result: "success" | "failure", note?: string) => {
     await saveActionLog(actionId, result, note);
     setActionLogs(prev => [...prev, {
       actionId,
@@ -303,74 +292,78 @@ export const GameTracker = () => {
   };
 
   return (
-    <div className="space-y-4 p-4 max-w-md mx-auto">
-      {gamePhase !== "preview" && (
-        <GameTimer
-          isRunning={isTimerRunning}
-          minute={minute}
-          onMinuteChange={setMinute}
-        />
-      )}
-
-      {gamePhase === "preview" && (
-        <GamePreview
-          actions={actions}
-          onActionAdd={handleAddAction}
-          onStartMatch={startMatch}
-        />
-      )}
-
-      {(gamePhase === "playing" || gamePhase === "secondHalf") && (
-        <div className="space-y-4">
-          <GameStats actions={actions} actionLogs={actionLogs} />
-          
-          <GameActionsList actions={actions} onLog={logAction} />
-
-          <GameNotes
-            generalNote={generalNote}
-            onNoteChange={setGeneralNote}
-            onAddNote={handleAddGeneralNote}
-          />
-
-          <PlayerSubstitution
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-md mx-auto bg-white min-h-screen relative pb-24 md:pb-0">
+        {gamePhase !== "preview" && (
+          <GameHeader
+            isTimerRunning={isTimerRunning}
             minute={minute}
-            onPlayerExit={handlePlayerExit}
-            onPlayerReturn={handlePlayerReturn}
-          />
-          
-          <GamePhaseManager
-            gamePhase={gamePhase}
-            onStartMatch={startMatch}
-            onEndHalf={endHalf}
-            onStartSecondHalf={startSecondHalf}
-            onEndMatch={endMatch}
-          />
-        </div>
-      )}
-
-      <GoalsAchievement actions={actions} actionLogs={actionLogs} />
-
-      <HalftimeSummary
-        isOpen={gamePhase === "halftime" && showSummary}
-        onClose={() => setShowSummary(false)}
-        onStartSecondHalf={startSecondHalf}
-        actions={actions}
-        actionLogs={actionLogs}
-      />
-
-      <Dialog open={gamePhase === "ended" && showSummary} onOpenChange={setShowSummary}>
-        <DialogContent className="max-w-md mx-auto">
-          <GameSummary 
+            onMinuteChange={setMinute}
             actions={actions}
             actionLogs={actionLogs}
-            generalNotes={generalNotes}
-            substitutions={substitutions}
-            onClose={() => setShowSummary(false)}
-            gamePhase="ended"
-            matchId={matchId}
           />
-        </DialogContent>
-      </Dialog>
+        )}
+
+        {gamePhase === "preview" && (
+          <GamePreview
+            actions={actions}
+            onActionAdd={handleAddAction}
+            onStartMatch={startMatch}
+          />
+        )}
+
+        {(gamePhase === "playing" || gamePhase === "secondHalf") && (
+          <div className="space-y-6 p-4">
+            <div className="grid gap-6">
+              {actions.map(action => (
+                <div key={action.id} className="border rounded-lg p-4 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">{action.name}</span>
+                    <ActionButtons
+                      actionId={action.id}
+                      onLog={logAction}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <GameNotes
+              generalNote={generalNote}
+              onNoteChange={setGeneralNote}
+              onAddNote={handleAddGeneralNote}
+            />
+
+            <PlayerSubstitution
+              minute={minute}
+              onPlayerExit={handlePlayerExit}
+              onPlayerReturn={handlePlayerReturn}
+            />
+          </div>
+        )}
+
+        <GameControls
+          gamePhase={gamePhase}
+          onStartMatch={startMatch}
+          onEndHalf={endHalf}
+          onStartSecondHalf={startSecondHalf}
+          onEndMatch={endMatch}
+        />
+
+        <Dialog open={showSummary} onOpenChange={setShowSummary}>
+          <DialogContent className="max-w-md mx-auto">
+            <GameSummary
+              actions={actions}
+              actionLogs={actionLogs}
+              generalNotes={generalNotes}
+              substitutions={substitutions}
+              onClose={() => setShowSummary(false)}
+              gamePhase={gamePhase}
+              matchId={matchId}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 };
