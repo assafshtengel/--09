@@ -1,17 +1,8 @@
-import React, { useState } from 'react';
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState } from 'react';
 import { Action } from "@/components/ActionSelector";
-import { GameStats } from "./GameStats";
-import { GameInsights } from "./GameInsights";
-import { GoalsAchievement } from "./GoalsAchievement";
-import { PerformanceTable } from "./PerformanceTable";
-import { SummaryHeader } from "./summary/SummaryHeader";
-import { QuestionsSection } from "./summary/QuestionsSection";
-import { NotesSection } from "./summary/NotesSection";
-import { ActionsLogSection } from "./summary/ActionsLogSection";
-import { SummaryActions } from "./summary/SummaryActions";
-import { supabase } from "@/integrations/supabase/client";
+import { SummaryLayout } from "./summary/SummaryLayout";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import html2canvas from "html2canvas";
 import { format } from "date-fns";
 
@@ -50,34 +41,7 @@ export const GameSummary = ({
   matchId
 }: GameSummaryProps) => {
   const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [performanceRatings, setPerformanceRatings] = useState<Record<string, number>>({});
   const { toast } = useToast();
-
-  const handleAnswerChange = (question: string, answer: string) => {
-    setAnswers(prev => ({
-      ...prev,
-      [question]: answer
-    }));
-  };
-
-  const handlePerformanceRating = (aspect: string, rating: number) => {
-    setPerformanceRatings(prev => ({
-      ...prev,
-      [aspect]: rating
-    }));
-  };
-
-  const calculateScore = (actionLogs: ActionLog[]) => {
-    const successPoints = 10;
-    const failurePoints = -5;
-    
-    const score = actionLogs.reduce((total, log) => {
-      return total + (log.result === "success" ? successPoints : failurePoints);
-    }, 0);
-
-    return Math.max(0, score);
-  };
 
   const handleSubmit = async () => {
     try {
@@ -99,19 +63,6 @@ export const GameSummary = ({
         });
         return;
       }
-
-      const { error: feedbackError } = await supabase
-        .from('post_game_feedback')
-        .insert([
-          {
-            player_id: user.id,
-            match_id: matchId,
-            questions_answers: answers,
-            performance_ratings: performanceRatings,
-          }
-        ]);
-
-      if (feedbackError) throw feedbackError;
 
       await sendEmail();
       toast({
@@ -204,69 +155,27 @@ export const GameSummary = ({
     }
   };
 
+  const calculateScore = (actionLogs: ActionLog[]) => {
+    const successPoints = 10;
+    const failurePoints = -5;
+    
+    const score = actionLogs.reduce((total, log) => {
+      return total + (log.result === "success" ? successPoints : failurePoints);
+    }, 0);
+
+    return Math.max(0, score);
+  };
+
   return (
-    <ScrollArea className="h-[80vh] md:h-[600px]">
-      <div className="space-y-4 p-2 md:p-4 bg-background">
-        <div id="game-summary-content" className="space-y-4">
-          <SummaryHeader gamePhase={gamePhase} matchId={matchId} />
-          
-          <div className="mt-4">
-            <GoalsAchievement actions={actions} actionLogs={actionLogs} />
-          </div>
-
-          {gamePhase === "ended" && (
-            <div className="mt-6">
-              <QuestionsSection
-                answers={answers}
-                onAnswerChange={handleAnswerChange}
-              />
-            </div>
-          )}
-
-          {gamePhase === "ended" && (
-            <div className="mt-6">
-              <PerformanceTable
-                ratings={performanceRatings}
-                onRatingChange={handlePerformanceRating}
-              />
-            </div>
-          )}
-
-          <div className="mt-6">
-            <NotesSection notes={generalNotes} />
-          </div>
-
-          <div className="mt-6">
-            <GameStats actions={actions} actionLogs={actionLogs} />
-          </div>
-
-          <div className="mt-6">
-            <GameInsights actionLogs={actionLogs} />
-          </div>
-
-          <div className="p-4 border rounded-lg bg-primary/10 mt-6">
-            <h3 className="text-lg md:text-xl font-semibold text-right mb-2">ציון</h3>
-            <p className="text-2xl md:text-3xl font-bold text-center">
-              {calculateScore(actionLogs)}
-            </p>
-          </div>
-
-          <div className="mt-6">
-            <ActionsLogSection actions={actions} actionLogs={actionLogs} />
-          </div>
-        </div>
-
-        <SummaryActions
-          gamePhase={gamePhase}
-          isSendingEmail={isSendingEmail}
-          onSubmit={handleSubmit}
-          onSendEmail={sendEmail}
-          onShareSocial={shareToSocial}
-          onScreenshot={takeScreenshot}
-          onClose={onClose}
-          onContinueGame={onContinueGame}
-        />
-      </div>
-    </ScrollArea>
+    <SummaryLayout
+      actions={actions}
+      actionLogs={actionLogs}
+      generalNotes={generalNotes}
+      substitutions={substitutions}
+      onClose={onClose}
+      gamePhase={gamePhase}
+      onContinueGame={onContinueGame}
+      matchId={matchId}
+    />
   );
 };
