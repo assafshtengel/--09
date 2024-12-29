@@ -9,7 +9,7 @@ import { toast } from "sonner";
 interface Activity {
   day_of_week: number;
   start_time: string;
-  end_time: string;
+  end_time: string | number;
   activity_type: string;
   title?: string;
 }
@@ -24,6 +24,13 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
   
   const days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
   const hours = Array.from({ length: 18 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
+
+  const formatTime = (time: string | number): string => {
+    if (typeof time === 'string') return time;
+    // If it's a timestamp, convert it to HH:mm format
+    const date = new Date(time);
+    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  };
 
   const handlePrint = () => {
     window.print();
@@ -102,10 +109,13 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
         {activities
           .filter((activity) => activity.day_of_week === dayIndex)
           .map((activity, activityIndex) => {
-            const startHour = parseInt(activity.start_time.split(':')[0]);
-            const startMinute = parseInt(activity.start_time.split(':')[1]);
-            const endHour = parseInt(activity.end_time.split(':')[0]);
-            const endMinute = parseInt(activity.end_time.split(':')[1]);
+            const startTime = formatTime(activity.start_time);
+            const endTime = formatTime(activity.end_time);
+            
+            const startHour = parseInt(startTime.split(':')[0]);
+            const startMinute = parseInt(startTime.split(':')[1]);
+            const endHour = parseInt(endTime.split(':')[0]);
+            const endMinute = parseInt(endTime.split(':')[1]);
             
             const top = ((startHour - 6) * 60 + startMinute) * (50 / 60);
             const height = ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) * (50 / 60);
@@ -125,7 +135,7 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
                   <span className="truncate">{activity.title}</span>
                 </div>
                 <div className="text-xs text-gray-600 mt-0.5">
-                  {activity.start_time} - {activity.end_time}
+                  {startTime} - {endTime}
                 </div>
               </div>
             );
