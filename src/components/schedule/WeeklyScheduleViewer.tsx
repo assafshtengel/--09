@@ -27,7 +27,6 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
 
   const formatTime = (time: string | number): string => {
     if (typeof time === 'string') return time;
-    // If it's a timestamp, convert it to HH:mm format
     const date = new Date(time);
     return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
   };
@@ -146,7 +145,7 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
 
   return (
     <Card className="p-4 overflow-x-auto">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 print:hidden">
         <h3 className="text-xl font-bold">תצוגת מערכת שבועית</h3>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handlePrint}>
@@ -160,10 +159,10 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
         </div>
       </div>
       
-      <div id="weekly-schedule">
+      <div id="weekly-schedule" className="print:p-0">
         {isMobile ? (
           <div className="space-y-4">
-            <div className="flex items-center justify-between px-4">
+            <div className="flex items-center justify-between px-4 print:hidden">
               <Button variant="outline" size="icon" onClick={() => setSelectedDay((prev) => (prev > 0 ? prev - 1 : 6))}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -185,7 +184,7 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
             </div>
           </div>
         ) : (
-          <div className="flex">
+          <div className="flex print:scale-90 print:transform print:origin-top-right">
             <div className="w-16 flex-shrink-0">
               {hours.map((hour) => (
                 <div key={hour} className="h-20 border-b border-gray-200 text-sm text-gray-500 text-center">
@@ -200,6 +199,22 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
           </div>
         )}
       </div>
+
+      <style>{`
+        @media print {
+          @page {
+            size: landscape;
+            margin: 1cm;
+          }
+          body {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+          }
+          .print\\:hidden {
+            display: none !important;
+          }
+        }
+      `}</style>
     </Card>
   );
 };

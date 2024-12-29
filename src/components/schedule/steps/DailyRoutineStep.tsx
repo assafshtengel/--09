@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 
 interface DailyRoutineStepProps {
   onAddActivity: (activity: any) => void;
@@ -26,13 +27,22 @@ export const DailyRoutineStep = ({ onAddActivity }: DailyRoutineStepProps) => {
     { id: 6, label: "שבת" },
   ];
 
+  const formatTimeForDatabase = (timeString: string): string => {
+    return timeString.split(':').slice(0, 2).join(':');
+  };
+
   const handleAddRoutine = () => {
+    if (selectedDays.length === 0) {
+      toast.error("יש לבחור לפחות יום אחד");
+      return;
+    }
+
     selectedDays.forEach((day) => {
       // Wake up
       onAddActivity({
         day_of_week: day,
-        start_time: wakeUpTime,
-        end_time: wakeUpTime,
+        start_time: formatTimeForDatabase(wakeUpTime),
+        end_time: formatTimeForDatabase(wakeUpTime),
         activity_type: "wake_up",
         title: "השכמה",
         priority: 1
@@ -41,8 +51,8 @@ export const DailyRoutineStep = ({ onAddActivity }: DailyRoutineStepProps) => {
       // Breakfast
       onAddActivity({
         day_of_week: day,
-        start_time: breakfastTime,
-        end_time: new Date(`2000-01-01T${breakfastTime}`).getTime() + 30 * 60000,
+        start_time: formatTimeForDatabase(breakfastTime),
+        end_time: formatTimeForDatabase(new Date(`2000-01-01T${breakfastTime}`).getTime() + 30 * 60000),
         activity_type: "lunch",
         title: "ארוחת בוקר",
         priority: 2
@@ -51,8 +61,8 @@ export const DailyRoutineStep = ({ onAddActivity }: DailyRoutineStepProps) => {
       // Lunch
       onAddActivity({
         day_of_week: day,
-        start_time: lunchTime,
-        end_time: new Date(`2000-01-01T${lunchTime}`).getTime() + 45 * 60000,
+        start_time: formatTimeForDatabase(lunchTime),
+        end_time: formatTimeForDatabase(new Date(`2000-01-01T${lunchTime}`).getTime() + 45 * 60000),
         activity_type: "lunch",
         title: "ארוחת צהריים",
         priority: 3
@@ -61,8 +71,8 @@ export const DailyRoutineStep = ({ onAddActivity }: DailyRoutineStepProps) => {
       // Dinner
       onAddActivity({
         day_of_week: day,
-        start_time: dinnerTime,
-        end_time: new Date(`2000-01-01T${dinnerTime}`).getTime() + 45 * 60000,
+        start_time: formatTimeForDatabase(dinnerTime),
+        end_time: formatTimeForDatabase(new Date(`2000-01-01T${dinnerTime}`).getTime() + 45 * 60000),
         activity_type: "lunch",
         title: "ארוחת ערב",
         priority: 4
@@ -71,20 +81,23 @@ export const DailyRoutineStep = ({ onAddActivity }: DailyRoutineStepProps) => {
       // Free time blocks
       const freeTimeBlocks = [
         { start: "16:00", end: "18:00", title: "זמן חופשי" },
-        { start: "20:00", end: bedTime, title: "זמן חופשי לפני השינה" }
+        { start: dinnerTime, end: bedTime, title: "זמן חופשי לפני השינה" }
       ];
 
       freeTimeBlocks.forEach((block, index) => {
         onAddActivity({
           day_of_week: day,
-          start_time: block.start,
-          end_time: block.end,
+          start_time: formatTimeForDatabase(block.start),
+          end_time: formatTimeForDatabase(block.end),
           activity_type: "free_time",
           title: block.title,
           priority: 5 + index
         });
       });
     });
+
+    toast.success(`נוספה שגרה יומית ל-${selectedDays.length} ימים`);
+    setSelectedDays([]);
   };
 
   return (
