@@ -7,6 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NotificationForm } from "@/components/notifications/NotificationForm";
 import { NotificationsList } from "@/components/notifications/NotificationsList";
 import { NotificationHistory } from "@/components/notifications/NotificationHistory";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Video, BookOpen, Trash2, Plus } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -17,6 +22,14 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+interface LearningResource {
+  id: string;
+  title: string;
+  description: string;
+  type: 'video' | 'article';
+  url: string;
+}
+
 const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -24,6 +37,13 @@ const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [usageStats, setUsageStats] = useState([]);
+  const [resources, setResources] = useState<LearningResource[]>([]);
+  const [newResource, setNewResource] = useState<Partial<LearningResource>>({
+    title: '',
+    description: '',
+    type: 'video',
+    url: ''
+  });
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -74,6 +94,14 @@ const Admin = () => {
 
       setNotifications(notificationsData || []);
 
+      // Fetch learning resources
+      const { data: resourcesData } = await supabase
+        .from("learning_resources")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      setResources(resourcesData || []);
+
       // Fetch usage statistics (matches as an example)
       const { data: matchesData } = await supabase
         .from("matches")
@@ -97,6 +125,57 @@ const Admin = () => {
 
     fetchData();
   }, [isAdmin]);
+
+  const handleAddResource = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("learning_resources")
+        .insert([newResource])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setResources([data, ...resources]);
+      setNewResource({ title: '', description: '', type: 'video', url: '' });
+      
+      toast({
+        title: "המשאב נוסף בהצלחה",
+        description: "המשאב החדש זמין כעת לכל המשתמשים",
+      });
+    } catch (error) {
+      console.error("Error adding resource:", error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בהוספת המשאב",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteResource = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("learning_resources")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setResources(resources.filter(resource => resource.id !== id));
+      
+      toast({
+        title: "המשאב נמחק בהצלחה",
+      });
+    } catch (error) {
+      console.error("Error deleting resource:", error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה במחיקת המשאב",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (!isAdmin) {
     return null;
@@ -166,6 +245,74 @@ const Admin = () => {
                 />
               </TabsContent>
             </Tabs>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>ניהול משאבי למידה</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid gap-4">
+                <Input
+                  placeholder="כותרת"
+                  value={newResource.title}
+                  onChange={(e) => setNewResource({ ...newResource, title: e.target.value })}
+                />
+                <Textarea
+                  placeholder="תיאור"
+                  value={newResource.description}
+                  onChange={(e) => setNewResource({ ...newResource, description: e.target.value })}
+                />
+                <Select
+                  value={newResource.type}
+                  onValueChange={(value: 'video' | 'article') => setNewResource({ ...newResource, type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="בחר סוג משאב" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="video">סרטון</SelectItem>
+                    <SelectItem value="article">מאמר</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="קישור"
+                  value={newResource.url}
+                  onChange={(e) => setNewResource({ ...newResource, url: e.target.value })}
+                />
+                <Button onClick={handleAddResource} className="w-full">
+                  <Plus className="h-4 w-4 ml-2" />
+                  הוסף משאב
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {resources.map((resource) => (
+                  <div key={resource.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center">
+                      {resource.type === 'video' ? (
+                        <Video className="h-5 w-5 ml-2" />
+                      ) : (
+                        <BookOpen className="h-5 w-5 ml-2" />
+                      )}
+                      <div>
+                        <h3 className="font-semibold">{resource.title}</h3>
+                        <p className="text-sm text-gray-500">{resource.description}</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteResource(resource.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
