@@ -2,3 +2,12 @@ project_id = "mmopqtoxstnbabavsics"
 
 [functions.send-whatsapp]
 verify_jwt = true
+
+[functions.send-game-summary]
+verify_jwt = true
+
+[functions.send-pre-match-report]
+verify_jwt = true
+
+[functions.receive-whatsapp]
+verify_jwt = false
