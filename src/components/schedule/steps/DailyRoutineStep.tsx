@@ -31,6 +31,14 @@ export const DailyRoutineStep = ({ onAddActivity }: DailyRoutineStepProps) => {
     return timeString.split(':').slice(0, 2).join(':');
   };
 
+  const calculateEndTime = (startTime: string, durationMinutes: number): string => {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + durationMinutes;
+    const endHours = Math.floor(totalMinutes / 60);
+    const endMinutes = totalMinutes % 60;
+    return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+  };
+
   const handleAddRoutine = () => {
     if (selectedDays.length === 0) {
       toast.error("יש לבחור לפחות יום אחד");
@@ -49,30 +57,33 @@ export const DailyRoutineStep = ({ onAddActivity }: DailyRoutineStepProps) => {
       });
 
       // Breakfast
+      const breakfastEndTime = calculateEndTime(breakfastTime, 30);
       onAddActivity({
         day_of_week: day,
         start_time: formatTimeForDatabase(breakfastTime),
-        end_time: formatTimeForDatabase(new Date(`2000-01-01T${breakfastTime}`).getTime() + 30 * 60000),
+        end_time: formatTimeForDatabase(breakfastEndTime),
         activity_type: "lunch",
         title: "ארוחת בוקר",
         priority: 2
       });
 
       // Lunch
+      const lunchEndTime = calculateEndTime(lunchTime, 45);
       onAddActivity({
         day_of_week: day,
         start_time: formatTimeForDatabase(lunchTime),
-        end_time: formatTimeForDatabase(new Date(`2000-01-01T${lunchTime}`).getTime() + 45 * 60000),
+        end_time: formatTimeForDatabase(lunchEndTime),
         activity_type: "lunch",
         title: "ארוחת צהריים",
         priority: 3
       });
 
       // Dinner
+      const dinnerEndTime = calculateEndTime(dinnerTime, 45);
       onAddActivity({
         day_of_week: day,
         start_time: formatTimeForDatabase(dinnerTime),
-        end_time: formatTimeForDatabase(new Date(`2000-01-01T${dinnerTime}`).getTime() + 45 * 60000),
+        end_time: formatTimeForDatabase(dinnerEndTime),
         activity_type: "lunch",
         title: "ארוחת ערב",
         priority: 4
