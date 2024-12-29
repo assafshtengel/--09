@@ -12,21 +12,7 @@ import { GameNotes } from "./game/GameNotes";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-
-type GamePhase = "preview" | "playing" | "halftime" | "secondHalf" | "ended";
-
-interface ActionLog {
-  actionId: string;
-  minute: number;
-  result: "success" | "failure";
-  note?: string;
-}
-
-interface SubstitutionLog {
-  playerIn: string;
-  playerOut: string;
-  minute: number;
-}
+import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog } from "@/types/game";
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();

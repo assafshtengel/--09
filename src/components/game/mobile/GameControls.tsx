@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { GamePhase } from "../GamePhaseManager";
+import { GamePhase } from "@/types/game";
 
 interface GameControlsProps {
   gamePhase: GamePhase;
