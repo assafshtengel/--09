@@ -176,6 +176,11 @@ export const GameSummary = ({
       gamePhase={gamePhase}
       onContinueGame={onContinueGame}
       matchId={matchId}
+      isSendingEmail={isSendingEmail}
+      onSubmit={handleSubmit}
+      onSendEmail={sendEmail}
+      onShareSocial={shareToSocial}
+      onScreenshot={takeScreenshot}
     />
   );
 };

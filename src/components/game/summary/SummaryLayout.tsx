@@ -26,6 +26,11 @@ interface SummaryLayoutProps {
   gamePhase?: "halftime" | "ended";
   onContinueGame?: () => void;
   matchId?: string;
+  isSendingEmail: boolean;
+  onSubmit: () => void;
+  onSendEmail: () => void;
+  onShareSocial: (platform: 'facebook' | 'instagram') => void;
+  onScreenshot: () => void;
 }
 
 export const SummaryLayout = ({
@@ -36,7 +41,12 @@ export const SummaryLayout = ({
   onClose,
   gamePhase = "ended",
   onContinueGame,
-  matchId
+  matchId,
+  isSendingEmail,
+  onSubmit,
+  onSendEmail,
+  onShareSocial,
+  onScreenshot
 }: SummaryLayoutProps) => {
   return (
     <ScrollArea className="h-[80vh] md:h-[600px]">
@@ -52,6 +62,11 @@ export const SummaryLayout = ({
         </div>
         <SummaryActions
           gamePhase={gamePhase}
+          isSendingEmail={isSendingEmail}
+          onSubmit={onSubmit}
+          onSendEmail={onSendEmail}
+          onShareSocial={onShareSocial}
+          onScreenshot={onScreenshot}
           onClose={onClose}
           onContinueGame={onContinueGame}
           matchId={matchId}
