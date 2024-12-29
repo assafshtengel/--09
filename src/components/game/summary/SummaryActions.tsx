@@ -10,6 +10,7 @@ interface SummaryActionsProps {
   onScreenshot: () => void;
   onClose: () => void;
   onContinueGame?: () => void;
+  matchId?: string;
 }
 
 export const SummaryActions = ({
@@ -20,7 +21,8 @@ export const SummaryActions = ({
   onShareSocial,
   onScreenshot,
   onClose,
-  onContinueGame
+  onContinueGame,
+  matchId
 }: SummaryActionsProps) => {
   return (
     <div className="flex flex-wrap justify-end gap-4">
