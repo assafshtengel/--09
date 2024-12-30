@@ -616,11 +616,13 @@ export type Database = {
         Row: {
           age_category: string | null
           club: string | null
+          coach_phone_number: string | null
           created_at: string
           date_of_birth: string | null
           email: string
           full_name: string | null
           id: string
+          mental_coach_phone_number: string | null
           phone_number: string | null
           profile_picture_url: string | null
           role: Database["public"]["Enums"]["user_role"] | null
@@ -631,11 +633,13 @@ export type Database = {
         Insert: {
           age_category?: string | null
           club?: string | null
+          coach_phone_number?: string | null
           created_at?: string
           date_of_birth?: string | null
           email: string
           full_name?: string | null
           id: string
+          mental_coach_phone_number?: string | null
           phone_number?: string | null
           profile_picture_url?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
@@ -646,11 +650,13 @@ export type Database = {
         Update: {
           age_category?: string | null
           club?: string | null
+          coach_phone_number?: string | null
           created_at?: string
           date_of_birth?: string | null
           email?: string
           full_name?: string | null
           id?: string
+          mental_coach_phone_number?: string | null
           phone_number?: string | null
           profile_picture_url?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null

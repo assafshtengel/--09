@@ -10,6 +10,7 @@ import { QuestionSelector } from "./QuestionSelector";
 import { RatingSliders } from "./form/RatingSliders";
 import { DateTimeFields } from "./form/DateTimeFields";
 import { AIInsights } from "./AIInsights";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { TrainingSummaryFormData } from "./types";
 
 export const TrainingSummaryForm = () => {
@@ -17,6 +18,7 @@ export const TrainingSummaryForm = () => {
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [insights, setInsights] = useState<string | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+  const [shareWithCoach, setShareWithCoach] = useState(false);
   
   const form = useForm<TrainingSummaryFormData>({
     defaultValues: {
@@ -57,6 +59,31 @@ export const TrainingSummaryForm = () => {
     }
   };
 
+  const sendWhatsAppMessage = async (coachPhoneNumber: string, summary: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('send-whatsapp', {
+        body: {
+          message: summary,
+          recipientNumber: coachPhoneNumber
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "נשלח בהצלחה",
+        description: "סיכום האימון נשלח למאמן",
+      });
+    } catch (error) {
+      console.error('Error sending WhatsApp message:', error);
+      toast({
+        title: "שגיאה בשליחת ההודעה",
+        description: "לא הצלחנו לשלוח את ההודעה למאמן. אנא נסה שוב מאוחר יותר.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const onSubmit = async (data: TrainingSummaryFormData) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -83,6 +110,25 @@ export const TrainingSummaryForm = () => {
         .insert(summary);
 
       if (error) throw error;
+
+      if (shareWithCoach) {
+        // Get coach's phone number from profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('coach_phone_number')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.coach_phone_number) {
+          const summaryText = `סיכום אימון מ-${format(data.trainingDate, "dd/MM/yyyy")}:\n` +
+            `שביעות רצון: ${data.satisfactionRating}/5\n` +
+            `התמודדות עם אתגרים: ${data.challengeHandlingRating}/5\n` +
+            `אנרגיה וריכוז: ${data.energyFocusRating}/5\n` +
+            `תובנות: ${insights || 'אין תובנות זמינות'}`;
+
+          await sendWhatsAppMessage(profile.coach_phone_number, summaryText);
+        }
+      }
 
       toast({
         title: "הסיכום נשמר בהצלחה",
@@ -128,6 +174,20 @@ export const TrainingSummaryForm = () => {
               )}
             />
           ))}
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="shareWithCoach"
+              checked={shareWithCoach}
+              onCheckedChange={(checked) => setShareWithCoach(checked as boolean)}
+            />
+            <label
+              htmlFor="shareWithCoach"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              שתף את המאמן בסיכום האימון
+            </label>
+          </div>
         </div>
 
         <AIInsights insights={insights} isLoading={isLoadingInsights} />
