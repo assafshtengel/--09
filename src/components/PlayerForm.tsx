@@ -23,9 +23,9 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
     roles: [],
     phoneNumber: "",
     club: "",
-    teamYear: "",
     dateOfBirth: "",
     ageCategory: "",
+    coachPhoneNumber: "",
   });
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
 
@@ -45,7 +45,7 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.fullName || !formData.phoneNumber || !formData.club || !formData.teamYear || !formData.dateOfBirth || !formData.ageCategory) {
+    if (!formData.fullName || !formData.phoneNumber || !formData.club || !formData.dateOfBirth || !formData.ageCategory || !formData.coachPhoneNumber) {
       toast({
         title: "שגיאה",
         description: "אנא מלא את כל השדות",
@@ -147,12 +147,11 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
         </div>
 
         <FormField
-          id="teamYear"
-          label="שנת קבוצה"
-          value={formData.teamYear}
-          onChange={(value) => setFormData({ ...formData, teamYear: value })}
-          type="number"
-          placeholder="הכנס את שנת הקבוצה"
+          id="coachPhoneNumber"
+          label="מספר טלפון של המאמן"
+          value={formData.coachPhoneNumber}
+          onChange={(value) => setFormData({ ...formData, coachPhoneNumber: value })}
+          placeholder="הכנס את מספר הטלפון של המאמן"
         />
 
         <FormField
