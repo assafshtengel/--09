@@ -57,11 +57,21 @@ export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
 
   return (
     <motion.div 
-      className="space-y-4"
+      className="space-y-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
+      <div className="bg-secondary/10 p-6 rounded-lg space-y-4 text-right">
+        <h2 className="text-xl font-bold text-secondary">הכנה מנטלית למשחק</h2>
+        <p className="text-gray-700">
+          שחקני העל מחליטים מראש איך הם יגיעו לכל משחק, וכך מבטיחים שהאנרגיה והאופי שלהם לא ישתנו לפי מה שקורה במשחק – אלא הם אלו שיוצרים את מהלך המשחק. זו הכנה מנטלית מנצחת.
+        </p>
+        <p className="text-gray-700">
+          עכשיו, מתוך רשימת ההוויות הבאה, בחר 3–4 הוויות שאתה רוצה לאמץ במשחק הקרוב.
+        </p>
+      </div>
+
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-semibold">הוויות למשחק</h3>
@@ -72,11 +82,8 @@ export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
               </button>
             </HoverCardTrigger>
             <HoverCardContent className="w-96 text-right p-4">
-              <p className="text-sm text-gray-600 mb-4">
-                שחקני העל מחליטים מראש איך הם יגיעו לכל משחק, וכך מבטיחים שהאנרגיה והאופי שלהם לא ישתנו לפי מה שקורה במשחק – אלא הם אלו שיוצרים את מהלך המשחק. זו הכנה מנטלית מנצחת.
-              </p>
               <p className="text-sm text-gray-600">
-                בחר 3-4 הוויות שתרצה לאמץ במשחק הקרוב.
+                ברגע שאתה "מכריז" על ההוויות האלה מראש, אתה מכתיב לעצמך את מצב הרוח, הגישה והאופי שלך על המגרש – במקום לתת לאירועי המשחק להשפיע עליך. זו הכנה מנטלית אמיתית שמובילה לתוצאות מנצחות!
               </p>
             </HoverCardContent>
           </HoverCard>
