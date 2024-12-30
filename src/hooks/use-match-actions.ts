@@ -17,8 +17,13 @@ export const useMatchActions = (playerId: string) => {
         .eq('matches.player_id', playerId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching match actions:', error);
+        throw error;
+      }
+
       return data;
     },
+    enabled: !!playerId
   });
 };
