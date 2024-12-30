@@ -22,6 +22,51 @@ interface ScheduleGridProps {
   onDeleteActivity: (activityId?: string) => void;
 }
 
+const getActivityStyle = (activity: Activity) => {
+  const startHour = parseInt(activity.start_time.split(':')[0]);
+  const startMinute = parseInt(activity.start_time.split(':')[1]);
+  const endHour = parseInt(activity.end_time.split(':')[0]);
+  const endMinute = parseInt(activity.end_time.split(':')[1]);
+  
+  const top = ((startHour - 6) * 64) + (startMinute / 60 * 64);
+  const height = ((endHour - startHour) * 64) + ((endMinute - startMinute) / 60 * 64);
+  
+  return {
+    top: `${top}px`,
+    height: `${height}px`
+  };
+};
+
+const getActivityProps = (activity: Activity) => {
+  switch (activity.activity_type) {
+    case 'school':
+      return {
+        colorClass: 'bg-blue-100',
+        icon: '🏫'
+      };
+    case 'team_training':
+      return {
+        colorClass: 'bg-green-100',
+        icon: '⚽'
+      };
+    case 'personal_training':
+      return {
+        colorClass: 'bg-purple-100',
+        icon: '🏃'
+      };
+    case 'sleep':
+      return {
+        colorClass: 'bg-gray-100',
+        icon: '😴'
+      };
+    default:
+      return {
+        colorClass: 'bg-yellow-100',
+        icon: '📅'
+      };
+  }
+};
+
 export const ScheduleGrid = ({
   activities,
   days,
@@ -62,13 +107,19 @@ export const ScheduleGrid = ({
             {hours.map((hour, hourIndex) => (
               <div key={hour} className="h-16 border-b border-r" />
             ))}
-            {dayActivities.map((activity) => (
-              <ActivityBlock
-                key={activity.id}
-                activity={activity}
-                onDelete={() => onDeleteActivity(activity.id)}
-              />
-            ))}
+            {dayActivities.map((activity) => {
+              const { colorClass, icon } = getActivityProps(activity);
+              return (
+                <ActivityBlock
+                  key={activity.id}
+                  activity={activity}
+                  style={getActivityStyle(activity)}
+                  colorClass={colorClass}
+                  icon={icon}
+                  onDelete={() => onDeleteActivity(activity.id)}
+                />
+              );
+            })}
           </div>
         </div>
       );
@@ -92,13 +143,19 @@ export const ScheduleGrid = ({
               {hours.map((hour) => (
                 <div key={hour} className="h-16 border-b border-r" />
               ))}
-              {dayActivities.map((activity) => (
-                <ActivityBlock
-                  key={activity.id}
-                  activity={activity}
-                  onDelete={() => onDeleteActivity(activity.id)}
-                />
-              ))}
+              {dayActivities.map((activity) => {
+                const { colorClass, icon } = getActivityProps(activity);
+                return (
+                  <ActivityBlock
+                    key={activity.id}
+                    activity={activity}
+                    style={getActivityStyle(activity)}
+                    colorClass={colorClass}
+                    icon={icon}
+                    onDelete={() => onDeleteActivity(activity.id)}
+                  />
+                );
+              })}
             </div>
           </div>
         </div>
