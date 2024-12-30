@@ -12,6 +12,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Info } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface HavayaSelectorProps {
   value: string;
@@ -43,16 +44,25 @@ const havayaOptions = [
 ];
 
 export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className="space-y-4">
+    <motion.div 
+      className="space-y-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="flex items-center gap-2">
         <h3 className="text-lg font-semibold">הוויה למשחק</h3>
         <HoverCard>
-          <HoverCardTrigger>
-            <Info className="h-4 w-4 text-muted-foreground" />
+          <HoverCardTrigger asChild>
+            <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+              <Info className="h-4 w-4 text-muted-foreground" />
+            </button>
           </HoverCardTrigger>
-          <HoverCardContent className="w-80 text-right">
-            <p>
+          <HoverCardContent className="w-80 text-right p-4">
+            <p className="text-sm text-gray-600">
               בחר את ההוויה שתלווה אותך במשחק. ההוויה היא מצב התודעה והגישה שאיתה
               אתה ניגש למשחק, והיא תשפיע על התנהגותך והביצועים שלך במגרש.
             </p>
@@ -60,23 +70,41 @@ export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
         </HoverCard>
       </div>
 
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-full">
+      <Select 
+        value={value} 
+        onValueChange={onChange}
+        onOpenChange={setIsOpen}
+      >
+        <SelectTrigger 
+          className={`w-full transition-all duration-200 ${
+            isOpen ? 'ring-2 ring-primary ring-offset-2' : ''
+          }`}
+        >
           <SelectValue placeholder="בחר הוויה למשחק" />
         </SelectTrigger>
         <SelectContent>
-          {havayaOptions.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              <div className="flex flex-col">
-                <span>{option.value}</span>
-                <span className="text-sm text-muted-foreground">
-                  {option.description}
-                </span>
-              </div>
-            </SelectItem>
-          ))}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {havayaOptions.map((option) => (
+              <SelectItem 
+                key={option.value} 
+                value={option.value}
+                className="hover:bg-primary/5 transition-colors"
+              >
+                <div className="flex flex-col py-1">
+                  <span className="font-medium">{option.value}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {option.description}
+                  </span>
+                </div>
+              </SelectItem>
+            ))}
+          </motion.div>
         </SelectContent>
       </Select>
-    </div>
+    </motion.div>
   );
 };
