@@ -24,7 +24,7 @@ export const PreMatchReport = () => {
   });
   const [actions, setActions] = useState<any[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [havaya, setHavaya] = useState("");
+  const [havaya, setHavaya] = useState<string[]>([]);
   const [aiInsights, setAiInsights] = useState<string[]>([]);
 
   const handleNext = () => {
@@ -103,7 +103,10 @@ export const PreMatchReport = () => {
                 onChange={setHavaya}
               />
               <div className="flex justify-between mt-6">
-                <Button onClick={handleNext}>
+                <Button 
+                  onClick={handleNext}
+                  disabled={havaya.length < 3}
+                >
                   הבא
                   <ArrowRight className="mr-2 h-4 w-4" />
                 </Button>
