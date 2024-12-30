@@ -1,5 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
+import { Send } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface PreMatchSummaryProps {
   matchDetails: {
@@ -22,6 +26,66 @@ export const PreMatchSummary = ({
   aiInsights,
   onFinish,
 }: PreMatchSummaryProps) => {
+  const { toast } = useToast();
+  const [isSending, setIsSending] = useState(false);
+
+  const handleWhatsAppShare = async () => {
+    try {
+      setIsSending(true);
+      
+      // Get user's profile to get coach's phone number
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("משתמש לא מחובר");
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('coach_phone_number')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.coach_phone_number) {
+        toast({
+          title: "שגיאה",
+          description: "לא נמצא מספר טלפון של המאמן בפרופיל",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const summaryText = `דוח טרום משחק - ${matchDetails.date}${matchDetails.opponent ? ` מול ${matchDetails.opponent}` : ''}\n\n` +
+        `הוויה נבחרת: ${havaya}\n\n` +
+        `יעדים למשחק:\n${actions.map(action => 
+          `- ${action.name}${action.goal ? ` (יעד: ${action.goal})` : ''}`
+        ).join('\n')}\n\n` +
+        `תשובות לשאלות:\n${Object.entries(answers)
+          .map(([question, answer]) => `${question}: ${answer}`).join('\n')}`;
+
+      const { error: whatsappError } = await supabase.functions.invoke('send-whatsapp', {
+        body: {
+          message: summaryText,
+          recipientNumber: profile.coach_phone_number
+        }
+      });
+
+      if (whatsappError) throw whatsappError;
+
+      toast({
+        title: "נשלח בהצלחה",
+        description: "דוח טרום משחק נשלח למאמן",
+      });
+
+    } catch (error) {
+      console.error('Error sending WhatsApp message:', error);
+      toast({
+        title: "שגיאה בשליחת ההודעה",
+        description: "לא הצלחנו לשלוח את ההודעה למאמן",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="border-b pb-4">
@@ -76,7 +140,16 @@ export const PreMatchSummary = ({
         </div>
       )}
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-4">
+        <Button 
+          onClick={handleWhatsAppShare}
+          variant="outline"
+          disabled={isSending}
+          className="flex items-center gap-2"
+        >
+          <Send className="h-4 w-4" />
+          {isSending ? "שולח..." : "שלח למאמן"}
+        </Button>
         <Button onClick={onFinish}>סיים</Button>
       </div>
     </div>
