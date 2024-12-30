@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
@@ -10,7 +9,8 @@ import { QuestionSelector } from "./QuestionSelector";
 import { RatingSliders } from "./form/RatingSliders";
 import { DateTimeFields } from "./form/DateTimeFields";
 import { AIInsights } from "./AIInsights";
-import { Checkbox } from "@/components/ui/checkbox";
+import { WhatsAppShare } from "./form/WhatsAppShare";
+import { SubmitButton } from "./form/SubmitButton";
 import type { TrainingSummaryFormData } from "./types";
 
 export const TrainingSummaryForm = () => {
@@ -19,6 +19,7 @@ export const TrainingSummaryForm = () => {
   const [insights, setInsights] = useState<string | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
   const [shareWithCoach, setShareWithCoach] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<TrainingSummaryFormData>({
     defaultValues: {
@@ -59,32 +60,8 @@ export const TrainingSummaryForm = () => {
     }
   };
 
-  const sendWhatsAppMessage = async (coachPhoneNumber: string, summary: string) => {
-    try {
-      const { error } = await supabase.functions.invoke('send-whatsapp', {
-        body: {
-          message: summary,
-          recipientNumber: coachPhoneNumber
-        }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "נשלח בהצלחה",
-        description: "סיכום האימון נשלח למאמן",
-      });
-    } catch (error) {
-      console.error('Error sending WhatsApp message:', error);
-      toast({
-        title: "שגיאה בשליחת ההודעה",
-        description: "לא הצלחנו לשלוח את ההודעה למאמן. אנא נסה שוב מאוחר יותר.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const onSubmit = async (data: TrainingSummaryFormData) => {
+    setIsSubmitting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -126,7 +103,26 @@ export const TrainingSummaryForm = () => {
             `אנרגיה וריכוז: ${data.energyFocusRating}/5\n` +
             `תובנות: ${insights || 'אין תובנות זמינות'}`;
 
-          await sendWhatsAppMessage(profile.coach_phone_number, summaryText);
+          const { error: whatsappError } = await supabase.functions.invoke('send-whatsapp', {
+            body: {
+              message: summaryText,
+              recipientNumber: profile.coach_phone_number
+            }
+          });
+
+          if (whatsappError) {
+            console.error('Error sending WhatsApp message:', whatsappError);
+            toast({
+              title: "שגיאה בשליחת ההודעה",
+              description: "לא הצלחנו לשלוח את ההודעה למאמן. אנא נסה שוב מאוחר יותר.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "נשלח בהצלחה",
+              description: "סיכום האימון נשלח למאמן",
+            });
+          }
         }
       }
 
@@ -144,6 +140,8 @@ export const TrainingSummaryForm = () => {
         description: "לא ניתן לשמור את הסיכום",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -175,26 +173,15 @@ export const TrainingSummaryForm = () => {
             />
           ))}
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="shareWithCoach"
-              checked={shareWithCoach}
-              onCheckedChange={(checked) => setShareWithCoach(checked as boolean)}
-            />
-            <label
-              htmlFor="shareWithCoach"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              שתף את המאמן בסיכום האימון
-            </label>
-          </div>
+          <WhatsAppShare
+            checked={shareWithCoach}
+            onCheckedChange={(checked) => setShareWithCoach(checked)}
+          />
         </div>
 
         <AIInsights insights={insights} isLoading={isLoadingInsights} />
 
-        <Button type="submit" className="w-full">
-          שמור סיכום אימון
-        </Button>
+        <SubmitButton isLoading={isSubmitting} />
       </form>
     </Form>
   );
