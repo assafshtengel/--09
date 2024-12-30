@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Share2, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
