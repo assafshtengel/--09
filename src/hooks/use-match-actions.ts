@@ -11,12 +11,12 @@ export const useMatchActions = (userId?: string) => {
         .from('match_actions')
         .select(`
           *,
-          match:matches!inner(
+          matches!inner(
             match_date,
             player_id
           )
         `)
-        .eq('match.player_id', userId)
+        .eq('matches.player_id', userId)
         .order('created_at', { ascending: true });
 
       if (error) {
