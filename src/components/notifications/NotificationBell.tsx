@@ -9,8 +9,15 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+interface Notification {
+  id: string;
+  message: string;
+  created_at: string;
+  status: string;
+}
+
 export const NotificationBell = () => {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const { toast } = useToast();
 
@@ -55,7 +62,7 @@ export const NotificationBell = () => {
     }
 
     setNotifications(data || []);
-    setUnreadCount(data?.filter(n => !n.read)?.length || 0);
+    setUnreadCount(data?.filter(n => n.status === 'pending')?.length || 0);
   };
 
   return (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ActionSelector, Action } from "@/components/ActionSelector";
 import { PreMatchQuestionnaire } from "./PreMatchQuestionnaire";
 import { MatchDetailsForm } from "./MatchDetailsForm";
@@ -28,13 +28,21 @@ interface PreMatchReportProps {
   onFinish: () => void;
 }
 
+interface MatchDetails {
+  date: string;
+  time?: string;
+  opponent?: string;
+  position: string;
+}
+
 export const PreMatchReport = () => {
   const [currentStep, setCurrentStep] = useState<
     "dashboard" | "details" | "actions" | "questions" | "summary"
   >("dashboard");
-  const [matchDetails, setMatchDetails] = useState({
+  const [matchDetails, setMatchDetails] = useState<MatchDetails>({
     date: new Date().toISOString().split("T")[0],
     position: "forward",
+    opponent: "",
   });
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
   const [questionsAnswers, setQuestionsAnswers] = useState({});
