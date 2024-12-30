@@ -1,29 +1,22 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { QuestionSelector } from "./QuestionSelector";
 import { RatingSliders } from "./form/RatingSliders";
 import { DateTimeFields } from "./form/DateTimeFields";
+import { AIInsights } from "./AIInsights";
 import type { TrainingSummaryFormData } from "./types";
-import type { Database } from "@/integrations/supabase/types";
-
-type TrainingSummary = Database['public']['Tables']['training_summaries']['Insert'];
 
 export const TrainingSummaryForm = () => {
   const { toast } = useToast();
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
+  const [insights, setInsights] = useState<string | null>(null);
+  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+  
   const form = useForm<TrainingSummaryFormData>({
     defaultValues: {
       trainingDate: new Date(),
@@ -35,6 +28,34 @@ export const TrainingSummaryForm = () => {
     },
   });
 
+  const getAIInsights = async (data: TrainingSummaryFormData) => {
+    setIsLoadingInsights(true);
+    try {
+      const { data: aiResponse, error } = await supabase.functions.invoke('analyze-training', {
+        body: {
+          ratings: {
+            שביעות_רצון: data.satisfactionRating,
+            התמודדות_עם_אתגרים: data.challengeHandlingRating,
+            אנרגיה_וריכוז: data.energyFocusRating
+          },
+          answers: data.answers
+        }
+      });
+
+      if (error) throw error;
+      setInsights(aiResponse.insights);
+    } catch (error) {
+      console.error('Error getting AI insights:', error);
+      toast({
+        title: "שגיאה בקבלת תובנות AI",
+        description: "לא הצלחנו לקבל המלצות. אנא נסה שוב מאוחר יותר.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingInsights(false);
+    }
+  };
+
   const onSubmit = async (data: TrainingSummaryFormData) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -43,7 +64,10 @@ export const TrainingSummaryForm = () => {
         throw new Error("לא נמצא משתמש מחובר");
       }
 
-      const summary: TrainingSummary = {
+      // Get AI insights before saving
+      await getAIInsights(data);
+
+      const summary = {
         player_id: user.id,
         training_date: format(data.trainingDate, "yyyy-MM-dd"),
         training_time: data.trainingTime,
@@ -104,6 +128,8 @@ export const TrainingSummaryForm = () => {
             />
           ))}
         </div>
+
+        <AIInsights insights={insights} isLoading={isLoadingInsights} />
 
         <Button type="submit" className="w-full">
           שמור סיכום אימון
