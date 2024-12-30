@@ -83,7 +83,7 @@ export const ScheduleGrid = ({
   const currentDays = activeSection === 'first' ? firstHalf : secondHalf;
 
   const renderTimeColumn = () => (
-    <div className="sticky left-0 bg-background z-10">
+    <div className="sticky right-0 bg-background z-10">
       <div className="h-12 border-b" /> {/* Header spacer */}
       {hours.map((hour) => (
         <div key={hour} className="h-16 border-b px-2 text-sm text-muted-foreground">
