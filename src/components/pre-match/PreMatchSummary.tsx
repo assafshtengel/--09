@@ -4,6 +4,7 @@ import { Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 interface PreMatchSummaryProps {
   matchDetails: {
@@ -13,7 +14,7 @@ interface PreMatchSummaryProps {
   };
   actions: Action[];
   answers: Record<string, string>;
-  havaya: string;
+  havaya: string[];
   aiInsights: string[];
   onFinish: () => void;
 }
@@ -53,7 +54,7 @@ export const PreMatchSummary = ({
       }
 
       const summaryText = `דוח טרום משחק - ${matchDetails.date}${matchDetails.opponent ? ` מול ${matchDetails.opponent}` : ''}\n\n` +
-        `הוויה נבחרת: ${havaya}\n\n` +
+        `הוויות נבחרות:\n${havaya.join('\n')}\n\n` +
         `יעדים למשחק:\n${actions.map(action => 
           `- ${action.name}${action.goal ? ` (יעד: ${action.goal})` : ''}`
         ).join('\n')}\n\n` +
@@ -96,10 +97,16 @@ export const PreMatchSummary = ({
         </p>
       </div>
 
-      {havaya && (
+      {havaya.length > 0 && (
         <div className="border p-4 rounded-lg">
-          <h3 className="text-lg font-semibold mb-2">הוויה נבחרת</h3>
-          <p className="text-xl font-bold">{havaya}</p>
+          <h3 className="text-lg font-semibold mb-2">הוויות נבחרות</h3>
+          <div className="flex flex-wrap gap-2">
+            {havaya.map((h, index) => (
+              <Badge key={index} variant="secondary" className="text-base">
+                {h}
+              </Badge>
+            ))}
+          </div>
         </div>
       )}
 
