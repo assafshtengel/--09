@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ActionSelector, Action } from "@/components/ActionSelector";
 import { PreMatchQuestionnaire } from "./PreMatchQuestionnaire";
 import { MatchDetailsForm } from "./MatchDetailsForm";
@@ -6,11 +6,27 @@ import { PreMatchSummary } from "./PreMatchSummary";
 import { PreMatchDashboard } from "./PreMatchDashboard";
 import { SocialShareGoals } from "./SocialShareGoals";
 import { HavayaSelector } from "./HavayaSelector";
+import { NotificationBell } from "../notifications/NotificationBell";
+import { ShareResults } from "../social/ShareResults";
+import { PerformanceStats } from "../stats/PerformanceStats";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
-import { ChevronRight, ChevronLeft, Save } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
+
+interface PreMatchReportProps {
+  matchDetails: {
+    date: string;
+    time?: string;
+    opponent?: string;
+  };
+  actions: Action[];
+  answers: Record<string, string>;
+  havaya: string;
+  aiInsights: string[];
+  onFinish: () => void;
+}
 
 export const PreMatchReport = () => {
   const [currentStep, setCurrentStep] = useState<
@@ -83,7 +99,12 @@ export const PreMatchReport = () => {
       <AnimatePresence mode="wait">
         {currentStep === "dashboard" && (
           <motion.div {...commonProps} key="dashboard">
+            <div className="flex justify-between items-center mb-6">
+              <NotificationBell />
+              <h1 className="text-2xl font-bold">דוח טרום משחק</h1>
+            </div>
             <PreMatchDashboard onCreateNew={() => setCurrentStep("details")} />
+            <PerformanceStats />
           </motion.div>
         )}
 
@@ -117,6 +138,19 @@ export const PreMatchReport = () => {
 
         {currentStep === "summary" && (
           <motion.div {...commonProps} key="summary">
+            <div className="flex justify-between items-center mb-6">
+              <ShareResults
+                data={{
+                  title: "סיכום דוח טרום משחק",
+                  description: `משחק מול ${matchDetails.opponent || "יריב"}`,
+                  stats: {
+                    "מספר יעדים": selectedActions.length,
+                    "רמת מוכנות": 85
+                  }
+                }}
+              />
+              <h2 className="text-xl font-bold">סיכום דוח</h2>
+            </div>
             <PreMatchSummary
               matchDetails={matchDetails}
               actions={selectedActions}
