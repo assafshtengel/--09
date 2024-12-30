@@ -3,6 +3,17 @@ import { Action } from "@/components/ActionSelector";
 import { AdditionalActions } from "./AdditionalActions";
 import html2canvas from "html2canvas";
 import { toast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface GamePreviewProps {
   actions: Action[];
@@ -34,6 +45,18 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
     }
   };
 
+  const handleStartMatch = () => {
+    if (actions.length === 0) {
+      toast({
+        title: "שים לב",
+        description: "לא נבחרו יעדים למשחק. האם ברצונך להוסיף יעדים לפני תחילת המשחק?",
+        variant: "warning",
+      });
+      return;
+    }
+    onStartMatch();
+  };
+
   return (
     <div id="goals-preview" className="space-y-4">
       <div className="bg-white rounded-lg shadow-md p-4">
@@ -56,9 +79,26 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
         <Button onClick={takeScreenshot} variant="outline" size="sm">
           צלם מסך
         </Button>
-        <Button onClick={onStartMatch} size="sm">
-          התחל משחק
-        </Button>
+        
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button size="sm">התחל משחק</Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>התחלת משחק חדש</AlertDialogTitle>
+              <AlertDialogDescription>
+                האם אתה בטוח שברצונך להתחיל את המשחק? לא ניתן יהיה לערוך את היעדים לאחר תחילת המשחק.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>ביטול</AlertDialogCancel>
+              <AlertDialogAction onClick={handleStartMatch}>
+                התחל משחק
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
