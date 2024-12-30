@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Calendar } from "@/components/ui/calendar";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
@@ -6,8 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -16,12 +23,39 @@ interface NotificationFormData {
   message: string;
   scheduledFor: Date;
   condition?: string;
-  recipientId?: string;
+  recipients: string[];
+}
+
+interface Player {
+  id: string;
+  full_name: string;
+  club?: string;
 }
 
 export const NotificationForm = () => {
   const [date, setDate] = useState<Date>();
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const form = useForm<NotificationFormData>();
+
+  useEffect(() => {
+    fetchPlayers();
+  }, []);
+
+  const fetchPlayers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, club')
+        .eq('role', 'player');
+      
+      if (error) throw error;
+      setPlayers(data || []);
+    } catch (error) {
+      console.error('Error fetching players:', error);
+      toast.error("שגיאה בטעינת רשימת השחקנים");
+    }
+  };
 
   const onSubmit = async (data: NotificationFormData) => {
     try {
@@ -30,20 +64,37 @@ export const NotificationForm = () => {
         throw new Error("משתמש לא מחובר");
       }
 
-      const { error } = await supabase.from("notifications").insert({
-        sender_id: session.session.user.id,
-        message: data.message,
-        scheduled_for: data.scheduledFor.toISOString(),
-        condition: data.condition ? JSON.parse(data.condition) : null,
-        recipient_id: data.recipientId || null,
-        type: "custom",
-        status: "pending"
-      });
+      // אם נבחרו שחקנים, שלח התראה לכל אחד מהם
+      if (selectedPlayers.length > 0) {
+        const notifications = selectedPlayers.map(playerId => ({
+          sender_id: session.session.user.id,
+          message: data.message,
+          scheduled_for: data.scheduledFor.toISOString(),
+          condition: data.condition ? JSON.parse(data.condition) : null,
+          recipient_id: playerId,
+          type: "custom",
+          status: "pending"
+        }));
 
-      if (error) throw error;
+        const { error } = await supabase.from("notifications").insert(notifications);
+        if (error) throw error;
+      } else {
+        // אם לא נבחרו שחקנים, שלח התראה גלובלית
+        const { error } = await supabase.from("notifications").insert({
+          sender_id: session.session.user.id,
+          message: data.message,
+          scheduled_for: data.scheduledFor.toISOString(),
+          condition: data.condition ? JSON.parse(data.condition) : null,
+          recipient_id: null,
+          type: "custom",
+          status: "pending"
+        });
+        if (error) throw error;
+      }
 
       toast.success("התזכורת נוצרה בהצלחה");
       form.reset();
+      setSelectedPlayers([]);
     } catch (error) {
       console.error("Error creating notification:", error);
       toast.error("שגיאה ביצירת התזכורת");
@@ -109,18 +160,37 @@ export const NotificationForm = () => {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="recipientId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>מזהה נמען (אופציונלי)</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="הכנס מזהה נמען..." />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+        <FormItem>
+          <FormLabel>בחר שחקנים (אופציונלי)</FormLabel>
+          <Command className="border rounded-md">
+            <CommandInput placeholder="חפש שחקנים..." />
+            <CommandEmpty>לא נמצאו שחקנים</CommandEmpty>
+            <CommandGroup className="max-h-64 overflow-auto">
+              {players.map((player) => (
+                <CommandItem
+                  key={player.id}
+                  onSelect={() => {
+                    setSelectedPlayers(prev => {
+                      if (prev.includes(player.id)) {
+                        return prev.filter(id => id !== player.id);
+                      }
+                      return [...prev, player.id];
+                    });
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selectedPlayers.includes(player.id) ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  <span>{player.full_name}</span>
+                  {player.club && <span className="text-muted-foreground mr-2">({player.club})</span>}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </Command>
+        </FormItem>
 
         <FormField
           control={form.control}
