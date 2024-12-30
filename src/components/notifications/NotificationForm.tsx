@@ -68,7 +68,19 @@ export const NotificationForm = () => {
             <FormItem>
               <FormLabel>תנאי שליחה (JSON, אופציונלי)</FormLabel>
               <FormControl>
-                <Input {...field} placeholder='{"key": "value"}' />
+                <Input 
+                  {...field} 
+                  value={typeof field.value === 'string' ? field.value : JSON.stringify(field.value)}
+                  onChange={(e) => {
+                    try {
+                      const parsed = JSON.parse(e.target.value);
+                      field.onChange(parsed);
+                    } catch {
+                      field.onChange(e.target.value);
+                    }
+                  }}
+                  placeholder='{"key": "value"}'
+                />
               </FormControl>
             </FormItem>
           )}
