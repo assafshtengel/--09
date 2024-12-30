@@ -30,7 +30,13 @@ export const NotificationBell = () => {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notifications' },
         (payload) => {
-          setNotifications(prev => [payload.new, ...prev]);
+          const newNotification: Notification = {
+            id: payload.new.id,
+            message: payload.new.message,
+            created_at: payload.new.created_at,
+            status: payload.new.status
+          };
+          setNotifications(prev => [newNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
           toast({
             title: "התראה חדשה",
