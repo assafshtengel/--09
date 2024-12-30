@@ -339,7 +339,9 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_completed: boolean
           player_id: string
+          progress: number
           title: string
           updated_at: string
         }
@@ -349,7 +351,9 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_completed?: boolean
           player_id: string
+          progress?: number
           title: string
           updated_at?: string
         }
@@ -359,7 +363,9 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_completed?: boolean
           player_id?: string
+          progress?: number
           title?: string
           updated_at?: string
         }
