@@ -32,7 +32,7 @@ export const NotificationSchedule = ({ form }: NotificationScheduleProps) => {
                 >
                   <CalendarIcon className="ml-2 h-4 w-4" />
                   {field.value ? (
-                    format(field.value, "PPP")
+                    format(new Date(field.value), "PPP")
                   ) : (
                     <span>בחר תאריך</span>
                   )}
@@ -41,10 +41,10 @@ export const NotificationSchedule = ({ form }: NotificationScheduleProps) => {
               <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
-                  selected={field.value}
+                  selected={field.value ? new Date(field.value) : undefined}
                   onSelect={(date) => {
                     if (date) {
-                      field.onChange(date);
+                      field.onChange(date.toISOString());
                     }
                   }}
                   initialFocus

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Form } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { NotificationMessage } from "./form/NotificationMessage";
 import { NotificationSchedule } from "./form/NotificationSchedule";
 import { RecipientSelector } from "./form/RecipientSelector";
-import { NotificationData, NotificationType } from "@/types/notifications";
+import { NotificationData } from "@/types/notifications";
 
 export const NotificationForm = () => {
   const [isSending, setIsSending] = useState(false);
@@ -27,17 +27,17 @@ export const NotificationForm = () => {
         sender_id: session.session.user.id,
         message: data.message,
         scheduled_for: data.scheduled_for,
-        condition: data.condition ? JSON.parse(data.condition) : null,
+        condition: data.condition ? JSON.stringify(data.condition) : null,
         recipient_id: data.recipient_id,
-        type: "custom" as NotificationType,
+        type: data.type,
         status: "pending"
       }] : [{
         sender_id: session.session.user.id,
         message: data.message,
         scheduled_for: data.scheduled_for,
-        condition: data.condition ? JSON.parse(data.condition) : null,
+        condition: data.condition ? JSON.stringify(data.condition) : null,
         recipient_id: null,
-        type: "custom" as NotificationType,
+        type: data.type,
         status: "pending"
       }];
 
