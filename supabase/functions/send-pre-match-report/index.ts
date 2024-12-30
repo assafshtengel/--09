@@ -28,7 +28,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "Pre Match Report <onboarding@resend.dev>",
-        to: ["socr.co.il@gmail.com", ...emailRequest.to],
+        to: emailRequest.to,
         subject: emailRequest.subject,
         html: emailRequest.html,
       }),
