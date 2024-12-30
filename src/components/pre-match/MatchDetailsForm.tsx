@@ -2,11 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
-interface MatchDetails {
+export interface MatchDetails {
   date: string;
   time?: string;
   opponent?: string;
-  location?: string;
   position?: string;
 }
 

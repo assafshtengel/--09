@@ -8,9 +8,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
+interface MatchDetails {
+  date: string;
+  time?: string;
+  opponent?: string;
+  position?: string;
+}
+
 export const PreMatchReport = () => {
   const [step, setStep] = useState(1);
-  const [matchDetails, setMatchDetails] = useState({
+  const [matchDetails, setMatchDetails] = useState<MatchDetails>({
     date: "",
     time: "",
     opponent: "",
@@ -40,11 +47,11 @@ export const PreMatchReport = () => {
               exit={{ opacity: 0, x: -20 }}
             >
               <MatchDetailsForm
-                initialValues={matchDetails}
                 onSubmit={(values) => {
                   setMatchDetails(values);
                   handleNext();
                 }}
+                initialData={matchDetails}
               />
             </motion.div>
           )}
@@ -59,18 +66,12 @@ export const PreMatchReport = () => {
             >
               <h2 className="text-2xl font-bold text-right">בחר פעולות למעקב</h2>
               <ActionSelector
-                actions={actions}
-                onChange={setActions}
+                position={matchDetails.position || "forward"}
+                onSubmit={(selectedActions) => {
+                  setActions(selectedActions);
+                  handleNext();
+                }}
               />
-              <div className="flex justify-between">
-                <Button onClick={handleNext}>
-                  הבא
-                  <ArrowRight className="mr-2 h-4 w-4" />
-                </Button>
-                <Button variant="outline" onClick={handleBack}>
-                  חזור
-                </Button>
-              </div>
             </motion.div>
           )}
 
@@ -86,7 +87,6 @@ export const PreMatchReport = () => {
                   setAnswers(values);
                   handleNext();
                 }}
-                onBack={handleBack}
               />
             </motion.div>
           )}
@@ -101,9 +101,16 @@ export const PreMatchReport = () => {
               <HavayaSelector
                 value={havaya}
                 onChange={setHavaya}
-                onSubmit={() => handleNext()}
-                onBack={handleBack}
               />
+              <div className="flex justify-between mt-6">
+                <Button onClick={handleNext}>
+                  הבא
+                  <ArrowRight className="mr-2 h-4 w-4" />
+                </Button>
+                <Button variant="outline" onClick={handleBack}>
+                  חזור
+                </Button>
+              </div>
             </motion.div>
           )}
 
