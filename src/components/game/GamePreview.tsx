@@ -50,7 +50,7 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
       toast({
         title: "שים לב",
         description: "לא נבחרו יעדים למשחק. האם ברצונך להוסיף יעדים לפני תחילת המשחק?",
-        variant: "warning",
+        variant: "destructive", // Changed from "warning" to "destructive"
       });
       return;
     }
