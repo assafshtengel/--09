@@ -13,7 +13,17 @@ serve(async (req) => {
   }
 
   try {
+    // Validate request method
+    if (req.method !== 'POST') {
+      throw new Error('Method not allowed');
+    }
+
     const { message, recipientNumber } = await req.json();
+
+    // Validate required fields
+    if (!message || !recipientNumber) {
+      throw new Error('Missing required fields: message and recipientNumber are required');
+    }
 
     // Initialize Twilio client
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
@@ -21,16 +31,20 @@ serve(async (req) => {
     const fromNumber = Deno.env.get('TWILIO_WHATSAPP_NUMBER');
 
     if (!accountSid || !authToken || !fromNumber) {
-      throw new Error('Missing Twilio credentials');
+      console.error('Missing Twilio credentials');
+      throw new Error('Server configuration error: Missing Twilio credentials');
     }
 
     const client = new Twilio(accountSid, authToken);
+
+    // Format phone number if needed
+    const formattedNumber = recipientNumber.startsWith('+') ? recipientNumber : `+${recipientNumber}`;
 
     // Send WhatsApp message
     const twilioMessage = await client.messages.create({
       body: message,
       from: `whatsapp:${fromNumber}`,
-      to: `whatsapp:${recipientNumber}`,
+      to: `whatsapp:${formattedNumber}`,
     });
 
     console.log('Message sent successfully:', twilioMessage.sid);
@@ -47,10 +61,13 @@ serve(async (req) => {
     console.error('Error sending WhatsApp message:', error);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error instanceof Error ? error.stack : undefined 
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        status: error.message === 'Method not allowed' ? 405 : 500,
       }
     );
   }
