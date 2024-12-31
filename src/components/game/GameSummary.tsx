@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Action } from "@/components/ActionSelector";
-import { SummaryLayout } from "./summary/SummaryLayout";
-import { useToast } from "@/hooks/use-toast";
+import { GameStats } from "./GameStats";
+import { GameInsights } from "./GameInsights";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import html2canvas from "html2canvas";
-import { format } from "date-fns";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ActionLog {
   actionId: string;
@@ -13,174 +13,139 @@ interface ActionLog {
   note?: string;
 }
 
-interface SubstitutionLog {
-  playerIn: string;
-  playerOut: string;
-  minute: number;
-}
-
 interface GameSummaryProps {
   actions: Action[];
   actionLogs: ActionLog[];
   generalNotes: Array<{ text: string; minute: number }>;
-  substitutions: SubstitutionLog[];
   onClose: () => void;
-  gamePhase?: "halftime" | "ended";
-  onContinueGame?: () => void;
+  gamePhase: "halftime" | "ended";
   matchId?: string;
 }
 
-export const GameSummary = ({ 
-  actions, 
-  actionLogs, 
+export const GameSummary = ({
+  actions,
+  actionLogs,
   generalNotes,
-  substitutions,
   onClose,
-  gamePhase = "ended",
-  onContinueGame,
+  gamePhase,
   matchId
 }: GameSummaryProps) => {
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const { toast } = useToast();
+  const [havaya, setHavaya] = useState<string[]>([]);
+  const [preMatchAnswers, setPreMatchAnswers] = useState<Record<string, string>>({});
 
-  const handleSubmit = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "שגיאה",
-          description: "משתמש לא מחובר",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!matchId) {
-        toast({
-          title: "שגיאה",
-          description: "לא נמצא מזהה משחק",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      await sendEmail();
-      toast({
-        title: "המשוב נשמר בהצלחה",
-        description: "סיכום המשחק נשלח למייל",
-      });
-      onClose();
-    } catch (error) {
-      console.error('Error in handleSubmit:', error);
-      toast({
-        title: "שגיאה בשמירת המשוב",
-        description: "אנא נסה שנית",
-        variant: "destructive",
-      });
+  useEffect(() => {
+    if (matchId) {
+      loadPreMatchData();
     }
-  };
+  }, [matchId]);
 
-  const takeScreenshot = async () => {
+  const loadPreMatchData = async () => {
     try {
-      const element = document.getElementById('game-summary-content');
-      if (element) {
-        const canvas = await html2canvas(element);
-        const link = document.createElement('a');
-        link.download = `game-summary-${format(new Date(), 'yyyy-MM-dd')}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-        toast({
-          title: "צילום מסך נשמר בהצלחה",
-          variant: "default",
-        });
+      const { data: match } = await supabase
+        .from('matches')
+        .select(`
+          pre_match_reports (
+            havaya,
+            questions_answers
+          )
+        `)
+        .eq('id', matchId)
+        .single();
+
+      if (match?.pre_match_reports) {
+        const report = match.pre_match_reports;
+        if (report.havaya) {
+          setHavaya(report.havaya.split(','));
+        }
+        if (report.questions_answers) {
+          setPreMatchAnswers(report.questions_answers);
+        }
       }
     } catch (error) {
-      console.error('Error taking screenshot:', error);
-      toast({
-        title: "שגיאה בשמירת צילום המסך",
-        variant: "destructive",
-      });
+      console.error('Error loading pre-match data:', error);
     }
   };
 
-  const shareToSocial = async (platform: 'facebook' | 'instagram') => {
-    const score = calculateScore(actionLogs);
-    const shareText = `Just finished a game with a performance score of ${score}! 🎯⚽️ #SoccerPerformance #Training`;
-    
-    if (platform === 'facebook') {
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${window.location.href}&quote=${encodeURIComponent(shareText)}`, '_blank');
-    } else if (platform === 'instagram') {
-      await navigator.clipboard.writeText(shareText);
-      toast({
-        title: "טקסט הועתק ללוח",
-        description: "כעת תוכל להדביק אותו באינסטגרם",
-      });
-    }
+  const calculateActionStats = (actionId: string) => {
+    const actionResults = actionLogs.filter(log => log.actionId === actionId);
+    const successes = actionResults.filter(log => log.result === "success").length;
+    return `${successes}/${actionResults.length}`;
   };
 
-  const sendEmail = async () => {
-    try {
-      setIsSendingEmail(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.email) throw new Error("No user email found");
-
-      const htmlContent = `
-        <div dir="rtl">
-          <h1>סיכום משחק</h1>
-          ${document.getElementById('game-summary-content')?.innerHTML}
-        </div>
-      `;
-
-      const { error } = await supabase.functions.invoke('send-game-summary', {
-        body: {
-          to: [user.email],
-          subject: `סיכום משחק - ${format(new Date(), 'dd/MM/yyyy')}`,
-          html: htmlContent,
-        },
-      });
-
-      if (error) throw error;
-      toast({
-        title: "הסיכום נשלח בהצלחה למייל",
-        variant: "default",
-      });
-    } catch (error) {
-      console.error('Error sending email:', error);
-      toast({
-        title: "שגיאה בשליחת המייל",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSendingEmail(false);
+  const handleClose = () => {
+    if (gamePhase === "halftime") {
+      onClose(); // This will return to game tracking
     }
-  };
-
-  const calculateScore = (actionLogs: ActionLog[]) => {
-    const successPoints = 10;
-    const failurePoints = -5;
-    
-    const score = actionLogs.reduce((total, log) => {
-      return total + (log.result === "success" ? successPoints : failurePoints);
-    }, 0);
-
-    return Math.max(0, score);
   };
 
   return (
-    <SummaryLayout
-      actions={actions}
-      actionLogs={actionLogs}
-      generalNotes={generalNotes}
-      substitutions={substitutions}
-      onClose={onClose}
-      gamePhase={gamePhase}
-      onContinueGame={onContinueGame}
-      matchId={matchId}
-      isSendingEmail={isSendingEmail}
-      onSubmit={handleSubmit}
-      onSendEmail={sendEmail}
-      onShareSocial={shareToSocial}
-      onScreenshot={takeScreenshot}
-    />
+    <ScrollArea className="h-[80vh] md:h-[600px] p-4">
+      <div className="space-y-6">
+        <div className="border-b pb-4">
+          <h2 className="text-2xl font-bold text-right">
+            {gamePhase === "halftime" ? "סיכום מחצית" : "סיכום משחק"}
+          </h2>
+        </div>
+
+        {havaya.length > 0 && (
+          <div className="border p-4 rounded-lg">
+            <h3 className="text-lg font-semibold mb-2 text-right">הוויות נבחרות</h3>
+            <div className="flex flex-wrap gap-2 justify-end">
+              {havaya.map((h, index) => (
+                <Badge key={index} variant="secondary">
+                  {h}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {Object.keys(preMatchAnswers).length > 0 && (
+          <div className="border p-4 rounded-lg">
+            <h3 className="text-lg font-semibold mb-2 text-right">תשובות מדוח טרום משחק</h3>
+            <div className="space-y-2">
+              {Object.entries(preMatchAnswers).map(([question, answer], index) => (
+                <div key={index} className="text-right">
+                  <p className="font-medium">{question}</p>
+                  <p className="text-muted-foreground">{answer}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-right">פעולות במשחק</h3>
+          {actions.map(action => (
+            <div key={action.id} className="border p-4 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">{calculateActionStats(action.id)}</span>
+                <span>{action.name}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {gamePhase === "halftime" && (
+          <>
+            <GameInsights actionLogs={actionLogs} />
+            
+            {generalNotes.length > 0 && (
+              <div className="border p-4 rounded-lg">
+                <h3 className="text-lg font-semibold mb-2 text-right">הערות</h3>
+                <div className="space-y-2">
+                  {generalNotes.map((note, index) => (
+                    <div key={index} className="text-right">
+                      <span className="text-sm text-muted-foreground">{note.minute}'</span>
+                      <p>{note.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </ScrollArea>
   );
 };

@@ -277,6 +277,14 @@ export const GameTracker = () => {
     });
   };
 
+  const calculateActionStats = (actionId: string) => {
+    const actionResults = actionLogs.filter(log => log.actionId === actionId);
+    return {
+      success: actionResults.filter(log => log.result === "success").length,
+      total: actionResults.length
+    };
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-md mx-auto bg-white min-h-screen relative pb-24 md:pb-0">
@@ -300,17 +308,14 @@ export const GameTracker = () => {
 
         {(gamePhase === "playing" || gamePhase === "secondHalf") && (
           <div className="space-y-6 p-4">
-            <div className="grid gap-6">
+            <div className="grid gap-4 max-h-[calc(100vh-200px)] overflow-y-auto">
               {actions.map(action => (
-                <div key={action.id} className="border rounded-lg p-4 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">{action.name}</span>
-                    <ActionButtons
-                      actionId={action.id}
-                      onLog={logAction}
-                    />
-                  </div>
-                </div>
+                <ActionItem
+                  key={action.id}
+                  action={action}
+                  stats={calculateActionStats(action.id)}
+                  onLog={logAction}
+                />
               ))}
             </div>
 
@@ -342,8 +347,12 @@ export const GameTracker = () => {
               actions={actions}
               actionLogs={actionLogs}
               generalNotes={generalNotes}
-              substitutions={substitutions}
-              onClose={() => setShowSummary(false)}
+              onClose={() => {
+                setShowSummary(false);
+                if (gamePhase === "halftime") {
+                  startSecondHalf();
+                }
+              }}
               gamePhase={gamePhase === "halftime" || gamePhase === "ended" ? gamePhase : "ended"}
               matchId={matchId}
             />
