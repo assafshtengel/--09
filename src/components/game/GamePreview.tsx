@@ -14,14 +14,24 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface GamePreviewProps {
   actions: Action[];
+  havaya: string[];
+  preMatchAnswers: Record<string, string>;
   onActionAdd: (action: Action) => void;
   onStartMatch: () => void;
 }
 
-export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewProps) => {
+export const GamePreview = ({ 
+  actions, 
+  havaya, 
+  preMatchAnswers,
+  onActionAdd, 
+  onStartMatch 
+}: GamePreviewProps) => {
   const takeScreenshot = async () => {
     try {
       const element = document.getElementById('goals-preview');
@@ -50,7 +60,7 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
       toast({
         title: "שים לב",
         description: "לא נבחרו יעדים למשחק. האם ברצונך להוסיף יעדים לפני תחילת המשחק?",
-        variant: "destructive", // Changed from "warning" to "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -58,48 +68,77 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
   };
 
   return (
-    <div id="goals-preview" className="space-y-4">
-      <div className="bg-white rounded-lg shadow-md p-4">
-        <h2 className="text-xl font-bold text-right mb-4">יעדי המשחק</h2>
-        <div className="grid gap-3">
-          {actions.map(action => (
-            <div key={action.id} className="border p-3 rounded-lg text-right hover:bg-gray-50 transition-colors">
-              <h3 className="font-semibold">{action.name}</h3>
-              {action.goal && (
-                <p className="text-sm text-gray-600 mt-1">יעד: {action.goal}</p>
-              )}
+    <ScrollArea className="h-[calc(100vh-200px)]">
+      <div id="goals-preview" className="space-y-4 p-4">
+        {havaya.length > 0 && (
+          <div className="border p-4 rounded-lg">
+            <h3 className="text-lg font-semibold mb-2 text-right">הוויות נבחרות</h3>
+            <div className="flex flex-wrap gap-2 justify-end">
+              {havaya.map((h, index) => (
+                <Badge key={index} variant="secondary">
+                  {h}
+                </Badge>
+              ))}
             </div>
-          ))}
+          </div>
+        )}
+
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <h2 className="text-xl font-bold text-right mb-4">יעדי המשחק</h2>
+          <div className="grid gap-3">
+            {actions.map(action => (
+              <div key={action.id} className="border p-3 rounded-lg text-right hover:bg-gray-50 transition-colors">
+                <h3 className="font-semibold">{action.name}</h3>
+                {action.goal && (
+                  <p className="text-sm text-gray-600 mt-1">יעד: {action.goal}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {Object.keys(preMatchAnswers).length > 0 && (
+          <div className="border p-4 rounded-lg">
+            <h3 className="text-lg font-semibold mb-2 text-right">תשובות מדוח טרום משחק</h3>
+            <div className="space-y-3">
+              {Object.entries(preMatchAnswers).map(([question, answer], index) => (
+                <div key={index} className="text-right">
+                  <p className="font-medium">{question}</p>
+                  <p className="text-gray-600">{answer}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <AdditionalActions onActionSelect={onActionAdd} />
+        
+        <div className="flex gap-3 justify-end mt-6">
+          <Button onClick={takeScreenshot} variant="outline" size="sm">
+            צלם מסך
+          </Button>
+          
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="sm">התחל משחק</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>התחלת משחק חדש</AlertDialogTitle>
+                <AlertDialogDescription>
+                  האם אתה בטוח שברצונך להתחיל את המשחק? לא ניתן יהיה לערוך את היעדים לאחר תחילת המשחק.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>ביטול</AlertDialogCancel>
+                <AlertDialogAction onClick={handleStartMatch}>
+                  התחל משחק
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
-
-      <AdditionalActions onActionSelect={onActionAdd} />
-      
-      <div className="flex gap-3 justify-end">
-        <Button onClick={takeScreenshot} variant="outline" size="sm">
-          צלם מסך
-        </Button>
-        
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button size="sm">התחל משחק</Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>התחלת משחק חדש</AlertDialogTitle>
-              <AlertDialogDescription>
-                האם אתה בטוח שברצונך להתחיל את המשחק? לא ניתן יהיה לערוך את היעדים לאחר תחילת המשחק.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>ביטול</AlertDialogCancel>
-              <AlertDialogAction onClick={handleStartMatch}>
-                התחל משחק
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
-    </div>
+    </ScrollArea>
   );
 };

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { ActionButton } from "./ActionButton";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
 
 interface ActionItemProps {

@@ -41,7 +41,9 @@ export const GameTracker = () => {
         .select(`
           *,
           pre_match_reports (
-            actions
+            actions,
+            havaya,
+            questions_answers
           )
         `)
         .eq("id", matchId)
@@ -302,6 +304,8 @@ export const GameTracker = () => {
         {gamePhase === "preview" && (
           <GamePreview
             actions={actions}
+            havaya={match?.pre_match_reports?.havaya?.split(',') || []}
+            preMatchAnswers={match?.pre_match_reports?.questions_answers || {}}
             onActionAdd={handleAddAction}
             onStartMatch={startMatch}
           />
@@ -344,18 +348,14 @@ export const GameTracker = () => {
 
         <Dialog open={showSummary} onOpenChange={setShowSummary}>
           <DialogContent className="max-w-md mx-auto">
-            <GameSummary
+            <HalftimeSummary
+              isOpen={showSummary}
+              onClose={() => setShowSummary(false)}
+              onStartSecondHalf={startSecondHalf}
               actions={actions}
               actionLogs={actionLogs}
               generalNotes={generalNotes}
-              onClose={() => {
-                setShowSummary(false);
-                if (gamePhase === "halftime") {
-                  startSecondHalf();
-                }
-              }}
-              gamePhase={gamePhase === "halftime" || gamePhase === "ended" ? gamePhase : "ended"}
-              matchId={matchId}
+              havaya={match?.pre_match_reports?.havaya?.split(',') || []}
             />
           </DialogContent>
         </Dialog>
