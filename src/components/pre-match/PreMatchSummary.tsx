@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Action } from "@/components/ActionSelector";
 import { PreMatchActions } from "./components/PreMatchActions";
+import { Badge } from "@/components/ui/badge";
 import html2canvas from "html2canvas";
 
 interface PreMatchSummaryProps {
