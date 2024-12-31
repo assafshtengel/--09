@@ -57,8 +57,8 @@ export const GameSummary = ({
         if (report.havaya) {
           setHavaya(report.havaya.split(','));
         }
-        if (report.questions_answers) {
-          setPreMatchAnswers(report.questions_answers);
+        if (report.questions_answers && typeof report.questions_answers === 'object') {
+          setPreMatchAnswers(report.questions_answers as Record<string, string>);
         }
       }
     } catch (error) {

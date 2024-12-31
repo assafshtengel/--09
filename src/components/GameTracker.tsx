@@ -13,6 +13,7 @@ import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog } from "@/types/game";
+import { ActionItem } from "./game/ActionItem"; // Add this import
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
