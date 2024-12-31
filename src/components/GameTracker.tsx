@@ -17,12 +17,18 @@ import { ActionItem } from "./game/ActionItem";
 
 interface MatchData {
   id: string;
+  created_at: string;
+  location: string | null;
+  match_date: string;
+  opponent: string | null;
+  player_id: string;
+  pre_match_report_id: string | null;
+  status: GamePhase;
   pre_match_reports?: {
     actions?: PreMatchReportActions[];
     havaya?: string;
     questions_answers?: Record<string, any>;
   };
-  status: GamePhase;
 }
 
 export const GameTracker = () => {
@@ -62,7 +68,7 @@ export const GameTracker = () => {
 
       if (matchError) throw matchError;
 
-      setMatchData(match);
+      setMatchData(match as MatchData);
 
       if (match?.pre_match_reports?.actions) {
         const rawActions = match.pre_match_reports.actions as unknown;

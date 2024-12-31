@@ -20,6 +20,7 @@ interface GameSummaryProps {
   onClose: () => void;
   gamePhase: "halftime" | "ended";
   matchId?: string;
+  havaya?: string[];
 }
 
 export const GameSummary = ({
@@ -28,9 +29,9 @@ export const GameSummary = ({
   generalNotes,
   onClose,
   gamePhase,
-  matchId
+  matchId,
+  havaya = []
 }: GameSummaryProps) => {
-  const [havaya, setHavaya] = useState<string[]>([]);
   const [preMatchAnswers, setPreMatchAnswers] = useState<Record<string, string>>({});
 
   useEffect(() => {
