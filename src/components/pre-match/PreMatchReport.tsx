@@ -46,7 +46,7 @@ export const PreMatchReport = () => {
           actions: actions,
           questions_answers: answers,
           havaya: havaya.join(','),
-          status: 'draft'
+          status: 'completed' as const // Fix the type issue by explicitly setting it as 'completed'
         };
 
         let reportId = preMatchReportId;

@@ -44,8 +44,7 @@ export const GameSelection = () => {
           `)
           .eq("player_id", user.id)
           .eq("status", "completed")
-          .order("match_date", { ascending: false })
-          .limit(10); // Changed from 3 to 10
+          .order("match_date", { ascending: false });
 
         if (error) throw error;
 
