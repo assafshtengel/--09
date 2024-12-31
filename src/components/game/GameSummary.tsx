@@ -46,7 +46,6 @@ export const GameSummary = ({
         .from('matches')
         .select(`
           pre_match_reports (
-            havaya,
             questions_answers
           )
         `)
@@ -55,9 +54,6 @@ export const GameSummary = ({
 
       if (match?.pre_match_reports) {
         const report = match.pre_match_reports;
-        if (report.havaya) {
-          setHavaya(report.havaya.split(','));
-        }
         if (report.questions_answers && typeof report.questions_answers === 'object') {
           setPreMatchAnswers(report.questions_answers as Record<string, string>);
         }

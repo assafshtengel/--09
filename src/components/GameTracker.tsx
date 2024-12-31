@@ -25,10 +25,10 @@ interface MatchData {
   pre_match_report_id: string | null;
   status: GamePhase;
   pre_match_reports?: {
-    actions?: PreMatchReportActions[];
-    havaya?: string;
-    questions_answers?: Record<string, any>;
-  };
+    actions?: PreMatchReportActions[] | null;
+    havaya?: string | null;
+    questions_answers?: Record<string, any> | null;
+  } | null;
 }
 
 export const GameTracker = () => {
@@ -68,14 +68,14 @@ export const GameTracker = () => {
 
       if (matchError) throw matchError;
 
-      setMatchData(match as MatchData);
+      const typedMatch = match as unknown as MatchData;
+      setMatchData(typedMatch);
 
-      if (match?.pre_match_reports?.actions) {
-        const rawActions = match.pre_match_reports.actions as unknown;
-        const preMatchActions = rawActions as PreMatchReportActions[];
+      if (typedMatch?.pre_match_reports?.actions) {
+        const rawActions = typedMatch.pre_match_reports.actions;
         
-        const validActions = preMatchActions
-          .filter(action => 
+        const validActions = (Array.isArray(rawActions) ? rawActions : [])
+          .filter((action): action is PreMatchReportActions => 
             typeof action === 'object' && 
             action !== null && 
             'id' in action && 
@@ -92,7 +92,7 @@ export const GameTracker = () => {
         setActions(validActions);
       }
 
-      setGamePhase(match.status as GamePhase);
+      setGamePhase(typedMatch.status as GamePhase);
     } catch (error) {
       console.error("Error loading match data:", error);
       toast({
