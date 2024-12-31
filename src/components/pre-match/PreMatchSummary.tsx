@@ -1,10 +1,8 @@
-import { Button } from "@/components/ui/button";
-import { Action } from "@/components/ActionSelector";
-import { Send, Mail, Printer } from "lucide-react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
+import { Action } from "@/components/ActionSelector";
+import { PreMatchActions } from "./components/PreMatchActions";
 import html2canvas from "html2canvas";
 
 interface PreMatchSummaryProps {
@@ -248,39 +246,14 @@ export const PreMatchSummary = ({
         )}
       </div>
 
-      <div className="flex justify-end gap-4">
-        <Button 
-          onClick={handleEmailSend}
-          variant="outline"
-          disabled={isEmailSending}
-          className="flex items-center gap-2"
-        >
-          <Mail className="h-4 w-4" />
-          {isEmailSending ? "שולח..." : "שלח למייל"}
-        </Button>
-
-        <Button 
-          onClick={handlePrint}
-          variant="outline"
-          disabled={isPrinting}
-          className="flex items-center gap-2"
-        >
-          <Printer className="h-4 w-4" />
-          {isPrinting ? "מדפיס..." : "הדפס"}
-        </Button>
-
-        <Button 
-          onClick={handleWhatsAppShare}
-          variant="outline"
-          disabled={isSending}
-          className="flex items-center gap-2"
-        >
-          <Send className="h-4 w-4" />
-          {isSending ? "שולח..." : "שלח לוואטסאפ"}
-        </Button>
-
-        <Button onClick={onFinish}>סיים</Button>
-      </div>
+      <PreMatchActions
+        onEmailSend={handleEmailSend}
+        onPrint={handlePrint}
+        onWhatsAppShare={handleWhatsAppShare}
+        isEmailSending={isEmailSending}
+        isPrinting={isPrinting}
+        isWhatsAppSending={isSending}
+      />
     </div>
   );
 };
