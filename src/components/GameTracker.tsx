@@ -13,7 +13,17 @@ import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog } from "@/types/game";
-import { ActionItem } from "./game/ActionItem"; // Add this import
+import { ActionItem } from "./game/ActionItem";
+
+interface MatchData {
+  id: string;
+  pre_match_reports?: {
+    actions?: PreMatchReportActions[];
+    havaya?: string;
+    questions_answers?: Record<string, any>;
+  };
+  status: GamePhase;
+}
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
@@ -27,6 +37,7 @@ export const GameTracker = () => {
   const [generalNotes, setGeneralNotes] = useState<Array<{ text: string; minute: number }>>([]);
   const [substitutions, setSubstitutions] = useState<SubstitutionLog[]>([]);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [matchData, setMatchData] = useState<MatchData | null>(null);
 
   useEffect(() => {
     loadMatchData();
@@ -50,6 +61,8 @@ export const GameTracker = () => {
         .single();
 
       if (matchError) throw matchError;
+
+      setMatchData(match);
 
       if (match?.pre_match_reports?.actions) {
         const rawActions = match.pre_match_reports.actions as unknown;
@@ -301,11 +314,11 @@ export const GameTracker = () => {
           />
         )}
 
-        {gamePhase === "preview" && (
+        {gamePhase === "preview" && matchData?.pre_match_reports && (
           <GamePreview
             actions={actions}
-            havaya={match?.pre_match_reports?.havaya?.split(',') || []}
-            preMatchAnswers={match?.pre_match_reports?.questions_answers || {}}
+            havaya={matchData.pre_match_reports.havaya?.split(',') || []}
+            preMatchAnswers={matchData.pre_match_reports.questions_answers || {}}
             onActionAdd={handleAddAction}
             onStartMatch={startMatch}
           />
@@ -348,14 +361,13 @@ export const GameTracker = () => {
 
         <Dialog open={showSummary} onOpenChange={setShowSummary}>
           <DialogContent className="max-w-md mx-auto">
-            <HalftimeSummary
-              isOpen={showSummary}
-              onClose={() => setShowSummary(false)}
-              onStartSecondHalf={startSecondHalf}
+            <GameSummary
               actions={actions}
               actionLogs={actionLogs}
               generalNotes={generalNotes}
-              havaya={match?.pre_match_reports?.havaya?.split(',') || []}
+              onClose={() => setShowSummary(false)}
+              gamePhase={gamePhase === "halftime" ? "halftime" : "ended"}
+              havaya={matchData?.pre_match_reports?.havaya?.split(',') || []}
             />
           </DialogContent>
         </Dialog>
