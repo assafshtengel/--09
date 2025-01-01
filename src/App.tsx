@@ -2,16 +2,16 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { useEffect } from "react";
 import { supabase } from "./integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Auth } from "./pages/Auth";
-import { Dashboard } from "./pages/Dashboard";
-import { Player } from "./pages/Player";
-import { Admin } from "./pages/Admin";
-import { Index } from "./pages/Index";
-import { Profile } from "./pages/Profile";
-import { PlayerPortfolio } from "./pages/PlayerPortfolio";
-import { MentalLearning } from "./pages/MentalLearning";
-import { NotificationsManager } from "./pages/NotificationsManager";
-import { Achievements } from "./pages/Achievements";
+import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
+import Player from "./pages/Player";
+import Admin from "./pages/Admin";
+import Index from "./pages/Index";
+import Profile from "./pages/Profile";
+import PlayerPortfolio from "./pages/PlayerPortfolio";
+import MentalLearning from "./pages/MentalLearning";
+import NotificationsManager from "./pages/NotificationsManager";
+import Achievements from "./pages/Achievements";
 import { TrainingSummaryDashboard } from "./components/training/TrainingSummaryDashboard";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
