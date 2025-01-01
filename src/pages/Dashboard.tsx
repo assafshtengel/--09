@@ -7,6 +7,7 @@ import { Trophy, Timer, FileText, Calendar, Activity } from "lucide-react";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
+import { Navigation } from "@/components/Navigation";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -87,6 +88,8 @@ const Dashboard = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-8">
+      <Navigation />
+      
       {/* Header Section */}
       <div className="text-right mb-8">
         <h1 className="text-4xl font-bold mb-2">ברוך הבא, {profile.full_name}</h1>
