@@ -26,7 +26,14 @@ export const TrainingSummaryDashboard = () => {
         .order('training_date', { ascending: false });
 
       if (error) throw error;
-      setSummaries(data || []);
+      
+      // Transform the data to ensure questions_answers is properly typed
+      const transformedData = data?.map(summary => ({
+        ...summary,
+        questions_answers: summary.questions_answers as Record<string, string>
+      })) || [];
+      
+      setSummaries(transformedData);
     } catch (error) {
       console.error('Error loading summaries:', error);
       toast({
