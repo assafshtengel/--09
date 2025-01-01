@@ -39,8 +39,16 @@ export function RecipientSelector({ form }: RecipientSelectorProps) {
     },
   });
 
-  const value = form.watch("recipient_id");
-  const selectedRecipient = recipients.find((recipient) => recipient.id === value);
+  const value = form.watch("recipient_id") || "";
+  const selectedRecipient = recipients?.find((recipient) => recipient.id === value);
+
+  if (isLoading) {
+    return (
+      <Button variant="outline" className="w-full justify-between" disabled>
+        טוען...
+      </Button>
+    );
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -62,7 +70,7 @@ export function RecipientSelector({ form }: RecipientSelectorProps) {
           <CommandInput placeholder="חפש נמען..." />
           <CommandEmpty>לא נמצאו תוצאות.</CommandEmpty>
           <CommandGroup>
-            {recipients.map((recipient) => (
+            {recipients?.map((recipient) => (
               <CommandItem
                 key={recipient.id}
                 value={recipient.id}
