@@ -1,184 +1,119 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Navigation } from "@/components/Navigation";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Player from "./pages/Player";
-import Profile from "./pages/Profile";
-import Dashboard from "./pages/Dashboard";
-import Admin from "./pages/Admin";
-import MentalLearning from "./pages/MentalLearning";
-import { PreMatchReport } from "@/components/pre-match/PreMatchReport";
-import { WeeklyScheduleWizard } from "@/components/schedule/WeeklyScheduleWizard";
-import { DailyRoutineForm } from "@/components/daily-routine/DailyRoutineForm";
-import { GameSelection } from "@/components/game/GameSelection";
-import { GameTracker } from "@/components/GameTracker";
-import NotificationsManager from "./pages/NotificationsManager";
-import PlayerPortfolio from "./pages/PlayerPortfolio";
-
-const queryClient = new QueryClient();
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { supabase } from "./integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { Auth } from "./pages/Auth";
+import { Dashboard } from "./pages/Dashboard";
+import { Player } from "./pages/Player";
+import { Admin } from "./pages/Admin";
+import { Index } from "./pages/Index";
+import { Profile } from "./pages/Profile";
+import { PlayerPortfolio } from "./pages/PlayerPortfolio";
+import { MentalLearning } from "./pages/MentalLearning";
+import { NotificationsManager } from "./pages/NotificationsManager";
+import { Achievements } from "./pages/Achievements";
+import { TrainingSummaryDashboard } from "./components/training/TrainingSummaryDashboard";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
-    };
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (!session) {
+        navigate("/auth");
+      }
     });
+  }, [navigate]);
 
-    checkAuth();
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (isAuthenticated === null) {
-    return <div>טוען...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  return (
-    <>
-      <Navigation />
-      {children}
-    </>
-  );
+  return <>{children}</>;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <div dir="rtl" className="min-h-screen bg-gray-50">
-        <div className="max-w-md mx-auto min-h-screen bg-white">
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute>
-                    <Admin />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/player"
-                element={
-                  <ProtectedRoute>
-                    <Player />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/mental-learning"
-                element={
-                  <ProtectedRoute>
-                    <MentalLearning />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/pre-match-report"
-                element={
-                  <ProtectedRoute>
-                    <PreMatchReport />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/schedule"
-                element={
-                  <ProtectedRoute>
-                    <WeeklyScheduleWizard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/daily-routine"
-                element={
-                  <ProtectedRoute>
-                    <DailyRoutineForm />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/game-selection"
-                element={
-                  <ProtectedRoute>
-                    <GameSelection />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/match/:id"
-                element={
-                  <ProtectedRoute>
-                    <GameTracker />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/notifications"
-                element={
-                  <ProtectedRoute>
-                    <NotificationsManager />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/portfolio"
-                element={
-                  <ProtectedRoute>
-                    <PlayerPortfolio />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/coach" element={<Navigate to="/" replace />} />
-              <Route path="/analyst" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </div>
+function App() {
+  return (
+    <div dir="rtl" className="min-h-screen bg-background">
+      <div className="container mx-auto px-4">
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/player"
+              element={
+                <ProtectedRoute>
+                  <Player />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <Admin />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/portfolio"
+              element={
+                <ProtectedRoute>
+                  <PlayerPortfolio />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/mental-learning"
+              element={
+                <ProtectedRoute>
+                  <MentalLearning />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <NotificationsManager />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/achievements"
+              element={
+                <ProtectedRoute>
+                  <Achievements />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/training-summary"
+              element={
+                <ProtectedRoute>
+                  <TrainingSummaryDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
       </div>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </div>
+  );
+}
 
 export default App;
