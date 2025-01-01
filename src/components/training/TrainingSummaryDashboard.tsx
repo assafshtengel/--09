@@ -4,6 +4,7 @@ import { TrainingSummaryForm } from "./TrainingSummaryForm";
 import { TrainingSummaryList } from "./TrainingSummaryList";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { Navigation } from "@/components/Navigation";
 import type { TrainingSummary } from "./types";
 
 export const TrainingSummaryDashboard = () => {
@@ -46,6 +47,8 @@ export const TrainingSummaryDashboard = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-6">
+      <Navigation />
+      
       <Card className="p-6">
         <h2 className="text-2xl font-bold mb-4 text-right">סיכום אימון</h2>
         <TrainingSummaryForm onSubmitSuccess={loadTrainingSummaries} />
