@@ -1,35 +1,9 @@
-import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import type { Database } from "@/integrations/supabase/types";
+import type { TrainingSummaryListProps } from "./types";
 
-type TrainingSummary = Database['public']['Tables']['training_summaries']['Row'];
-
-export const TrainingSummaryList = () => {
-  const [summaries, setSummaries] = useState<TrainingSummary[]>([]);
-
-  useEffect(() => {
-    const fetchSummaries = async () => {
-      const { data, error } = await supabase
-        .from('training_summaries')
-        .select('*')
-        .order('training_date', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching summaries:', error);
-        return;
-      }
-
-      if (data) {
-        setSummaries(data);
-      }
-    };
-
-    fetchSummaries();
-  }, []);
-
+export const TrainingSummaryList = ({ summaries }: TrainingSummaryListProps) => {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-right mb-4">סיכומי אימונים קודמים</h2>
@@ -61,7 +35,7 @@ export const TrainingSummaryList = () => {
 
                   <div className="mt-4">
                     <h4 className="font-semibold mb-2">תשובות לשאלות</h4>
-                    {Object.entries(summary.questions_answers as Record<string, string>).map(([question, answer], index) => (
+                    {Object.entries(summary.questions_answers).map(([question, answer], index) => (
                       <div key={index} className="mb-2">
                         <p className="font-medium text-right">{question}</p>
                         <p className="text-muted-foreground text-right">{answer}</p>

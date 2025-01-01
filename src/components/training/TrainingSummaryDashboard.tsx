@@ -4,9 +4,10 @@ import { TrainingSummaryForm } from "./TrainingSummaryForm";
 import { TrainingSummaryList } from "./TrainingSummaryList";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import type { TrainingSummary } from "./types";
 
 export const TrainingSummaryDashboard = () => {
-  const [summaries, setSummaries] = useState<any[]>([]);
+  const [summaries, setSummaries] = useState<TrainingSummary[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export const TrainingSummaryDashboard = () => {
     <div className="container mx-auto p-4 space-y-6">
       <Card className="p-6">
         <h2 className="text-2xl font-bold mb-4 text-right">סיכום אימון</h2>
-        <TrainingSummaryForm onSubmit={loadTrainingSummaries} />
+        <TrainingSummaryForm onSubmitSuccess={loadTrainingSummaries} />
       </Card>
 
       {summaries.length > 0 && (
