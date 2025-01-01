@@ -17,7 +17,7 @@ interface NotificationsListProps {
   notifications: Notification[];
 }
 
-export const NotificationsList = ({ notifications }: NotificationsListProps) => {
+export const NotificationsList = ({ notifications = [] }: NotificationsListProps) => {
   const cancelNotification = async (id: string) => {
     try {
       const { error } = await supabase
@@ -32,6 +32,10 @@ export const NotificationsList = ({ notifications }: NotificationsListProps) => 
       toast.error("שגיאה בביטול התזכורת");
     }
   };
+
+  if (!notifications || notifications.length === 0) {
+    return <div className="text-center py-4">אין תזכורות מתוזמנות</div>;
+  }
 
   return (
     <Table>
