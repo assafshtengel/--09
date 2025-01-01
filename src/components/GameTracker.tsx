@@ -7,7 +7,6 @@ import { GamePreview } from "./game/GamePreview";
 import { GameSummary } from "./game/GameSummary";
 import { GameHeader } from "./game/mobile/GameHeader";
 import { GameControls } from "./game/mobile/GameControls";
-import { ActionButtons } from "./game/mobile/ActionButtons";
 import { GameNotes } from "./game/GameNotes";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { supabase } from "@/integrations/supabase/client";
@@ -331,8 +330,8 @@ export const GameTracker = () => {
         )}
 
         {(gamePhase === "playing" || gamePhase === "secondHalf") && (
-          <div className="space-y-6 p-4">
-            <div className="grid gap-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+          <div className="p-4">
+            <div className="grid gap-4">
               {actions.map(action => (
                 <ActionItem
                   key={action.id}

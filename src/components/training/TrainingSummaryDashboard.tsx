@@ -1,26 +1,53 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { TrainingSummaryForm } from "./TrainingSummaryForm";
 import { TrainingSummaryList } from "./TrainingSummaryList";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 export const TrainingSummaryDashboard = () => {
+  const [summaries, setSummaries] = useState<any[]>([]);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadTrainingSummaries();
+  }, []);
+
+  const loadTrainingSummaries = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('training_summaries')
+        .select('*')
+        .eq('player_id', user.id)
+        .order('training_date', { ascending: false });
+
+      if (error) throw error;
+      setSummaries(data || []);
+    } catch (error) {
+      console.error('Error loading summaries:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לטעון את סיכומי האימונים",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold text-right mb-6">סיכום אימון</h1>
-      
-      <Tabs defaultValue="new" dir="rtl">
-        <TabsList className="w-full justify-end mb-6">
-          <TabsTrigger value="new">סיכום חדש</TabsTrigger>
-          <TabsTrigger value="history">היסטוריה</TabsTrigger>
-        </TabsList>
+    <div className="container mx-auto p-4 space-y-6">
+      <Card className="p-6">
+        <h2 className="text-2xl font-bold mb-4 text-right">סיכום אימון</h2>
+        <TrainingSummaryForm onSubmit={loadTrainingSummaries} />
+      </Card>
 
-        <TabsContent value="new">
-          <TrainingSummaryForm />
-        </TabsContent>
-
-        <TabsContent value="history">
-          <TrainingSummaryList />
-        </TabsContent>
-      </Tabs>
+      {summaries.length > 0 && (
+        <Card className="p-6">
+          <TrainingSummaryList summaries={summaries} />
+        </Card>
+      )}
     </div>
   );
 };
