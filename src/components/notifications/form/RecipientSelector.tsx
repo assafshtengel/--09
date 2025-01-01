@@ -16,13 +16,14 @@ import {
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { UseFormReturn } from "react-hook-form";
+import { NotificationData } from "@/types/notifications";
 
 interface RecipientSelectorProps {
-  value?: string;
-  onChange: (value: string) => void;
+  form: UseFormReturn<NotificationData>;
 }
 
-export function RecipientSelector({ value, onChange }: RecipientSelectorProps) {
+export function RecipientSelector({ form }: RecipientSelectorProps) {
   const [open, setOpen] = useState(false);
 
   const { data: recipients = [], isLoading } = useQuery({
@@ -38,6 +39,7 @@ export function RecipientSelector({ value, onChange }: RecipientSelectorProps) {
     },
   });
 
+  const value = form.watch("recipient_id");
   const selectedRecipient = recipients.find((recipient) => recipient.id === value);
 
   return (
@@ -65,7 +67,7 @@ export function RecipientSelector({ value, onChange }: RecipientSelectorProps) {
                 key={recipient.id}
                 value={recipient.id}
                 onSelect={(currentValue) => {
-                  onChange(currentValue === value ? "" : currentValue);
+                  form.setValue("recipient_id", currentValue === value ? "" : currentValue);
                   setOpen(false);
                 }}
               >
