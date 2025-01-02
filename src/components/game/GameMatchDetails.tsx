@@ -1,15 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { MatchData } from "@/types/game";
 
 interface GameMatchDetailsProps {
-  matchData: {
-    match_date?: string;
-    opponent?: string;
-    location?: string;
-    player_role?: string;
-    team_name?: string;
-    match_type?: string;
-  };
+  matchData: MatchData | null;
 }
 
 export const GameMatchDetails = ({ matchData }: GameMatchDetailsProps) => {
