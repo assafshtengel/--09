@@ -1,62 +1,49 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useState } from "react";
 
 interface PerformanceRatingTableProps {
   ratings: Record<string, number>;
   onRatingChange: (aspect: string, rating: number) => void;
-  isEditable?: boolean;
 }
 
-const PERFORMANCE_ASPECTS = [
-  "טכניקה אישית",
-  "קבלת החלטות",
-  "עזרה לעבודה הקבוצתית",
-  "התמודדות עם לחץ",
-  "כושר גופני",
-  "מנהיגות",
-  "אישיות מקצועית",
-  "הבנה וגישה למשחק",
-  "חיוביות"
-];
-
-export const PerformanceRatingTable = ({ 
-  ratings, 
+export const PerformanceRatingTable = ({
+  ratings,
   onRatingChange,
-  isEditable = true 
 }: PerformanceRatingTableProps) => {
+  const aspects = [
+    { id: "technique", label: "טכניקה אישית" },
+    { id: "decisions", label: "קבלת החלטות" },
+    { id: "teamwork", label: "עזרה לקבוצה" },
+    { id: "positioning", label: "מיקום ותנועה" },
+    { id: "communication", label: "תקשורת" },
+    { id: "physical", label: "יכולת פיזית" },
+    { id: "mental", label: "חוסן מנטלי" },
+  ];
+
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-right">דירוג ביצועים</h3>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="text-right">היבט</TableHead>
-            {[1, 2, 3, 4, 5].map(rating => (
-              <TableHead key={rating} className="text-center">
-                {rating}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {PERFORMANCE_ASPECTS.map(aspect => (
-            <TableRow key={aspect}>
-              <TableCell className="text-right">{aspect}</TableCell>
-              {[1, 2, 3, 4, 5].map(rating => (
-                <TableCell key={rating} className="text-center">
-                  <input
-                    type="radio"
-                    name={aspect}
-                    checked={ratings[aspect] === rating}
-                    onChange={() => isEditable && onRatingChange(aspect, rating)}
-                    disabled={!isEditable}
-                    className="h-4 w-4"
-                  />
-                </TableCell>
+    <div className="border p-4 rounded-lg">
+      <h3 className="text-lg font-semibold mb-4 text-right">דירוג ביצועים</h3>
+      <div className="space-y-4">
+        {aspects.map((aspect) => (
+          <div key={aspect.id} className="flex flex-row-reverse items-center gap-4">
+            <div className="flex-1 text-right">{aspect.label}</div>
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((rating) => (
+                <button
+                  key={rating}
+                  onClick={() => onRatingChange(aspect.id, rating)}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                    ratings[aspect.id] === rating
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary hover:bg-secondary/80"
+                  }`}
+                >
+                  {rating}
+                </button>
               ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

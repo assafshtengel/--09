@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Share2, Send } from "lucide-react";
+import { Share2, Send, Mail, Instagram } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -30,76 +30,37 @@ export const SummaryActions = ({
   const { toast } = useToast();
   const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
 
-  const handleWhatsAppShare = async () => {
+  const handleInstagramShare = async () => {
     try {
-      setIsSendingWhatsApp(true);
-      
-      // Get user's profile to get coach's phone number
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("משתמש לא מחובר");
+      const element = document.getElementById("game-summary-content");
+      if (!element) return;
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('coach_phone_number')
-        .eq('id', user.id)
-        .single();
+      const canvas = await html2canvas(element);
+      const imageData = canvas.toDataURL("image/png");
 
-      if (!profile?.coach_phone_number) {
-        toast({
-          title: "שגיאה",
-          description: "לא נמצא מספר טלפון של המאמן בפרופיל",
-          variant: "destructive",
-        });
-        return;
-      }
+      // Create a temporary link to download the image
+      const link = document.createElement("a");
+      link.href = imageData;
+      link.download = "game-summary.png";
+      link.click();
 
-      // Get match details and summary
-      const { data: match } = await supabase
-        .from('matches')
-        .select(`
-          match_date,
-          opponent,
-          match_actions (
-            action_id,
-            result
-          )
-        `)
-        .eq('id', matchId)
-        .single();
-
-      if (!match) throw new Error("לא נמצאו פרטי משחק");
-
-      const successCount = match.match_actions?.filter((action: any) => action.result === 'success').length || 0;
-      const totalActions = match.match_actions?.length || 0;
-      const successRate = totalActions > 0 ? Math.round((successCount / totalActions) * 100) : 0;
-
-      const summaryText = `סיכום משחק מ-${match.match_date}${match.opponent ? ` מול ${match.opponent}` : ''}\n` +
-        `אחוז הצלחה: ${successRate}%\n` +
-        `פעולות מוצלחות: ${successCount}/${totalActions}`;
-
-      const { error: whatsappError } = await supabase.functions.invoke('send-whatsapp', {
-        body: {
-          message: summaryText,
-          recipientNumber: profile.coach_phone_number
-        }
-      });
-
-      if (whatsappError) throw whatsappError;
+      // Open Instagram with a pre-filled message
+      const instagramUrl = `https://www.instagram.com/create/story?caption=${encodeURIComponent(
+        "Just finished my game! Check out my performance stats using @socr_app\n\nJoin me at https://socr.co.il"
+      )}`;
+      window.open(instagramUrl, '_blank');
 
       toast({
-        title: "נשלח בהצלחה",
-        description: "סיכום המשחק נשלח למאמן",
+        title: "תמונה נשמרה",
+        description: "כעת תוכל להעלות את התמונה לאינסטגרם",
       });
-
     } catch (error) {
-      console.error('Error sending WhatsApp message:', error);
+      console.error("Error sharing to Instagram:", error);
       toast({
-        title: "שגיאה בשליחת ההודעה",
-        description: "לא הצלחנו לשלוח את ההודעה למאמן",
+        title: "שגיאה",
+        description: "לא ניתן לשתף לאינסטגרם כרגע",
         variant: "destructive",
       });
-    } finally {
-      setIsSendingWhatsApp(false);
     }
   };
 
@@ -126,36 +87,19 @@ export const SummaryActions = ({
             onClick={onSendEmail} 
             variant="outline"
             disabled={isSendingEmail}
+            className="flex items-center gap-2"
           >
+            <Mail className="h-4 w-4" />
             {isSendingEmail ? "שולח..." : "שלח למייל"}
           </Button>
           <Button
-            onClick={handleWhatsAppShare}
+            onClick={handleInstagramShare}
             variant="outline"
-            disabled={isSendingWhatsApp}
             className="flex items-center gap-2"
           >
-            <Send className="h-4 w-4" />
-            {isSendingWhatsApp ? "שולח..." : "שלח למאמן"}
+            <Instagram className="h-4 w-4" />
+            שתף באינסטגרם
           </Button>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => onShareSocial('facebook')}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Share2 className="h-4 w-4" />
-              שתף בפייסבוק
-            </Button>
-            <Button
-              onClick={() => onShareSocial('instagram')}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Share2 className="h-4 w-4" />
-              שתף באינסטגרם
-            </Button>
-          </div>
         </>
       )}
       

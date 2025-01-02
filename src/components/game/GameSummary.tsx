@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Action } from "@/components/ActionSelector";
 import { MatchDetailsSection } from "./summary/MatchDetailsSection";
 import { ActionsSummarySection } from "./summary/ActionsSummarySection";
 import { PerformanceRatingTable } from "./summary/PerformanceRatingTable";
+import { SummaryActions } from "./summary/SummaryActions";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Share2 } from "lucide-react";
 import html2canvas from "html2canvas";
 
 interface GameSummaryProps {
@@ -44,10 +43,7 @@ export const GameSummary = ({
 
   useEffect(() => {
     const fetchMatchData = async () => {
-      if (!matchId) {
-        console.error("No match ID provided");
-        return;
-      }
+      if (!matchId) return;
 
       try {
         const { data: match, error } = await supabase
@@ -74,7 +70,7 @@ export const GameSummary = ({
     fetchMatchData();
   }, [matchId]);
 
-  const handlePerformanceRatingChange = async (aspect: string, rating: number) => {
+  const handlePerformanceRatingChange = (aspect: string, rating: number) => {
     setPerformanceRatings(prev => ({ ...prev, [aspect]: rating }));
   };
 
@@ -92,22 +88,27 @@ export const GameSummary = ({
 
       const { data: playerProfile } = await supabase
         .from("profiles")
-        .select("coach_email")
+        .select("coach_email, email")
         .eq("id", profile.user.id)
         .single();
 
-      if (!playerProfile?.coach_email) {
+      if (!playerProfile?.coach_email && !playerProfile?.email) {
         toast({
           title: "שגיאה",
-          description: "לא נמצא אימייל של המאמן",
+          description: "לא נמצאו כתובות מייל",
           variant: "destructive",
         });
         return;
       }
 
+      const recipients = [
+        playerProfile.coach_email,
+        playerProfile.email
+      ].filter(Boolean);
+
       const { error } = await supabase.functions.invoke("send-game-summary", {
         body: {
-          to: [playerProfile.coach_email],
+          to: recipients,
           subject: `סיכום משחק - ${matchData?.match_date}`,
           html: `
             <div dir="rtl">
@@ -162,14 +163,50 @@ export const GameSummary = ({
     }
   };
 
+  const handleShareSocial = async (platform: 'facebook' | 'instagram') => {
+    try {
+      const element = document.getElementById("game-summary-content");
+      if (!element) return;
+
+      const canvas = await html2canvas(element);
+      const imageData = canvas.toDataURL("image/png");
+
+      if (platform === 'instagram') {
+        // Create a temporary link to download the image
+        const link = document.createElement("a");
+        link.href = imageData;
+        link.download = "game-summary.png";
+        link.click();
+
+        // Open Instagram with a pre-filled message
+        const instagramUrl = `https://www.instagram.com/create/story?caption=${encodeURIComponent(
+          "Just finished my game! Check out my performance stats using @socr_app\n\nJoin me at https://socr.co.il"
+        )}`;
+        window.open(instagramUrl, '_blank');
+
+        toast({
+          title: "תמונה נשמרה",
+          description: "כעת תוכל להעלות את התמונה לאינסטגרם",
+        });
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשתף כרגע",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!matchData) {
     return <div>טוען...</div>;
   }
 
   return (
-    <div className="h-[80vh] overflow-hidden flex flex-col">
-      <div className="flex-1 overflow-y-auto px-4">
-        <div id="game-summary-content" className="space-y-6">
+    <div className="h-[80vh] flex flex-col">
+      <ScrollArea className="flex-1">
+        <div id="game-summary-content" className="space-y-6 p-4">
           <div className="border-b pb-4">
             <h2 className="text-2xl font-bold text-right">
               {gamePhase === "halftime" ? "סיכום מחצית" : "סיכום משחק"}
@@ -200,43 +237,20 @@ export const GameSummary = ({
             </div>
           )}
         </div>
-      </div>
+      </ScrollArea>
 
-      <div className="border-t p-4 bg-background flex flex-wrap justify-end gap-4">
-        {gamePhase === "halftime" && onContinue && (
-          <Button onClick={() => {
-            onContinue();
-            onClose();
-          }}>
-            התחל מחצית שנייה
-          </Button>
-        )}
-
-        {gamePhase === "ended" && (
-          <>
-            <Button
-              onClick={handleSendEmail}
-              variant="outline"
-              disabled={isSendingEmail}
-              className="flex items-center gap-2"
-            >
-              <Send className="h-4 w-4" />
-              {isSendingEmail ? "שולח..." : "שלח למאמן"}
-            </Button>
-            <Button
-              onClick={handleScreenshot}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Share2 className="h-4 w-4" />
-              שמור צילום מסך
-            </Button>
-          </>
-        )}
-        
-        <Button onClick={onClose} variant="outline">
-          סגור
-        </Button>
+      <div className="border-t p-4 bg-background">
+        <SummaryActions
+          gamePhase={gamePhase}
+          isSendingEmail={isSendingEmail}
+          onSubmit={() => {}}
+          onSendEmail={handleSendEmail}
+          onShareSocial={handleShareSocial}
+          onScreenshot={handleScreenshot}
+          onClose={onClose}
+          onContinueGame={onContinue}
+          matchId={matchId}
+        />
       </div>
     </div>
   );
