@@ -3,7 +3,7 @@ import { Action } from "@/components/ActionSelector";
 import { ActionItem } from "./ActionItem";
 import { GameNotes } from "./GameNotes";
 import { PlayerSubstitution } from "./PlayerSubstitution";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface GameActionsSectionProps {
@@ -24,6 +24,7 @@ export const GameActionsSection = ({
   minute,
   matchId,
 }: GameActionsSectionProps) => {
+  const { toast } = useToast();
   const [generalNote, setGeneralNote] = useState("");
 
   const calculateActionStats = (actionId: string) => {
@@ -103,8 +104,9 @@ export const GameActionsSection = ({
 
                 toast({
                   title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
-                  className: result === "success" ? "bg-green-500" : "bg-red-500",
-                  duration: 1000,
+                  description: `הפעולה נשמרה בדקה ${minute}`,
+                  variant: result === "success" ? "default" : "destructive",
+                  duration: 2000,
                 });
               } catch (error) {
                 console.error('Error saving action:', error);

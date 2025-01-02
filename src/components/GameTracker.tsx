@@ -39,6 +39,7 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
 
   useEffect(() => {
     loadMatchData();
+    loadActionLogs();
   }, [matchId]);
 
   const loadMatchData = async () => {
@@ -89,6 +90,29 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
       toast({
         title: "שגיאה",
         description: "לא ניתן לטעון את נתוני המשחק",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const loadActionLogs = async () => {
+    if (!matchId) return;
+
+    try {
+      const { data: logs, error } = await supabase
+        .from('match_actions')
+        .select('*')
+        .eq('match_id', matchId)
+        .order('minute', { ascending: true });
+
+      if (error) throw error;
+
+      setActionLogs(logs as ActionLog[]);
+    } catch (error) {
+      console.error("Error loading action logs:", error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לטעון את היסטוריית הפעולות",
         variant: "destructive",
       });
     }
