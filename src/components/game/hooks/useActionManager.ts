@@ -1,9 +1,13 @@
-import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Action } from "@/components/ActionSelector";
 
-export const useActionManager = (matchId: string, minute: number, actions: Action[]) => {
+export const useActionManager = (
+  matchId: string, 
+  minute: number, 
+  actions: Action[], 
+  onActionLogged?: () => void
+) => {
   const { toast } = useToast();
 
   const handleActionLog = async (actionId: string, result: "success" | "failure", note?: string) => {
@@ -32,6 +36,11 @@ export const useActionManager = (matchId: string, minute: number, actions: Actio
 
       if (navigator.vibrate) {
         navigator.vibrate(100);
+      }
+
+      // Notify parent component to refresh action logs
+      if (onActionLogged) {
+        onActionLogged();
       }
     } catch (error) {
       console.error('Error saving action:', error);

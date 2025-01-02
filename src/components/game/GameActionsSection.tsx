@@ -14,6 +14,7 @@ interface GameActionsSectionProps {
   }>;
   minute: number;
   matchId: string;
+  onActionUpdate?: () => void;
 }
 
 export const GameActionsSection = ({
@@ -21,8 +22,9 @@ export const GameActionsSection = ({
   actionLogs,
   minute,
   matchId,
+  onActionUpdate,
 }: GameActionsSectionProps) => {
-  const { handleActionLog } = useActionManager(matchId, minute, actions);
+  const { handleActionLog } = useActionManager(matchId, minute, actions, onActionUpdate);
 
   return (
     <div className="p-4 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">

@@ -6,6 +6,7 @@ import { GameControls } from "./mobile/GameControls";
 import { GameActionsSection } from "./GameActionsSection";
 import { Action } from "@/components/ActionSelector";
 import { GamePhase, PreMatchReportActions } from "@/types/game";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GameContentProps {
   gamePhase: GamePhase;
@@ -53,6 +54,29 @@ export const GameContent = ({
   onStartSecondHalf,
   onEndMatch,
 }: GameContentProps) => {
+  const handleActionUpdate = async () => {
+    // Refresh action logs
+    const { data: logs } = await supabase
+      .from('match_actions')
+      .select('*')
+      .eq('match_id', matchId)
+      .order('minute', { ascending: true });
+
+    if (logs) {
+      // Update parent component's action logs
+      const formattedLogs = logs.map(log => ({
+        actionId: log.action_id,
+        minute: log.minute,
+        result: log.result as "success" | "failure",
+        note: log.note
+      }));
+      // Update action logs in parent component
+      if (typeof actionLogs !== 'undefined') {
+        actionLogs = formattedLogs;
+      }
+    }
+  };
+
   return (
     <>
       {gamePhase !== "preview" && (
@@ -72,7 +96,6 @@ export const GameContent = ({
           preMatchAnswers={matchData.pre_match_reports.questions_answers || {}}
           onStartMatch={onStartMatch}
           onActionAdd={(action) => {
-            // This is a placeholder function since we're not actually adding actions in preview mode
             console.log("Action added:", action);
           }}
         />
@@ -85,6 +108,7 @@ export const GameContent = ({
             actionLogs={actionLogs}
             minute={minute}
             matchId={matchId}
+            onActionUpdate={handleActionUpdate}
           />
         </div>
       )}
