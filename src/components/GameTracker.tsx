@@ -40,6 +40,13 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
     initializeData();
   }, [matchId]);
 
+  const handleCloseSummary = () => {
+    setShowSummary(false);
+    if (gamePhase === "halftime") {
+      startSecondHalf();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-md mx-auto bg-white min-h-screen relative pb-24 md:pb-0">
@@ -62,7 +69,7 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
         />
       </div>
 
-      <Dialog open={showSummary} onOpenChange={setShowSummary}>
+      <Dialog open={showSummary} onOpenChange={handleCloseSummary}>
         <DialogContent className="max-w-md mx-auto">
           <DialogTitle>
             {gamePhase === "halftime" ? "סיכום מחצית" : "סיכום משחק"}
