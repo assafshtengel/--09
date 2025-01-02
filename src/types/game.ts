@@ -1,9 +1,11 @@
+export type GamePhase = "preview" | "playing" | "halftime" | "secondHalf" | "ended";
+
 export interface ActionLog {
   id: string;
   matchId: string;
   actionId: string;
   minute: number;
-  result: string;
+  result: "success" | "failure";
   note?: string;
 }
 
@@ -25,7 +27,7 @@ export interface MatchData {
   match_date: string;
   opponent?: string;
   location?: string;
-  status: 'preview' | 'first_half' | 'halftime' | 'second_half' | 'completed';
+  status: GamePhase;
   team?: string;
   team_name?: string;
   player_role?: string;

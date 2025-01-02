@@ -6,7 +6,7 @@ import { PreMatchGoalsSection } from "./game/PreMatchGoalsSection";
 import { GameScore } from "./game/GameScore";
 import { useGameState } from "./game/hooks/useGameState";
 import { useMatchData } from "./game/hooks/useMatchData";
-import { MatchData } from "@/types/game";
+import { ActionLog, MatchData } from "@/types/game";
 
 interface GameTrackerProps {
   matchId: string;
@@ -41,7 +41,17 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
         const actions = await loadMatchData();
         const logs = await loadActionLogs();
         if (actions) setActions(actions);
-        if (logs) setActionLogs(logs);
+        if (logs) {
+          const formattedLogs: ActionLog[] = logs.map(log => ({
+            id: log.id || crypto.randomUUID(),
+            matchId,
+            actionId: log.actionId,
+            minute: log.minute,
+            result: log.result as "success" | "failure",
+            note: log.note
+          }));
+          setActionLogs(formattedLogs);
+        }
       } catch (error) {
         console.error("Error initializing data:", error);
       } finally {
@@ -56,7 +66,17 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
     const refreshActionLogs = async () => {
       if (showSummary) {
         const logs = await loadActionLogs();
-        if (logs) setActionLogs(logs);
+        if (logs) {
+          const formattedLogs: ActionLog[] = logs.map(log => ({
+            id: log.id || crypto.randomUUID(),
+            matchId,
+            actionId: log.actionId,
+            minute: log.minute,
+            result: log.result as "success" | "failure",
+            note: log.note
+          }));
+          setActionLogs(formattedLogs);
+        }
       }
     };
 
