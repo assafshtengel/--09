@@ -15,8 +15,9 @@ interface GameActionsListProps {
 export const GameActionsList = ({ actions, actionLogs, onLog, matchId, minute }: GameActionsListProps) => {
   const calculateStats = (actionId: string) => {
     const results = actionLogs.filter(log => log.actionId === actionId);
+    const successCount = results.filter(log => log.result === "success").length;
     return {
-      success: results.filter(log => log.result === "success").length,
+      success: successCount,
       total: results.length
     };
   };

@@ -34,7 +34,7 @@ export const ActionItem = ({ action, stats, onLog, matchId, minute }: ActionItem
 
       if (error) throw error;
 
-      // Update local state
+      // Update local state first
       onLog(action.id, result, note || undefined);
       setNote("");
     } catch (error) {
