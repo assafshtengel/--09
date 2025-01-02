@@ -112,7 +112,7 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
         actionId: log.action_id,
         minute: log.minute,
         result: log.result as "success" | "failure",
-        note: log.note
+        note: log.note || undefined
       }));
 
       setActionLogs(mappedLogs);
