@@ -13,26 +13,50 @@ const Auth = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
-        // Check if user has a profile
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+        try {
+          // Check if user has a profile
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
 
-        if (!profile) {
-          // If no profile exists, redirect to profile creation
-          navigate("/profile");
+          if (profileError && profileError.code !== 'PGRST116') {
+            throw profileError;
+          }
+
+          if (!profile) {
+            // If no profile exists, create a basic one and redirect to profile completion
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert({
+                id: session.user.id,
+                email: session.user.email,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+
+            if (insertError) throw insertError;
+
+            navigate("/profile");
+            toast({
+              title: "ברוך הבא!",
+              description: "אנא מלא את פרטי הפרופיל שלך",
+            });
+          } else {
+            // If profile exists, redirect to dashboard
+            navigate("/dashboard");
+            toast({
+              title: "ברוך הבא בחזרה!",
+              description: "התחברת בהצלחה",
+            });
+          }
+        } catch (error) {
+          console.error('Error in auth flow:', error);
           toast({
-            title: "ברוך הבא!",
-            description: "אנא מלא את פרטי הפרופיל שלך",
-          });
-        } else {
-          // If profile exists, redirect to dashboard
-          navigate("/dashboard");
-          toast({
-            title: "ברוך הבא בחזרה!",
-            description: "התחברת בהצלחה",
+            title: "שגיאה",
+            description: "אירעה שגיאה בתהליך ההרשמה",
+            variant: "destructive",
           });
         }
       }
@@ -65,6 +89,7 @@ const Auth = () => {
                 label: 'text-right block mb-2',
                 button: 'w-full',
                 input: 'text-right',
+                message: 'text-right',
               },
             }}
             localization={{

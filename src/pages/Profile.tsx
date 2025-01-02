@@ -11,38 +11,64 @@ const Profile = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate('/auth');
-        return;
-      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          navigate('/auth');
+          return;
+        }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
 
-      if (profile) {
-        // If profile exists and we're on /profile, redirect to dashboard
-        if (window.location.pathname === '/profile') {
+        if (error && error.code !== 'PGRST116') {
+          throw error;
+        }
+
+        if (profile?.full_name) {
+          // If profile exists and has a name, redirect to dashboard
           navigate('/dashboard');
         }
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        toast({
+          title: "שגיאה",
+          description: "אירעה שגיאה בטעינת הפרופיל",
+          variant: "destructive",
+        });
+        navigate('/auth');
       }
-      
-      setIsLoading(false);
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleSubmit = async () => {
-    toast({
-      title: "פרופיל נשמר בהצלחה",
-      description: "מועבר לדף הבית",
-    });
-    navigate('/dashboard');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No session found');
+      }
+
+      toast({
+        title: "פרופיל נשמר בהצלחה",
+        description: "מועבר לדף הבית",
+      });
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error in profile submission:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בשמירת הפרופיל",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
