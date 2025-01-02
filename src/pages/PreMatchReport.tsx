@@ -1,13 +1,11 @@
 import { Navigation } from "@/components/Navigation";
+import { PreMatchReport as PreMatchReportComponent } from "@/components/pre-match/PreMatchReport";
 
 export default function PreMatchReport() {
   return (
     <div>
       <Navigation />
-      <div className="py-8">
-        <h1 className="text-2xl font-bold mb-4">יעדי טרום משחק</h1>
-        {/* Pre-match report content will be implemented here */}
-      </div>
+      <PreMatchReportComponent />
     </div>
   );
 }
