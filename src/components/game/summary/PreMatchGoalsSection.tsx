@@ -13,8 +13,8 @@ interface PreMatchGoalsProps {
 }
 
 export const PreMatchGoalsSection = ({ preMatchData }: PreMatchGoalsProps) => {
-  // Parse havaya string into array if it exists
-  const havayaArray = preMatchData.havaya ? JSON.parse(preMatchData.havaya) : [];
+  // Split havaya string by commas if it exists, otherwise return empty array
+  const havayaArray = preMatchData.havaya ? preMatchData.havaya.split(',').map(h => h.trim()) : [];
 
   return (
     <Card>
