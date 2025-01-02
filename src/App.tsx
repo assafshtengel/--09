@@ -9,6 +9,7 @@ import Dashboard from "@/pages/Dashboard";
 import PreMatchReport from "@/pages/PreMatchReport";
 import { GameSelection } from "@/components/game/GameSelection";
 import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryDashboard";
+import Schedule from "@/pages/Schedule";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ function App() {
               <Route path="/game" element={<GameSelection />} />
               <Route path="/game/:id" element={<Game />} />
               <Route path="/training-summary" element={<TrainingSummaryDashboard />} />
+              <Route path="/schedule" element={<Schedule />} />
             </Routes>
           </Router>
           <Toaster />
