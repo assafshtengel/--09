@@ -31,14 +31,51 @@ export const SummaryActions = ({
   const { toast } = useToast();
   const [isSendingToCoach, setIsSendingToCoach] = useState(false);
 
+  const formatEmailContent = (element: HTMLElement) => {
+    const matchDetails = element.querySelector('[data-section="match-details"]');
+    const actionsSummary = element.querySelector('[data-section="actions-summary"]');
+    const performanceRatings = element.querySelector('[data-section="performance-ratings"]');
+    const generalNotes = element.querySelector('[data-section="general-notes"]');
+
+    return `
+      <div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <h1 style="color: #2563eb; margin-bottom: 1rem;">סיכום משחק</h1>
+        
+        ${matchDetails ? matchDetails.innerHTML : ''}
+        
+        ${actionsSummary ? `
+          <div style="margin-top: 2rem;">
+            <h2 style="color: #374151;">סיכום פעולות</h2>
+            ${actionsSummary.innerHTML}
+          </div>
+        ` : ''}
+        
+        ${performanceRatings ? `
+          <div style="margin-top: 2rem;">
+            <h2 style="color: #374151;">דירוג ביצועים</h2>
+            ${performanceRatings.innerHTML}
+          </div>
+        ` : ''}
+        
+        ${generalNotes ? `
+          <div style="margin-top: 2rem;">
+            <h2 style="color: #374151;">הערות כלליות</h2>
+            ${generalNotes.innerHTML}
+          </div>
+        ` : ''}
+        
+        <div style="margin-top: 2rem; color: #6b7280; font-size: 0.875rem;">
+          <p>נשלח באמצעות מערכת SOCR</p>
+        </div>
+      </div>
+    `;
+  };
+
   const handleSendToCoach = async () => {
     try {
       setIsSendingToCoach(true);
       const element = document.getElementById("game-summary-content");
       if (!element) return;
-
-      const canvas = await html2canvas(element);
-      const imageData = canvas.toDataURL("image/png");
 
       const { data: profile } = await supabase.auth.getUser();
       if (!profile.user) throw new Error("User not found");
@@ -58,18 +95,13 @@ export const SummaryActions = ({
         return;
       }
 
+      const emailContent = formatEmailContent(element);
+
       const { error } = await supabase.functions.invoke("send-game-summary", {
         body: {
           to: [playerProfile.coach_email],
           subject: "סיכום משחק מתלמיד",
-          html: `
-            <div dir="rtl">
-              <h1>סיכום משחק</h1>
-              <p>שלום מאמן,</p>
-              <p>מצורף סיכום המשחק שלי.</p>
-              <img src="${imageData}" alt="Game Summary" style="max-width: 100%;" />
-            </div>
-          `,
+          html: emailContent,
         },
       });
 
