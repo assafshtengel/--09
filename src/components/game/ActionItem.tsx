@@ -17,12 +17,6 @@ export const ActionItem = ({ action, stats, onLog }: ActionItemProps) => {
   const handleAction = (result: "success" | "failure") => {
     onLog(action.id, result, note || undefined);
     setNote("");
-    
-    toast({
-      title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
-      description: `${action.name} - ${result === "success" ? "הצלחה" : "כישלון"}`,
-      variant: result === "success" ? "default" : "destructive",
-    });
   };
 
   return (
@@ -33,11 +27,13 @@ export const ActionItem = ({ action, stats, onLog }: ActionItemProps) => {
           <div className="flex gap-2">
             <ActionButton
               actionId={action.id}
+              actionName={action.name}
               result="success"
               onClick={() => handleAction("success")}
             />
             <ActionButton
               actionId={action.id}
+              actionName={action.name}
               result="failure"
               onClick={() => handleAction("failure")}
             />

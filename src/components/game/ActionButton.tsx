@@ -3,18 +3,19 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ActionButtonProps {
   actionId: string;
+  actionName: string;
   result: "success" | "failure";
   onClick: () => void;
   className?: string;
 }
 
-export const ActionButton = ({ actionId, result, onClick, className }: ActionButtonProps) => {
+export const ActionButton = ({ actionId, actionName, result, onClick, className }: ActionButtonProps) => {
   const { toast } = useToast();
 
   const handleClick = () => {
     // Show toast notification
     toast({
-      title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
+      title: result === "success" ? `${actionName} - הצלחה` : `${actionName} - כישלון`,
       description: result === "success" ? "✓ הפעולה נרשמה בהצלחה" : "✗ הפעולה נרשמה ככישלון",
       variant: result === "success" ? "default" : "destructive",
       duration: 2000,
