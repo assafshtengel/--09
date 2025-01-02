@@ -4,12 +4,12 @@ import { GameTracker } from "@/components/GameTracker";
 import { useParams } from "react-router-dom";
 
 export default function Game() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
 
   return (
     <div>
       <Navigation />
-      {id ? <GameTracker /> : <GameSelection />}
+      {id ? <GameTracker matchId={id} /> : <GameSelection />}
     </div>
   );
 }
