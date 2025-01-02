@@ -25,7 +25,7 @@ export interface PreMatchReport {
   actions: PreMatchReportActions[];
   questions_answers: Record<string, any>;
   ai_insights?: string[];
-  status: 'draft' | 'published';
+  status: 'draft' | 'completed';
   created_at: string;
   updated_at: string;
   havaya?: string;
