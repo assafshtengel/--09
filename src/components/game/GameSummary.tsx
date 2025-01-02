@@ -5,6 +5,7 @@ import { MatchDetailsSection } from "./summary/MatchDetailsSection";
 import { ActionsSummarySection } from "./summary/ActionsSummarySection";
 import { PerformanceRatingTable } from "./summary/PerformanceRatingTable";
 import { SummaryActions } from "./summary/SummaryActions";
+import { PreMatchGoalsSection } from "./summary/PreMatchGoalsSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
@@ -37,6 +38,7 @@ export const GameSummary = ({
 }: GameSummaryProps) => {
   const { toast } = useToast();
   const [matchData, setMatchData] = useState<any>(null);
+  const [preMatchData, setPreMatchData] = useState<any>(null);
   const [performanceRatings, setPerformanceRatings] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
@@ -50,13 +52,16 @@ export const GameSummary = ({
           .from("matches")
           .select(`
             *,
-            match_mental_feedback (*)
+            pre_match_report:pre_match_report_id (*)
           `)
           .eq("id", matchId)
           .maybeSingle();
 
         if (error) throw error;
         setMatchData(match);
+        if (match?.pre_match_report) {
+          setPreMatchData(match.pre_match_report);
+        }
       } catch (error) {
         console.error("Error fetching match data:", error);
         toast({
@@ -214,6 +219,11 @@ export const GameSummary = ({
           </div>
 
           <MatchDetailsSection matchData={matchData} />
+          
+          {preMatchData && (
+            <PreMatchGoalsSection preMatchData={preMatchData} />
+          )}
+          
           <ActionsSummarySection actions={actions} actionLogs={actionLogs} />
           
           {gamePhase === "ended" && (

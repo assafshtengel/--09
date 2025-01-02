@@ -6,7 +6,6 @@ interface MatchDetailsSectionProps {
     match_date: string;
     match_time?: string;
     opponent?: string;
-    match_type?: string;
     final_score?: string;
     player_position?: string;
     team?: string;
@@ -32,14 +31,6 @@ export const MatchDetailsSection = ({ matchData }: MatchDetailsSectionProps) => 
             <div>
               <p className="text-sm text-muted-foreground">קבוצה יריבה</p>
               <p className="font-medium">{matchData.opponent}</p>
-            </div>
-          )}
-          {matchData.match_type && (
-            <div>
-              <p className="text-sm text-muted-foreground">סוג משחק</p>
-              <p className="font-medium">
-                {matchData.match_type === 'friendly' ? 'ידידותי' : 'רשמי'}
-              </p>
             </div>
           )}
           {matchData.final_score && (
