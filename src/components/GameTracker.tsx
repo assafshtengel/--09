@@ -1,15 +1,10 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Action } from "@/components/ActionSelector";
-import { GamePreview } from "./game/GamePreview";
-import { GameSummary } from "./game/GameSummary";
-import { GameHeader } from "./game/mobile/GameHeader";
-import { GameControls } from "./game/mobile/GameControls";
-import { GameActionsSection } from "./game/GameActionsSection";
+import { GameContent } from "./game/GameContent";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog } from "@/types/game";
+import { GamePhase, PreMatchReportActions, ActionLog } from "@/types/game";
 
 interface GameTrackerProps {
   matchId: string;
@@ -39,7 +34,6 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
   const [showSummary, setShowSummary] = useState(false);
   const [actions, setActions] = useState<Action[]>([]);
   const [generalNotes, setGeneralNotes] = useState<Array<{ text: string; minute: number }>>([]);
-  const [substitutions, setSubstitutions] = useState<SubstitutionLog[]>([]);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [matchData, setMatchData] = useState<MatchData | null>(null);
 
@@ -161,55 +155,24 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-md mx-auto bg-white min-h-screen relative pb-24 md:pb-0">
-        {gamePhase !== "preview" && (
-          <GameHeader
-            isTimerRunning={isTimerRunning}
-            minute={minute}
-            onMinuteChange={setMinute}
-            actions={actions}
-            actionLogs={actionLogs}
-          />
-        )}
-
-        {gamePhase === "preview" && matchData?.pre_match_reports && (
-          <GamePreview
-            actions={actions}
-            havaya={matchData.pre_match_reports.havaya?.split(',') || []}
-            preMatchAnswers={matchData.pre_match_reports.questions_answers || {}}
-            onActionAdd={handleAddAction}
-            onStartMatch={startMatch}
-          />
-        )}
-
-        {(gamePhase === "playing" || gamePhase === "secondHalf") && (
-          <GameActionsSection
-            actions={actions}
-            actionLogs={actionLogs}
-            minute={minute}
-            matchId={matchId}
-          />
-        )}
-
-        <GameControls
+        <GameContent
           gamePhase={gamePhase}
+          isTimerRunning={isTimerRunning}
+          minute={minute}
+          onMinuteChange={setMinute}
+          actions={actions}
+          actionLogs={actionLogs}
+          generalNotes={generalNotes}
+          showSummary={showSummary}
+          setShowSummary={setShowSummary}
+          matchId={matchId}
+          matchData={matchData}
           onStartMatch={startMatch}
           onEndHalf={endHalf}
           onStartSecondHalf={startSecondHalf}
           onEndMatch={endMatch}
+          onActionAdd={handleAddAction}
         />
-
-        <Dialog open={showSummary} onOpenChange={setShowSummary}>
-          <DialogContent className="max-w-md mx-auto">
-            <GameSummary
-              actions={actions}
-              actionLogs={actionLogs}
-              generalNotes={generalNotes}
-              onClose={() => setShowSummary(false)}
-              gamePhase={gamePhase === "halftime" ? "halftime" : "ended"}
-              havaya={matchData?.pre_match_reports?.havaya?.split(',') || []}
-            />
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );
