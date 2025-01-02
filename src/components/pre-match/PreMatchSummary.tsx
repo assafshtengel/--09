@@ -14,6 +14,7 @@ interface PreMatchSummaryProps {
   answers: Record<string, string>;
   havaya: string[];
   aiInsights: string[];
+  onFinish?: () => void;  // Added this prop
 }
 
 export const PreMatchSummary = ({
@@ -22,6 +23,7 @@ export const PreMatchSummary = ({
   answers,
   havaya,
   aiInsights,
+  onFinish,  // Added this prop
 }: PreMatchSummaryProps) => {
   const [isEmailSending, setIsEmailSending] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
@@ -89,6 +91,7 @@ export const PreMatchSummary = ({
         onPrint={handlePrint}
         isEmailSending={isEmailSending}
         isPrinting={isPrinting}
+        onFinish={onFinish}  // Pass the onFinish prop to SummaryButtons
       />
     </div>
   );

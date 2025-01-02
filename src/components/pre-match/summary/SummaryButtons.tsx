@@ -8,12 +8,14 @@ interface SummaryButtonsProps {
   onPrint: () => Promise<void>;
   isEmailSending: boolean;
   isPrinting: boolean;
+  onFinish?: () => void;  // Added this prop
 }
 
 export const SummaryButtons = ({
   onPrint,
   isEmailSending,
-  isPrinting
+  isPrinting,
+  onFinish,  // Added this prop
 }: SummaryButtonsProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -76,7 +78,7 @@ export const SummaryButtons = ({
   return (
     <div className="flex flex-wrap gap-4 justify-end mt-6">
       <Button
-        onClick={() => navigate("/dashboard")}
+        onClick={onFinish || (() => navigate("/dashboard"))}
         variant="outline"
         className="flex items-center gap-2"
       >
