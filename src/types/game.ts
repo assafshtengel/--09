@@ -13,6 +13,7 @@ export interface PreMatchReportActions {
   id: string;
   name: string;
   isSelected: boolean;
+  goal?: string;
 }
 
 export interface PreMatchReport {
