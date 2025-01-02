@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PreMatchReport } from "@/types/game";
 
 interface PreMatchGoalsSectionProps {
-  preMatchData: PreMatchReport | null;
+  preMatchData: PreMatchReport;
 }
 
 export const PreMatchGoalsSection = ({ preMatchData }: PreMatchGoalsSectionProps) => {
