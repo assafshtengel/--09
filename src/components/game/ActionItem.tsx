@@ -34,18 +34,6 @@ export const ActionItem = ({ action, stats, onLog, matchId, minute }: ActionItem
 
       if (error) throw error;
 
-      // Show toast notification
-      toast({
-        title: result === "success" ? `${action.name} - הצלחה` : `${action.name} - כישלון`,
-        description: result === "success" ? "✓ הפעולה נרשמה בהצלחה" : "✗ הפעולה נרשמה ככישלון",
-        variant: result === "success" ? "default" : "destructive",
-      });
-
-      // Trigger vibration on mobile if supported
-      if (navigator.vibrate) {
-        navigator.vibrate(100);
-      }
-
       // Update local state
       onLog(action.id, result, note || undefined);
       setNote("");
@@ -55,6 +43,8 @@ export const ActionItem = ({ action, stats, onLog, matchId, minute }: ActionItem
         title: "שגיאה",
         description: "לא ניתן לשמור את הפעולה",
         variant: "destructive",
+        duration: 1500,
+        className: "bg-red-500 text-white",
       });
     }
   };

@@ -18,7 +18,8 @@ export const ActionButton = ({ actionId, actionName, result, onClick, className 
       title: result === "success" ? `${actionName} - הצלחה` : `${actionName} - כישלון`,
       description: result === "success" ? "✓ הפעולה נרשמה בהצלחה" : "✗ הפעולה נרשמה ככישלון",
       variant: result === "success" ? "default" : "destructive",
-      duration: 2000,
+      duration: 1500,
+      className: result === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white",
     });
     
     // Trigger vibration on mobile if supported
