@@ -47,15 +47,15 @@ export const HavayaSelector = ({ value, onChange, onNext, onBack }: HavayaSelect
       </div>
 
       <div className="flex justify-between mt-6">
-        <Button variant="outline" onClick={onBack}>
-          חזור
-        </Button>
         <Button 
           onClick={onNext}
           disabled={value.length < 3}
         >
           המשך
           <ArrowRight className="mr-2 h-4 w-4" />
+        </Button>
+        <Button variant="outline" onClick={onBack}>
+          חזור
         </Button>
       </div>
     </div>
