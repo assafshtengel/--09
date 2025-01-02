@@ -20,6 +20,59 @@ export const SummaryButtons = ({
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const handleSendToUser = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "שגיאה",
+          description: "משתמש לא מחובר למערכת",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profile?.email) {
+        toast({
+          title: "שגיאה",
+          description: "לא נמצאה כתובת מייל בפרופיל שלך",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error: sendError } = await supabase.functions.invoke('send-pre-match-report', {
+        body: {
+          to: [profile.email],
+          subject: "דוח טרום משחק",
+          html: document.getElementById('pre-match-summary')?.innerHTML || '',
+        }
+      });
+
+      if (sendError) {
+        throw sendError;
+      }
+
+      toast({
+        title: "נשלח בהצלחה",
+        description: "הדוח נשלח למייל שלך",
+      });
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast({
+        title: "שגיאה בשליחת המייל",
+        description: "לא הצלחנו לשלוח את המייל, אנא נסה שוב מאוחר יותר",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSendToCoach = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -38,16 +91,7 @@ export const SummaryButtons = ({
         .eq('id', user.id)
         .single();
 
-      if (profileError) {
-        toast({
-          title: "שגיאה",
-          description: "לא הצלחנו לאתר את פרטי הפרופיל שלך",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!profile?.coach_email) {
+      if (profileError || !profile?.coach_email) {
         toast({
           title: "שגיאה",
           description: "לא נמצאה כתובת מייל של המאמן בפרופיל",
@@ -71,44 +115,6 @@ export const SummaryButtons = ({
       toast({
         title: "נשלח בהצלחה",
         description: "הדוח נשלח למייל המאמן",
-      });
-    } catch (error) {
-      console.error('Error sending email:', error);
-      toast({
-        title: "שגיאה בשליחת המייל",
-        description: "לא הצלחנו לשלוח את המייל, אנא נסה שוב מאוחר יותר",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleSendToUser = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.email) {
-        toast({
-          title: "שגיאה",
-          description: "לא נמצאה כתובת מייל בפרופיל שלך",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error: sendError } = await supabase.functions.invoke('send-pre-match-report', {
-        body: {
-          to: [user.email],
-          subject: "דוח טרום משחק",
-          html: document.getElementById('pre-match-summary')?.innerHTML || '',
-        }
-      });
-
-      if (sendError) {
-        throw sendError;
-      }
-
-      toast({
-        title: "נשלח בהצלחה",
-        description: "הדוח נשלח למייל שלך",
       });
     } catch (error) {
       console.error('Error sending email:', error);
