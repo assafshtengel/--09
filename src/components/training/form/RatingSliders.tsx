@@ -41,8 +41,8 @@ export const RatingSliders = ({ form }: RatingSlidersProps) => {
               <Badge variant="secondary">{currentValues.satisfactionRating}/7</Badge>
             </div>
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>חלש מאוד</span>
-              <span>מצוין</span>
+              <span>7</span>
+              <span>1</span>
             </div>
             <FormMessage />
           </FormItem>
@@ -72,8 +72,8 @@ export const RatingSliders = ({ form }: RatingSlidersProps) => {
               <Badge variant="secondary">{currentValues.challengeHandlingRating}/7</Badge>
             </div>
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>חלש מאוד</span>
-              <span>מצוין</span>
+              <span>7</span>
+              <span>1</span>
             </div>
             <FormMessage />
           </FormItem>
@@ -103,8 +103,8 @@ export const RatingSliders = ({ form }: RatingSlidersProps) => {
               <Badge variant="secondary">{currentValues.energyFocusRating}/7</Badge>
             </div>
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>חלש מאוד</span>
-              <span>מצוין</span>
+              <span>7</span>
+              <span>1</span>
             </div>
             <FormMessage />
           </FormItem>
