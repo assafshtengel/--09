@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Share2, Send, Mail, Instagram } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import html2canvas from "html2canvas";
 
 interface SummaryActionsProps {
   gamePhase: "halftime" | "ended";
