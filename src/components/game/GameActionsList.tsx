@@ -8,9 +8,11 @@ interface GameActionsListProps {
     result: "success" | "failure";
   }>;
   onLog: (actionId: string, result: "success" | "failure", note?: string) => void;
+  matchId: string;
+  minute: number;
 }
 
-export const GameActionsList = ({ actions, actionLogs, onLog }: GameActionsListProps) => {
+export const GameActionsList = ({ actions, actionLogs, onLog, matchId, minute }: GameActionsListProps) => {
   const calculateStats = (actionId: string) => {
     const results = actionLogs.filter(log => log.actionId === actionId);
     return {
@@ -27,6 +29,8 @@ export const GameActionsList = ({ actions, actionLogs, onLog }: GameActionsListP
           action={action}
           stats={calculateStats(action.id)}
           onLog={onLog}
+          matchId={matchId}
+          minute={minute}
         />
       ))}
     </div>

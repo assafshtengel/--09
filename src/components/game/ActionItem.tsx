@@ -3,20 +3,60 @@ import { ActionButton } from "./ActionButton";
 import { Input } from "@/components/ui/input";
 import { Action } from "@/components/ActionSelector";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ActionItemProps {
   action: Action;
   stats: { success: number; total: number };
   onLog: (actionId: string, result: "success" | "failure", note?: string) => void;
+  matchId: string;
+  minute: number;
 }
 
-export const ActionItem = ({ action, stats, onLog }: ActionItemProps) => {
+export const ActionItem = ({ action, stats, onLog, matchId, minute }: ActionItemProps) => {
   const [note, setNote] = useState("");
   const { toast } = useToast();
 
-  const handleAction = (result: "success" | "failure") => {
-    onLog(action.id, result, note || undefined);
-    setNote("");
+  const handleAction = async (result: "success" | "failure") => {
+    try {
+      // Save to Supabase
+      const { error } = await supabase
+        .from('match_actions')
+        .insert([
+          {
+            match_id: matchId,
+            action_id: action.id,
+            minute,
+            result,
+            note: note || undefined
+          }
+        ]);
+
+      if (error) throw error;
+
+      // Show toast notification
+      toast({
+        title: result === "success" ? `${action.name} - הצלחה` : `${action.name} - כישלון`,
+        description: result === "success" ? "✓ הפעולה נרשמה בהצלחה" : "✗ הפעולה נרשמה ככישלון",
+        variant: result === "success" ? "default" : "destructive",
+      });
+
+      // Trigger vibration on mobile if supported
+      if (navigator.vibrate) {
+        navigator.vibrate(100);
+      }
+
+      // Update local state
+      onLog(action.id, result, note || undefined);
+      setNote("");
+    } catch (error) {
+      console.error('Error saving action:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את הפעולה",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

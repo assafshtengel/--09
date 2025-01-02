@@ -24,14 +24,6 @@ export const GameActionsSection = ({
 }: GameActionsSectionProps) => {
   const { handleActionLog } = useActionManager(matchId, minute, actions);
 
-  const calculateActionStats = (actionId: string) => {
-    const actionResults = actionLogs.filter(log => log.actionId === actionId);
-    return {
-      success: actionResults.filter(log => log.result === "success").length,
-      total: actionResults.length
-    };
-  };
-
   return (
     <div className="p-4 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
       <div className="grid gap-4">
@@ -41,6 +33,8 @@ export const GameActionsSection = ({
             actions={[action]}
             actionLogs={actionLogs.filter(log => log.actionId === action.id)}
             onLog={handleActionLog}
+            matchId={matchId}
+            minute={minute}
           />
         ))}
       </div>

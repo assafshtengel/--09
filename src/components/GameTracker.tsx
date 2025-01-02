@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { GameContent } from "./game/GameContent";
 import { useGameState } from "./game/hooks/useGameState";
 import { useMatchData } from "./game/hooks/useMatchData";
@@ -74,6 +74,9 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
           <DialogTitle>
             {gamePhase === "halftime" ? "סיכום מחצית" : "סיכום משחק"}
           </DialogTitle>
+          <DialogDescription>
+            סיכום הפעולות והסטטיסטיקות עד כה
+          </DialogDescription>
           <GameContent
             gamePhase={gamePhase}
             isTimerRunning={isTimerRunning}
