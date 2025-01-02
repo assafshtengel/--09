@@ -13,7 +13,10 @@ interface MatchData {
   player_id: string;
   pre_match_report_id: string | null;
   status: string;
-  pre_match_reports?: {
+  team_name?: string;
+  player_role?: string;
+  match_type?: string;
+  pre_match_report?: {
     actions?: any[] | null;
     havaya?: string | null;
     questions_answers?: Record<string, any> | null;
@@ -23,6 +26,7 @@ interface MatchData {
 export const useMatchData = (matchId: string) => {
   const { toast } = useToast();
   const [matchData, setMatchData] = useState<MatchData | null>(null);
+  const [preMatchData, setPreMatchData] = useState<any>(null);
 
   const loadMatchData = async () => {
     if (!matchId) return;
@@ -32,7 +36,7 @@ export const useMatchData = (matchId: string) => {
         .from("matches")
         .select(`
           *,
-          pre_match_reports (
+          pre_match_report:pre_match_report_id (
             actions,
             havaya,
             questions_answers
@@ -44,9 +48,12 @@ export const useMatchData = (matchId: string) => {
       if (matchError) throw matchError;
 
       setMatchData(match as MatchData);
+      if (match?.pre_match_report) {
+        setPreMatchData(match.pre_match_report);
+      }
 
-      if (match?.pre_match_reports?.actions) {
-        const rawActions = match.pre_match_reports.actions;
+      if (match?.pre_match_report?.actions) {
+        const rawActions = match.pre_match_report.actions;
         
         const validActions = (Array.isArray(rawActions) ? rawActions : [])
           .filter((action): action is any => 
@@ -105,15 +112,5 @@ export const useMatchData = (matchId: string) => {
     }
   };
 
-  useEffect(() => {
-    const initializeData = async () => {
-      const actions = await loadMatchData();
-      const logs = await loadActionLogs();
-      return { actions, logs };
-    };
-
-    initializeData();
-  }, [matchId]);
-
-  return { matchData, loadMatchData, loadActionLogs };
+  return { matchData, preMatchData, loadMatchData, loadActionLogs };
 };

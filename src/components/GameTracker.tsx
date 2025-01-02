@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { GameContent } from "./game/GameContent";
 import { GameMatchDetails } from "./game/GameMatchDetails";
+import { PreMatchGoalsSection } from "./game/PreMatchGoalsSection";
 import { useGameState } from "./game/hooks/useGameState";
 import { useMatchData } from "./game/hooks/useMatchData";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,6 +77,9 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-md mx-auto bg-white min-h-screen relative pb-24 md:pb-0">
         <GameMatchDetails matchData={matchData} />
+        {gamePhase === "preview" && (
+          <PreMatchGoalsSection preMatchData={matchData?.pre_match_report} />
+        )}
         <GameContent
           gamePhase={gamePhase}
           isTimerRunning={isTimerRunning}
