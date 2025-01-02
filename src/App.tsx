@@ -8,6 +8,7 @@ import Profile from "@/pages/Profile";
 import Dashboard from "@/pages/Dashboard";
 import PreMatchReport from "@/pages/PreMatchReport";
 import { GameSelection } from "@/components/game/GameSelection";
+import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryDashboard";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ function App() {
               <Route path="/pre-match-report" element={<PreMatchReport />} />
               <Route path="/game" element={<GameSelection />} />
               <Route path="/game/:id" element={<Game />} />
+              <Route path="/training-summary" element={<TrainingSummaryDashboard />} />
             </Routes>
           </Router>
           <Toaster />
