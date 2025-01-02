@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
 
 interface HavayaSelectorProps {
   value: string[];
@@ -69,10 +68,8 @@ export const HavayaSelector = ({ value, onChange, onNext, onBack }: HavayaSelect
         <Button 
           onClick={onNext}
           disabled={value.length < 3}
-          className="mr-auto"
         >
           המשך
-          <ArrowRight className="mr-2 h-4 w-4" />
         </Button>
       </div>
     </div>
