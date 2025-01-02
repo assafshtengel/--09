@@ -7,7 +7,6 @@ import { GameScore } from "./game/GameScore";
 import { useGameState } from "./game/hooks/useGameState";
 import { useMatchData } from "./game/hooks/useMatchData";
 import { MatchData } from "@/types/game";
-import { supabase } from "@/integrations/supabase/client";
 
 interface GameTrackerProps {
   matchId: string;
