@@ -50,12 +50,19 @@ export const GameActionsSection = ({
         ]);
 
       if (error) throw error;
+
+      toast({
+        title: "ההערה נשמרה",
+        description: "ההערה נשמרה בהצלחה",
+        duration: 2000,
+      });
     } catch (error) {
       console.error('Error saving note:', error);
       toast({
         title: "שגיאה",
         description: "לא ניתן לשמור את ההערה",
         variant: "destructive",
+        duration: 2000,
       });
     }
   };
@@ -66,16 +73,53 @@ export const GameActionsSection = ({
         title: "שגיאה",
         description: "יש להזין טקסט להערה",
         variant: "destructive",
+        duration: 2000,
       });
       return;
     }
 
     await saveNote(generalNote);
     setGeneralNote("");
-    toast({
-      title: "ההערה נשמרה",
-      description: "ההערה נשמרה בהצלחה",
-    });
+  };
+
+  const handleActionLog = async (actionId: string, result: "success" | "failure", note?: string) => {
+    try {
+      const { error } = await supabase
+        .from('match_actions')
+        .insert([
+          {
+            match_id: matchId,
+            action_id: actionId,
+            minute,
+            result,
+            note
+          }
+        ]);
+
+      if (error) throw error;
+
+      // Show toast notification
+      const action = actions.find(a => a.id === actionId);
+      toast({
+        title: result === "success" ? `${action?.name || ''} - הצלחה` : `${action?.name || ''} - כישלון`,
+        description: result === "success" ? "✓ הפעולה נרשמה בהצלחה" : "✗ הפעולה נרשמה ככישלון",
+        variant: result === "success" ? "default" : "destructive",
+        duration: 2000,
+      });
+
+      // Trigger vibration on mobile if supported
+      if (navigator.vibrate) {
+        navigator.vibrate(100);
+      }
+    } catch (error) {
+      console.error('Error saving action:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את הפעולה",
+        variant: "destructive",
+        duration: 2000,
+      });
+    }
   };
 
   return (
@@ -86,37 +130,7 @@ export const GameActionsSection = ({
             key={action.id}
             action={action}
             stats={calculateActionStats(action.id)}
-            onLog={async (actionId, result, note) => {
-              try {
-                const { error } = await supabase
-                  .from('match_actions')
-                  .insert([
-                    {
-                      match_id: matchId,
-                      action_id: actionId,
-                      minute,
-                      result,
-                      note
-                    }
-                  ]);
-
-                if (error) throw error;
-
-                toast({
-                  title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
-                  description: `הפעולה נשמרה בדקה ${minute}`,
-                  variant: result === "success" ? "default" : "destructive",
-                  duration: 2000,
-                });
-              } catch (error) {
-                console.error('Error saving action:', error);
-                toast({
-                  title: "שגיאה",
-                  description: "לא ניתן לשמור את הפעולה",
-                  variant: "destructive",
-                });
-              }
-            }}
+            onLog={handleActionLog}
           />
         ))}
       </div>
@@ -143,12 +157,19 @@ export const GameActionsSection = ({
               ]);
 
             if (error) throw error;
+
+            toast({
+              title: "חילוף בוצע",
+              description: `${playerName} יצא מהמשחק`,
+              duration: 2000,
+            });
           } catch (error) {
             console.error('Error saving substitution:', error);
             toast({
               title: "שגיאה",
               description: "לא ניתן לשמור את החילוף",
               variant: "destructive",
+              duration: 2000,
             });
           }
         }}
@@ -166,12 +187,19 @@ export const GameActionsSection = ({
               ]);
 
             if (error) throw error;
+
+            toast({
+              title: "חילוף בוצע",
+              description: `${playerName} חזר למשחק`,
+              duration: 2000,
+            });
           } catch (error) {
             console.error('Error saving substitution:', error);
             toast({
               title: "שגיאה",
               description: "לא ניתן לשמור את החילוף",
               variant: "destructive",
+              duration: 2000,
             });
           }
         }}
