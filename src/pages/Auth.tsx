@@ -4,19 +4,42 @@ import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
-        navigate("/");
+        // Check if user has a profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (!profile) {
+          // If no profile exists, redirect to profile creation
+          navigate("/profile");
+          toast({
+            title: "ברוך הבא!",
+            description: "אנא מלא את פרטי הפרופיל שלך",
+          });
+        } else {
+          // If profile exists, redirect to dashboard
+          navigate("/dashboard");
+          toast({
+            title: "ברוך הבא בחזרה!",
+            description: "התחברת בהצלחה",
+          });
+        }
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-md min-h-screen flex items-center justify-center">
