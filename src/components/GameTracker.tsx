@@ -97,7 +97,7 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-md mx-auto bg-white min-h-screen relative pb-24 md:pb-0">
-        <GameMatchDetails matchData={matchData as MatchData} />
+        <GameMatchDetails matchData={matchData} />
         {gamePhase === "preview" && matchData?.pre_match_report && (
           <PreMatchGoalsSection preMatchData={matchData.pre_match_report} />
         )}
@@ -113,7 +113,7 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
           showSummary={showSummary}
           setShowSummary={setShowSummary}
           matchId={matchId}
-          matchData={matchData as MatchData}
+          matchData={matchData}
           onStartMatch={startMatch}
           onEndHalf={endHalf}
           onStartSecondHalf={startSecondHalf}
@@ -140,7 +140,7 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
             showSummary={showSummary}
             setShowSummary={setShowSummary}
             matchId={matchId}
-            matchData={matchData as MatchData}
+            matchData={matchData}
             onStartMatch={startMatch}
             onEndHalf={endHalf}
             onStartSecondHalf={startSecondHalf}
