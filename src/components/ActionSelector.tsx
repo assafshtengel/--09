@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export interface Action {
   id: string;
@@ -23,7 +23,8 @@ const getPositionActions = (position: string): Action[] => {
       "מסירה מקדמת",
       "ריצה לעומק",
       "סגירה הגנתית",
-      "שיפור מיקום בסיום"
+      "שיפור מיקום בסיום",
+      "מסירת מפתח"
     ],
     goalkeeper: [
       "יציאה נכונה",
@@ -35,7 +36,8 @@ const getPositionActions = (position: string): Action[] => {
       "עצירת קרנות",
       "צמצום זוויות",
       "התחלת התקפה מהירה",
-      "קבלת החלטות תחת לחץ"
+      "קבלת החלטות תחת לחץ",
+      "מסירת מפתח"
     ],
     defender: [
       "תיקול מוצלח",
@@ -47,7 +49,8 @@ const getPositionActions = (position: string): Action[] => {
       "חיפוי על בלמים",
       "מסירות רוחב מדויקות",
       "נוכחות באגף",
-      "התמודדות עם שחקן כנף"
+      "התמודדות עם שחקן כנף",
+      "מסירת מפתח"
     ],
     midfielder: [
       "חילוץ בקישור",
@@ -59,7 +62,8 @@ const getPositionActions = (position: string): Action[] => {
       "מסירה ארוכה מדויקת",
       "תנועה בין הקווים",
       "שמירה על פוזשן",
-      "יצירת יתרון מספרי"
+      "יצירת יתרון מספרי",
+      "מסירת מפתח"
     ]
   };
 
@@ -137,7 +141,10 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-xl mx-auto p-6">
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-right mb-4">בחר פעולות למעקב</h2>
+        <div className="flex flex-col space-y-2">
+          <h2 className="text-xl font-semibold text-right">בחר פעולות למעקב</h2>
+          <p className="text-sm text-gray-500 text-right">(מומלץ 5-7 פעולות)</p>
+        </div>
         
         {actions.map(action => (
           <div key={action.id} className="flex flex-col space-y-2 border rounded-lg p-4">
