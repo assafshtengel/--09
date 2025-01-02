@@ -158,7 +158,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
                   type="text"
                   value={action.goal || ""}
                   onChange={(e) => handleGoalChange(action.id, e.target.value)}
-                  placeholder="הגדר יעד (לדוגמה: 5 הצלחות)"
+                  placeholder="הגדר יעד (לדוגמה: 5 פעולות)"
                   className="text-right"
                 />
               </div>
@@ -183,9 +183,14 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
         </div>
       </div>
 
-      <Button type="submit" className="w-full">
-        התחל משחק
-      </Button>
+      <div className="flex justify-between mt-6">
+        <Button type="submit">
+          המשך
+        </Button>
+        <Button type="button" variant="outline" onClick={() => window.history.back()}>
+          חזור
+        </Button>
+      </div>
     </form>
   );
 };
