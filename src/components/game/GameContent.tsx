@@ -71,6 +71,10 @@ export const GameContent = ({
           havaya={matchData.pre_match_reports.havaya?.split(',') || []}
           preMatchAnswers={matchData.pre_match_reports.questions_answers || {}}
           onStartMatch={onStartMatch}
+          onActionAdd={(action) => {
+            // This is a placeholder function since we're not actually adding actions in preview mode
+            console.log("Action added:", action);
+          }}
         />
       )}
 
@@ -102,7 +106,7 @@ export const GameContent = ({
             onClose={() => setShowSummary(false)}
             gamePhase={gamePhase === "halftime" ? "halftime" : "ended"}
             havaya={matchData?.pre_match_reports?.havaya?.split(',') || []}
-            onContinue={gamePhase === "halftime" ? startSecondHalf : undefined}
+            onContinue={gamePhase === "halftime" ? onStartSecondHalf : undefined}
           />
         </DialogContent>
       </Dialog>
