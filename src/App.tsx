@@ -125,6 +125,14 @@ function App() {
                 }
               />
               <Route
+                path="/game/:id"
+                element={
+                  <ProtectedRoute>
+                    <Game />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/pre-match-report"
                 element={
                   <ProtectedRoute>
