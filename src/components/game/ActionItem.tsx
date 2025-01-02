@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ActionButton } from "./ActionButton";
 import { Input } from "@/components/ui/input";
 import { Action } from "@/components/ActionSelector";
+import { useToast } from "@/hooks/use-toast";
 
 interface ActionItemProps {
   action: Action;
@@ -11,10 +12,17 @@ interface ActionItemProps {
 
 export const ActionItem = ({ action, stats, onLog }: ActionItemProps) => {
   const [note, setNote] = useState("");
+  const { toast } = useToast();
 
   const handleAction = (result: "success" | "failure") => {
     onLog(action.id, result, note || undefined);
     setNote("");
+    
+    toast({
+      title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
+      description: `${action.name} - ${result === "success" ? "הצלחה" : "כישלון"}`,
+      variant: result === "success" ? "default" : "destructive",
+    });
   };
 
   return (

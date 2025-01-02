@@ -34,7 +34,6 @@ interface GameContentProps {
   onEndHalf: () => void;
   onStartSecondHalf: () => void;
   onEndMatch: () => void;
-  onActionAdd: (action: Action) => void;
 }
 
 export const GameContent = ({
@@ -53,7 +52,6 @@ export const GameContent = ({
   onEndHalf,
   onStartSecondHalf,
   onEndMatch,
-  onActionAdd,
 }: GameContentProps) => {
   return (
     <>
@@ -72,18 +70,19 @@ export const GameContent = ({
           actions={actions}
           havaya={matchData.pre_match_reports.havaya?.split(',') || []}
           preMatchAnswers={matchData.pre_match_reports.questions_answers || {}}
-          onActionAdd={onActionAdd}
           onStartMatch={onStartMatch}
         />
       )}
 
       {(gamePhase === "playing" || gamePhase === "secondHalf") && (
-        <GameActionsSection
-          actions={actions}
-          actionLogs={actionLogs}
-          minute={minute}
-          matchId={matchId}
-        />
+        <div className="h-[calc(100vh-180px)] overflow-y-auto">
+          <GameActionsSection
+            actions={actions}
+            actionLogs={actionLogs}
+            minute={minute}
+            matchId={matchId}
+          />
+        </div>
       )}
 
       <GameControls
@@ -103,6 +102,7 @@ export const GameContent = ({
             onClose={() => setShowSummary(false)}
             gamePhase={gamePhase === "halftime" ? "halftime" : "ended"}
             havaya={matchData?.pre_match_reports?.havaya?.split(',') || []}
+            onContinue={gamePhase === "halftime" ? startSecondHalf : undefined}
           />
         </DialogContent>
       </Dialog>

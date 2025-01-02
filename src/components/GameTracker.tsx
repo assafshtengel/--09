@@ -62,6 +62,7 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
 
       const typedMatch = match as unknown as MatchData;
       setMatchData(typedMatch);
+      setGamePhase(typedMatch.status as GamePhase);
 
       if (typedMatch?.pre_match_reports?.actions) {
         const rawActions = typedMatch.pre_match_reports.actions;
@@ -83,8 +84,6 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
           
         setActions(validActions);
       }
-
-      setGamePhase(typedMatch.status as GamePhase);
     } catch (error) {
       console.error("Error loading match data:", error);
       toast({
@@ -113,14 +112,6 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
         variant: "destructive",
       });
     }
-  };
-
-  const handleAddAction = (newAction: Action) => {
-    setActions(prev => [...prev, newAction]);
-    toast({
-      title: "פעולה נוספה",
-      description: `הפעולה ${newAction.name} נוספה למעקב`,
-    });
   };
 
   const startMatch = async () => {
@@ -171,7 +162,6 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
           onEndHalf={endHalf}
           onStartSecondHalf={startSecondHalf}
           onEndMatch={endMatch}
-          onActionAdd={handleAddAction}
         />
       </div>
     </div>
