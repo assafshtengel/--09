@@ -15,9 +15,13 @@ interface ActionItemProps {
 
 export const ActionItem = ({ action, stats, onLog, matchId, minute }: ActionItemProps) => {
   const [note, setNote] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleAction = async (result: "success" | "failure") => {
+    if (isLoading) return;
+    
+    setIsLoading(true);
     try {
       // Save to Supabase
       const { error } = await supabase
@@ -34,9 +38,24 @@ export const ActionItem = ({ action, stats, onLog, matchId, minute }: ActionItem
 
       if (error) throw error;
 
-      // Update local state first
-      onLog(action.id, result, note || undefined);
+      // Update local state and show toast
+      await onLog(action.id, result, note || undefined);
+      
+      toast({
+        title: result === "success" ? `${action.name} - הצלחה` : `${action.name} - כישלון`,
+        description: result === "success" ? "✓ הפעולה נרשמה בהצלחה" : "✗ הפעולה נרשמה ככישלון",
+        variant: result === "success" ? "default" : "destructive",
+        duration: 1500,
+        className: result === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white",
+      });
+
+      // Clear note after successful save
       setNote("");
+      
+      // Trigger vibration on mobile if supported
+      if (navigator.vibrate) {
+        navigator.vibrate(100);
+      }
     } catch (error) {
       console.error('Error saving action:', error);
       toast({
@@ -46,6 +65,8 @@ export const ActionItem = ({ action, stats, onLog, matchId, minute }: ActionItem
         duration: 1500,
         className: "bg-red-500 text-white",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
