@@ -2,8 +2,8 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Action } from "@/components/ActionSelector";
-import { PreMatchActions } from "./components/PreMatchActions";
 import { Badge } from "@/components/ui/badge";
+import { SummaryActions } from "./components/SummaryActions";
 import html2canvas from "html2canvas";
 
 interface PreMatchSummaryProps {
@@ -25,68 +25,10 @@ export const PreMatchSummary = ({
   answers,
   havaya,
   aiInsights,
-  onFinish,
 }: PreMatchSummaryProps) => {
   const { toast } = useToast();
-  const [isSending, setIsSending] = useState(false);
-  const [isPrinting, setIsPrinting] = useState(false);
   const [isEmailSending, setIsEmailSending] = useState(false);
-
-  const handleWhatsAppShare = async () => {
-    try {
-      setIsSending(true);
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("משתמש לא מחובר");
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('phone_number')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile?.phone_number) {
-        toast({
-          title: "שגיאה",
-          description: "לא נמצא מספר טלפון בפרופיל",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const summaryText = `דוח טרום משחק - ${matchDetails.date}${matchDetails.opponent ? ` מול ${matchDetails.opponent}` : ''}\n\n` +
-        `הוויות נבחרות:\n${havaya.join('\n')}\n\n` +
-        `יעדים למשחק:\n${actions.map(action => 
-          `- ${action.name}${action.goal ? ` (יעד: ${action.goal})` : ''}`
-        ).join('\n')}\n\n` +
-        `תשובות לשאלות:\n${Object.entries(answers)
-          .map(([question, answer]) => `${question}: ${answer}`).join('\n')}`;
-
-      const { error: whatsappError } = await supabase.functions.invoke('send-whatsapp', {
-        body: {
-          message: summaryText,
-          recipientNumber: profile.phone_number
-        }
-      });
-
-      if (whatsappError) throw whatsappError;
-
-      toast({
-        title: "נשלח בהצלחה",
-        description: "דוח טרום משחק נשלח לוואטסאפ שלך",
-      });
-
-    } catch (error) {
-      console.error('Error sending WhatsApp message:', error);
-      toast({
-        title: "שגיאה בשליחת ההודעה",
-        description: "לא הצלחנו לשלוח את ההודעה",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSending(false);
-    }
-  };
+  const [isPrinting, setIsPrinting] = useState(false);
 
   const handlePrint = async () => {
     try {
@@ -99,11 +41,15 @@ export const PreMatchSummary = ({
       if (!printWindow) return;
 
       printWindow.document.write(`
-        <html>
+        <html dir="rtl">
           <head>
             <title>דוח טרום משחק</title>
+            <style>
+              body { margin: 0; display: flex; justify-content: center; }
+              img { max-width: 100%; height: auto; }
+            </style>
           </head>
-          <body style="margin: 0; display: flex; justify-content: center;">
+          <body>
             <img src="${canvas.toDataURL()}" />
           </body>
         </html>
@@ -127,7 +73,22 @@ export const PreMatchSummary = ({
       setIsEmailSending(true);
       
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.email) throw new Error("לא נמצאה כתובת מייל");
+      if (!user) throw new Error("משתמש לא מחובר");
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('coach_email')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.coach_email) {
+        toast({
+          title: "שגיאה",
+          description: "לא נמצאה כתובת מייל של המאמן בפרופיל",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const htmlContent = `
         <div dir="rtl">
@@ -139,7 +100,7 @@ export const PreMatchSummary = ({
             ${havaya.map(h => `<li>${h}</li>`).join('')}
           </ul>
           
-          <h3>יעדים למשחק:</h3>
+          <h3>פעולות למעקב:</h3>
           <ul>
             ${actions.map(action => `
               <li>
@@ -161,7 +122,7 @@ export const PreMatchSummary = ({
 
       const { error } = await supabase.functions.invoke('send-pre-match-report', {
         body: {
-          to: [user.email],
+          to: [profile.coach_email],
           subject: `דוח טרום משחק - ${matchDetails.date}`,
           html: htmlContent,
         },
@@ -171,7 +132,7 @@ export const PreMatchSummary = ({
 
       toast({
         title: "נשלח בהצלחה",
-        description: "דוח טרום משחק נשלח למייל שלך",
+        description: "דוח טרום משחק נשלח למייל המאמן",
       });
     } catch (error) {
       console.error('Error sending email:', error);
@@ -189,8 +150,8 @@ export const PreMatchSummary = ({
     <div className="space-y-6">
       <div id="pre-match-summary">
         <div className="border-b pb-4">
-          <h2 className="text-2xl font-bold">סיכום דוח טרום משחק</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-bold text-right">סיכום דוח טרום משחק</h2>
+          <p className="text-muted-foreground text-right">
             תאריך: {matchDetails.date}
             {matchDetails.opponent && ` | נגד: ${matchDetails.opponent}`}
           </p>
@@ -198,10 +159,10 @@ export const PreMatchSummary = ({
 
         {havaya.length > 0 && (
           <div className="border p-4 rounded-lg mt-4">
-            <h3 className="text-lg font-semibold mb-2">הוויות נבחרות</h3>
-            <div className="flex flex-wrap gap-2">
+            <h3 className="text-lg font-semibold mb-2 text-right">הוויות נבחרות</h3>
+            <div className="flex flex-wrap gap-2 justify-end">
               {havaya.map((h, index) => (
-                <Badge key={index} variant="secondary" className="text-base">
+                <Badge key={index} variant="secondary">
                   {h}
                 </Badge>
               ))}
@@ -210,22 +171,24 @@ export const PreMatchSummary = ({
         )}
 
         <div className="mt-4">
-          <h3 className="text-lg font-semibold mb-2">יעדים למשחק</h3>
-          <ul className="space-y-2">
+          <h3 className="text-lg font-semibold mb-2 text-right">פעולות למעקב</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {actions.map((action, index) => (
-              <li key={index} className="border p-2 rounded">
-                {action.name}
-                {action.goal && <div className="text-sm">יעד: {action.goal}</div>}
-              </li>
+              <div key={index} className="border p-3 rounded-lg text-right">
+                <h4 className="font-semibold">{action.name}</h4>
+                {action.goal && (
+                  <p className="text-sm text-gray-600 mt-1">יעד: {action.goal}</p>
+                )}
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
 
         <div className="mt-4">
-          <h3 className="text-lg font-semibold mb-2">תשובות לשאלות</h3>
+          <h3 className="text-lg font-semibold mb-2 text-right">תשובות לשאלות</h3>
           <div className="space-y-4">
             {Object.entries(answers).map(([question, answer], index) => (
-              <div key={index} className="border p-3 rounded">
+              <div key={index} className="border p-3 rounded-lg text-right">
                 <p className="font-medium">{question}</p>
                 <p className="text-muted-foreground">{answer}</p>
               </div>
@@ -235,8 +198,8 @@ export const PreMatchSummary = ({
 
         {aiInsights.length > 0 && (
           <div className="mt-4">
-            <h3 className="text-lg font-semibold mb-2">תובנות AI</h3>
-            <ul className="space-y-2">
+            <h3 className="text-lg font-semibold mb-2 text-right">תובנות AI</h3>
+            <ul className="space-y-2 text-right">
               {aiInsights.map((insight, index) => (
                 <li key={index} className="text-muted-foreground">
                   {insight}
@@ -247,13 +210,11 @@ export const PreMatchSummary = ({
         )}
       </div>
 
-      <PreMatchActions
+      <SummaryActions
         onEmailSend={handleEmailSend}
         onPrint={handlePrint}
-        onWhatsAppShare={handleWhatsAppShare}
         isEmailSending={isEmailSending}
         isPrinting={isPrinting}
-        isWhatsAppSending={isSending}
       />
     </div>
   );

@@ -616,6 +616,7 @@ export type Database = {
         Row: {
           age_category: string | null
           club: string | null
+          coach_email: string | null
           coach_phone_number: string | null
           created_at: string
           date_of_birth: string | null
@@ -633,6 +634,7 @@ export type Database = {
         Insert: {
           age_category?: string | null
           club?: string | null
+          coach_email?: string | null
           coach_phone_number?: string | null
           created_at?: string
           date_of_birth?: string | null
@@ -650,6 +652,7 @@ export type Database = {
         Update: {
           age_category?: string | null
           club?: string | null
+          coach_email?: string | null
           coach_phone_number?: string | null
           created_at?: string
           date_of_birth?: string | null
