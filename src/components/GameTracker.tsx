@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Action } from "@/components/ActionSelector";
@@ -13,6 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog } from "@/types/game";
 import { ActionItem } from "./game/ActionItem";
+
+interface GameTrackerProps {
+  matchId: string;
+}
 
 interface MatchData {
   id: string;
@@ -30,8 +33,7 @@ interface MatchData {
   } | null;
 }
 
-export const GameTracker = () => {
-  const { id: matchId } = useParams<{ id: string }>();
+export const GameTracker = ({ matchId }: GameTrackerProps) => {
   const { toast } = useToast();
   const [gamePhase, setGamePhase] = useState<GamePhase>("preview");
   const [minute, setMinute] = useState(0);
