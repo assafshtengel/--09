@@ -141,6 +141,7 @@ export const GameContent = ({
             gamePhase={gamePhase === "halftime" ? "halftime" : "ended"}
             havaya={matchData?.pre_match_reports?.havaya?.split(',') || []}
             onContinue={gamePhase === "halftime" ? onStartSecondHalf : undefined}
+            matchId={matchId}
           />
         </DialogContent>
       </Dialog>

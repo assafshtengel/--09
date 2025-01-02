@@ -44,6 +44,11 @@ export const GameSummary = ({
 
   useEffect(() => {
     const fetchMatchData = async () => {
+      if (!matchId) {
+        console.error("No match ID provided");
+        return;
+      }
+
       try {
         const { data: match, error } = await supabase
           .from("matches")
@@ -52,12 +57,12 @@ export const GameSummary = ({
             match_mental_feedback (*)
           `)
           .eq("id", matchId)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
         
         setMatchData(match);
-        if (match.match_mental_feedback?.[0]) {
+        if (match?.match_mental_feedback?.[0]) {
           setMentalFeedback(match.match_mental_feedback[0]);
         }
       } catch (error) {
