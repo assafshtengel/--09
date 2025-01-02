@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { GameContent } from "./game/GameContent";
 import { useGameState } from "./game/hooks/useGameState";
 import { useMatchData } from "./game/hooks/useMatchData";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GameTrackerProps {
   matchId: string;
@@ -28,17 +29,37 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
   } = useGameState(matchId);
 
   const { matchData, loadMatchData, loadActionLogs } = useMatchData(matchId);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const initializeData = async () => {
-      const actions = await loadMatchData();
-      const logs = await loadActionLogs();
-      if (actions) setActions(actions);
-      if (logs) setActionLogs(logs);
+      setIsLoading(true);
+      try {
+        const actions = await loadMatchData();
+        const logs = await loadActionLogs();
+        if (actions) setActions(actions);
+        if (logs) setActionLogs(logs);
+      } catch (error) {
+        console.error("Error initializing data:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     initializeData();
   }, [matchId]);
+
+  // Refresh action logs when showing summary
+  useEffect(() => {
+    const refreshActionLogs = async () => {
+      if (showSummary) {
+        const logs = await loadActionLogs();
+        if (logs) setActionLogs(logs);
+      }
+    };
+
+    refreshActionLogs();
+  }, [showSummary]);
 
   const handleCloseSummary = () => {
     setShowSummary(false);
@@ -46,6 +67,10 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
       startSecondHalf();
     }
   };
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">טוען...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

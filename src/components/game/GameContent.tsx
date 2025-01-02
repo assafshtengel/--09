@@ -7,6 +7,7 @@ import { GameActionsSection } from "./GameActionsSection";
 import { Action } from "@/components/ActionSelector";
 import { GamePhase, PreMatchReportActions } from "@/types/game";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 interface GameContentProps {
   gamePhase: GamePhase;
@@ -55,27 +56,36 @@ export const GameContent = ({
   onEndMatch,
 }: GameContentProps) => {
   const handleActionUpdate = async () => {
-    // Refresh action logs
-    const { data: logs } = await supabase
-      .from('match_actions')
-      .select('*')
-      .eq('match_id', matchId)
-      .order('minute', { ascending: true });
+    try {
+      const { data: logs, error } = await supabase
+        .from('match_actions')
+        .select('*')
+        .eq('match_id', matchId)
+        .order('minute', { ascending: true });
 
-    if (logs) {
-      // Update parent component's action logs
-      const formattedLogs = logs.map(log => ({
-        actionId: log.action_id,
-        minute: log.minute,
-        result: log.result as "success" | "failure",
-        note: log.note
-      }));
-      // Update action logs in parent component
-      if (typeof actionLogs !== 'undefined') {
-        actionLogs = formattedLogs;
+      if (error) throw error;
+
+      if (logs) {
+        const formattedLogs = logs.map(log => ({
+          actionId: log.action_id,
+          minute: log.minute,
+          result: log.result as "success" | "failure",
+          note: log.note
+        }));
+        return formattedLogs;
       }
+    } catch (error) {
+      console.error('Error fetching action logs:', error);
     }
+    return [];
   };
+
+  // Refresh action logs when showing summary
+  useEffect(() => {
+    if (showSummary) {
+      handleActionUpdate();
+    }
+  }, [showSummary]);
 
   return (
     <>
