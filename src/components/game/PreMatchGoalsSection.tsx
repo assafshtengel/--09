@@ -1,13 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PreMatchReportActions } from "@/types/game";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MatchData } from "@/types/game";
 
 interface PreMatchGoalsSectionProps {
-  preMatchData: {
-    actions?: PreMatchReportActions[] | null;
-    questions_answers?: Record<string, any> | null;
-    havaya?: string | null;
-  } | null;
+  preMatchData: MatchData['pre_match_report'];
 }
 
 export const PreMatchGoalsSection = ({ preMatchData }: PreMatchGoalsSectionProps) => {

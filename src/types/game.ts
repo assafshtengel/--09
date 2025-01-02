@@ -20,6 +20,12 @@ export interface SubstitutionLog {
   minute: number;
 }
 
+export interface PreMatchReport {
+  actions?: PreMatchReportActions[] | null;
+  questions_answers?: Record<string, any> | null;
+  havaya?: string | null;
+}
+
 export interface MatchData {
   id: string;
   created_at: string;
@@ -32,9 +38,5 @@ export interface MatchData {
   team_name?: string;
   player_role?: string;
   match_type?: string;
-  pre_match_report?: {
-    actions?: PreMatchReportActions[] | null;
-    questions_answers?: Record<string, any> | null;
-    havaya?: string | null;
-  } | null;
+  pre_match_report?: PreMatchReport | null;
 }
