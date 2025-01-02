@@ -74,8 +74,8 @@ export const GameSelection = () => {
       if (!user) throw new Error("No authenticated user");
 
       if (game.status === "completed" && game.match_id) {
-        // Navigate to existing match summary
-        navigate(`/match/${game.match_id}`);
+        // Navigate to existing match
+        navigate(`/game/${game.match_id}`);
         return;
       }
 
@@ -94,7 +94,7 @@ export const GameSelection = () => {
 
       if (createError) throw createError;
       if (newMatch) {
-        navigate(`/match/${newMatch.id}`);
+        navigate(`/game/${newMatch.id}`);
       }
     } catch (error) {
       console.error("Error handling game selection:", error);
