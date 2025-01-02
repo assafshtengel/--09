@@ -5,9 +5,11 @@ import { ArrowRight } from "lucide-react";
 interface HavayaSelectorProps {
   value: string[];
   onChange: (value: string[]) => void;
+  onNext?: () => void;
+  onBack?: () => void;
 }
 
-export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
+export const HavayaSelector = ({ value, onChange, onNext, onBack }: HavayaSelectorProps) => {
   const [options] = useState<string[]>([
     "חווית 1",
     "חווית 2",
@@ -45,11 +47,11 @@ export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
       </div>
 
       <div className="flex justify-between mt-6">
-        <Button variant="outline" onClick={handleBack}>
+        <Button variant="outline" onClick={onBack}>
           חזור
         </Button>
         <Button 
-          onClick={handleNext}
+          onClick={onNext}
           disabled={value.length < 3}
         >
           המשך
