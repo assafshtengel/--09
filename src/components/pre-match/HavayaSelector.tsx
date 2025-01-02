@@ -11,12 +11,27 @@ interface HavayaSelectorProps {
 
 export const HavayaSelector = ({ value, onChange, onNext, onBack }: HavayaSelectorProps) => {
   const [options] = useState<string[]>([
-    "חווית 1",
-    "חווית 2",
-    "חווית 3",
-    "חווית 4",
-    "חווית 5",
-    "חווית 6",
+    "מוטיבציה",
+    "ביטחון",
+    "שליטה",
+    "ריכוז",
+    "רוגע",
+    "הנאה",
+    "נחישות",
+    "אנרגטיות",
+    "חדות",
+    "אגרסיביות",
+    "אופטימיות",
+    "תקשורת",
+    "יצירתיות",
+    "אחריות",
+    "מנהיגות",
+    "התמדה",
+    "גמישות",
+    "סבלנות",
+    "אומץ",
+    "משמעת",
+    "שיתוף פעולה"
   ]);
 
   const handleOptionToggle = (option: string) => {
@@ -38,7 +53,11 @@ export const HavayaSelector = ({ value, onChange, onNext, onBack }: HavayaSelect
             <button
               key={option}
               onClick={() => handleOptionToggle(option)}
-              className={`p-4 border rounded-lg ${value.includes(option) ? 'bg-blue-500 text-white' : 'bg-white text-black'}`}
+              className={`p-4 border rounded-lg text-right ${
+                value.includes(option) 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-white text-black hover:bg-gray-50'
+              }`}
             >
               {option}
             </button>
