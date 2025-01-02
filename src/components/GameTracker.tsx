@@ -107,7 +107,15 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
 
       if (error) throw error;
 
-      setActionLogs(logs as ActionLog[]);
+      // Map the database fields to our interface
+      const mappedLogs: ActionLog[] = (logs || []).map(log => ({
+        actionId: log.action_id,
+        minute: log.minute,
+        result: log.result as "success" | "failure",
+        note: log.note
+      }));
+
+      setActionLogs(mappedLogs);
     } catch (error) {
       console.error("Error loading action logs:", error);
       toast({
