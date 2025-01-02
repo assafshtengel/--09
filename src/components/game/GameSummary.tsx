@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Action } from "@/components/ActionSelector";
 import { MatchDetailsSection } from "./summary/MatchDetailsSection";
 import { ActionsSummarySection } from "./summary/ActionsSummarySection";
-import { MentalFeedbackSection } from "./summary/MentalFeedbackSection";
+import { PerformanceRatingTable } from "./summary/PerformanceRatingTable";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Send, Share2 } from "lucide-react";
@@ -38,7 +38,7 @@ export const GameSummary = ({
 }: GameSummaryProps) => {
   const { toast } = useToast();
   const [matchData, setMatchData] = useState<any>(null);
-  const [mentalFeedback, setMentalFeedback] = useState<any>({});
+  const [performanceRatings, setPerformanceRatings] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
 
@@ -60,11 +60,7 @@ export const GameSummary = ({
           .maybeSingle();
 
         if (error) throw error;
-        
         setMatchData(match);
-        if (match?.match_mental_feedback?.[0]) {
-          setMentalFeedback(match.match_mental_feedback[0]);
-        }
       } catch (error) {
         console.error("Error fetching match data:", error);
         toast({
@@ -78,33 +74,8 @@ export const GameSummary = ({
     fetchMatchData();
   }, [matchId]);
 
-  const handleMentalFeedbackChange = async (field: string, value: string) => {
-    try {
-      const updatedFeedback = { ...mentalFeedback, [field]: value };
-      setMentalFeedback(updatedFeedback);
-
-      if (mentalFeedback.id) {
-        const { error } = await supabase
-          .from("match_mental_feedback")
-          .update({ [field]: value })
-          .eq("id", mentalFeedback.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("match_mental_feedback")
-          .insert([{ match_id: matchId, [field]: value }]);
-
-        if (error) throw error;
-      }
-    } catch (error) {
-      console.error("Error updating mental feedback:", error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לעדכן את המשוב המנטלי",
-        variant: "destructive",
-      });
-    }
+  const handlePerformanceRatingChange = async (aspect: string, rating: number) => {
+    setPerformanceRatings(prev => ({ ...prev, [aspect]: rating }));
   };
 
   const handleSendEmail = async () => {
@@ -121,7 +92,7 @@ export const GameSummary = ({
 
       const { data: playerProfile } = await supabase
         .from("profiles")
-        .select("coach_email, email")
+        .select("coach_email")
         .eq("id", profile.user.id)
         .single();
 
@@ -136,7 +107,7 @@ export const GameSummary = ({
 
       const { error } = await supabase.functions.invoke("send-game-summary", {
         body: {
-          to: [playerProfile.coach_email, playerProfile.email].filter(Boolean),
+          to: [playerProfile.coach_email],
           subject: `סיכום משחק - ${matchData?.match_date}`,
           html: `
             <div dir="rtl">
@@ -196,8 +167,8 @@ export const GameSummary = ({
   }
 
   return (
-    <ScrollArea className="h-[80vh] md:h-[600px]">
-      <div className="space-y-6 p-4">
+    <div className="h-[80vh] overflow-hidden flex flex-col">
+      <div className="flex-1 overflow-y-auto px-4">
         <div id="game-summary-content" className="space-y-6">
           <div className="border-b pb-4">
             <h2 className="text-2xl font-bold text-right">
@@ -207,11 +178,13 @@ export const GameSummary = ({
 
           <MatchDetailsSection matchData={matchData} />
           <ActionsSummarySection actions={actions} actionLogs={actionLogs} />
-          <MentalFeedbackSection
-            feedback={mentalFeedback}
-            onFeedbackChange={handleMentalFeedbackChange}
-            isEditable={gamePhase === "ended"}
-          />
+          
+          {gamePhase === "ended" && (
+            <PerformanceRatingTable
+              ratings={performanceRatings}
+              onRatingChange={handlePerformanceRatingChange}
+            />
+          )}
 
           {generalNotes.length > 0 && (
             <div className="border p-4 rounded-lg">
@@ -227,44 +200,44 @@ export const GameSummary = ({
             </div>
           )}
         </div>
-
-        <div className="flex flex-wrap justify-end gap-4">
-          {gamePhase === "halftime" && onContinue && (
-            <Button onClick={() => {
-              onContinue();
-              onClose();
-            }}>
-              התחל מחצית שנייה
-            </Button>
-          )}
-
-          {gamePhase === "ended" && (
-            <>
-              <Button
-                onClick={handleSendEmail}
-                variant="outline"
-                disabled={isSendingEmail}
-                className="flex items-center gap-2"
-              >
-                <Send className="h-4 w-4" />
-                {isSendingEmail ? "שולח..." : "שלח במייל"}
-              </Button>
-              <Button
-                onClick={handleScreenshot}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <Share2 className="h-4 w-4" />
-                שמור צילום מסך
-              </Button>
-            </>
-          )}
-          
-          <Button onClick={onClose} variant="outline">
-            סגור
-          </Button>
-        </div>
       </div>
-    </ScrollArea>
+
+      <div className="border-t p-4 bg-background flex flex-wrap justify-end gap-4">
+        {gamePhase === "halftime" && onContinue && (
+          <Button onClick={() => {
+            onContinue();
+            onClose();
+          }}>
+            התחל מחצית שנייה
+          </Button>
+        )}
+
+        {gamePhase === "ended" && (
+          <>
+            <Button
+              onClick={handleSendEmail}
+              variant="outline"
+              disabled={isSendingEmail}
+              className="flex items-center gap-2"
+            >
+              <Send className="h-4 w-4" />
+              {isSendingEmail ? "שולח..." : "שלח למאמן"}
+            </Button>
+            <Button
+              onClick={handleScreenshot}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              שמור צילום מסך
+            </Button>
+          </>
+        )}
+        
+        <Button onClick={onClose} variant="outline">
+          סגור
+        </Button>
+      </div>
+    </div>
   );
 };
