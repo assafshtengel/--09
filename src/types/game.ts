@@ -16,6 +16,8 @@ export interface PreMatchReportActions {
   goal?: string;
 }
 
+export type ReportStatus = 'draft' | 'completed';
+
 export interface PreMatchReport {
   id: string;
   player_id: string;
@@ -25,7 +27,7 @@ export interface PreMatchReport {
   actions: PreMatchReportActions[];
   questions_answers: Record<string, any>;
   ai_insights?: string[];
-  status: 'draft' | 'completed';
+  status: ReportStatus;
   created_at: string;
   updated_at: string;
   havaya?: string;
@@ -40,11 +42,11 @@ export interface MatchData {
   location?: string;
   status: GamePhase;
   pre_match_report_id?: string;
+  pre_match_report?: PreMatchReport;
   match_type?: string;
   final_score?: string;
   player_position?: string;
   team?: string;
   team_name?: string;
   player_role?: string;
-  pre_match_report?: PreMatchReport;
 }
