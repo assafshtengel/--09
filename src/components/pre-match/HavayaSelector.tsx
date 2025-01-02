@@ -69,11 +69,16 @@ export const HavayaSelector = ({ value, onChange, onNext, onBack }: HavayaSelect
         <Button 
           onClick={onNext}
           disabled={value.length < 3}
+          className="mr-auto"
         >
           המשך
           <ArrowRight className="mr-2 h-4 w-4" />
         </Button>
-        <Button variant="outline" onClick={onBack}>
+        <Button 
+          variant="outline" 
+          onClick={onBack}
+          className="ml-auto"
+        >
           חזור
         </Button>
       </div>
