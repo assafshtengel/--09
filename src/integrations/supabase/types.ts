@@ -234,9 +234,11 @@ export type Database = {
           opponent: string | null
           player_id: string
           player_position: string | null
+          player_role: string | null
           pre_match_report_id: string | null
           status: string
           team: string | null
+          team_name: string | null
         }
         Insert: {
           created_at?: string
@@ -248,9 +250,11 @@ export type Database = {
           opponent?: string | null
           player_id: string
           player_position?: string | null
+          player_role?: string | null
           pre_match_report_id?: string | null
           status?: string
           team?: string | null
+          team_name?: string | null
         }
         Update: {
           created_at?: string
@@ -262,9 +266,11 @@ export type Database = {
           opponent?: string | null
           player_id?: string
           player_position?: string | null
+          player_role?: string | null
           pre_match_report_id?: string | null
           status?: string
           team?: string | null
+          team_name?: string | null
         }
         Relationships: [
           {
