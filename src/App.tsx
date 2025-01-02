@@ -14,6 +14,9 @@ import MentalLearning from "./pages/MentalLearning";
 import NotificationsManager from "./pages/NotificationsManager";
 import Achievements from "./pages/Achievements";
 import { TrainingSummaryDashboard } from "./components/training/TrainingSummaryDashboard";
+import Game from "./pages/Game";
+import PreMatchReport from "./pages/PreMatchReport";
+import Schedule from "./pages/Schedule";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -110,6 +113,30 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <TrainingSummaryDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/game"
+                element={
+                  <ProtectedRoute>
+                    <Game />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/pre-match-report"
+                element={
+                  <ProtectedRoute>
+                    <PreMatchReport />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/schedule"
+                element={
+                  <ProtectedRoute>
+                    <Schedule />
                   </ProtectedRoute>
                 }
               />
