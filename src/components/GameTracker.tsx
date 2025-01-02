@@ -77,8 +77,8 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-md mx-auto bg-white min-h-screen relative pb-24 md:pb-0">
         <GameMatchDetails matchData={matchData} />
-        {gamePhase === "preview" && (
-          <PreMatchGoalsSection preMatchData={matchData?.pre_match_report} />
+        {gamePhase === "preview" && matchData?.pre_match_report && (
+          <PreMatchGoalsSection preMatchData={matchData.pre_match_report} />
         )}
         <GameContent
           gamePhase={gamePhase}

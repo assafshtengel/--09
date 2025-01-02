@@ -1,16 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PreMatchReportActions } from "@/types/game";
 
 interface PreMatchGoalsSectionProps {
   preMatchData: {
-    actions?: Array<{
-      id: string;
-      name: string;
-      goal?: string;
-      isSelected: boolean;
-    }>;
-    questions_answers?: Record<string, string>;
-    havaya?: string;
+    actions?: PreMatchReportActions[] | null;
+    questions_answers?: Record<string, any> | null;
+    havaya?: string | null;
   } | null;
 }
 
