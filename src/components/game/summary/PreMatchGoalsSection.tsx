@@ -8,11 +8,14 @@ interface PreMatchGoalsProps {
       name: string;
       isSelected: boolean;
     }>;
-    havaya?: string[];
+    havaya?: string;
   };
 }
 
 export const PreMatchGoalsSection = ({ preMatchData }: PreMatchGoalsProps) => {
+  // Parse havaya string into array if it exists
+  const havayaArray = preMatchData.havaya ? JSON.parse(preMatchData.havaya) : [];
+
   return (
     <Card>
       <CardHeader>
@@ -34,11 +37,11 @@ export const PreMatchGoalsSection = ({ preMatchData }: PreMatchGoalsProps) => {
           </div>
         )}
 
-        {preMatchData.havaya && preMatchData.havaya.length > 0 && (
+        {havayaArray.length > 0 && (
           <div>
             <h4 className="font-semibold text-right mb-2">הוויות נבחרות</h4>
             <div className="flex flex-wrap gap-2 justify-end">
-              {preMatchData.havaya.map((h, index) => (
+              {havayaArray.map((h: string, index: number) => (
                 <Badge key={index} variant="outline">
                   {h}
                 </Badge>
