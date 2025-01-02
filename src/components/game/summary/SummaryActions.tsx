@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Share2, Send, Mail, Instagram } from "lucide-react";
+import { Share2, Send, Mail, Instagram, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
@@ -29,39 +29,65 @@ export const SummaryActions = ({
   matchId
 }: SummaryActionsProps) => {
   const { toast } = useToast();
-  const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
+  const [isSendingToCoach, setIsSendingToCoach] = useState(false);
 
-  const handleInstagramShare = async () => {
+  const handleSendToCoach = async () => {
     try {
+      setIsSendingToCoach(true);
       const element = document.getElementById("game-summary-content");
       if (!element) return;
 
       const canvas = await html2canvas(element);
       const imageData = canvas.toDataURL("image/png");
 
-      // Create a temporary link to download the image
-      const link = document.createElement("a");
-      link.href = imageData;
-      link.download = "game-summary.png";
-      link.click();
+      const { data: profile } = await supabase.auth.getUser();
+      if (!profile.user) throw new Error("User not found");
 
-      // Open Instagram with a pre-filled message
-      const instagramUrl = `https://www.instagram.com/create/story?caption=${encodeURIComponent(
-        "Just finished my game! Check out my performance stats using @socr_app\n\nJoin me at https://socr.co.il"
-      )}`;
-      window.open(instagramUrl, '_blank');
+      const { data: playerProfile } = await supabase
+        .from("profiles")
+        .select("coach_email")
+        .eq("id", profile.user.id)
+        .single();
+
+      if (!playerProfile?.coach_email) {
+        toast({
+          title: "שגיאה",
+          description: "לא נמצאה כתובת מייל של המאמן",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke("send-game-summary", {
+        body: {
+          to: [playerProfile.coach_email],
+          subject: "סיכום משחק מתלמיד",
+          html: `
+            <div dir="rtl">
+              <h1>סיכום משחק</h1>
+              <p>שלום מאמן,</p>
+              <p>מצורף סיכום המשחק שלי.</p>
+              <img src="${imageData}" alt="Game Summary" style="max-width: 100%;" />
+            </div>
+          `,
+        },
+      });
+
+      if (error) throw error;
 
       toast({
-        title: "תמונה נשמרה",
-        description: "כעת תוכל להעלות את התמונה לאינסטגרם",
+        title: "נשלח בהצלחה",
+        description: "סיכום המשחק נשלח למאמן",
       });
     } catch (error) {
-      console.error("Error sharing to Instagram:", error);
+      console.error("Error sending email to coach:", error);
       toast({
         title: "שגיאה",
-        description: "לא ניתן לשתף לאינסטגרם כרגע",
+        description: "לא ניתן לשלוח את הסיכום למאמן",
         variant: "destructive",
       });
+    } finally {
+      setIsSendingToCoach(false);
     }
   };
 
@@ -94,7 +120,16 @@ export const SummaryActions = ({
             {isSendingEmail ? "שולח..." : "שלח למייל"}
           </Button>
           <Button
-            onClick={handleInstagramShare}
+            onClick={handleSendToCoach}
+            variant="outline"
+            disabled={isSendingToCoach}
+            className="flex items-center gap-2"
+          >
+            <User className="h-4 w-4" />
+            {isSendingToCoach ? "שולח למאמן..." : "שלח למאמן"}
+          </Button>
+          <Button
+            onClick={() => onShareSocial('instagram')}
             variant="outline"
             className="flex items-center gap-2"
           >
