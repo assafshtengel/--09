@@ -19,3 +19,22 @@ export interface SubstitutionLog {
   playerOut: string;
   minute: number;
 }
+
+export interface MatchData {
+  id: string;
+  created_at: string;
+  location: string | null;
+  match_date: string;
+  opponent: string | null;
+  player_id: string;
+  pre_match_report_id: string | null;
+  status: string;
+  team_name?: string;
+  player_role?: string;
+  match_type?: string;
+  pre_match_report?: {
+    actions?: PreMatchReportActions[] | null;
+    questions_answers?: Record<string, any> | null;
+    havaya?: string | null;
+  } | null;
+}

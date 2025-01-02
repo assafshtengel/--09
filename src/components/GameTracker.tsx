@@ -3,8 +3,10 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { GameContent } from "./game/GameContent";
 import { GameMatchDetails } from "./game/GameMatchDetails";
 import { PreMatchGoalsSection } from "./game/PreMatchGoalsSection";
+import { GameScore } from "./game/GameScore";
 import { useGameState } from "./game/hooks/useGameState";
 import { useMatchData } from "./game/hooks/useMatchData";
+import { MatchData } from "@/types/game";
 import { supabase } from "@/integrations/supabase/client";
 
 interface GameTrackerProps {
@@ -80,6 +82,7 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
         {gamePhase === "preview" && matchData?.pre_match_report && (
           <PreMatchGoalsSection preMatchData={matchData.pre_match_report} />
         )}
+        {gamePhase !== "preview" && <GameScore actionLogs={actionLogs} />}
         <GameContent
           gamePhase={gamePhase}
           isTimerRunning={isTimerRunning}
