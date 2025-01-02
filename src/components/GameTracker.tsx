@@ -43,12 +43,12 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
         if (actions) setActions(actions);
         if (logs) {
           const formattedLogs: ActionLog[] = logs.map(log => ({
-            id: log.id || crypto.randomUUID(),
+            id: crypto.randomUUID(),
             matchId,
             actionId: log.actionId,
             minute: log.minute,
             result: log.result as "success" | "failure",
-            note: log.note
+            note: log.note || ""
           }));
           setActionLogs(formattedLogs);
         }
@@ -68,12 +68,12 @@ export const GameTracker = ({ matchId }: GameTrackerProps) => {
         const logs = await loadActionLogs();
         if (logs) {
           const formattedLogs: ActionLog[] = logs.map(log => ({
-            id: log.id || crypto.randomUUID(),
+            id: crypto.randomUUID(),
             matchId,
             actionId: log.actionId,
             minute: log.minute,
             result: log.result as "success" | "failure",
-            note: log.note
+            note: log.note || ""
           }));
           setActionLogs(formattedLogs);
         }

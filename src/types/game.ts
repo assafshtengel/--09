@@ -32,5 +32,5 @@ export interface MatchData {
   team_name?: string;
   player_role?: string;
   match_type?: string;
-  pre_match_report?: PreMatchReport | null;
+  pre_match_report?: PreMatchReport;
 }
