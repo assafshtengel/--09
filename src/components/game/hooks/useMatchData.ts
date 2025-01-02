@@ -1,32 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ActionLog } from "@/types/game";
+import { ActionLog, MatchData } from "@/types/game";
 import { Action } from "@/components/ActionSelector";
-
-interface MatchData {
-  id: string;
-  created_at: string;
-  location: string | null;
-  match_date: string;
-  opponent: string | null;
-  player_id: string;
-  pre_match_report_id: string | null;
-  status: string;
-  team_name?: string;
-  player_role?: string;
-  match_type?: string;
-  pre_match_report?: {
-    actions?: any[] | null;
-    havaya?: string | null;
-    questions_answers?: Record<string, any> | null;
-  } | null;
-}
 
 export const useMatchData = (matchId: string) => {
   const { toast } = useToast();
   const [matchData, setMatchData] = useState<MatchData | null>(null);
-  const [preMatchData, setPreMatchData] = useState<any>(null);
 
   const loadMatchData = async () => {
     if (!matchId) return;
@@ -48,10 +28,7 @@ export const useMatchData = (matchId: string) => {
       if (matchError) throw matchError;
 
       setMatchData(match as MatchData);
-      if (match?.pre_match_report) {
-        setPreMatchData(match.pre_match_report);
-      }
-
+      
       if (match?.pre_match_report?.actions) {
         const rawActions = match.pre_match_report.actions;
         
@@ -112,5 +89,5 @@ export const useMatchData = (matchId: string) => {
     }
   };
 
-  return { matchData, preMatchData, loadMatchData, loadActionLogs };
+  return { matchData, loadMatchData, loadActionLogs };
 };
