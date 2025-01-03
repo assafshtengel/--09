@@ -12,10 +12,13 @@ import { useGameState } from "./game/GameStateManager";
 import { useGameData } from "./game/GameDataManager";
 import { useGameActions } from "./game/hooks/useGameActions";
 import { useGameNotes } from "./game/hooks/useGameNotes";
+import { Action } from "@/components/ActionSelector";
+import { toast } from "@/hooks/use-toast";
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
   const [showSummary, setShowSummary] = useState(false);
+  const [actions, setActions] = useState<Action[]>([]);
 
   const {
     gamePhase,
@@ -36,11 +39,7 @@ export const GameTracker = () => {
     saveSubstitution
   } = useGameData(matchId);
 
-  const {
-    actions,
-    loadMatchActions,
-    handleAddAction
-  } = useGameActions(matchId);
+  const { data: queryActions, isError } = useGameActions(matchId);
 
   const {
     generalNote,
@@ -49,8 +48,28 @@ export const GameTracker = () => {
   } = useGameNotes(matchId);
 
   useEffect(() => {
-    loadMatchActions();
-  }, [matchId]);
+    if (queryActions) {
+      setActions(queryActions);
+    }
+  }, [queryActions]);
+
+  useEffect(() => {
+    if (isError) {
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לטעון את נתוני המשחק",
+        variant: "destructive",
+      });
+    }
+  }, [isError]);
+
+  const handleAddAction = (newAction: Action) => {
+    setActions(prev => [...prev, newAction]);
+    toast({
+      title: "פעולה נוספה",
+      description: `הפעולה ${newAction.name} נוספה למעקב`,
+    });
+  };
 
   const handlePlayerExit = async (playerName: string, canReturn: boolean) => {
     const sub = {
