@@ -33,7 +33,6 @@ export const PreMatchReport = () => {
 
   const handleNext = async () => {
     if (step === 4) {
-      // Save pre-match report after havaya selection
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("User not authenticated");
@@ -46,7 +45,7 @@ export const PreMatchReport = () => {
           actions: actions,
           questions_answers: answers,
           havaya: havaya.join(','),
-          status: 'completed' as const // Fix the type issue by explicitly setting it as 'completed'
+          status: 'completed' as const
         };
 
         let reportId = preMatchReportId;
@@ -58,7 +57,11 @@ export const PreMatchReport = () => {
             .select()
             .single();
 
-          if (reportError) throw reportError;
+          if (reportError) {
+            console.error('Error saving report:', reportError);
+            throw reportError;
+          }
+          
           reportId = report.id;
           setPreMatchReportId(reportId);
         } else {
@@ -67,21 +70,11 @@ export const PreMatchReport = () => {
             .update(preMatchReportData)
             .eq('id', reportId);
 
-          if (updateError) throw updateError;
+          if (updateError) {
+            console.error('Error updating report:', updateError);
+            throw updateError;
+          }
         }
-
-        // Create match record
-        const { error: matchError } = await supabase
-          .from('matches')
-          .insert({
-            player_id: user.id,
-            match_date: matchDetails.date,
-            opponent: matchDetails.opponent,
-            pre_match_report_id: reportId,
-            status: 'preview'
-          });
-
-        if (matchError) throw matchError;
 
         toast({
           title: "נשמר בהצלחה",
@@ -98,10 +91,6 @@ export const PreMatchReport = () => {
       }
     }
     setStep(prev => prev + 1);
-  };
-
-  const handleBack = () => {
-    setStep(prev => prev - 1);
   };
 
   return (
@@ -171,16 +160,13 @@ export const PreMatchReport = () => {
                 value={havaya}
                 onChange={setHavaya}
               />
-              <div className="flex justify-between mt-6">
+              <div className="flex justify-end mt-6">
                 <Button 
                   onClick={handleNext}
                   disabled={havaya.length < 3}
                 >
                   המשך
                   <ArrowRight className="mr-2 h-4 w-4" />
-                </Button>
-                <Button variant="outline" onClick={handleBack}>
-                  חזור
                 </Button>
               </div>
             </motion.div>
