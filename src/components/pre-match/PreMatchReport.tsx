@@ -8,9 +8,12 @@ import { SummaryStep } from "./steps/SummaryStep";
 import { Action } from "@/components/ActionSelector";
 import { useToast } from "@/hooks/use-toast";
 
+type Step = "details" | "actions" | "questions" | "summary";
+
 export const PreMatchReport = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [currentStep, setCurrentStep] = useState<Step>("details");
   const [matchDetails, setMatchDetails] = useState({
     date: new Date().toISOString().split("T")[0],
     position: "forward",
@@ -22,17 +25,17 @@ export const PreMatchReport = () => {
 
   const handleMatchDetailsSubmit = (details: any) => {
     setMatchDetails(details);
-    navigate(`/match/${matchDetails.date}/experience`);
+    setCurrentStep("actions");
   };
 
   const handleActionsSubmit = (actions: Action[]) => {
     setSelectedActions(actions);
-    navigate(`/match/${matchDetails.date}/questions`);
+    setCurrentStep("questions");
   };
 
   const handleQuestionsSubmit = (answers: Record<string, string>) => {
     setQuestionsAnswers(answers);
-    navigate(`/match/${matchDetails.date}/summary`);
+    setCurrentStep("summary");
   };
 
   const handleFinalSubmit = async () => {
