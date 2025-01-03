@@ -40,9 +40,13 @@ export interface MatchData {
   match_date: string;
   opponent?: string;
   location?: string;
-  status: GamePhase;
+  status: string;
   pre_match_report_id?: string;
-  pre_match_report?: PreMatchReport;
+  pre_match_report?: {
+    actions: PreMatchReportActions[];
+    havaya?: string;
+    questions_answers: Record<string, any>;
+  };
   match_type?: string;
   final_score?: string;
   player_position?: string;

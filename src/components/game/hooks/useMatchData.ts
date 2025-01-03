@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ActionLog, MatchData } from "@/types/game";
-import { Action } from "@/components/ActionSelector";
+import { ActionLog, MatchData, PreMatchReportActions } from "@/types/game";
 
 export const useMatchData = (matchId: string) => {
   const { toast } = useToast();
@@ -27,27 +26,27 @@ export const useMatchData = (matchId: string) => {
 
       if (matchError) throw matchError;
 
-      setMatchData(match as MatchData);
+      // Transform the data to match MatchData type
+      const transformedMatch: MatchData = {
+        ...match,
+        pre_match_report: match?.pre_match_report ? {
+          actions: Array.isArray(match.pre_match_report.actions) 
+            ? match.pre_match_report.actions.map((action: any) => ({
+                id: action.id,
+                name: action.name,
+                goal: action.goal,
+                isSelected: action.isSelected
+              }))
+            : [],
+          havaya: match.pre_match_report.havaya,
+          questions_answers: match.pre_match_report.questions_answers || {}
+        } : undefined
+      };
+
+      setMatchData(transformedMatch);
       
-      if (match?.pre_match_report?.actions) {
-        const rawActions = match.pre_match_report.actions;
-        
-        const validActions = (Array.isArray(rawActions) ? rawActions : [])
-          .filter((action): action is any => 
-            typeof action === 'object' && 
-            action !== null && 
-            'id' in action && 
-            'name' in action && 
-            'isSelected' in action
-          )
-          .map(action => ({
-            id: action.id,
-            name: action.name,
-            goal: action.goal,
-            isSelected: action.isSelected
-          }));
-          
-        return validActions;
+      if (transformedMatch?.pre_match_report?.actions) {
+        return transformedMatch.pre_match_report.actions;
       }
     } catch (error) {
       console.error("Error loading match data:", error);
