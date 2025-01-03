@@ -72,23 +72,28 @@ export const NotificationForm = () => {
           scheduled_for: data.scheduledFor.toISOString(),
           condition: data.condition ? JSON.parse(data.condition) : null,
           recipient_id: playerId,
-          type: "custom",
-          status: "pending"
+          type: "custom" as const, // Explicitly type as "custom"
+          status: "pending" as const
         }));
 
-        const { error } = await supabase.from("notifications").insert(notifications);
+        const { error } = await supabase
+          .from("notifications")
+          .insert(notifications);
+          
         if (error) throw error;
       } else {
         // אם לא נבחרו שחקנים, שלח התראה גלובלית
-        const { error } = await supabase.from("notifications").insert({
-          sender_id: session.session.user.id,
-          message: data.message,
-          scheduled_for: data.scheduledFor.toISOString(),
-          condition: data.condition ? JSON.parse(data.condition) : null,
-          recipient_id: null,
-          type: "custom",
-          status: "pending"
-        });
+        const { error } = await supabase
+          .from("notifications")
+          .insert({
+            sender_id: session.session.user.id,
+            message: data.message,
+            scheduled_for: data.scheduledFor.toISOString(),
+            condition: data.condition ? JSON.parse(data.condition) : null,
+            recipient_id: null,
+            type: "custom" as const, // Explicitly type as "custom"
+            status: "pending" as const
+          });
         if (error) throw error;
       }
 
