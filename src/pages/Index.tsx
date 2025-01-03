@@ -1,40 +1,23 @@
-import { UserRound, Users, LineChart } from "lucide-react";
-import { RoleCard } from "@/components/RoleCard";
+import { Card } from "@/components/ui/card";
 
-const Index = () => {
+export default function Index() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
-      <div className="container px-4 py-6 md:py-16">
-        <div className="text-center mb-6 md:mb-16">
-          <h1 className="text-xl md:text-4xl font-bold mb-2 md:mb-4">ברוכים הבאים למערכת הביצועים</h1>
-          <p className="text-base md:text-xl text-muted-foreground">בחר את התפקיד שלך להתחלה</p>
-        </div>
-        
-        <div className="grid grid-cols-1 gap-4 md:gap-6 max-w-sm mx-auto">
-          <RoleCard
-            title="שחקנים"
-            description="הגדר מטרות אישיות, עקוב אחר הביצועים שלך ושפר את המשחק שלך"
-            icon={<UserRound className="w-5 h-5 text-primary" />}
-            path="/player"
-          />
-          
-          <RoleCard
-            title="מאמנים"
-            description="נהל את הקבוצה שלך, הגדר מטרות קבוצתיות ועקוב אחר ההתקדמות"
-            icon={<Users className="w-5 h-5 text-primary" />}
-            path="/coach"
-          />
-          
-          <RoleCard
-            title="אנליסטים"
-            description="נתח ביצועים, צור דוחות מפורטים וזהה מגמות חשובות"
-            icon={<LineChart className="w-5 h-5 text-primary" />}
-            path="/analyst"
-          />
-        </div>
+    <div className="container mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">ברוכים הבאים</h1>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4">משחקים</h2>
+          <p>צפייה וניהול משחקים</p>
+        </Card>
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4">אימונים</h2>
+          <p>מעקב אחר אימונים</p>
+        </Card>
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4">סטטיסטיקות</h2>
+          <p>נתונים ומדדים</p>
+        </Card>
       </div>
     </div>
   );
 };
-
-export default Index;
