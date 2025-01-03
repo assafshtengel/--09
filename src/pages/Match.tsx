@@ -1,8 +1,19 @@
+import { useParams } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 export const Match = () => {
+  const { id } = useParams();
+
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Match Details</h1>
-      {/* TODO: Implement match details */}
+      <Card>
+        <CardHeader>
+          <CardTitle>משחק מספר {id}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>תוכן המשחק יוצג כאן</p>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -1,8 +1,16 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 export const TrainingHistory = () => {
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Training History</h1>
-      {/* TODO: Implement training history */}
+      <Card>
+        <CardHeader>
+          <CardTitle>היסטוריית אימונים</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>היסטוריית האימונים תוצג כאן</p>
+        </CardContent>
+      </Card>
     </div>
   );
 };

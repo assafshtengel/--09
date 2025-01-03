@@ -1,8 +1,16 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 export const MatchHistory = () => {
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Match History</h1>
-      {/* TODO: Implement match history */}
+      <Card>
+        <CardHeader>
+          <CardTitle>היסטוריית משחקים</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>היסטוריית המשחקים תוצג כאן</p>
+        </CardContent>
+      </Card>
     </div>
   );
 };

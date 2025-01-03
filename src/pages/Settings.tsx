@@ -1,8 +1,16 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 export const Settings = () => {
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Settings</h1>
-      {/* TODO: Implement settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>הגדרות</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>הגדרות המערכת יוצגו כאן</p>
+        </CardContent>
+      </Card>
     </div>
   );
 };

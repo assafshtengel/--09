@@ -19,7 +19,7 @@ const Dashboard = () => {
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
-          navigate("/");
+          navigate("/login");
           return;
         }
 
@@ -30,14 +30,14 @@ const Dashboard = () => {
           .single();
 
         if (!profileData) {
-          navigate("/player");
+          navigate("/profile");
           return;
         }
 
         setProfile(profileData);
       } catch (error) {
         console.error("Error checking auth:", error);
-        navigate("/");
+        navigate("/login");
       } finally {
         setIsLoading(false);
       }
@@ -46,59 +46,62 @@ const Dashboard = () => {
     checkAuth();
   }, [navigate]);
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center min-h-screen">טוען...</div>;
-  }
-
-  if (!profile) {
-    return null;
-  }
-
   const quickActions = [
     {
-      title: "יעדי טרום משחק",
+      title: "דוח טרום משחק",
       icon: <Trophy className="h-6 w-6 text-primary" />,
       description: "הגדר יעדים ומטרות למשחק הבא",
-      onClick: () => navigate("/pre-match-report"),
+      path: "/pre-match-report",
       gradient: "from-blue-500 to-blue-600"
     },
     {
       title: "מעקב משחק",
       icon: <Timer className="h-6 w-6 text-primary" />,
       description: "עקוב אחר ביצועים במהלך המשחק",
-      onClick: () => navigate("/game-selection"),
+      path: "/game-selection",
       gradient: "from-green-500 to-green-600"
     },
     {
       title: "סיכום אימון",
       icon: <FileText className="h-6 w-6 text-primary" />,
       description: "תעד ונתח את האימון שלך",
-      onClick: () => navigate("/training-summary"),
+      path: "/training",
       gradient: "from-purple-500 to-purple-600"
     },
     {
       title: "מערכת שעות",
       icon: <Calendar className="h-6 w-6 text-primary" />,
       description: "נהל את לוח הזמנים השבועי שלך",
-      onClick: () => navigate("/schedule"),
+      path: "/schedule",
       gradient: "from-orange-500 to-orange-600"
+    },
+    {
+      title: "היסטוריית משחקים",
+      icon: <Activity className="h-6 w-6 text-primary" />,
+      description: "צפה בהיסטוריית המשחקים שלך",
+      path: "/match-history",
+      gradient: "from-red-500 to-red-600"
     }
   ];
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center min-h-screen">טוען...</div>;
+  }
 
   return (
     <div className="container mx-auto p-4 space-y-8">
       {/* Header Section */}
       <div className="text-right mb-8">
-        <h1 className="text-4xl font-bold mb-2">ברוך הבא, {profile.full_name}</h1>
+        <h1 className="text-4xl font-bold mb-2">ברוך הבא, {profile?.full_name}</h1>
         <p className="text-muted-foreground text-lg">בחר באפשרות כדי להתחיל</p>
       </div>
 
       {/* Quick Actions Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         {quickActions.map((action, index) => (
           <button
             key={index}
-            onClick={action.onClick}
+            onClick={() => navigate(action.path)}
             className={`p-6 rounded-xl bg-gradient-to-r ${action.gradient} transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl text-white`}
           >
             <div className="flex flex-col items-end space-y-4">
