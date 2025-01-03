@@ -5,7 +5,8 @@ export const useMatchActions = (userId: string) => {
   return useQuery({
     queryKey: ["match-actions", userId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get matches for the user
+      const { data: matches, error: matchesError } = await supabase
         .from('matches')
         .select(`
           id,
@@ -21,12 +22,12 @@ export const useMatchActions = (userId: string) => {
         .eq('player_id', userId)
         .order('match_date', { ascending: true });
 
-      if (error) {
-        throw error;
+      if (matchesError) {
+        throw matchesError;
       }
 
       // Flatten the data structure to match the expected format
-      const flattenedData = data?.flatMap(match => 
+      const flattenedData = matches?.flatMap(match => 
         match.match_actions?.map(action => ({
           ...action,
           match: {
