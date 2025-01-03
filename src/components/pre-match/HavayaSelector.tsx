@@ -57,13 +57,20 @@ export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
       
       const newSelection = [...prev, havayaValue];
       onChange(havayaValue);
-
-      if (newSelection.length >= 3) {
-        navigate(`/match/${matchId}/actions`);
-      }
-      
       return newSelection;
     });
+  };
+
+  const handleContinue = () => {
+    if (selectedHavayot.length < 3) {
+      toast({
+        title: "בחירה לא מספקת",
+        description: "יש לבחור לפחות 3 הוויות",
+        variant: "destructive",
+      });
+      return;
+    }
+    navigate(`/match/${matchId}/actions`);
   };
 
   return (
@@ -103,6 +110,15 @@ export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
             </div>
           </motion.div>
         ))}
+      </div>
+
+      <div className="flex justify-end mt-8">
+        <Button
+          onClick={handleContinue}
+          disabled={selectedHavayot.length < 3}
+        >
+          המשך
+        </Button>
       </div>
     </div>
   );
