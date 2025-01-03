@@ -26,21 +26,32 @@ export const useGameActions = (matchId: string | undefined) => {
       if (matchError) throw matchError;
 
       if (match?.pre_match_reports?.actions) {
-        const rawActions = match.pre_match_reports.actions as PreMatchReportActions[];
+        // Type guard function to validate PreMatchReportActions
+        const isPreMatchReportAction = (item: any): item is PreMatchReportActions => {
+          return (
+            typeof item === 'object' &&
+            item !== null &&
+            'id' in item &&
+            typeof item.id === 'string' &&
+            'name' in item &&
+            typeof item.name === 'string' &&
+            'isSelected' in item &&
+            typeof item.isSelected === 'boolean'
+          );
+        };
+
+        // Safely convert and filter the actions
+        const rawActions = Array.isArray(match.pre_match_reports.actions) 
+          ? match.pre_match_reports.actions 
+          : [];
         
         const validActions = rawActions
-          .filter(action => 
-            typeof action === 'object' && 
-            action !== null && 
-            'id' in action && 
-            'name' in action && 
-            'isSelected' in action
-          )
+          .filter(isPreMatchReportAction)
           .map(action => ({
             id: action.id,
             name: action.name,
-            goal: action.goal,
-            isSelected: action.isSelected
+            isSelected: action.isSelected,
+            goal: action.goal
           }));
           
         setActions(validActions);
