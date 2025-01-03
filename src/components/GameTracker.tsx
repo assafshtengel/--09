@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
@@ -10,173 +10,47 @@ import { GameControls } from "./game/mobile/GameControls";
 import { ActionButtons } from "./game/mobile/ActionButtons";
 import { GameNotes } from "./game/GameNotes";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
-import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog } from "@/types/game";
+import { useGameState } from "./game/GameState";
+import { useGameDataService } from "./game/GameDataService";
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
-  const { toast } = useToast();
-  const [gamePhase, setGamePhase] = useState<GamePhase>("preview");
-  const [minute, setMinute] = useState(0);
-  const [actionLogs, setActionLogs] = useState<ActionLog[]>([]);
-  const [showSummary, setShowSummary] = useState(false);
-  const [actions, setActions] = useState<Action[]>([]);
-  const [generalNote, setGeneralNote] = useState("");
-  const [generalNotes, setGeneralNotes] = useState<Array<{ text: string; minute: number }>>([]);
-  const [substitutions, setSubstitutions] = useState<SubstitutionLog[]>([]);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const gameState = useGameState();
+  const gameDataService = useGameDataService();
+  const {
+    gamePhase,
+    setGamePhase,
+    minute,
+    setMinute,
+    actionLogs,
+    setActionLogs,
+    showSummary,
+    setShowSummary,
+    actions,
+    setActions,
+    generalNote,
+    setGeneralNote,
+    generalNotes,
+    setGeneralNotes,
+    substitutions,
+    setSubstitutions,
+    isTimerRunning,
+    setIsTimerRunning,
+  } = gameState;
 
   useEffect(() => {
-    loadMatchData();
+    if (matchId) {
+      loadMatchData();
+    }
   }, [matchId]);
 
   const loadMatchData = async () => {
     if (!matchId) return;
 
-    try {
-      const { data: match, error: matchError } = await supabase
-        .from("matches")
-        .select(`
-          *,
-          pre_match_report:pre_match_report_id (
-            actions,
-            havaya,
-            questions_answers
-          )
-        `)
-        .eq("id", matchId)
-        .single();
-
-      if (matchError) throw matchError;
-
-      if (match?.pre_match_report?.actions) {
-        const preMatchActions = match.pre_match_report.actions as PreMatchReportActions[];
-        
-        const validActions = preMatchActions
-          .filter(action => 
-            typeof action === 'object' && 
-            action !== null && 
-            'id' in action && 
-            'name' in action && 
-            'isSelected' in action
-          )
-          .map(action => ({
-            id: action.id,
-            name: action.name,
-            goal: action.goal,
-            isSelected: action.isSelected
-          }));
-          
-        setActions(validActions);
-      }
-
-      setGamePhase(match.status as GamePhase);
-    } catch (error) {
-      console.error("Error loading match data:", error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לטעון את נתוני המשחק",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const saveActionLog = async (action_id: string, result: "success" | "failure", note?: string) => {
-    if (!matchId) return;
-
-    try {
-      const { error } = await supabase
-        .from('match_actions')
-        .insert([
-          {
-            match_id: matchId,
-            action_id,
-            minute,
-            result,
-            note
-          }
-        ]);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving action:', error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לשמור את הפעולה",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const saveNote = async (note: string) => {
-    if (!matchId) return;
-
-    try {
-      const { error } = await supabase
-        .from('match_notes')
-        .insert([
-          {
-            match_id: matchId,
-            minute,
-            note
-          }
-        ]);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving note:', error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לשמור את ההערה",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const saveSubstitution = async (sub: SubstitutionLog) => {
-    if (!matchId) return;
-
-    try {
-      const { error } = await supabase
-        .from('match_substitutions')
-        .insert([
-          {
-            match_id: matchId,
-            minute: sub.minute,
-            player_in: sub.playerIn,
-            player_out: sub.playerOut
-          }
-        ]);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving substitution:', error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לשמור את החילוף",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const updateMatchStatus = async (status: GamePhase) => {
-    if (!matchId) return;
-
-    try {
-      const { error } = await supabase
-        .from('matches')
-        .update({ status })
-        .eq('id', matchId);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error updating match status:', error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לעדכן את סטטוס המשחק",
-        variant: "destructive",
-      });
+    const data = await gameDataService.loadMatchData(matchId);
+    if (data) {
+      setActions(data.actions);
+      setGamePhase(data.status);
     }
   };
 
@@ -189,7 +63,7 @@ export const GameTracker = () => {
   };
 
   const handleAddGeneralNote = async () => {
-    if (!generalNote.trim()) {
+    if (!matchId || !generalNote.trim()) {
       toast({
         title: "שגיאה",
         description: "יש להזין טקסט להערה",
@@ -198,84 +72,113 @@ export const GameTracker = () => {
       return;
     }
 
-    await saveNote(generalNote);
-    setGeneralNotes(prev => [...prev, { text: generalNote, minute }]);
-    setGeneralNote("");
-    toast({
-      title: "ההערה נשמרה",
-      description: "ההערה נשמרה בהצלחה",
-    });
+    const success = await gameDataService.saveNote(matchId, minute, generalNote);
+    if (success) {
+      setGeneralNotes(prev => [...prev, { text: generalNote, minute }]);
+      setGeneralNote("");
+      toast({
+        title: "ההערה נשמרה",
+        description: "ההערה נשמרה בהצלחה",
+      });
+    }
   };
 
   const handlePlayerExit = async (playerName: string, canReturn: boolean) => {
-    const sub: SubstitutionLog = {
+    if (!matchId) return;
+
+    const sub = {
       playerIn: "",
       playerOut: playerName,
       minute
     };
 
-    await saveSubstitution(sub);
-    setSubstitutions(prev => [...prev, sub]);
-
-    if (!canReturn) {
-      endMatch();
+    const success = await gameDataService.saveSubstitution(matchId, sub);
+    if (success) {
+      setSubstitutions(prev => [...prev, sub]);
+      if (!canReturn) {
+        endMatch();
+      }
     }
   };
 
   const handlePlayerReturn = async (playerName: string) => {
-    const sub: SubstitutionLog = {
+    if (!matchId) return;
+
+    const sub = {
       playerIn: playerName,
       playerOut: "",
       minute
     };
 
-    await saveSubstitution(sub);
-    setSubstitutions(prev => [...prev, sub]);
+    const success = await gameDataService.saveSubstitution(matchId, sub);
+    if (success) {
+      setSubstitutions(prev => [...prev, sub]);
+    }
   };
 
   const startMatch = async () => {
-    setGamePhase("playing");
-    await updateMatchStatus("playing");
-    setMinute(0);
-    setIsTimerRunning(true);
+    if (!matchId) return;
+
+    const success = await gameDataService.updateMatchStatus(matchId, "playing");
+    if (success) {
+      setGamePhase("playing");
+      setMinute(0);
+      setIsTimerRunning(true);
+    }
   };
 
   const endHalf = async () => {
-    setIsTimerRunning(false);
-    setGamePhase("halftime");
-    await updateMatchStatus("halftime");
-    setShowSummary(true);
+    if (!matchId) return;
+
+    const success = await gameDataService.updateMatchStatus(matchId, "halftime");
+    if (success) {
+      setIsTimerRunning(false);
+      setGamePhase("halftime");
+      setShowSummary(true);
+    }
   };
 
   const startSecondHalf = async () => {
-    setGamePhase("secondHalf");
-    await updateMatchStatus("secondHalf");
-    setMinute(45);
-    setIsTimerRunning(true);
-    setShowSummary(false);
+    if (!matchId) return;
+
+    const success = await gameDataService.updateMatchStatus(matchId, "secondHalf");
+    if (success) {
+      setGamePhase("secondHalf");
+      setMinute(45);
+      setIsTimerRunning(true);
+      setShowSummary(false);
+    }
   };
 
   const endMatch = async () => {
-    setIsTimerRunning(false);
-    setGamePhase("ended");
-    await updateMatchStatus("ended");
-    setShowSummary(true);
+    if (!matchId) return;
+
+    const success = await gameDataService.updateMatchStatus(matchId, "ended");
+    if (success) {
+      setIsTimerRunning(false);
+      setGamePhase("ended");
+      setShowSummary(true);
+    }
   };
 
   const logAction = async (action_id: string, result: "success" | "failure", note?: string) => {
-    await saveActionLog(action_id, result, note);
-    setActionLogs(prev => [...prev, {
-      action_id,
-      minute,
-      result,
-      note
-    }]);
+    if (!matchId) return;
 
-    toast({
-      title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
-      className: result === "success" ? "bg-green-500" : "bg-red-500",
-      duration: 1000,
-    });
+    const success = await gameDataService.saveActionLog(matchId, action_id, minute, result, note);
+    if (success) {
+      setActionLogs(prev => [...prev, {
+        action_id,
+        minute,
+        result,
+        note
+      }]);
+
+      toast({
+        title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
+        className: result === "success" ? "bg-green-500" : "bg-red-500",
+        duration: 1000,
+      });
+    }
   };
 
   return (
