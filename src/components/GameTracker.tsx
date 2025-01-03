@@ -106,7 +106,8 @@ export const GameTracker = () => {
                     <span className="font-medium">{action.name}</span>
                     <ActionButtons
                       actionId={action.id}
-                      onLog={(actionId, result, note) => saveActionLog(actionId, result, minute, note)}
+                      minute={minute}
+                      onLog={saveActionLog}
                     />
                   </div>
                 </div>
