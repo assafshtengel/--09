@@ -1,23 +1,30 @@
-import { Card } from "@/components/ui/card";
+import { RoleCard } from "@/components/RoleCard";
+import { Trophy, Activity, ChartBar } from "lucide-react";
 
 export default function Index() {
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">ברוכים הבאים</h1>
+      <h1 className="text-2xl font-bold mb-6 text-right">ברוכים הבאים</h1>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">משחקים</h2>
-          <p>צפייה וניהול משחקים</p>
-        </Card>
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">אימונים</h2>
-          <p>מעקב אחר אימונים</p>
-        </Card>
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">סטטיסטיקות</h2>
-          <p>נתונים ומדדים</p>
-        </Card>
+        <RoleCard
+          title="משחקים"
+          description="צפייה וניהול משחקים, מעקב אחר ביצועים ותוצאות"
+          icon={<Trophy className="w-6 h-6" />}
+          path="/game-selection"
+        />
+        <RoleCard
+          title="אימונים"
+          description="תיעוד ומעקב אחר אימונים, התקדמות והערות"
+          icon={<Activity className="w-6 h-6" />}
+          path="/training"
+        />
+        <RoleCard
+          title="סטטיסטיקות"
+          description="ניתוח נתונים, מדדי ביצוע והשוואות"
+          icon={<ChartBar className="w-6 h-6" />}
+          path="/stats"
+        />
       </div>
     </div>
   );
-};
+}
