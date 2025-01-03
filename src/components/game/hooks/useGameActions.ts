@@ -48,14 +48,12 @@ export const useGameActions = (matchId: string | undefined) => {
       if (match?.pre_match_reports?.actions) {
         // Ensure we're working with an array
         const actionsArray = Array.isArray(match.pre_match_reports.actions) 
-          ? match.pre_match_reports.actions 
+          ? match.pre_match_reports.actions as unknown[]
           : [];
 
         // First validate and transform the data
         const validActions = actionsArray
-          .filter((item): item is Record<string, unknown> => 
-            item !== null && typeof item === 'object'
-          )
+          .filter((item): item is unknown => item !== null)
           .filter(isValidAction)
           .map(action => ({
             id: action.id,
