@@ -4,20 +4,20 @@ import { AuthProvider } from "@/providers/AuthProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Import all pages
-import { Index } from "@/pages/Index";
+import Index from "@/pages/Index";
 import { Login } from "@/pages/Login";
 import { Register } from "@/pages/Register";
-import { Dashboard } from "@/pages/Dashboard";
+import Dashboard from "@/pages/Dashboard";
 import { Match } from "@/pages/Match";
 import { Training } from "@/pages/Training";
 import { TrainingHistory } from "@/pages/TrainingHistory";
 import { MatchHistory } from "@/pages/MatchHistory";
 import { WeeklySchedule } from "@/pages/WeeklySchedule";
-import { Player } from "@/pages/Player";
-import { PlayerPortfolio } from "@/pages/PlayerPortfolio";
+import Player from "@/pages/Player";
+import PlayerPortfolio from "@/pages/PlayerPortfolio";
 import { Settings } from "@/pages/Settings";
-import { Admin } from "@/pages/Admin";
-import { Profile } from "@/pages/Profile";
+import Admin from "@/pages/Admin";
+import Profile from "@/pages/Profile";
 import { PreMatchReport } from "@/pages/PreMatchReport";
 
 function App() {
