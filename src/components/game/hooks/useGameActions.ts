@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Action } from "@/components/ActionSelector";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 interface ActionData {
   id: string;
@@ -52,7 +53,10 @@ export const useGameActions = (matchId: string | undefined) => {
 
         // First validate and transform the data
         const validActions = actionsArray
-          .filter((item): item is ActionData => isValidAction(item))
+          .filter((item): item is Record<string, unknown> => 
+            item !== null && typeof item === 'object'
+          )
+          .filter(isValidAction)
           .map(action => ({
             id: action.id,
             name: action.name,
