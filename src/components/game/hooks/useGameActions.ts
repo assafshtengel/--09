@@ -3,8 +3,15 @@ import { Action } from "@/components/ActionSelector";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface ActionData {
+  id: string;
+  name: string;
+  isSelected: boolean;
+  goal?: string;
+}
+
 // Type guard function to validate action shape
-function isValidAction(item: unknown): item is Action {
+function isValidAction(item: unknown): item is ActionData {
   if (!item || typeof item !== 'object') return false;
   
   const action = item as Record<string, unknown>;
@@ -12,7 +19,8 @@ function isValidAction(item: unknown): item is Action {
   return (
     typeof action.id === 'string' &&
     typeof action.name === 'string' &&
-    typeof action.isSelected === 'boolean'
+    typeof action.isSelected === 'boolean' &&
+    (action.goal === undefined || typeof action.goal === 'string')
   );
 }
 
@@ -44,8 +52,10 @@ export const useGameActions = (matchId: string | undefined) => {
         const validActions = actionsArray
           .filter(isValidAction)
           .map(action => ({
-            ...action,
-            goal: typeof action.goal === 'string' ? action.goal : undefined
+            id: action.id,
+            name: action.name,
+            isSelected: action.isSelected,
+            goal: action.goal
           }));
 
         setActions(validActions);
