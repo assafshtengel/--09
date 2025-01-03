@@ -9,7 +9,7 @@ export const useMatchActions = (userId: string) => {
         .from('match_actions')
         .select(`
           *,
-          matches!inner(
+          matches!inner (
             match_date,
             player_id
           )
