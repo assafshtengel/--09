@@ -6,22 +6,36 @@ export const useMatchActions = (userId: string) => {
     queryKey: ["match-actions", userId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('match_actions')
+        .from('matches')
         .select(`
-          *,
-          matches!inner (
-            match_date,
-            player_id
+          id,
+          match_date,
+          match_actions (
+            id,
+            action_id,
+            minute,
+            result,
+            note
           )
         `)
-        .eq('matches.player_id', userId)
+        .eq('player_id', userId)
         .order('created_at', { ascending: true });
 
       if (error) {
         throw error;
       }
 
-      return data;
+      // Flatten the data structure to match the expected format
+      const flattenedData = data?.flatMap(match => 
+        match.match_actions.map(action => ({
+          ...action,
+          match: {
+            match_date: match.match_date
+          }
+        }))
+      ) || [];
+
+      return flattenedData;
     },
     enabled: !!userId,
   });
