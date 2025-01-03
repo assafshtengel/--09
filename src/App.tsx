@@ -1,184 +1,101 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { PreMatchExperience } from "./components/pre-match/PreMatchExperience";
+import { Dashboard } from "./pages/Dashboard";
+import { Login } from "./pages/Login";
+import { Register } from "./pages/Register";
+import { Profile } from "./pages/Profile";
+import { Match } from "./pages/Match";
+import { Training } from "./pages/Training";
+import { WeeklySchedule } from "./pages/WeeklySchedule";
+import { MatchHistory } from "./pages/MatchHistory";
+import { TrainingHistory } from "./pages/TrainingHistory";
+import { Settings } from "./pages/Settings";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Navigation } from "@/components/Navigation";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Player from "./pages/Player";
-import Profile from "./pages/Profile";
-import Dashboard from "./pages/Dashboard";
-import Admin from "./pages/Admin";
-import MentalLearning from "./pages/MentalLearning";
-import { PreMatchReport } from "@/components/pre-match/PreMatchReport";
-import { WeeklyScheduleWizard } from "@/components/schedule/WeeklyScheduleWizard";
-import { DailyRoutineForm } from "@/components/daily-routine/DailyRoutineForm";
-import { GameSelection } from "@/components/game/GameSelection";
-import { GameTracker } from "@/components/GameTracker";
-import NotificationsManager from "./pages/NotificationsManager";
-import PlayerPortfolio from "./pages/PlayerPortfolio";
+import { AuthProvider } from "./providers/AuthProvider";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
-const queryClient = new QueryClient();
-
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
-    };
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-    });
-
-    checkAuth();
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (isAuthenticated === null) {
-    return <div>טוען...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
-  }
-
+export default function App() {
   return (
-    <>
-      <Navigation />
-      {children}
-    </>
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/match/:id"
+            element={
+              <ProtectedRoute>
+                <Match />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/match/:id/experience"
+            element={
+              <ProtectedRoute>
+                <PreMatchExperience />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/training"
+            element={
+              <ProtectedRoute>
+                <Training />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/schedule"
+            element={
+              <ProtectedRoute>
+                <WeeklySchedule />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/match-history"
+            element={
+              <ProtectedRoute>
+                <MatchHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/training-history"
+            element={
+              <ProtectedRoute>
+                <TrainingHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+        <Toaster />
+      </AuthProvider>
+    </Router>
   );
-};
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <div dir="rtl" className="min-h-screen bg-gray-50">
-        <div className="max-w-md mx-auto min-h-screen bg-white">
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute>
-                    <Admin />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/player"
-                element={
-                  <ProtectedRoute>
-                    <Player />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/mental-learning"
-                element={
-                  <ProtectedRoute>
-                    <MentalLearning />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/pre-match-report"
-                element={
-                  <ProtectedRoute>
-                    <PreMatchReport />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/schedule"
-                element={
-                  <ProtectedRoute>
-                    <WeeklyScheduleWizard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/daily-routine"
-                element={
-                  <ProtectedRoute>
-                    <DailyRoutineForm />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/game-selection"
-                element={
-                  <ProtectedRoute>
-                    <GameSelection />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/match/:id"
-                element={
-                  <ProtectedRoute>
-                    <GameTracker />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/notifications"
-                element={
-                  <ProtectedRoute>
-                    <NotificationsManager />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/portfolio"
-                element={
-                  <ProtectedRoute>
-                    <PlayerPortfolio />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/coach" element={<Navigate to="/" replace />} />
-              <Route path="/analyst" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </div>
-      </div>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
-
-export default App;
+}
