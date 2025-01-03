@@ -62,6 +62,15 @@ export const PreMatchExperience = () => {
   };
 
   const handleNext = async () => {
+    if (!matchId) {
+      toast({
+        title: "שגיאה",
+        description: "מזהה המשחק חסר",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (selectedAttributes.length < 3) {
       toast({
         title: "בחירה לא מספקת",
