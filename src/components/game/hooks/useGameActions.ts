@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Action } from "@/components/ActionSelector";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { PreMatchReportActions } from "@/types/game";
 
 export const useGameActions = (matchId: string | undefined) => {
   const [actions, setActions] = useState<Action[]>([]);
@@ -25,10 +26,9 @@ export const useGameActions = (matchId: string | undefined) => {
       if (matchError) throw matchError;
 
       if (match?.pre_match_reports?.actions) {
-        const rawActions = match.pre_match_reports.actions as unknown;
-        const preMatchActions = rawActions as PreMatchReportActions[];
+        const rawActions = match.pre_match_reports.actions as PreMatchReportActions[];
         
-        const validActions = preMatchActions
+        const validActions = rawActions
           .filter(action => 
             typeof action === 'object' && 
             action !== null && 
