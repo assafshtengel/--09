@@ -577,6 +577,73 @@ export type Database = {
           },
         ]
       }
+      pre_match_attribute_selections: {
+        Row: {
+          attribute_id: string | null
+          created_at: string
+          id: string
+          match_id: string | null
+          player_id: string | null
+        }
+        Insert: {
+          attribute_id?: string | null
+          created_at?: string
+          id?: string
+          match_id?: string | null
+          player_id?: string | null
+        }
+        Update: {
+          attribute_id?: string | null
+          created_at?: string
+          id?: string
+          match_id?: string | null
+          player_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pre_match_attribute_selections_attribute_id_fkey"
+            columns: ["attribute_id"]
+            isOneToOne: false
+            referencedRelation: "pre_match_attributes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pre_match_attribute_selections_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pre_match_attribute_selections_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pre_match_attributes: {
+        Row: {
+          category: string | null
+          description: string
+          id: string
+          name: string
+        }
+        Insert: {
+          category?: string | null
+          description: string
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: string | null
+          description?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       pre_match_reports: {
         Row: {
           actions: Json

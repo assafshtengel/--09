@@ -28,7 +28,7 @@ export const PreMatchExperience = () => {
           .select('*');
 
         if (error) throw error;
-        setAttributes(data || []);
+        setAttributes(data as Attribute[] || []);
       } catch (error) {
         console.error('Error loading attributes:', error);
         toast({
