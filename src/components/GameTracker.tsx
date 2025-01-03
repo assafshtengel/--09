@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Action } from "@/components/ActionSelector";
 import { GamePreview } from "./game/GamePreview";
 import { GameSummary } from "./game/GameSummary";
 import { GameHeader } from "./game/mobile/GameHeader";
@@ -9,18 +8,14 @@ import { GameControls } from "./game/mobile/GameControls";
 import { ActionButtons } from "./game/mobile/ActionButtons";
 import { GameNotes } from "./game/GameNotes";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
-import { PreMatchReportActions } from "@/types/game";
 import { useGameState } from "./game/GameStateManager";
 import { useGameData } from "./game/GameDataManager";
+import { useGameActions } from "./game/hooks/useGameActions";
+import { useGameNotes } from "./game/hooks/useGameNotes";
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
-  const { toast } = useToast();
   const [showSummary, setShowSummary] = useState(false);
-  const [actions, setActions] = useState<Action[]>([]);
-  const [generalNote, setGeneralNote] = useState("");
 
   const {
     gamePhase,
@@ -38,83 +33,24 @@ export const GameTracker = () => {
     generalNotes,
     substitutions,
     saveActionLog,
-    saveNote,
     saveSubstitution
   } = useGameData(matchId);
 
+  const {
+    actions,
+    loadMatchActions,
+    handleAddAction
+  } = useGameActions(matchId);
+
+  const {
+    generalNote,
+    setGeneralNote,
+    handleAddGeneralNote
+  } = useGameNotes(matchId);
+
   useEffect(() => {
-    loadMatchData();
+    loadMatchActions();
   }, [matchId]);
-
-  const loadMatchData = async () => {
-    if (!matchId) return;
-
-    try {
-      const { data: match, error: matchError } = await supabase
-        .from("matches")
-        .select(`
-          *,
-          pre_match_reports (
-            actions
-          )
-        `)
-        .eq("id", matchId)
-        .maybeSingle();
-
-      if (matchError) throw matchError;
-
-      if (match?.pre_match_reports?.actions) {
-        const rawActions = match.pre_match_reports.actions as unknown;
-        const preMatchActions = rawActions as PreMatchReportActions[];
-        
-        const validActions = preMatchActions
-          .filter(action => 
-            typeof action === 'object' && 
-            action !== null && 
-            'id' in action && 
-            'name' in action && 
-            'isSelected' in action
-          )
-          .map(action => ({
-            id: action.id,
-            name: action.name,
-            goal: action.goal,
-            isSelected: action.isSelected
-          }));
-          
-        setActions(validActions);
-      }
-    } catch (error) {
-      console.error("Error loading match data:", error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לטעון את נתוני המשחק",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleAddAction = (newAction: Action) => {
-    setActions(prev => [...prev, newAction]);
-    toast({
-      title: "פעולה נוספה",
-      description: `הפעולה ${newAction.name} נוספה למעקב`,
-    });
-  };
-
-  const handleAddGeneralNote = async () => {
-    if (!generalNote.trim()) {
-      toast({
-        title: "שגיאה",
-        description: "יש להזין טקסט להערה",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    await saveNote(generalNote, minute);
-    setGeneralNote("");
-  };
 
   const handlePlayerExit = async (playerName: string, canReturn: boolean) => {
     const sub = {
@@ -138,16 +74,6 @@ export const GameTracker = () => {
     };
 
     await saveSubstitution(sub);
-  };
-
-  const logAction = async (actionId: string, result: "success" | "failure", note?: string) => {
-    await saveActionLog(actionId, result, minute, note);
-
-    toast({
-      title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
-      className: result === "success" ? "bg-green-500" : "bg-red-500",
-      duration: 1000,
-    });
   };
 
   return (
@@ -180,7 +106,7 @@ export const GameTracker = () => {
                     <span className="font-medium">{action.name}</span>
                     <ActionButtons
                       actionId={action.id}
-                      onLog={logAction}
+                      onLog={saveActionLog}
                     />
                   </div>
                 </div>
@@ -190,7 +116,7 @@ export const GameTracker = () => {
             <GameNotes
               generalNote={generalNote}
               onNoteChange={setGeneralNote}
-              onAddNote={handleAddGeneralNote}
+              onAddNote={() => handleAddGeneralNote(minute)}
             />
 
             <PlayerSubstitution

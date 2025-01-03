@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { Action } from "@/components/ActionSelector";
 import { ActionLog, SubstitutionLog } from "@/types/game";
 
 export const useGameData = (matchId: string | undefined) => {
@@ -11,7 +10,14 @@ export const useGameData = (matchId: string | undefined) => {
   const { toast } = useToast();
 
   const saveActionLog = async (actionId: string, result: "success" | "failure", minute: number, note?: string) => {
-    if (!matchId) return;
+    if (!matchId) {
+      toast({
+        title: "שגיאה",
+        description: "לא נמצא מזהה משחק",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -29,6 +35,12 @@ export const useGameData = (matchId: string | undefined) => {
       if (error) throw error;
       
       setActionLogs(prev => [...prev, { actionId, minute, result, note }]);
+      
+      toast({
+        title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
+        className: result === "success" ? "bg-green-500" : "bg-red-500",
+        duration: 1000,
+      });
     } catch (error) {
       console.error('Error saving action:', error);
       toast({
@@ -39,35 +51,15 @@ export const useGameData = (matchId: string | undefined) => {
     }
   };
 
-  const saveNote = async (note: string, minute: number) => {
-    if (!matchId) return;
-
-    try {
-      const { error } = await supabase
-        .from('match_notes')
-        .insert([
-          {
-            match_id: matchId,
-            minute,
-            note
-          }
-        ]);
-
-      if (error) throw error;
-      
-      setGeneralNotes(prev => [...prev, { text: note, minute }]);
-    } catch (error) {
-      console.error('Error saving note:', error);
+  const saveSubstitution = async (sub: SubstitutionLog) => {
+    if (!matchId) {
       toast({
         title: "שגיאה",
-        description: "לא ניתן לשמור את ההערה",
+        description: "לא נמצא מזהה משחק",
         variant: "destructive",
       });
+      return;
     }
-  };
-
-  const saveSubstitution = async (sub: SubstitutionLog) => {
-    if (!matchId) return;
 
     try {
       const { error } = await supabase
@@ -84,6 +76,11 @@ export const useGameData = (matchId: string | undefined) => {
       if (error) throw error;
       
       setSubstitutions(prev => [...prev, sub]);
+      
+      toast({
+        title: "חילוף בוצע",
+        description: sub.playerIn ? `${sub.playerIn} נכנס למשחק` : `${sub.playerOut} יצא מהמשחק`,
+      });
     } catch (error) {
       console.error('Error saving substitution:', error);
       toast({
@@ -96,13 +93,9 @@ export const useGameData = (matchId: string | undefined) => {
 
   return {
     actionLogs,
-    setActionLogs,
     generalNotes,
-    setGeneralNotes,
     substitutions,
-    setSubstitutions,
     saveActionLog,
-    saveNote,
     saveSubstitution
   };
 };
