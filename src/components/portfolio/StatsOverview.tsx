@@ -1,45 +1,64 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export const StatsOverview = () => {
   const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-      const { data } = await supabase
-        .from("player_stats")
-        .select("*")
-        .eq("player_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+        const { data } = await supabase
+          .from("player_stats")
+          .select("*")
+          .eq("player_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      setStats(data);
+        setStats(data || null);
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchStats();
   }, []);
 
   const chartData = stats ? [
-    { name: "דקות משחק", value: stats.minutes_played },
-    { name: "שערים", value: stats.goals },
-    { name: "בישולים", value: stats.assists },
-    { name: "בעיטות למסגרת", value: stats.shots_on_target },
-    { name: "פעולות הגנתיות", value: stats.defensive_actions },
+    { name: "דקות משחק", value: stats.minutes_played || 0 },
+    { name: "שערים", value: stats.goals || 0 },
+    { name: "בישולים", value: stats.assists || 0 },
+    { name: "בעיטות למסגרת", value: stats.shots_on_target || 0 },
+    { name: "פעולות הגנתיות", value: stats.defensive_actions || 0 },
   ] : [];
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center">טוען נתונים...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center">לא נמצאו נתונים סטטיסטיים</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
