@@ -8,7 +8,7 @@ export interface PreMatchReportActions {
 }
 
 export interface ActionLog {
-  action_id: string;  // Changed from actionId to match database
+  action_id: string;
   minute: number;
   result: "success" | "failure";
   note?: string;

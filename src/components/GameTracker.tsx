@@ -39,8 +39,10 @@ export const GameTracker = () => {
         .from("matches")
         .select(`
           *,
-          pre_match_reports (
-            actions
+          pre_match_report:pre_match_report_id (
+            actions,
+            havaya,
+            questions_answers
           )
         `)
         .eq("id", matchId)
@@ -48,9 +50,8 @@ export const GameTracker = () => {
 
       if (matchError) throw matchError;
 
-      if (match?.pre_match_reports?.actions) {
-        const rawActions = match.pre_match_reports.actions as unknown;
-        const preMatchActions = rawActions as PreMatchReportActions[];
+      if (match?.pre_match_report?.actions) {
+        const preMatchActions = match.pre_match_report.actions as PreMatchReportActions[];
         
         const validActions = preMatchActions
           .filter(action => 
