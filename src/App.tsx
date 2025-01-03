@@ -1,28 +1,35 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { PreMatchExperience } from "./components/pre-match/PreMatchExperience";
-import Dashboard from "./pages/Dashboard";
-import { Login } from "./pages/Login";
-import { Register } from "./pages/Register";
-import Profile from "./pages/Profile";
-import { Match } from "./pages/Match.tsx";
-import { Training } from "./pages/Training.tsx";
-import { WeeklySchedule } from "./pages/WeeklySchedule.tsx";
-import { MatchHistory } from "./pages/MatchHistory.tsx";
-import { TrainingHistory } from "./pages/TrainingHistory.tsx";
-import { Settings } from "./pages/Settings.tsx";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from "./providers/AuthProvider";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AuthProvider } from "@/providers/AuthProvider";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
-export default function App() {
+// Import all pages
+import { Index } from "@/pages/Index";
+import { Login } from "@/pages/Login";
+import { Register } from "@/pages/Register";
+import { Dashboard } from "@/pages/Dashboard";
+import { Match } from "@/pages/Match";
+import { Training } from "@/pages/Training";
+import { TrainingHistory } from "@/pages/TrainingHistory";
+import { MatchHistory } from "@/pages/MatchHistory";
+import { WeeklySchedule } from "@/pages/WeeklySchedule";
+import { Player } from "@/pages/Player";
+import { PlayerPortfolio } from "@/pages/PlayerPortfolio";
+import { Settings } from "@/pages/Settings";
+import { Admin } from "@/pages/Admin";
+import { Profile } from "@/pages/Profile";
+import { PreMatchReport } from "@/pages/PreMatchReport";
+
+function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <AuthProvider>
         <Routes>
+          <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route
-            path="/"
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <Dashboard />
@@ -30,26 +37,10 @@ export default function App() {
             }
           />
           <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/match/:id"
+            path="/match"
             element={
               <ProtectedRoute>
                 <Match />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/match/:id/experience"
-            element={
-              <ProtectedRoute>
-                <PreMatchExperience />
               </ProtectedRoute>
             }
           />
@@ -62,10 +53,10 @@ export default function App() {
             }
           />
           <Route
-            path="/schedule"
+            path="/training-history"
             element={
               <ProtectedRoute>
-                <WeeklySchedule />
+                <TrainingHistory />
               </ProtectedRoute>
             }
           />
@@ -78,10 +69,26 @@ export default function App() {
             }
           />
           <Route
-            path="/training-history"
+            path="/weekly-schedule"
             element={
               <ProtectedRoute>
-                <TrainingHistory />
+                <WeeklySchedule />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/player"
+            element={
+              <ProtectedRoute>
+                <Player />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/portfolio"
+            element={
+              <ProtectedRoute>
+                <PlayerPortfolio />
               </ProtectedRoute>
             }
           />
@@ -93,9 +100,35 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <Admin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pre-match-report"
+            element={
+              <ProtectedRoute>
+                <PreMatchReport />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
-        <Toaster />
       </AuthProvider>
-    </Router>
+      <Toaster />
+    </BrowserRouter>
   );
 }
+
+export default App;
