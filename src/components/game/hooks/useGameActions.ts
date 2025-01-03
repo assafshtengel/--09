@@ -26,34 +26,41 @@ export const useGameActions = (matchId: string | undefined) => {
       if (matchError) throw matchError;
 
       if (match?.pre_match_reports?.actions) {
-        // Type guard function to validate PreMatchReportActions
-        const isPreMatchReportAction = (item: any): item is PreMatchReportActions => {
-          return (
-            typeof item === 'object' &&
-            item !== null &&
-            'id' in item &&
-            typeof item.id === 'string' &&
-            'name' in item &&
-            typeof item.name === 'string' &&
-            'isSelected' in item &&
-            typeof item.isSelected === 'boolean'
-          );
-        };
-
-        // Safely convert and filter the actions
-        const rawActions = Array.isArray(match.pre_match_reports.actions) 
+        // First ensure we have an array to work with
+        const actionsArray = Array.isArray(match.pre_match_reports.actions) 
           ? match.pre_match_reports.actions 
           : [];
-        
-        const validActions = rawActions
-          .filter(isPreMatchReportAction)
-          .map(action => ({
-            id: action.id,
-            name: action.name,
-            isSelected: action.isSelected,
-            goal: action.goal
-          }));
+
+        // Type guard to ensure each item has the required properties
+        const validActions = actionsArray.reduce<Action[]>((acc, item) => {
+          // Skip any non-object items
+          if (typeof item !== 'object' || item === null) return acc;
           
+          // Cast to unknown first then to our expected type to check properties
+          const action = item as unknown as { 
+            id?: string; 
+            name?: string; 
+            isSelected?: boolean;
+            goal?: string;
+          };
+
+          // Only include items that have all required properties
+          if (
+            typeof action.id === 'string' &&
+            typeof action.name === 'string' &&
+            typeof action.isSelected === 'boolean'
+          ) {
+            acc.push({
+              id: action.id,
+              name: action.name,
+              isSelected: action.isSelected,
+              goal: action.goal || undefined
+            });
+          }
+          
+          return acc;
+        }, []);
+
         setActions(validActions);
       }
     } catch (error) {
