@@ -34,7 +34,7 @@ export const Auth = () => {
       description: "ברוך הבא!",
     });
     
-    navigate("/");
+    navigate("/game-selection");
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -44,7 +44,7 @@ export const Auth = () => {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}/game-selection`,
       },
     });
 
@@ -62,13 +62,13 @@ export const Auth = () => {
       description: "ברוך הבא! אנא בדוק את תיבת הדואר שלך לאימות החשבון.",
     });
     
-    navigate("/");
+    navigate("/game-selection");
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold text-center">התחברות</h1>
+        <h1 className="text-2xl font-bold text-center">ברוכים הבאים</h1>
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">התחברות</TabsTrigger>
@@ -133,6 +133,7 @@ export const Auth = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   dir="ltr"
+                  minLength={6}
                 />
               </div>
               <Button type="submit" className="w-full">
