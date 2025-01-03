@@ -8,7 +8,7 @@ export interface PreMatchReportActions {
 }
 
 export interface ActionLog {
-  action_id: string;
+  actionId: string;
   minute: number;
   result: "success" | "failure";
   note?: string;

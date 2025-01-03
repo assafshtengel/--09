@@ -12,6 +12,7 @@ import { GameNotes } from "./game/GameNotes";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { useGameState } from "./game/GameState";
 import { useGameDataService } from "./game/GameDataService";
+import { ActionLog } from "@/types/game";
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
@@ -166,12 +167,13 @@ export const GameTracker = () => {
 
     const success = await gameDataService.saveActionLog(matchId, action_id, minute, result, note);
     if (success) {
-      setActionLogs(prev => [...prev, {
-        action_id,
+      const newActionLog: ActionLog = {
+        actionId: action_id,
         minute,
         result,
         note
-      }]);
+      };
+      setActionLogs(prev => [...prev, newActionLog]);
 
       toast({
         title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
