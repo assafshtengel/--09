@@ -1,141 +1,153 @@
-import { useEffect, useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState } from 'react';
 import { Action } from "@/components/ActionSelector";
-import { MatchDetailsSection } from "./summary/MatchDetailsSection";
-import { ActionsSummarySection } from "./summary/ActionsSummarySection";
-import { PerformanceRatingTable } from "./summary/PerformanceRatingTable";
-import { SummaryActions } from "./summary/SummaryActions";
-import { PreMatchGoalsSection } from "./summary/PreMatchGoalsSection";
-import { supabase } from "@/integrations/supabase/client";
+import { SummaryLayout } from "./summary/SummaryLayout";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import html2canvas from "html2canvas";
+import { format } from "date-fns";
+
+interface ActionLog {
+  actionId: string;
+  minute: number;
+  result: "success" | "failure";
+  note?: string;
+}
+
+interface SubstitutionLog {
+  playerIn: string;
+  playerOut: string;
+  minute: number;
+}
 
 interface GameSummaryProps {
   actions: Action[];
-  actionLogs: Array<{
-    actionId: string;
-    minute: number;
-    result: "success" | "failure";
-    note?: string;
-  }>;
+  actionLogs: ActionLog[];
   generalNotes: Array<{ text: string; minute: number }>;
+  substitutions: SubstitutionLog[];
   onClose: () => void;
-  gamePhase: "halftime" | "ended";
-  havaya?: string[];
-  onContinue?: () => void;
-  matchId: string;
+  gamePhase?: "halftime" | "ended";
+  onContinueGame?: () => void;
+  matchId?: string;
 }
 
-export const GameSummary = ({
-  actions,
-  actionLogs,
+export const GameSummary = ({ 
+  actions, 
+  actionLogs, 
   generalNotes,
+  substitutions,
   onClose,
-  gamePhase,
-  havaya = [],
-  onContinue,
-  matchId,
+  gamePhase = "ended",
+  onContinueGame,
+  matchId
 }: GameSummaryProps) => {
-  const { toast } = useToast();
-  const [matchData, setMatchData] = useState<any>(null);
-  const [preMatchData, setPreMatchData] = useState<any>(null);
-  const [performanceRatings, setPerformanceRatings] = useState<Record<string, number>>({});
-  const [isLoading, setIsLoading] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchMatchData = async () => {
-      if (!matchId) return;
-
-      try {
-        const { data: match, error } = await supabase
-          .from("matches")
-          .select(`
-            *,
-            pre_match_report:pre_match_report_id (*)
-          `)
-          .eq("id", matchId)
-          .maybeSingle();
-
-        if (error) throw error;
-        setMatchData(match);
-        if (match?.pre_match_report) {
-          setPreMatchData(match.pre_match_report);
-        }
-      } catch (error) {
-        console.error("Error fetching match data:", error);
-        toast({
-          title: "שגיאה",
-          description: "לא ניתן לטעון את נתוני המשחק",
-          variant: "destructive",
-        });
-      }
-    };
-
-    fetchMatchData();
-  }, [matchId]);
-
-  const handlePerformanceRatingChange = (aspect: string, rating: number) => {
-    setPerformanceRatings(prev => ({ ...prev, [aspect]: rating }));
-  };
-
-  const handleSendEmail = async () => {
-    setIsSendingEmail(true);
+  const handleSubmit = async () => {
     try {
-      const element = document.getElementById("game-summary-content");
-      if (!element) return;
-
-      const canvas = await html2canvas(element);
-      const imageData = canvas.toDataURL("image/png");
-
-      const { data: profile } = await supabase.auth.getUser();
-      if (!profile.user) throw new Error("User not found");
-
-      const { data: playerProfile } = await supabase
-        .from("profiles")
-        .select("coach_email, email")
-        .eq("id", profile.user.id)
-        .single();
-
-      if (!playerProfile?.coach_email && !playerProfile?.email) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         toast({
           title: "שגיאה",
-          description: "לא נמצאו כתובות מייל",
+          description: "משתמש לא מחובר",
           variant: "destructive",
         });
         return;
       }
 
-      const recipients = [
-        playerProfile.coach_email,
-        playerProfile.email
-      ].filter(Boolean);
+      if (!matchId) {
+        toast({
+          title: "שגיאה",
+          description: "לא נמצא מזהה משחק",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      const { error } = await supabase.functions.invoke("send-game-summary", {
+      await sendEmail();
+      toast({
+        title: "המשוב נשמר בהצלחה",
+        description: "סיכום המשחק נשלח למייל",
+      });
+      onClose();
+    } catch (error) {
+      console.error('Error in handleSubmit:', error);
+      toast({
+        title: "שגיאה בשמירת המשוב",
+        description: "אנא נסה שנית",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const takeScreenshot = async () => {
+    try {
+      const element = document.getElementById('game-summary-content');
+      if (element) {
+        const canvas = await html2canvas(element);
+        const link = document.createElement('a');
+        link.download = `game-summary-${format(new Date(), 'yyyy-MM-dd')}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+        toast({
+          title: "צילום מסך נשמר בהצלחה",
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error('Error taking screenshot:', error);
+      toast({
+        title: "שגיאה בשמירת צילום המסך",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const shareToSocial = async (platform: 'facebook' | 'instagram') => {
+    const score = calculateScore(actionLogs);
+    const shareText = `Just finished a game with a performance score of ${score}! 🎯⚽️ #SoccerPerformance #Training`;
+    
+    if (platform === 'facebook') {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${window.location.href}&quote=${encodeURIComponent(shareText)}`, '_blank');
+    } else if (platform === 'instagram') {
+      await navigator.clipboard.writeText(shareText);
+      toast({
+        title: "טקסט הועתק ללוח",
+        description: "כעת תוכל להדביק אותו באינסטגרם",
+      });
+    }
+  };
+
+  const sendEmail = async () => {
+    try {
+      setIsSendingEmail(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) throw new Error("No user email found");
+
+      const htmlContent = `
+        <div dir="rtl">
+          <h1>סיכום משחק</h1>
+          ${document.getElementById('game-summary-content')?.innerHTML}
+        </div>
+      `;
+
+      const { error } = await supabase.functions.invoke('send-game-summary', {
         body: {
-          to: recipients,
-          subject: `סיכום משחק - ${matchData?.match_date}`,
-          html: `
-            <div dir="rtl">
-              <h1>סיכום משחק</h1>
-              <p>מצורף סיכום המשחק מתאריך ${matchData?.match_date}</p>
-              <img src="${imageData}" alt="Game Summary" style="max-width: 100%;" />
-            </div>
-          `,
+          to: [user.email],
+          subject: `סיכום משחק - ${format(new Date(), 'dd/MM/yyyy')}`,
+          html: htmlContent,
         },
       });
 
       if (error) throw error;
-
       toast({
-        title: "נשלח בהצלחה",
-        description: "סיכום המשחק נשלח למייל",
+        title: "הסיכום נשלח בהצלחה למייל",
+        variant: "default",
       });
     } catch (error) {
-      console.error("Error sending email:", error);
+      console.error('Error sending email:', error);
       toast({
-        title: "שגיאה",
-        description: "לא ניתן לשלוח את הסיכום במייל",
+        title: "שגיאה בשליחת המייל",
         variant: "destructive",
       });
     } finally {
@@ -143,125 +155,32 @@ export const GameSummary = ({
     }
   };
 
-  const handleScreenshot = async () => {
-    try {
-      const element = document.getElementById("game-summary-content");
-      if (!element) return;
+  const calculateScore = (actionLogs: ActionLog[]) => {
+    const successPoints = 10;
+    const failurePoints = -5;
+    
+    const score = actionLogs.reduce((total, log) => {
+      return total + (log.result === "success" ? successPoints : failurePoints);
+    }, 0);
 
-      const canvas = await html2canvas(element);
-      const link = document.createElement("a");
-      link.download = `game-summary-${matchData?.match_date}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-
-      toast({
-        title: "צילום מסך נשמר",
-        description: "הקובץ נשמר בהצלחה",
-      });
-    } catch (error) {
-      console.error("Error taking screenshot:", error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לשמור צילום מסך",
-        variant: "destructive",
-      });
-    }
+    return Math.max(0, score);
   };
-
-  const handleShareSocial = async (platform: 'facebook' | 'instagram') => {
-    try {
-      const element = document.getElementById("game-summary-content");
-      if (!element) return;
-
-      const canvas = await html2canvas(element);
-      const imageData = canvas.toDataURL("image/png");
-
-      if (platform === 'instagram') {
-        // Create a temporary link to download the image
-        const link = document.createElement("a");
-        link.href = imageData;
-        link.download = "game-summary.png";
-        link.click();
-
-        // Open Instagram with a pre-filled message
-        const instagramUrl = `https://www.instagram.com/create/story?caption=${encodeURIComponent(
-          "Just finished my game! Check out my performance stats using @socr_app\n\nJoin me at https://socr.co.il"
-        )}`;
-        window.open(instagramUrl, '_blank');
-
-        toast({
-          title: "תמונה נשמרה",
-          description: "כעת תוכל להעלות את התמונה לאינסטגרם",
-        });
-      }
-    } catch (error) {
-      console.error("Error sharing:", error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לשתף כרגע",
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (!matchData) {
-    return <div>טוען...</div>;
-  }
 
   return (
-    <div className="h-[80vh] flex flex-col">
-      <ScrollArea className="flex-1">
-        <div id="game-summary-content" className="space-y-6 p-4">
-          <div className="border-b pb-4">
-            <h2 className="text-2xl font-bold text-right">
-              {gamePhase === "halftime" ? "סיכום מחצית" : "סיכום משחק"}
-            </h2>
-          </div>
-
-          <MatchDetailsSection matchData={matchData} />
-          
-          {preMatchData && (
-            <PreMatchGoalsSection preMatchData={preMatchData} />
-          )}
-          
-          <ActionsSummarySection actions={actions} actionLogs={actionLogs} />
-          
-          {gamePhase === "ended" && (
-            <PerformanceRatingTable
-              ratings={performanceRatings}
-              onRatingChange={handlePerformanceRatingChange}
-            />
-          )}
-
-          {generalNotes.length > 0 && (
-            <div className="border p-4 rounded-lg">
-              <h3 className="text-lg font-semibold mb-2 text-right">הערות כלליות</h3>
-              <div className="space-y-2">
-                {generalNotes.map((note, index) => (
-                  <div key={index} className="text-right">
-                    <span className="text-sm text-muted-foreground">{note.minute}'</span>
-                    <p>{note.text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </ScrollArea>
-
-      <div className="border-t p-4 bg-background">
-        <SummaryActions
-          gamePhase={gamePhase}
-          isSendingEmail={isSendingEmail}
-          onSubmit={() => {}}
-          onSendEmail={handleSendEmail}
-          onShareSocial={handleShareSocial}
-          onScreenshot={handleScreenshot}
-          onClose={onClose}
-          onContinueGame={onContinue}
-          matchId={matchId}
-        />
-      </div>
-    </div>
+    <SummaryLayout
+      actions={actions}
+      actionLogs={actionLogs}
+      generalNotes={generalNotes}
+      substitutions={substitutions}
+      onClose={onClose}
+      gamePhase={gamePhase}
+      onContinueGame={onContinueGame}
+      matchId={matchId}
+      isSendingEmail={isSendingEmail}
+      onSubmit={handleSubmit}
+      onSendEmail={sendEmail}
+      onShareSocial={shareToSocial}
+      onScreenshot={takeScreenshot}
+    />
   );
 };

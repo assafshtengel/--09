@@ -9,7 +9,6 @@ import { NotificationsList } from "@/components/notifications/NotificationsList"
 import { NotificationHistory } from "@/components/notifications/NotificationHistory";
 import { AdminStats } from "@/components/admin/AdminStats";
 import { LearningResourcesManager } from "@/components/admin/LearningResourcesManager";
-import { UserDataTabs } from "@/components/admin/UserDataTabs";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -111,15 +110,6 @@ const Admin = () => {
       
       <div className="grid gap-6">
         <AdminStats totalUsers={totalUsers} usageStats={usageStats} />
-
-        <Card>
-          <CardHeader>
-            <CardTitle>נתוני משתמשים</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <UserDataTabs />
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>

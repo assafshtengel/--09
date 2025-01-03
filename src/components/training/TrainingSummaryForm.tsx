@@ -11,9 +11,9 @@ import { DateTimeFields } from "./form/DateTimeFields";
 import { AIInsights } from "./AIInsights";
 import { WhatsAppShare } from "./form/WhatsAppShare";
 import { SubmitButton } from "./form/SubmitButton";
-import type { TrainingSummaryFormData, TrainingSummaryFormProps } from "./types";
+import type { TrainingSummaryFormData } from "./types";
 
-export const TrainingSummaryForm = ({ onSubmitSuccess }: TrainingSummaryFormProps) => {
+export const TrainingSummaryForm = () => {
   const { toast } = useToast();
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [insights, setInsights] = useState<string | null>(null);
@@ -131,7 +131,6 @@ export const TrainingSummaryForm = ({ onSubmitSuccess }: TrainingSummaryFormProp
         description: "תודה על מילוי הטופס",
       });
       
-      onSubmitSuccess();
       form.reset();
       
     } catch (error) {

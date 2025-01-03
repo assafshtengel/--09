@@ -1,4 +1,5 @@
 import { GameTimer } from "../GameTimer";
+import { GameStats } from "../GameStats";
 import { Action } from "@/components/ActionSelector";
 
 interface GameHeaderProps {
@@ -13,14 +14,17 @@ export const GameHeader = ({
   isTimerRunning,
   minute,
   onMinuteChange,
+  actions,
+  actionLogs
 }: GameHeaderProps) => {
   return (
-    <div className="sticky top-0 bg-white border-b z-10 p-4">
+    <div className="sticky top-0 bg-white border-b z-10 p-4 space-y-4">
       <GameTimer
         isRunning={isTimerRunning}
         minute={minute}
         onMinuteChange={onMinuteChange}
       />
+      <GameStats actions={actions} actionLogs={actionLogs} />
     </div>
   );
 };

@@ -74,9 +74,6 @@ export const Navigation = () => {
     { path: "/profile", label: "פרופיל", tooltip: "ניהול פרטי המשתמש" },
     { path: "/portfolio", label: "תיק שחקן", tooltip: "צפייה בהישגים וסטטיסטיקות" },
     { path: "/dashboard", label: "לוח בקרה", tooltip: "סקירת ביצועים ונתונים" },
-    { path: "/pre-match-report", label: "יעדי טרום משחק", tooltip: "הגדרת יעדים למשחק" },
-    { path: "/game", label: "מעקב משחק", tooltip: "מעקב אחר ביצועים במשחק" },
-    { path: "/schedule", label: "מערכת שעות", tooltip: "ניהול לוח הזמנים" },
   ];
 
   if (isAdmin) {

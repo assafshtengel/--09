@@ -1,25 +1,21 @@
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 interface ActionButtonProps {
   actionId: string;
-  actionName: string;
   result: "success" | "failure";
   onClick: () => void;
   className?: string;
 }
 
-export const ActionButton = ({ actionId, actionName, result, onClick, className }: ActionButtonProps) => {
-  const { toast } = useToast();
-
+export const ActionButton = ({ actionId, result, onClick, className }: ActionButtonProps) => {
   const handleClick = () => {
     // Show toast notification
     toast({
-      title: result === "success" ? `${actionName} - הצלחה` : `${actionName} - כישלון`,
-      description: result === "success" ? "✓ הפעולה נרשמה בהצלחה" : "✗ הפעולה נרשמה ככישלון",
-      variant: result === "success" ? "default" : "destructive",
-      duration: 1500,
-      className: result === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white",
+      title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
+      className: result === "success" ? "bg-green-500" : "bg-red-500",
+      duration: 1000,
     });
     
     // Trigger vibration on mobile if supported

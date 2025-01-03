@@ -1,94 +1,47 @@
 import { useState } from "react";
 import { ActionButton } from "./ActionButton";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 interface ActionItemProps {
   action: Action;
-  stats: { success: number; total: number };
   onLog: (actionId: string, result: "success" | "failure", note?: string) => void;
-  matchId: string;
-  minute: number;
 }
 
-export const ActionItem = ({ action, stats, onLog, matchId, minute }: ActionItemProps) => {
+export const ActionItem = ({ action, onLog }: ActionItemProps) => {
   const [note, setNote] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const [showUndo, setShowUndo] = useState<"success" | "failure" | null>(null);
 
-  const handleAction = async (result: "success" | "failure") => {
-    if (isLoading) return;
+  const handleAction = (result: "success" | "failure") => {
+    onLog(action.id, result, note || undefined);
+    setNote("");
     
-    setIsLoading(true);
-    try {
-      // Save to Supabase
-      const { error } = await supabase
-        .from('match_actions')
-        .insert([
-          {
-            match_id: matchId,
-            action_id: action.id,
-            minute,
-            result,
-            note: note || undefined
-          }
-        ]);
+    // Show undo button for 3 seconds
+    setShowUndo(result);
+    setTimeout(() => setShowUndo(null), 3000);
+  };
 
-      if (error) throw error;
-
-      // Update local state and show toast
-      await onLog(action.id, result, note || undefined);
-      
-      toast({
-        title: result === "success" ? `${action.name} - הצלחה` : `${action.name} - כישלון`,
-        description: result === "success" ? "✓ הפעולה נרשמה בהצלחה" : "✗ הפעולה נרשמה ככישלון",
-        variant: result === "success" ? "default" : "destructive",
-        duration: 1500,
-        className: result === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white",
-      });
-
-      // Clear note after successful save
-      setNote("");
-      
-      // Trigger vibration on mobile if supported
-      if (navigator.vibrate) {
-        navigator.vibrate(100);
-      }
-    } catch (error) {
-      console.error('Error saving action:', error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לשמור את הפעולה",
-        variant: "destructive",
-        duration: 1500,
-        className: "bg-red-500 text-white",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleUndo = () => {
+    // Here you would implement the undo logic
+    setShowUndo(null);
+    // You might want to call a parent function to remove the last action
   };
 
   return (
     <div className="border p-4 rounded-lg">
       <div className="flex justify-between items-center gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{stats.success}/{stats.total}</span>
-          <div className="flex gap-2">
-            <ActionButton
-              actionId={action.id}
-              actionName={action.name}
-              result="success"
-              onClick={() => handleAction("success")}
-            />
-            <ActionButton
-              actionId={action.id}
-              actionName={action.name}
-              result="failure"
-              onClick={() => handleAction("failure")}
-            />
-          </div>
+        <div className="flex gap-2">
+          <ActionButton
+            actionId={action.id}
+            result="success"
+            onClick={() => handleAction("success")}
+          />
+          <ActionButton
+            actionId={action.id}
+            result="failure"
+            onClick={() => handleAction("failure")}
+          />
         </div>
         <span className="font-medium">{action.name}</span>
       </div>
@@ -101,6 +54,19 @@ export const ActionItem = ({ action, stats, onLog, matchId, minute }: ActionItem
           className="text-right"
         />
       </div>
+
+      {showUndo && (
+        <div className="mt-2 text-right">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleUndo}
+            className="text-sm"
+          >
+            בטל פעולה אחרונה
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

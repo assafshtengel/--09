@@ -7,8 +7,6 @@ import { ActionSelector } from "@/components/ActionSelector";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 interface MatchDetails {
   date: string;
@@ -18,7 +16,6 @@ interface MatchDetails {
 }
 
 export const PreMatchReport = () => {
-  const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [matchDetails, setMatchDetails] = useState<MatchDetails>({
     date: "",
@@ -29,68 +26,13 @@ export const PreMatchReport = () => {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [havaya, setHavaya] = useState<string[]>([]);
   const [aiInsights, setAiInsights] = useState<string[]>([]);
-  const [preMatchReportId, setPreMatchReportId] = useState<string | null>(null);
 
-  const handleNext = async () => {
-    if (step === 4) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error("User not authenticated");
-
-        const preMatchReportData = {
-          player_id: user.id,
-          match_date: matchDetails.date,
-          match_time: matchDetails.time,
-          opponent: matchDetails.opponent,
-          actions: actions,
-          questions_answers: answers,
-          havaya: havaya.join(','),
-          status: 'completed' as const
-        };
-
-        let reportId = preMatchReportId;
-
-        if (!reportId) {
-          const { data: report, error: reportError } = await supabase
-            .from('pre_match_reports')
-            .insert(preMatchReportData)
-            .select()
-            .single();
-
-          if (reportError) {
-            console.error('Error saving report:', reportError);
-            throw reportError;
-          }
-          
-          reportId = report.id;
-          setPreMatchReportId(reportId);
-        } else {
-          const { error: updateError } = await supabase
-            .from('pre_match_reports')
-            .update(preMatchReportData)
-            .eq('id', reportId);
-
-          if (updateError) {
-            console.error('Error updating report:', updateError);
-            throw updateError;
-          }
-        }
-
-        toast({
-          title: "נשמר בהצלחה",
-          description: "דוח טרום משחק נשמר במערכת",
-        });
-      } catch (error) {
-        console.error('Error saving pre-match report:', error);
-        toast({
-          title: "שגיאה בשמירת הדוח",
-          description: "אנא נסה שוב",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
+  const handleNext = () => {
     setStep(prev => prev + 1);
+  };
+
+  const handleBack = () => {
+    setStep(prev => prev - 1);
   };
 
   return (
@@ -160,13 +102,16 @@ export const PreMatchReport = () => {
                 value={havaya}
                 onChange={setHavaya}
               />
-              <div className="flex justify-end mt-6">
+              <div className="flex justify-between mt-6">
                 <Button 
                   onClick={handleNext}
                   disabled={havaya.length < 3}
                 >
-                  המשך
+                  הבא
                   <ArrowRight className="mr-2 h-4 w-4" />
+                </Button>
+                <Button variant="outline" onClick={handleBack}>
+                  חזור
                 </Button>
               </div>
             </motion.div>

@@ -17,7 +17,8 @@ export class ProfileUpdateService {
 
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({
+      .upsert({
+        id: user.id,
         email: user.email,
         full_name: formData.fullName,
         roles: formData.roles,
@@ -27,10 +28,7 @@ export class ProfileUpdateService {
         date_of_birth: formData.dateOfBirth,
         age_category: formData.ageCategory,
         coach_phone_number: formData.coachPhoneNumber,
-        coach_email: formData.coachEmail,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', user.id);
+      });
 
     if (updateError) {
       console.error('Profile update error:', updateError);

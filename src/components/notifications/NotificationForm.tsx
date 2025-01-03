@@ -12,15 +12,7 @@ import { NotificationData } from "@/types/notifications";
 
 export const NotificationForm = () => {
   const [isSending, setIsSending] = useState(false);
-  const form = useForm<NotificationData>({
-    defaultValues: {
-      message: "",
-      scheduled_for: "",
-      recipient_id: "",
-      type: "custom",
-      status: "pending"
-    }
-  });
+  const form = useForm<NotificationData>();
 
   const onSubmit = async (data: NotificationData) => {
     try {
@@ -67,18 +59,7 @@ export const NotificationForm = () => {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <NotificationMessage form={form} />
         <NotificationSchedule form={form} />
-        <FormField
-          control={form.control}
-          name="recipient_id"
-          render={() => (
-            <FormItem>
-              <FormLabel>נמען</FormLabel>
-              <FormControl>
-                <RecipientSelector form={form} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+        <RecipientSelector form={form} />
 
         <FormField
           control={form.control}

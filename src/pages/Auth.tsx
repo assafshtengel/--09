@@ -4,66 +4,19 @@ import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
-        try {
-          // Check if user has a profile
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profileError && profileError.code !== 'PGRST116') {
-            throw profileError;
-          }
-
-          if (!profile) {
-            // If no profile exists, create a basic one and redirect to profile completion
-            const { error: insertError } = await supabase
-              .from('profiles')
-              .insert({
-                id: session.user.id,
-                email: session.user.email,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              });
-
-            if (insertError) throw insertError;
-
-            navigate("/profile");
-            toast({
-              title: "ברוך הבא!",
-              description: "אנא מלא את פרטי הפרופיל שלך",
-            });
-          } else {
-            // If profile exists, redirect to dashboard
-            navigate("/dashboard");
-            toast({
-              title: "ברוך הבא בחזרה!",
-              description: "התחברת בהצלחה",
-            });
-          }
-        } catch (error) {
-          console.error('Error in auth flow:', error);
-          toast({
-            title: "שגיאה",
-            description: "אירעה שגיאה בתהליך ההרשמה",
-            variant: "destructive",
-          });
-        }
+        navigate("/");
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, toast]);
+  }, [navigate]);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-md min-h-screen flex items-center justify-center">
@@ -89,7 +42,6 @@ const Auth = () => {
                 label: 'text-right block mb-2',
                 button: 'w-full',
                 input: 'text-right',
-                message: 'text-right',
               },
             }}
             localization={{

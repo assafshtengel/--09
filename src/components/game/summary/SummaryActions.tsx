@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Share2, Send, Mail, Instagram, User } from "lucide-react";
+import { Share2, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import html2canvas from "html2canvas";
 
 interface SummaryActionsProps {
   gamePhase: "halftime" | "ended";
@@ -29,97 +28,78 @@ export const SummaryActions = ({
   matchId
 }: SummaryActionsProps) => {
   const { toast } = useToast();
-  const [isSendingToCoach, setIsSendingToCoach] = useState(false);
+  const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
 
-  const formatEmailContent = (element: HTMLElement) => {
-    const matchDetails = element.querySelector('[data-section="match-details"]');
-    const actionsSummary = element.querySelector('[data-section="actions-summary"]');
-    const performanceRatings = element.querySelector('[data-section="performance-ratings"]');
-    const generalNotes = element.querySelector('[data-section="general-notes"]');
-
-    return `
-      <div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <h1 style="color: #2563eb; margin-bottom: 1rem;">סיכום משחק</h1>
-        
-        ${matchDetails ? matchDetails.innerHTML : ''}
-        
-        ${actionsSummary ? `
-          <div style="margin-top: 2rem;">
-            <h2 style="color: #374151;">סיכום פעולות</h2>
-            ${actionsSummary.innerHTML}
-          </div>
-        ` : ''}
-        
-        ${performanceRatings ? `
-          <div style="margin-top: 2rem;">
-            <h2 style="color: #374151;">דירוג ביצועים</h2>
-            ${performanceRatings.innerHTML}
-          </div>
-        ` : ''}
-        
-        ${generalNotes ? `
-          <div style="margin-top: 2rem;">
-            <h2 style="color: #374151;">הערות כלליות</h2>
-            ${generalNotes.innerHTML}
-          </div>
-        ` : ''}
-        
-        <div style="margin-top: 2rem; color: #6b7280; font-size: 0.875rem;">
-          <p>נשלח באמצעות מערכת SOCR</p>
-        </div>
-      </div>
-    `;
-  };
-
-  const handleSendToCoach = async () => {
+  const handleWhatsAppShare = async () => {
     try {
-      setIsSendingToCoach(true);
-      const element = document.getElementById("game-summary-content");
-      if (!element) return;
+      setIsSendingWhatsApp(true);
+      
+      // Get user's profile to get coach's phone number
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("משתמש לא מחובר");
 
-      const { data: profile } = await supabase.auth.getUser();
-      if (!profile.user) throw new Error("User not found");
-
-      const { data: playerProfile } = await supabase
-        .from("profiles")
-        .select("coach_email")
-        .eq("id", profile.user.id)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('coach_phone_number')
+        .eq('id', user.id)
         .single();
 
-      if (!playerProfile?.coach_email) {
+      if (!profile?.coach_phone_number) {
         toast({
           title: "שגיאה",
-          description: "לא נמצאה כתובת מייל של המאמן",
+          description: "לא נמצא מספר טלפון של המאמן בפרופיל",
           variant: "destructive",
         });
         return;
       }
 
-      const emailContent = formatEmailContent(element);
+      // Get match details and summary
+      const { data: match } = await supabase
+        .from('matches')
+        .select(`
+          match_date,
+          opponent,
+          match_actions (
+            action_id,
+            result
+          )
+        `)
+        .eq('id', matchId)
+        .single();
 
-      const { error } = await supabase.functions.invoke("send-game-summary", {
+      if (!match) throw new Error("לא נמצאו פרטי משחק");
+
+      const successCount = match.match_actions?.filter((action: any) => action.result === 'success').length || 0;
+      const totalActions = match.match_actions?.length || 0;
+      const successRate = totalActions > 0 ? Math.round((successCount / totalActions) * 100) : 0;
+
+      const summaryText = `סיכום משחק מ-${match.match_date}${match.opponent ? ` מול ${match.opponent}` : ''}\n` +
+        `אחוז הצלחה: ${successRate}%\n` +
+        `פעולות מוצלחות: ${successCount}/${totalActions}`;
+
+      const { error: whatsappError } = await supabase.functions.invoke('send-whatsapp', {
         body: {
-          to: [playerProfile.coach_email],
-          subject: "סיכום משחק מתלמיד",
-          html: emailContent,
-        },
+          message: summaryText,
+          recipientNumber: profile.coach_phone_number
+        }
       });
 
-      if (error) throw error;
+      if (whatsappError) throw whatsappError;
 
       toast({
         title: "נשלח בהצלחה",
         description: "סיכום המשחק נשלח למאמן",
       });
+
     } catch (error) {
-      console.error("Error sending email to coach:", error);
+      console.error('Error sending WhatsApp message:', error);
       toast({
-        title: "שגיאה",
-        description: "לא ניתן לשלוח את הסיכום למאמן",
+        title: "שגיאה בשליחת ההודעה",
+        description: "לא הצלחנו לשלוח את ההודעה למאמן",
         variant: "destructive",
       });
     } finally {
-      setIsSendingToCoach(false);
+      setIsSendingWhatsApp(false);
     }
   };
 
@@ -146,28 +126,36 @@ export const SummaryActions = ({
             onClick={onSendEmail} 
             variant="outline"
             disabled={isSendingEmail}
-            className="flex items-center gap-2"
           >
-            <Mail className="h-4 w-4" />
             {isSendingEmail ? "שולח..." : "שלח למייל"}
           </Button>
           <Button
-            onClick={handleSendToCoach}
+            onClick={handleWhatsAppShare}
             variant="outline"
-            disabled={isSendingToCoach}
+            disabled={isSendingWhatsApp}
             className="flex items-center gap-2"
           >
-            <User className="h-4 w-4" />
-            {isSendingToCoach ? "שולח למאמן..." : "שלח למאמן"}
+            <Send className="h-4 w-4" />
+            {isSendingWhatsApp ? "שולח..." : "שלח למאמן"}
           </Button>
-          <Button
-            onClick={() => onShareSocial('instagram')}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Instagram className="h-4 w-4" />
-            שתף באינסטגרם
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => onShareSocial('facebook')}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              שתף בפייסבוק
+            </Button>
+            <Button
+              onClick={() => onShareSocial('instagram')}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              שתף באינסטגרם
+            </Button>
+          </div>
         </>
       )}
       

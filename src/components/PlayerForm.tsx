@@ -26,7 +26,6 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
     dateOfBirth: "",
     ageCategory: "",
     coachPhoneNumber: "",
-    coachEmail: "",
   });
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
 
@@ -46,7 +45,7 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.fullName || !formData.phoneNumber || !formData.club || !formData.dateOfBirth || !formData.ageCategory || !formData.coachPhoneNumber || !formData.coachEmail) {
+    if (!formData.fullName || !formData.phoneNumber || !formData.club || !formData.dateOfBirth || !formData.ageCategory || !formData.coachPhoneNumber) {
       toast({
         title: "שגיאה",
         description: "אנא מלא את כל השדות",
@@ -153,15 +152,6 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
           value={formData.coachPhoneNumber}
           onChange={(value) => setFormData({ ...formData, coachPhoneNumber: value })}
           placeholder="הכנס את מספר הטלפון של המאמן"
-        />
-
-        <FormField
-          id="coachEmail"
-          label="מייל המאמן"
-          value={formData.coachEmail || ""}
-          onChange={(value) => setFormData({ ...formData, coachEmail: value })}
-          placeholder="הכנס את כתובת המייל של המאמן"
-          type="email"
         />
 
         <FormField

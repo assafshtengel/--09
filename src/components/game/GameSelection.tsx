@@ -44,7 +44,8 @@ export const GameSelection = () => {
           `)
           .eq("player_id", user.id)
           .eq("status", "completed")
-          .order("match_date", { ascending: false });
+          .order("match_date", { ascending: false })
+          .limit(10); // Changed from 3 to 10
 
         if (error) throw error;
 
@@ -74,8 +75,8 @@ export const GameSelection = () => {
       if (!user) throw new Error("No authenticated user");
 
       if (game.status === "completed" && game.match_id) {
-        // Navigate to existing match
-        navigate(`/game/${game.match_id}`);
+        // Navigate to existing match summary
+        navigate(`/match/${game.match_id}`);
         return;
       }
 
@@ -94,7 +95,7 @@ export const GameSelection = () => {
 
       if (createError) throw createError;
       if (newMatch) {
-        navigate(`/game/${newMatch.id}`);
+        navigate(`/match/${newMatch.id}`);
       }
     } catch (error) {
       console.error("Error handling game selection:", error);

@@ -6,8 +6,7 @@ import { StatsOverview } from "@/components/portfolio/StatsOverview";
 import { AchievementsList } from "@/components/portfolio/AchievementsList";
 import { MediaGallery } from "@/components/portfolio/MediaGallery";
 import { ProfessionalReviews } from "@/components/portfolio/ProfessionalReviews";
-import { PortfolioGuide } from "@/components/portfolio/PortfolioGuide";
-import { Trophy, Video, FileText, Star, HelpCircle } from "lucide-react";
+import { Trophy, Video, FileText, Star } from "lucide-react";
 
 const PlayerPortfolio = () => {
   const [playerData, setPlayerData] = useState<any>(null);
@@ -56,12 +55,8 @@ const PlayerPortfolio = () => {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="guide" dir="rtl">
+      <Tabs defaultValue="stats" dir="rtl">
         <TabsList className="w-full justify-start mb-4">
-          <TabsTrigger value="guide" className="flex items-center gap-2">
-            <HelpCircle className="h-4 w-4" />
-            מדריך
-          </TabsTrigger>
           <TabsTrigger value="stats" className="flex items-center gap-2">
             <Trophy className="h-4 w-4" />
             סטטיסטיקות
@@ -80,9 +75,6 @@ const PlayerPortfolio = () => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="guide">
-          <PortfolioGuide />
-        </TabsContent>
         <TabsContent value="stats">
           <StatsOverview />
         </TabsContent>

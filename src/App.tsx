@@ -1,41 +1,184 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import Game from "@/pages/Game";
-import Index from "@/pages/Index";
-import Player from "@/pages/Player";
-import Profile from "@/pages/Profile";
-import Dashboard from "@/pages/Dashboard";
-import PreMatchReport from "@/pages/PreMatchReport";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Navigation } from "@/components/Navigation";
+import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import Player from "./pages/Player";
+import Profile from "./pages/Profile";
+import Dashboard from "./pages/Dashboard";
+import Admin from "./pages/Admin";
+import MentalLearning from "./pages/MentalLearning";
+import { PreMatchReport } from "@/components/pre-match/PreMatchReport";
+import { WeeklyScheduleWizard } from "@/components/schedule/WeeklyScheduleWizard";
+import { DailyRoutineForm } from "@/components/daily-routine/DailyRoutineForm";
 import { GameSelection } from "@/components/game/GameSelection";
-import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryDashboard";
-import Schedule from "@/pages/Schedule";
+import { GameTracker } from "@/components/GameTracker";
+import NotificationsManager from "./pages/NotificationsManager";
+import PlayerPortfolio from "./pages/PlayerPortfolio";
 
 const queryClient = new QueryClient();
 
-function App() {
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    checkAuth();
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (isAuthenticated === null) {
+    return <div>טוען...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-background">
-        <div dir="rtl">
-          <Router>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/player" element={<Player />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/pre-match-report" element={<PreMatchReport />} />
-              <Route path="/game" element={<GameSelection />} />
-              <Route path="/game/:id" element={<Game />} />
-              <Route path="/training-summary" element={<TrainingSummaryDashboard />} />
-              <Route path="/schedule" element={<Schedule />} />
-            </Routes>
-          </Router>
+    <>
+      <Navigation />
+      {children}
+    </>
+  );
+};
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <div dir="rtl" className="min-h-screen bg-gray-50">
+        <div className="max-w-md mx-auto min-h-screen bg-white">
           <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <Admin />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/player"
+                element={
+                  <ProtectedRoute>
+                    <Player />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/mental-learning"
+                element={
+                  <ProtectedRoute>
+                    <MentalLearning />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/pre-match-report"
+                element={
+                  <ProtectedRoute>
+                    <PreMatchReport />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/schedule"
+                element={
+                  <ProtectedRoute>
+                    <WeeklyScheduleWizard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/daily-routine"
+                element={
+                  <ProtectedRoute>
+                    <DailyRoutineForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/game-selection"
+                element={
+                  <ProtectedRoute>
+                    <GameSelection />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/match/:id"
+                element={
+                  <ProtectedRoute>
+                    <GameTracker />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute>
+                    <NotificationsManager />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/portfolio"
+                element={
+                  <ProtectedRoute>
+                    <PlayerPortfolio />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/coach" element={<Navigate to="/" replace />} />
+              <Route path="/analyst" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
         </div>
       </div>
-    </QueryClientProvider>
-  );
-}
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;
