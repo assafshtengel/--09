@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate, useParams } from "react-router-dom";
 
 export interface Action {
   id: string;
@@ -78,6 +79,8 @@ interface ActionSelectorProps {
 
 export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { id: matchId } = useParams();
   const [actions, setActions] = useState<Action[]>(getPositionActions(position));
   const [customAction, setCustomAction] = useState("");
 
@@ -132,12 +135,18 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
     }
 
     onSubmit(selectedActions);
+    navigate(`/match/${matchId}/questions`);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-xl mx-auto p-6">
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-right mb-4">בחר פעולות למעקב</h2>
+        <div className="text-right">
+          <h2 className="text-xl font-semibold mb-2">בחר פעולות למעקב</h2>
+          <p className="text-sm text-gray-600">
+            רצוי לבחור 5-7 פעולות (3-4 שאתה מרגיש בהם ביטחון ועוד 1-2 שאתה חושש לבצע)
+          </p>
+        </div>
         
         {actions.map(action => (
           <div key={action.id} className="flex flex-col space-y-2 border rounded-lg p-4">
@@ -184,7 +193,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
       </div>
 
       <Button type="submit" className="w-full">
-        התחל משחק
+        המשך
       </Button>
     </form>
   );

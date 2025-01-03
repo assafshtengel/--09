@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface HavayaSelectorProps {
   value: string;
@@ -35,6 +36,8 @@ const havayaOptions = [
 
 export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { id: matchId } = useParams();
   const [selectedHavayot, setSelectedHavayot] = useState<string[]>([]);
 
   const handleHavayaSelect = (havayaValue: string) => {
@@ -53,9 +56,21 @@ export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
       }
       
       const newSelection = [...prev, havayaValue];
-      onChange(havayaValue); // Update parent component
+      onChange(havayaValue);
       return newSelection;
     });
+  };
+
+  const handleContinue = () => {
+    if (selectedHavayot.length < 3) {
+      toast({
+        title: "בחירה לא מספקת",
+        description: "יש לבחור לפחות 3 הוויות",
+        variant: "destructive",
+      });
+      return;
+    }
+    navigate(`/match/${matchId}/actions`);
   };
 
   return (
@@ -97,11 +112,10 @@ export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
         ))}
       </div>
 
-      <div className="flex justify-between items-center mt-8">
+      <div className="flex justify-end mt-8">
         <Button
-          onClick={() => {/* Navigate to actions page */}}
+          onClick={handleContinue}
           disabled={selectedHavayot.length < 3}
-          className="ml-auto"
         >
           המשך
         </Button>
