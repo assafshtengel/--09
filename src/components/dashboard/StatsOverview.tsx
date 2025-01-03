@@ -3,6 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
 
+interface MatchAction {
+  action_id: string;
+  result: 'success' | 'failure';
+}
+
+interface Match {
+  id: string;
+  match_actions: MatchAction[];
+}
+
 export const StatsOverview = () => {
   const [stats, setStats] = useState({
     totalMatches: 0,
@@ -10,12 +20,14 @@ export const StatsOverview = () => {
     totalActions: 0
   });
 
-  const [actionDistribution, setActionDistribution] = useState<any[]>([]);
+  const [actionDistribution, setActionDistribution] = useState<Array<{name: string, value: number}>>([]);
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   useEffect(() => {
     const fetchStats = async () => {
-      // Fetch overall stats
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data: matches } = await supabase
         .from('matches')
         .select(`
@@ -24,7 +36,8 @@ export const StatsOverview = () => {
             action_id,
             result
           )
-        `);
+        `)
+        .eq('player_id', user.id);
 
       if (matches) {
         const totalMatches = matches.length;
@@ -33,8 +46,8 @@ export const StatsOverview = () => {
 
         const actionCounts: Record<string, number> = {};
 
-        matches.forEach(match => {
-          match.match_actions?.forEach((action: any) => {
+        matches.forEach((match: Match) => {
+          match.match_actions?.forEach((action: MatchAction) => {
             totalActions++;
             if (action.result === 'success') {
               successfulActions++;
