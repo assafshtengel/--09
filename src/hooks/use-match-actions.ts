@@ -19,7 +19,7 @@ export const useMatchActions = (userId: string) => {
           )
         `)
         .eq('player_id', userId)
-        .order('created_at', { ascending: true });
+        .order('match_date', { ascending: true });
 
       if (error) {
         throw error;
@@ -27,13 +27,13 @@ export const useMatchActions = (userId: string) => {
 
       // Flatten the data structure to match the expected format
       const flattenedData = data?.flatMap(match => 
-        match.match_actions.map(action => ({
+        match.match_actions?.map(action => ({
           ...action,
           match: {
             match_date: match.match_date
           }
-        }))
-      ) || [];
+        })) || []
+      );
 
       return flattenedData;
     },
