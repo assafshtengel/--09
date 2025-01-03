@@ -81,7 +81,7 @@ export const GameTracker = () => {
     }
   };
 
-  const saveActionLog = async (actionId: string, result: "success" | "failure", note?: string) => {
+  const saveActionLog = async (action_id: string, result: "success" | "failure", note?: string) => {
     if (!matchId) return;
 
     try {
@@ -90,7 +90,7 @@ export const GameTracker = () => {
         .insert([
           {
             match_id: matchId,
-            action_id: actionId,
+            action_id,
             minute,
             result,
             note
@@ -261,10 +261,10 @@ export const GameTracker = () => {
     setShowSummary(true);
   };
 
-  const logAction = async (actionId: string, result: "success" | "failure", note?: string) => {
-    await saveActionLog(actionId, result, note);
+  const logAction = async (action_id: string, result: "success" | "failure", note?: string) => {
+    await saveActionLog(action_id, result, note);
     setActionLogs(prev => [...prev, {
-      actionId,
+      action_id,
       minute,
       result,
       note
