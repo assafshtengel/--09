@@ -26,6 +26,9 @@ interface NotificationFormData {
   recipients: string[];
 }
 
+type NotificationType = "pre_match" | "weekly" | "mental_tip" | "custom";
+type NotificationStatus = "pending" | "sent" | "failed";
+
 interface Player {
   id: string;
   full_name: string;
@@ -72,8 +75,8 @@ export const NotificationForm = () => {
           scheduled_for: data.scheduledFor.toISOString(),
           condition: data.condition ? JSON.parse(data.condition) : null,
           recipient_id: playerId,
-          type: "custom" as const, // Explicitly type as "custom"
-          status: "pending" as const
+          type: "custom" as NotificationType,
+          status: "pending" as NotificationStatus
         }));
 
         const { error } = await supabase
@@ -91,8 +94,8 @@ export const NotificationForm = () => {
             scheduled_for: data.scheduledFor.toISOString(),
             condition: data.condition ? JSON.parse(data.condition) : null,
             recipient_id: null,
-            type: "custom" as const, // Explicitly type as "custom"
-            status: "pending" as const
+            type: "custom" as NotificationType,
+            status: "pending" as NotificationStatus
           });
         if (error) throw error;
       }
