@@ -1,3 +1,5 @@
+export type GamePhase = "preview" | "playing" | "halftime" | "secondHalf" | "ended";
+
 export interface PreMatchReportActions {
   id: string;
   name: string;
@@ -10,6 +12,12 @@ export interface ActionLog {
   minute: number;
   result: "success" | "failure";
   note?: string;
+}
+
+export interface SubstitutionLog {
+  playerIn: string;
+  playerOut: string;
+  minute: number;
 }
 
 export interface MatchData {
