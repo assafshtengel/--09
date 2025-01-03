@@ -25,9 +25,9 @@ export class ProfileUpdateService {
         phone_number: formData.phoneNumber,
         profile_picture_url: profilePictureUrl,
         club: formData.club,
+        team_year: parseInt(formData.teamYear),
         date_of_birth: formData.dateOfBirth,
         age_category: formData.ageCategory,
-        coach_phone_number: formData.coachPhoneNumber,
       });
 
     if (updateError) {

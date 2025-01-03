@@ -1,30 +1,40 @@
+import { UserRound, Users, LineChart } from "lucide-react";
 import { RoleCard } from "@/components/RoleCard";
-import { Trophy, Activity, ChartBar } from "lucide-react";
 
-export default function Index() {
+const Index = () => {
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6 text-right">ברוכים הבאים</h1>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <RoleCard
-          title="משחקים"
-          description="צפייה וניהול משחקים, מעקב אחר ביצועים ותוצאות"
-          icon={<Trophy className="w-6 h-6" />}
-          path="/game-selection"
-        />
-        <RoleCard
-          title="אימונים"
-          description="תיעוד ומעקב אחר אימונים, התקדמות והערות"
-          icon={<Activity className="w-6 h-6" />}
-          path="/training"
-        />
-        <RoleCard
-          title="סטטיסטיקות"
-          description="ניתוח נתונים, מדדי ביצוע והשוואות"
-          icon={<ChartBar className="w-6 h-6" />}
-          path="/stats"
-        />
+    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
+      <div className="container px-4 py-6 md:py-16">
+        <div className="text-center mb-6 md:mb-16">
+          <h1 className="text-xl md:text-4xl font-bold mb-2 md:mb-4">ברוכים הבאים למערכת הביצועים</h1>
+          <p className="text-base md:text-xl text-muted-foreground">בחר את התפקיד שלך להתחלה</p>
+        </div>
+        
+        <div className="grid grid-cols-1 gap-4 md:gap-6 max-w-sm mx-auto">
+          <RoleCard
+            title="שחקנים"
+            description="הגדר מטרות אישיות, עקוב אחר הביצועים שלך ושפר את המשחק שלך"
+            icon={<UserRound className="w-5 h-5 text-primary" />}
+            path="/player"
+          />
+          
+          <RoleCard
+            title="מאמנים"
+            description="נהל את הקבוצה שלך, הגדר מטרות קבוצתיות ועקוב אחר ההתקדמות"
+            icon={<Users className="w-5 h-5 text-primary" />}
+            path="/coach"
+          />
+          
+          <RoleCard
+            title="אנליסטים"
+            description="נתח ביצועים, צור דוחות מפורטים וזהה מגמות חשובות"
+            icon={<LineChart className="w-5 h-5 text-primary" />}
+            path="/analyst"
+          />
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default Index;

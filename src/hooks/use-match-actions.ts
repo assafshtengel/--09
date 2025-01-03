@@ -1,43 +1,31 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const useMatchActions = (playerId: string) => {
+export const useMatchActions = (userId?: string) => {
   return useQuery({
-    queryKey: ["match-actions", playerId],
+    queryKey: ['matchActions', userId],
     queryFn: async () => {
+      if (!userId) return [];
+      
       const { data, error } = await supabase
-        .from('matches')
+        .from('match_actions')
         .select(`
-          id,
-          match_date,
-          match_actions (
-            id,
-            action_id,
-            minute,
-            result,
-            note
+          *,
+          match:matches!inner(
+            match_date,
+            player_id
           )
         `)
-        .eq('player_id', playerId)
-        .order('match_date', { ascending: false });
+        .eq('match.player_id', userId)
+        .order('created_at', { ascending: true });
 
       if (error) {
         console.error('Error fetching match actions:', error);
         throw error;
       }
 
-      // Flatten the nested structure to match the expected format
-      const flattenedData = data?.flatMap(match => 
-        match.match_actions?.map(action => ({
-          ...action,
-          matches: {
-            match_date: match.match_date
-          }
-        })) || []
-      ) || [];
-
-      return flattenedData;
+      return data;
     },
-    enabled: !!playerId
+    enabled: !!userId
   });
 };

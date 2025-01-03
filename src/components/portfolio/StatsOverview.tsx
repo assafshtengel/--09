@@ -13,67 +13,33 @@ import {
 
 export const StatsOverview = () => {
   const [stats, setStats] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          setIsLoading(false);
-          return;
-        }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-        const { data, error } = await supabase
-          .from("player_stats")
-          .select("*")
-          .eq("player_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+      const { data } = await supabase
+        .from("player_stats")
+        .select("*")
+        .eq("player_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
 
-        if (error) {
-          console.error("Error fetching stats:", error);
-          return;
-        }
-
-        setStats(data);
-      } catch (error) {
-        console.error("Error in fetchStats:", error);
-      } finally {
-        setIsLoading(false);
-      }
+      setStats(data);
     };
 
     fetchStats();
   }, []);
 
   const chartData = stats ? [
-    { name: "דקות משחק", value: stats.minutes_played || 0 },
-    { name: "שערים", value: stats.goals || 0 },
-    { name: "בישולים", value: stats.assists || 0 },
-    { name: "בעיטות למסגרת", value: stats.shots_on_target || 0 },
-    { name: "פעולות הגנתיות", value: stats.defensive_actions || 0 },
+    { name: "דקות משחק", value: stats.minutes_played },
+    { name: "שערים", value: stats.goals },
+    { name: "בישולים", value: stats.assists },
+    { name: "בעיטות למסגרת", value: stats.shots_on_target },
+    { name: "פעולות הגנתיות", value: stats.defensive_actions },
   ] : [];
-
-  if (isLoading) {
-    return <div className="text-center p-4">טוען...</div>;
-  }
-
-  if (!stats) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>סטטיסטיקות עונה נוכחית</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center text-muted-foreground">
-            לא נמצאו נתונים סטטיסטיים
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-6">

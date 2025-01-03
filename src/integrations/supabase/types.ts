@@ -124,44 +124,6 @@ export type Database = {
           },
         ]
       }
-      match_mental_feedback: {
-        Row: {
-          coach_feedback: string | null
-          created_at: string
-          id: string
-          match_id: string
-          mental_coach_feedback: string | null
-          pressure_handling: string | null
-          turning_points: string | null
-        }
-        Insert: {
-          coach_feedback?: string | null
-          created_at?: string
-          id?: string
-          match_id: string
-          mental_coach_feedback?: string | null
-          pressure_handling?: string | null
-          turning_points?: string | null
-        }
-        Update: {
-          coach_feedback?: string | null
-          created_at?: string
-          id?: string
-          match_id?: string
-          mental_coach_feedback?: string | null
-          pressure_handling?: string | null
-          turning_points?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "match_mental_feedback_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "matches"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       match_notes: {
         Row: {
           id: string
@@ -226,51 +188,33 @@ export type Database = {
       matches: {
         Row: {
           created_at: string
-          final_score: string | null
           id: string
           location: string | null
           match_date: string
-          match_type: string | null
           opponent: string | null
           player_id: string
-          player_position: string | null
-          player_role: string | null
           pre_match_report_id: string | null
           status: string
-          team: string | null
-          team_name: string | null
         }
         Insert: {
           created_at?: string
-          final_score?: string | null
           id?: string
           location?: string | null
           match_date: string
-          match_type?: string | null
           opponent?: string | null
           player_id: string
-          player_position?: string | null
-          player_role?: string | null
           pre_match_report_id?: string | null
           status?: string
-          team?: string | null
-          team_name?: string | null
         }
         Update: {
           created_at?: string
-          final_score?: string | null
           id?: string
           location?: string | null
           match_date?: string
-          match_type?: string | null
           opponent?: string | null
           player_id?: string
-          player_position?: string | null
-          player_role?: string | null
           pre_match_report_id?: string | null
           status?: string
-          team?: string | null
-          team_name?: string | null
         }
         Relationships: [
           {
@@ -672,7 +616,6 @@ export type Database = {
         Row: {
           age_category: string | null
           club: string | null
-          coach_email: string | null
           coach_phone_number: string | null
           created_at: string
           date_of_birth: string | null
@@ -690,7 +633,6 @@ export type Database = {
         Insert: {
           age_category?: string | null
           club?: string | null
-          coach_email?: string | null
           coach_phone_number?: string | null
           created_at?: string
           date_of_birth?: string | null
@@ -708,7 +650,6 @@ export type Database = {
         Update: {
           age_category?: string | null
           club?: string | null
-          coach_email?: string | null
           coach_phone_number?: string | null
           created_at?: string
           date_of_birth?: string | null

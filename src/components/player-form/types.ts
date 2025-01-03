@@ -3,10 +3,10 @@ export interface PlayerFormData {
   roles: string[];
   phoneNumber: string;
   club: string;
+  teamYear: string;
   dateOfBirth: string;
   profilePicture?: File;
   ageCategory?: string;
-  coachPhoneNumber?: string;
 }
 
 export interface PlayerFormProps {

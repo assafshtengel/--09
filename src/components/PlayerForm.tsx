@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { FormField } from "./player-form/FormField";
+import { RoleSelector } from "./player-form/RoleSelector";
 import { ProfilePictureUpload } from "./player-form/ProfilePictureUpload";
 import { ProfileUpdateService } from "./player-form/ProfileUpdateService";
 import type { PlayerFormData, PlayerFormProps } from "./player-form/types";
@@ -23,10 +24,11 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
     roles: [],
     phoneNumber: "",
     club: "",
+    teamYear: "",
     dateOfBirth: "",
     ageCategory: "",
-    coachPhoneNumber: "",
   });
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
 
   const ageCategories = [
@@ -45,7 +47,7 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.fullName || !formData.phoneNumber || !formData.club || !formData.dateOfBirth || !formData.ageCategory || !formData.coachPhoneNumber) {
+    if (!formData.fullName || !formData.phoneNumber || !formData.club || !formData.teamYear || !formData.dateOfBirth || !formData.ageCategory || selectedRoles.length === 0) {
       toast({
         title: "שגיאה",
         description: "אנא מלא את כל השדות",
@@ -58,7 +60,7 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
 
     try {
       await ProfileUpdateService.updateProfile(
-        formData,
+        { ...formData, roles: selectedRoles },
         profilePictureUrl
       );
 
@@ -86,6 +88,14 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
     }
   };
 
+  const toggleRole = (role: string) => {
+    setSelectedRoles(prev => 
+      prev.includes(role)
+        ? prev.filter(r => r !== role)
+        : [...prev, role]
+    );
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-md mx-auto p-6">
       <div className="space-y-4">
@@ -95,6 +105,11 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
           value={formData.fullName}
           onChange={(value) => setFormData({ ...formData, fullName: value })}
           placeholder="הכנס את שמך המלא"
+        />
+
+        <RoleSelector
+          selectedRoles={selectedRoles}
+          onToggleRole={toggleRole}
         />
 
         <FormField
@@ -147,11 +162,12 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
         </div>
 
         <FormField
-          id="coachPhoneNumber"
-          label="מספר טלפון של המאמן"
-          value={formData.coachPhoneNumber}
-          onChange={(value) => setFormData({ ...formData, coachPhoneNumber: value })}
-          placeholder="הכנס את מספר הטלפון של המאמן"
+          id="teamYear"
+          label="שנת קבוצה"
+          value={formData.teamYear}
+          onChange={(value) => setFormData({ ...formData, teamYear: value })}
+          type="number"
+          placeholder="הכנס את שנת הקבוצה"
         />
 
         <FormField

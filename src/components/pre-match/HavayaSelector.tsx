@@ -11,49 +11,40 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { Info, Check } from "lucide-react";
+import { Info } from "lucide-react";
 import { motion } from "framer-motion";
-import { Badge } from "@/components/ui/badge";
 
 interface HavayaSelectorProps {
-  value: string[];
-  onChange: (value: string[]) => void;
+  value: string;
+  onChange: (value: string) => void;
 }
 
 const havayaOptions = [
-  { value: "נחוש", description: "לא לוותר גם כשתנאים קשים, תמיד להמשיך ולהאמין במטרה" },
-  { value: "רגוע", description: "לשמור על שלווה פנימית ועל קור רוח, גם ברגעים לחוצים" },
-  { value: "אסיר תודה", description: "להעריך את ההזדמנות לשחק, את הקבוצה, את המאמנים – וכל מה שיש" },
-  { value: "ממוקד", description: "להשאיר בצד הסחות דעת ולהתרכז רק בפעולות ובהחלטות הנדרשות ברגע" },
-  { value: "בוטח", description: "להאמין ביכולותיך ולפעול בהחלטיות ללא ספקות מיותרים" },
-  { value: "אמיץ", description: "להעז, לנסות מהלכים חדשים ולא לחשוש מהפסד או טעות" },
-  { value: "חברותי", description: "לשתף פעולה, לתת כתף ולהעצים את החברים בקבוצה" },
-  { value: "גמיש", description: "לדעת להתאים את עצמך במהירות לשינויים או מצבים בלתי צפויים במשחק" },
-  { value: "עוצמתי", description: "לחוש ביטחון פנימי, כוח והתלהבות שמניעים אותך קדימה" },
-  { value: "אנרגטי", description: "להגיע לתחרות עם מלא מרץ, חיוניות ותשוקה למשחק" },
-  { value: "יצירתי", description: "לחשוב מחוץ לקופסה, להפתיע את היריב ולייצר פתרונות מקוריים במגרש" },
-  { value: "נוכח", description: "להיות 'כאן ועכשיו', בלי לתת לעבר או לעתיד להסיח את דעתך" },
-  { value: "אופטימי", description: "לראות בכל מצב הזדמנות ולהאמין בתוצאה חיובית" },
-  { value: "מדויק", description: "לשים לב לפרטים קטנים, לדייק במסירה, בבעיטה ובכל פעולה שלך" },
-  { value: "סבלני", description: "לדעת לחכות למהלך הנכון ולעיתוי המתאים בלי להיחפז" },
-  { value: "מחוייב", description: "לתת 100% מעצמך לכל פעולה ולשאוף לעמוד ביעדים שהצבת" },
-  { value: "מפרגן", description: "לשבח ולהעריך את התרומה של חברי הקבוצה ושל הצוות המקצועי" },
-  { value: "הוגן", description: "לשחק ביושר, לכבד את החוקים ולגלות רוח ספורטיבית" },
-  { value: "לומד", description: "לנצל כל מצב כהזדמנות ללמידה, לצמוח מהצלחות וגם מטעויות" },
-  { value: "מהנה", description: "לזכור ליהנות מהמשחק ולשחק עם חיוך, גם ברגעים תחרותיים" },
-  { value: "עקבי", description: "לשמור על רמה גבוהה של ביצועים וגישת משחק יציבה לאורך כל זמן המשחק" },
+  { value: "נחישות", description: "מצב של החלטיות ודבקות במטרה" },
+  { value: "אגרסיביות", description: "גישה תקיפה ונחושה למשחק" },
+  { value: "מנהיג", description: "לקיחת אחריות והובלת הקבוצה" },
+  { value: "מחייך", description: "גישה חיובית ואופטימית למשחק" },
+  { value: "אקטיבי", description: "מעורבות מתמדת ויוזמה במשחק" },
+  { value: "לוחם", description: "נכונות להתמודד עם כל אתגר" },
+  { value: "קליל", description: "גישה משוחררת ונינוחה למשחק" },
+  { value: "משוחרר", description: "חופש מלחץ ודאגות" },
+  { value: "רגוע", description: "שליטה עצמית ואיזון נפשי" },
+  { value: "אנרגטי", description: "מלא מרץ ומוטיבציה" },
+  { value: "מאמין", description: "בטחון ביכולות ובהצלחה" },
+  { value: "בטוח", description: "תחושת ביטחון עצמי ויציבות" },
+  { value: "ממוקד", description: "ריכוז מלא במטרות המשחק" },
+  { value: "נלהב", description: "התלהבות והתרגשות חיובית" },
+  { value: "דומיננטי", description: "נוכחות משמעותית במגרש" },
+  { value: "יצירתי", description: "חשיבה מחוץ לקופסה ופתרונות יצירתיים" },
+  { value: "תחרותי", description: "רצון עז להצליח ולנצח" },
+  { value: "סבלני", description: "יכולת להמתין לרגע הנכון" },
+  { value: "חכם", description: "קבלת החלטות נבונה ומחושבת" },
+  { value: "תומך", description: "עזרה ותמיכה בחברי הקבוצה" },
+  { value: "נחוש", description: "מיקוד מוחלט בהשגת המטרות" },
 ];
 
 export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
-
-  const handleSelect = (selectedValue: string) => {
-    if (value.includes(selectedValue)) {
-      onChange(value.filter(v => v !== selectedValue));
-    } else if (value.length < 4) {
-      onChange([...value, selectedValue]);
-    }
-  };
 
   return (
     <motion.div 
@@ -62,69 +53,58 @@ export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <h3 className="text-lg font-semibold">הוויות למשחק</h3>
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-                <Info className="h-4 w-4 text-muted-foreground" />
-              </button>
-            </HoverCardTrigger>
-            <HoverCardContent className="w-96 text-right p-4">
-              <p className="text-sm text-gray-600 mb-4">
-                שחקני העל מחליטים מראש איך הם יגיעו לכל משחק, וכך מבטיחים שהאנרגיה והאופי שלהם לא ישתנו לפי מה שקורה במשחק – אלא הם אלו שיוצרים את מהלך המשחק. זו הכנה מנטלית מנצחת.
-              </p>
-              <p className="text-sm text-gray-600">
-                בחר 3-4 הוויות שתרצה לאמץ במשחק הקרוב.
-              </p>
-            </HoverCardContent>
-          </HoverCard>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {value.map((selected) => (
-            <Badge 
-              key={selected}
-              variant="secondary"
-              className="text-sm py-1 px-3"
-              onClick={() => handleSelect(selected)}
-            >
-              {selected}
-              <button 
-                className="mr-1 hover:text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChange(value.filter(v => v !== selected));
-                }}
-              >
-                ×
-              </button>
-            </Badge>
-          ))}
-        </div>
-
-        <div className="border rounded-lg divide-y">
-          {havayaOptions.map((option) => (
-            <button
-              key={option.value}
-              className={`w-full text-right p-4 hover:bg-gray-50 transition-colors flex items-center justify-between gap-4 ${
-                value.includes(option.value) ? 'bg-primary/5' : ''
-              }`}
-              onClick={() => handleSelect(option.value)}
-              disabled={value.length >= 4 && !value.includes(option.value)}
-            >
-              <div className="flex-1">
-                <div className="font-medium">{option.value}</div>
-                <div className="text-sm text-muted-foreground">{option.description}</div>
-              </div>
-              {value.includes(option.value) && (
-                <Check className="h-4 w-4 text-primary shrink-0" />
-              )}
+      <div className="flex items-center gap-2">
+        <h3 className="text-lg font-semibold">הוויה למשחק</h3>
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+              <Info className="h-4 w-4 text-muted-foreground" />
             </button>
-          ))}
-        </div>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-80 text-right p-4">
+            <p className="text-sm text-gray-600">
+              בחר את ההוויה שתלווה אותך במשחק. ההוויה היא מצב התודעה והגישה שאיתה
+              אתה ניגש למשחק, והיא תשפיע על התנהגותך והביצועים שלך במגרש.
+            </p>
+          </HoverCardContent>
+        </HoverCard>
       </div>
+
+      <Select 
+        value={value} 
+        onValueChange={onChange}
+        onOpenChange={setIsOpen}
+      >
+        <SelectTrigger 
+          className={`w-full transition-all duration-200 ${
+            isOpen ? 'ring-2 ring-primary ring-offset-2' : ''
+          }`}
+        >
+          <SelectValue placeholder="בחר הוויה למשחק" />
+        </SelectTrigger>
+        <SelectContent>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {havayaOptions.map((option) => (
+              <SelectItem 
+                key={option.value} 
+                value={option.value}
+                className="hover:bg-primary/5 transition-colors"
+              >
+                <div className="flex flex-col py-1">
+                  <span className="font-medium">{option.value}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {option.description}
+                  </span>
+                </div>
+              </SelectItem>
+            ))}
+          </motion.div>
+        </SelectContent>
+      </Select>
     </motion.div>
   );
 };
