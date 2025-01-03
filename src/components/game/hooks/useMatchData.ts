@@ -26,7 +26,7 @@ export const useMatchData = (matchId: string) => {
 
       if (matchError) throw matchError;
 
-      // Transform the data to match MatchData type
+      // Transform the data to match our MatchData type
       const transformedMatch: MatchData = {
         ...match,
         pre_match_report: match?.pre_match_report ? {
@@ -39,7 +39,9 @@ export const useMatchData = (matchId: string) => {
               }))
             : [],
           havaya: match.pre_match_report.havaya,
-          questions_answers: match.pre_match_report.questions_answers || {}
+          questions_answers: typeof match.pre_match_report.questions_answers === 'object' 
+            ? match.pre_match_report.questions_answers 
+            : {}
         } : undefined
       };
 
@@ -71,12 +73,7 @@ export const useMatchData = (matchId: string) => {
 
       if (error) throw error;
 
-      return (logs || []).map(log => ({
-        actionId: log.action_id,
-        minute: log.minute,
-        result: log.result as "success" | "failure",
-        note: log.note || undefined
-      }));
+      return logs || [];
     } catch (error) {
       console.error("Error loading action logs:", error);
       toast({

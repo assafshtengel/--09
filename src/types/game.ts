@@ -41,7 +41,6 @@ export interface MatchData {
   opponent?: string;
   location?: string;
   status: string;
-  pre_match_report_id?: string;
   pre_match_report?: {
     actions: PreMatchReportActions[];
     havaya?: string;
