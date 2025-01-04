@@ -3,6 +3,7 @@ import { SummaryHeader } from "./SummaryHeader";
 import { SummaryContent } from "./SummaryContent";
 import { SummaryActions } from "./SummaryActions";
 import { Action } from "@/components/ActionSelector";
+import { ReactNode } from "react";
 
 interface ActionLog {
   actionId: string;
@@ -31,6 +32,8 @@ interface SummaryLayoutProps {
   onSendEmail: () => void;
   onShareSocial: (platform: 'facebook' | 'instagram') => void;
   onScreenshot: () => void;
+  opponent?: string;
+  children?: ReactNode;
 }
 
 export const SummaryLayout = ({
@@ -46,13 +49,16 @@ export const SummaryLayout = ({
   onSubmit,
   onSendEmail,
   onShareSocial,
-  onScreenshot
+  onScreenshot,
+  opponent,
+  children
 }: SummaryLayoutProps) => {
   return (
     <ScrollArea className="h-[80vh] md:h-[600px]">
       <div className="space-y-4 p-2 md:p-4 bg-background">
         <div id="game-summary-content" className="space-y-4">
-          <SummaryHeader gamePhase={gamePhase} matchId={matchId} />
+          <SummaryHeader gamePhase={gamePhase} matchId={matchId} opponent={opponent} />
+          {children}
           <SummaryContent
             actions={actions}
             actionLogs={actionLogs}
