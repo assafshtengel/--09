@@ -13,17 +13,6 @@ import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog } from "@/types/game";
-import { Database } from "@/integrations/supabase/types";
-
-type PreMatchReport = Database['public']['Tables']['pre_match_reports']['Row'];
-type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
-
-interface ActionData {
-  id: string;
-  name: string;
-  goal?: string;
-  isSelected: boolean;
-}
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
@@ -46,11 +35,12 @@ export const GameTracker = () => {
     if (!matchId) return;
 
     try {
+      // Load match data including pre-match report with all its details
       const { data: match, error: matchError } = await supabase
         .from("matches")
         .select(`
           *,
-          pre_match_reports!inner (
+          pre_match_reports (
             *
           )
         `)
@@ -59,47 +49,29 @@ export const GameTracker = () => {
 
       if (matchError) throw matchError;
 
-      console.log("Loaded match data:", match);
+      console.log("Loaded match data:", match); // Debug log
 
       if (match?.pre_match_reports?.actions) {
-        try {
-          const rawActions = match.pre_match_reports.actions;
-          console.log("Raw actions from DB:", rawActions);
+        const rawActions = match.pre_match_reports.actions as unknown;
+        const preMatchActions = rawActions as PreMatchReportActions[];
+        
+        const validActions = preMatchActions
+          .filter(action => 
+            typeof action === 'object' && 
+            action !== null && 
+            'id' in action && 
+            'name' in action && 
+            'isSelected' in action
+          )
+          .map(action => ({
+            id: action.id,
+            name: action.name,
+            goal: action.goal,
+            isSelected: action.isSelected
+          }));
           
-          if (Array.isArray(rawActions)) {
-            const validActions = rawActions
-              .filter((action): action is ActionData => 
-                typeof action === 'object' && 
-                action !== null && 
-                'id' in action && 
-                'name' in action && 
-                'isSelected' in action
-              )
-              .map(action => ({
-                id: action.id,
-                name: action.name,
-                goal: action.goal,
-                isSelected: action.isSelected
-              }));
-              
-            console.log("Parsed actions:", validActions);
-            setActions(validActions);
-          } else {
-            console.error("Actions data is not an array:", rawActions);
-            toast({
-              title: "שגיאה",
-              description: "מבנה הפעולות אינו תקין",
-              variant: "destructive",
-            });
-          }
-        } catch (parseError) {
-          console.error("Error parsing actions:", parseError);
-          toast({
-            title: "שגיאה",
-            description: "שגיאה בטעינת הפעולות",
-            variant: "destructive",
-          });
-        }
+        console.log("Parsed actions:", validActions); // Debug log
+        setActions(validActions);
       }
 
       // Load existing action logs
