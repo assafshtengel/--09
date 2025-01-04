@@ -21,6 +21,7 @@ export const GameSelection = () => {
   const navigate = useNavigate();
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -102,9 +103,13 @@ export const GameSelection = () => {
   };
 
   const handleDeleteGame = async (e: React.MouseEvent, gameId: string, matchId?: string) => {
-    e.stopPropagation(); // Prevent triggering the card click
-
+    e.stopPropagation();
+    
+    if (isDeleting) return; // Prevent multiple deletion attempts
+    
     try {
+      setIsDeleting(true);
+      
       // Delete the match if it exists
       if (matchId) {
         const { error: matchError } = await supabase
@@ -112,7 +117,10 @@ export const GameSelection = () => {
           .delete()
           .eq("id", matchId);
 
-        if (matchError) throw matchError;
+        if (matchError) {
+          console.error("Error deleting match:", matchError);
+          throw matchError;
+        }
       }
 
       // Delete the pre-match report
@@ -121,14 +129,19 @@ export const GameSelection = () => {
         .delete()
         .eq("id", gameId);
 
-      if (reportError) throw reportError;
+      if (reportError) {
+        console.error("Error deleting pre-match report:", reportError);
+        throw reportError;
+      }
 
       // Update local state
-      setGames(games.filter(game => game.id !== gameId));
+      setGames(prevGames => prevGames.filter(game => game.id !== gameId));
       toast.success("המשחק נמחק בהצלחה");
     } catch (error) {
       console.error("Error deleting game:", error);
       toast.error("שגיאה במחיקת המשחק");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -172,6 +185,7 @@ export const GameSelection = () => {
                     game.status === "completed" ? "text-white" : "text-red-500"
                   )}
                   onClick={(e) => handleDeleteGame(e, game.id, game.match_id)}
+                  disabled={isDeleting}
                 >
                   <Trash2 className="h-5 w-5" />
                 </Button>
