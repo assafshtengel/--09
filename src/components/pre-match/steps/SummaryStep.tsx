@@ -47,14 +47,7 @@ export const SummaryStep = ({
         />
         <h2 className="text-xl font-bold">סיכום דוח</h2>
       </div>
-      <PreMatchSummary 
-        matchDetails={matchDetails}
-        actions={actions}
-        answers={answers}
-        havaya={havaya}
-        aiInsights={aiInsights}
-        onFinish={onFinish}
-      />
+      <PreMatchSummary />
     </motion.div>
   );
 };

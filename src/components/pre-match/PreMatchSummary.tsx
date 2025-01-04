@@ -7,6 +7,7 @@ import { Send, Mail, Printer, Camera, Home } from "lucide-react";
 import html2canvas from "html2canvas";
 import { format } from "date-fns";
 import { Action } from "@/components/ActionSelector";
+import { convertJsonArrayToActions } from "@/utils/typeConverters";
 
 export const PreMatchSummary = () => {
   const { matchId } = useParams();
@@ -54,7 +55,7 @@ export const PreMatchSummary = () => {
 
           if (match.pre_match_reports) {
             const report = match.pre_match_reports;
-            setActions(report.actions as Action[]);
+            setActions(convertJsonArrayToActions(report.actions));
             setHavaya(report.havaya || '');
             setAnswers(report.questions_answers as Record<string, string>);
             setAiInsights(report.ai_insights || []);
