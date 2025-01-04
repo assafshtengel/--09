@@ -16,7 +16,14 @@ interface SummaryStepProps {
   onFinish: () => void;
 }
 
-export const SummaryStep = (props: SummaryStepProps) => {
+export const SummaryStep = ({
+  matchDetails,
+  actions,
+  answers,
+  havaya,
+  aiInsights,
+  onFinish,
+}: SummaryStepProps) => {
   return (
     <motion.div
       className="w-full max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg"
@@ -29,16 +36,23 @@ export const SummaryStep = (props: SummaryStepProps) => {
         <ShareResults
           data={{
             title: "סיכום דוח טרום משחק",
-            description: `משחק מול ${props.matchDetails.opponent || "יריב"}`,
+            description: `משחק מול ${matchDetails.opponent || "יריב"}`,
             stats: {
-              "מספר יעדים": props.actions.length,
+              "מספר יעדים": actions.length,
               "רמת מוכנות": 85
             }
           }}
         />
         <h2 className="text-xl font-bold">סיכום דוח</h2>
       </div>
-      <PreMatchSummary {...props} />
+      <PreMatchSummary 
+        matchDetails={matchDetails}
+        actions={actions}
+        answers={answers}
+        havaya={havaya}
+        aiInsights={aiInsights}
+        onFinish={onFinish}
+      />
     </motion.div>
   );
 };

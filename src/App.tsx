@@ -2,7 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { SignIn } from "./pages/SignIn";
 import { SignUp } from "./pages/SignUp";
-import { Dashboard } from "./pages/Dashboard";
+import Dashboard from "./pages/Dashboard";
 import { PreMatchReport } from "./pages/PreMatchReport";
 import { GameTracker } from "./pages/GameTracker";
 import { PreMatchSummary } from "./components/pre-match/PreMatchSummary";
