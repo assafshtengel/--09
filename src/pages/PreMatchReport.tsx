@@ -3,109 +3,133 @@ import { useNavigate } from "react-router-dom";
 import { MatchDetailsForm } from "@/components/pre-match/MatchDetailsForm";
 import { PreMatchCombinedForm } from "@/components/pre-match/PreMatchCombinedForm";
 import { PreMatchSummaryView } from "@/components/pre-match/PreMatchSummaryView";
-import { usePreMatchReport } from "@/components/pre-match/hooks/usePreMatchReport";
-import { useToast } from "@/components/ui/use-toast";
+import { Action } from "@/components/ActionSelector";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
+
+type Step = "details" | "form" | "summary";
+
+// Type guard to check if a Json value is an object with specific properties
+const isActionJson = (json: Json): json is { id: string; name: string; goal?: string | null } => {
+  return typeof json === 'object' && 
+         json !== null && 
+         'id' in json && 
+         'name' in json;
+};
 
 export const PreMatchReport = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const {
-    currentStep,
-    matchDetails,
-    selectedActions,
-    questionsAnswers,
-    havaya,
-    handleMatchDetailsSubmit,
-    handleCombinedFormSubmit,
-    handleFinish,
-    matchId,
-    reportId,
-    setSelectedActions,
-    setQuestionsAnswers,
-    setHavaya
-  } = usePreMatchReport();
+  const [currentStep, setCurrentStep] = useState<Step>("details");
+  const [matchDetails, setMatchDetails] = useState({
+    date: new Date().toISOString().split("T")[0],
+    time: "",
+    position: "forward",
+    opponent: "",
+  });
+  const [selectedActions, setSelectedActions] = useState<Action[]>([]);
+  const [questionsAnswers, setQuestionsAnswers] = useState<Record<string, string>>({});
+  const [havaya, setHavaya] = useState("");
+  const [matchId, setMatchId] = useState<string | null>(null);
+  const [reportId, setReportId] = useState<string | null>(null);
 
-  const savePreMatchReport = async (data: {
-    havaya: string;
-    actions: any[];
-    answers: Record<string, string>;
-  }) => {
+  const handleMatchDetailsSubmit = async (details: any) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user found');
 
-      console.log('Saving pre-match report with data:', { matchId, data });
+      const { data: match, error: matchError } = await supabase
+        .from('matches')
+        .insert({
+          player_id: user.id,
+          match_date: details.date,
+          opponent: details.opponent,
+          player_position: details.position,
+          status: 'preview'
+        })
+        .select()
+        .single();
 
-      // If we don't have a matchId, create a new match first
-      if (!matchId) {
-        const { data: match, error: matchError } = await supabase
-          .from('matches')
-          .insert({
-            player_id: user.id,
-            match_date: matchDetails.date,
-            opponent: matchDetails.opponent,
-            player_position: matchDetails.position,
-            status: 'preview'
-          })
-          .select()
-          .single();
+      if (matchError) throw matchError;
+      
+      setMatchId(match.id);
+      setMatchDetails(details);
+      setCurrentStep("form");
+    } catch (error) {
+      console.error('Error saving match details:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בשמירת פרטי המשחק",
+        variant: "destructive",
+      });
+    }
+  };
 
-        if (matchError) throw matchError;
-        console.log('Created new match:', match);
-      }
+  const handleCombinedFormSubmit = async (data: {
+    havaya: string;
+    actions: Json;
+    answers: Record<string, string>;
+  }) => {
+    if (!matchId) return;
 
-      // Create or update the pre-match report
-      const { data: report, error: reportError } = await supabase
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user found');
+
+      const { data: report, error } = await supabase
         .from('pre_match_reports')
-        .upsert({
-          id: reportId || undefined,
+        .insert({
           player_id: user.id,
           match_date: matchDetails.date,
           match_time: matchDetails.time,
           opponent: matchDetails.opponent,
           actions: data.actions,
           havaya: data.havaya,
-          questions_answers: data.answers,
+          questions_answers: data.answers as Json,
           status: 'completed'
         })
         .select()
         .single();
 
-      if (reportError) throw reportError;
-      console.log('Saved pre-match report:', report);
+      if (error) throw error;
 
-      // Update local state with the new data
+      const { error: updateError } = await supabase
+        .from('matches')
+        .update({ pre_match_report_id: report.id })
+        .eq('id', matchId);
+
+      if (updateError) throw updateError;
+
+      setReportId(report.id);
       setHavaya(data.havaya);
-      setSelectedActions(data.actions);
-      setQuestionsAnswers(data.answers);
-
-      // If we have a matchId, update it with the report id
-      if (matchId) {
-        const { error: updateError } = await supabase
-          .from('matches')
-          .update({ pre_match_report_id: report.id })
-          .eq('id', matchId);
-
-        if (updateError) throw updateError;
+      
+      if (Array.isArray(data.actions)) {
+        const actions = data.actions
+          .filter(isActionJson)
+          .map(action => ({
+            id: action.id,
+            name: action.name,
+            isSelected: true,
+            goal: action.goal || undefined
+          }));
+        setSelectedActions(actions);
       }
-
-      // Call the original handleCombinedFormSubmit to update local state
-      handleCombinedFormSubmit(data);
-
-      toast({
-        title: "נשמר בהצלחה",
-        description: "הדוח נשמר בהצלחה",
-      });
-
+      
+      setQuestionsAnswers(data.answers);
+      setCurrentStep("summary");
     } catch (error) {
-      console.error('Error saving pre-match report:', error);
+      console.error('Error saving form data:', error);
       toast({
         title: "שגיאה",
-        description: "אירעה שגיאה בשמירת הדוח",
+        description: "אירעה שגיאה בשמירת הנתונים",
         variant: "destructive",
       });
     }
+  };
+
+  const handleFinish = () => {
+    navigate('/dashboard');
   };
 
   const renderStep = () => {
@@ -121,7 +145,7 @@ export const PreMatchReport = () => {
         return (
           <PreMatchCombinedForm
             position={matchDetails.position}
-            onSubmit={savePreMatchReport}
+            onSubmit={handleCombinedFormSubmit}
           />
         );
       case "summary":
