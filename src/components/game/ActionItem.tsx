@@ -17,9 +17,9 @@ export const ActionItem = ({ action, onLog }: ActionItemProps) => {
     onLog(action.id, result, note || undefined);
     setNote("");
     
-    // Show undo button for 3 seconds
+    // Show undo button for 1 second
     setShowUndo(result);
-    setTimeout(() => setShowUndo(null), 3000);
+    setTimeout(() => setShowUndo(null), 1000);
   };
 
   const handleUndo = () => {
