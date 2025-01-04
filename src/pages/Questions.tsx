@@ -3,7 +3,7 @@ import { PreMatchQuestionnaire } from "@/components/pre-match/PreMatchQuestionna
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PreMatchSummaryView } from "@/components/pre-match/PreMatchSummaryView";
 import type { Action } from "@/components/ActionSelector";
 import type { Json } from "@/integrations/supabase/types";
@@ -38,6 +38,62 @@ export const Questions = () => {
   const { toast } = useToast();
   const [showSummary, setShowSummary] = useState(false);
   const [summaryData, setSummaryData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMatchData = async () => {
+      if (!matchId) return;
+
+      try {
+        // Get match details and existing pre-match report data
+        const { data: match } = await supabase
+          .from('matches')
+          .select(`
+            match_date,
+            opponent,
+            player_position,
+            pre_match_report_id
+          `)
+          .eq('id', matchId)
+          .single();
+
+        if (!match) {
+          throw new Error('Match not found');
+        }
+
+        // Get existing actions and havaya from pre-match report if it exists
+        if (match.pre_match_report_id) {
+          const { data: existingReport } = await supabase
+            .from('pre_match_reports')
+            .select('actions, havaya')
+            .eq('id', match.pre_match_report_id)
+            .single();
+            
+          if (existingReport) {
+            setSummaryData({
+              matchDate: match.match_date,
+              opponent: match.opponent,
+              position: match.player_position,
+              havaya: existingReport.havaya || '',
+              actions: convertJsonArrayToActions(existingReport.actions),
+              answers: {}
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching match data:', error);
+        toast({
+          title: "שגיאה",
+          description: "אירעה שגיאה בטעינת נתוני המשחק",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMatchData();
+  }, [matchId, toast]);
 
   const handleSubmit = async (answers: Record<string, string>) => {
     if (!matchId) {
@@ -56,37 +112,15 @@ export const Questions = () => {
         throw new Error('No authenticated user found');
       }
 
-      // Get match details and existing pre-match report data
+      // Get match details
       const { data: match } = await supabase
         .from('matches')
-        .select(`
-          match_date,
-          opponent,
-          player_position,
-          pre_match_report_id
-        `)
+        .select('match_date, opponent, player_position, pre_match_report_id')
         .eq('id', matchId)
         .single();
 
       if (!match) {
         throw new Error('Match not found');
-      }
-
-      // Get existing actions and havaya from pre-match report if it exists
-      let existingActions: Action[] = [];
-      let existingHavaya = '';
-      
-      if (match.pre_match_report_id) {
-        const { data: existingReport } = await supabase
-          .from('pre_match_reports')
-          .select('actions, havaya')
-          .eq('id', match.pre_match_report_id)
-          .single();
-          
-        if (existingReport) {
-          existingActions = convertJsonArrayToActions(existingReport.actions);
-          existingHavaya = existingReport.havaya || '';
-        }
       }
 
       let reportId = match.pre_match_report_id;
@@ -100,8 +134,8 @@ export const Questions = () => {
             match_date: match.match_date,
             opponent: match.opponent,
             questions_answers: answers,
-            actions: JSON.stringify(existingActions),
-            havaya: existingHavaya,
+            actions: summaryData?.actions || [],
+            havaya: summaryData?.havaya || '',
             status: 'completed'
           })
           .select()
@@ -119,7 +153,7 @@ export const Questions = () => {
         
         reportId = newReport.id;
       } else {
-        // Update existing report while preserving actions and havaya
+        // Update existing report
         const { error: updateError } = await supabase
           .from('pre_match_reports')
           .update({ 
@@ -131,22 +165,11 @@ export const Questions = () => {
         if (updateError) throw updateError;
       }
 
-      // Get the complete report data for summary
-      const { data: report } = await supabase
-        .from('pre_match_reports')
-        .select('actions, havaya')
-        .eq('id', reportId)
-        .single();
-
-      // Set summary data and show summary view
-      setSummaryData({
-        matchDate: match.match_date,
-        opponent: match.opponent,
-        position: match.player_position,
-        havaya: report?.havaya || '',
-        actions: report?.actions ? convertJsonArrayToActions(report.actions) : [],
+      // Update summary data with answers
+      setSummaryData(prev => ({
+        ...prev,
         answers
-      });
+      }));
       setShowSummary(true);
 
     } catch (error) {
@@ -158,6 +181,10 @@ export const Questions = () => {
       });
     }
   };
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center min-h-screen">טוען...</div>;
+  }
 
   if (showSummary && summaryData) {
     return <PreMatchSummaryView {...summaryData} />;
