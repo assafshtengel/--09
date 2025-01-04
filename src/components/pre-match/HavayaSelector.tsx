@@ -57,12 +57,6 @@ export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
       
       const newSelection = [...prev, havayaValue];
       onChange(havayaValue);
-      
-      // Automatically navigate when 3 or more havayot are selected
-      if (newSelection.length >= 3) {
-        navigate(`/match/${matchId}/questions`);
-      }
-      
       return newSelection;
     });
   };
