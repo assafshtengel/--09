@@ -2,7 +2,6 @@ import { useState } from "react";
 import { HavayaSelector } from "./HavayaSelector";
 import { ActionSelector } from "../ActionSelector";
 import { PreMatchQuestionnaire } from "./PreMatchQuestionnaire";
-import { Button } from "../ui/button";
 import { Action } from "../ActionSelector";
 import { motion } from "framer-motion";
 import { Json } from "@/integrations/supabase/types";
@@ -133,15 +132,6 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
         <section>
           <PreMatchQuestionnaire onSubmit={setAnswers} />
         </section>
-
-        <div className="flex justify-end">
-          <Button 
-            onClick={handleSubmit}
-            disabled={!havaya || selectedActions.length === 0 || Object.keys(answers).length === 0}
-          >
-            המשך לסיכום
-          </Button>
-        </div>
       </div>
     </motion.div>
   );
