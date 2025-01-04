@@ -3,11 +3,15 @@ import { PreMatchQuestionnaire } from "@/components/pre-match/PreMatchQuestionna
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { PreMatchSummaryView } from "@/components/pre-match/PreMatchSummaryView";
 
 export const Questions = () => {
   const { matchId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [showSummary, setShowSummary] = useState(false);
+  const [summaryData, setSummaryData] = useState<any>(null);
 
   const handleSubmit = async (answers: Record<string, string>) => {
     if (!matchId) {
@@ -26,36 +30,51 @@ export const Questions = () => {
         throw new Error('No authenticated user found');
       }
 
-      // First create a pre-match report
-      const { data: report, error: reportError } = await supabase
+      // Get match details
+      const { data: match } = await supabase
+        .from('matches')
+        .select(`
+          match_date,
+          opponent,
+          player_position,
+          pre_match_report_id
+        `)
+        .eq('id', matchId)
+        .single();
+
+      if (!match?.pre_match_report_id) {
+        throw new Error('Pre-match report not found');
+      }
+
+      // Get pre-match report details
+      const { data: report } = await supabase
         .from('pre_match_reports')
-        .insert({
-          player_id: user.id,
-          match_date: new Date().toISOString().split('T')[0],
+        .select('actions, havaya')
+        .eq('id', match.pre_match_report_id)
+        .single();
+
+      // Update the pre-match report with answers
+      const { error: updateError } = await supabase
+        .from('pre_match_reports')
+        .update({ 
           questions_answers: answers,
           status: 'completed'
         })
-        .select()
-        .single();
+        .eq('id', match.pre_match_report_id);
 
-      if (reportError) throw reportError;
+      if (updateError) throw updateError;
 
-      // Then update the match with the pre_match_report_id
-      const { error: matchError } = await supabase
-        .from('matches')
-        .update({ 
-          pre_match_report_id: report.id
-        })
-        .eq('id', matchId);
-
-      if (matchError) throw matchError;
-
-      toast({
-        title: "נשמר בהצלחה",
-        description: "התשובות נשמרו בהצלחה",
+      // Set summary data and show summary view
+      setSummaryData({
+        matchDate: match.match_date,
+        opponent: match.opponent,
+        position: match.player_position,
+        havaya: report.havaya,
+        actions: report.actions,
+        answers
       });
+      setShowSummary(true);
 
-      navigate('/dashboard');
     } catch (error) {
       console.error('Error saving answers:', error);
       toast({
@@ -65,6 +84,10 @@ export const Questions = () => {
       });
     }
   };
+
+  if (showSummary && summaryData) {
+    return <PreMatchSummaryView {...summaryData} />;
+  }
 
   return (
     <div className="container mx-auto p-4">
