@@ -23,8 +23,10 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const handleSubmit = () => {
-    // Validate form
-    if (!selectedActions || (Array.isArray(selectedActions) && selectedActions.length === 0)) {
+    // Check if actions array exists and has items
+    const hasSelectedActions = Array.isArray(selectedActions) && selectedActions.length > 0 && selectedActions.some((action: any) => action.isSelected);
+
+    if (!hasSelectedActions) {
       toast({
         title: "שגיאה",
         description: "אנא בחר לפחות פעולה אחת",
