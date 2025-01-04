@@ -16,6 +16,14 @@ interface PreMatchCombinedFormProps {
   }) => void;
 }
 
+// Type guard to check if a Json value is an object with specific properties
+const isActionJson = (json: Json): json is { id: string; name: string; goal?: string | null } => {
+  return typeof json === 'object' && 
+         json !== null && 
+         'id' in json && 
+         'name' in json;
+};
+
 export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFormProps) => {
   const [havaya, setHavaya] = useState("");
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
@@ -23,17 +31,14 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
 
   const handleActionsSubmit = (actionsJson: Json) => {
     if (Array.isArray(actionsJson)) {
-      const actions = actionsJson.map(action => {
-        if (typeof action === 'object' && action !== null) {
-          return {
-            id: String(action.id || ''),
-            name: String(action.name || ''),
-            isSelected: true,
-            goal: action.goal ? String(action.goal) : undefined
-          };
-        }
-        return null;
-      }).filter((action): action is Action => action !== null);
+      const actions = actionsJson
+        .filter(isActionJson)
+        .map(action => ({
+          id: action.id,
+          name: action.name,
+          isSelected: true,
+          goal: action.goal || undefined
+        }));
       setSelectedActions(actions);
     }
   };

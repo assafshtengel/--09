@@ -10,6 +10,14 @@ import { Json } from "@/integrations/supabase/types";
 
 type Step = "details" | "form" | "summary";
 
+// Type guard to check if a Json value is an object with specific properties
+const isActionJson = (json: Json): json is { id: string; name: string; goal?: string | null } => {
+  return typeof json === 'object' && 
+         json !== null && 
+         'id' in json && 
+         'name' in json;
+};
+
 export const PreMatchReport = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -86,7 +94,6 @@ export const PreMatchReport = () => {
 
       if (error) throw error;
 
-      // Update match with report id
       const { error: updateError } = await supabase
         .from('matches')
         .update({ pre_match_report_id: report.id })
@@ -98,17 +105,14 @@ export const PreMatchReport = () => {
       setHavaya(data.havaya);
       
       if (Array.isArray(data.actions)) {
-        const actions = data.actions.map(action => {
-          if (typeof action === 'object' && action !== null) {
-            return {
-              id: String(action.id || ''),
-              name: String(action.name || ''),
-              isSelected: true,
-              goal: action.goal ? String(action.goal) : undefined
-            };
-          }
-          return null;
-        }).filter((action): action is Action => action !== null);
+        const actions = data.actions
+          .filter(isActionJson)
+          .map(action => ({
+            id: action.id,
+            name: action.name,
+            isSelected: true,
+            goal: action.goal || undefined
+          }));
         setSelectedActions(actions);
       }
       
