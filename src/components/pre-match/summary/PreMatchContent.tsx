@@ -1,5 +1,3 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
-
 interface PreMatchContentProps {
   havaya: string;
   actions: Array<{ name: string; goal?: string }>;
@@ -8,41 +6,35 @@ interface PreMatchContentProps {
 
 export const PreMatchContent = ({ havaya, actions, answers }: PreMatchContentProps) => {
   return (
-    <>
-      {havaya && (
-        <div className="border p-4 rounded-lg">
-          <h3 className="text-lg font-semibold mb-2 text-right">הוויה נבחרת</h3>
-          <p className="text-xl font-bold text-right">{havaya}</p>
+    <div className="space-y-6">
+      <div className="border-t pt-4">
+        <h3 className="text-xl font-semibold mb-2 text-right">הוויה נבחרת</h3>
+        <p className="text-gray-700 text-right">{havaya}</p>
+      </div>
+
+      <div className="border-t pt-4">
+        <h3 className="text-xl font-semibold mb-2 text-right">פעולות נבחרות</h3>
+        <div className="space-y-2">
+          {actions.map((action, index) => (
+            <div key={index} className="flex justify-between items-center bg-gray-50 p-2 rounded">
+              <p className="text-gray-600">{action.goal}</p>
+              <p className="font-medium">{action.name}</p>
+            </div>
+          ))}
         </div>
-      )}
-
-      <div>
-        <h3 className="text-lg font-semibold mb-2 text-right">פעולות ({actions.length})</h3>
-        <ScrollArea className="h-[200px]">
-          <ul className="space-y-2">
-            {actions.map((action, index) => (
-              <li key={index} className="border p-2 rounded text-right">
-                {action.name}
-                {action.goal && <div className="text-sm text-muted-foreground">יעד: {action.goal}</div>}
-              </li>
-            ))}
-          </ul>
-        </ScrollArea>
       </div>
 
-      <div>
-        <h3 className="text-lg font-semibold mb-2 text-right">תשובות לשאלות</h3>
-        <ScrollArea className="h-[200px]">
-          <div className="space-y-4">
-            {Object.entries(answers).map(([question, answer], index) => (
-              <div key={index} className="border p-3 rounded">
-                <p className="font-medium text-right">{question}</p>
-                <p className="text-muted-foreground text-right">{answer}</p>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
+      <div className="border-t pt-4">
+        <h3 className="text-xl font-semibold mb-2 text-right">תשובות לשאלות</h3>
+        <div className="space-y-4">
+          {Object.entries(answers).map(([question, answer], index) => (
+            <div key={index} className="text-right">
+              <p className="font-medium mb-1">{question}</p>
+              <p className="text-gray-600">{answer}</p>
+            </div>
+          ))}
+        </div>
       </div>
-    </>
+    </div>
   );
 };

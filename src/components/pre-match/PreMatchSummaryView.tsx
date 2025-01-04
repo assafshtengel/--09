@@ -122,23 +122,6 @@ export const PreMatchSummaryView = ({
     }
   };
 
-  const shareToSocial = async (platform: 'facebook' | 'instagram') => {
-    const shareText = `דוח טרום משחק - ${format(new Date(matchDate), 'dd/MM/yyyy')}\n` +
-      `${opponent ? `נגד ${opponent}` : ''}\n` +
-      `הוויה נבחרת: ${havaya}\n` +
-      `מספר פעולות: ${actions.length}`;
-    
-    if (platform === 'facebook') {
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${window.location.href}&quote=${encodeURIComponent(shareText)}`, '_blank');
-    } else if (platform === 'instagram') {
-      await navigator.clipboard.writeText(shareText);
-      toast({
-        title: "טקסט הועתק ללוח",
-        description: "כעת תוכל להדביק אותו באינסטגרם",
-      });
-    }
-  };
-
   return (
     <div className="container mx-auto p-4 space-y-8">
       <div id="pre-match-summary" className="space-y-6 bg-white p-6 rounded-lg shadow-lg">
@@ -158,7 +141,7 @@ export const PreMatchSummaryView = ({
         onPrint={handlePrint}
         onScreenshot={handleScreenshot}
         onSendEmail={sendEmail}
-        onShareSocial={shareToSocial}
+        onShareSocial={() => {}}
         onNavigateHome={() => navigate('/dashboard')}
         isSending={isSending}
       />
