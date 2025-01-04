@@ -20,15 +20,35 @@ export const Questions = () => {
     }
 
     try {
-      const { error } = await supabase
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('No authenticated user found');
+      }
+
+      // First create a pre-match report
+      const { data: report, error: reportError } = await supabase
         .from('pre_match_reports')
-        .update({ 
+        .insert({
+          player_id: user.id,
+          match_date: new Date().toISOString().split('T')[0],
           questions_answers: answers,
           status: 'completed'
         })
-        .eq('match_id', matchId);
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (reportError) throw reportError;
+
+      // Then update the match with the pre_match_report_id
+      const { error: matchError } = await supabase
+        .from('matches')
+        .update({ 
+          pre_match_report_id: report.id
+        })
+        .eq('id', matchId);
+
+      if (matchError) throw matchError;
 
       toast({
         title: "נשמר בהצלחה",
