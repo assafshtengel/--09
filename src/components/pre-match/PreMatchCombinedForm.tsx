@@ -30,11 +30,6 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
         answers,
       });
       
-      // Validate that we have answers
-      if (Object.keys(answers).length === 0) {
-        console.warn("No answers provided before submission");
-      }
-
       onSubmit({
         havaya,
         actions: selectedActions,
