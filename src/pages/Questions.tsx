@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { PreMatchSummaryView } from "@/components/pre-match/PreMatchSummaryView";
+import type { Action } from "@/components/ActionSelector";
 
 export const Questions = () => {
   const { matchId } = useParams();
@@ -47,7 +48,7 @@ export const Questions = () => {
       }
 
       // Get existing actions and havaya from pre-match report if it exists
-      let existingActions = [];
+      let existingActions: Action[] = [];
       let existingHavaya = '';
       
       if (match.pre_match_report_id) {
@@ -58,8 +59,11 @@ export const Questions = () => {
           .single();
           
         if (existingReport) {
-          existingActions = existingReport.actions;
-          existingHavaya = existingReport.havaya;
+          // Ensure actions is parsed as an array
+          existingActions = Array.isArray(existingReport.actions) 
+            ? existingReport.actions as Action[]
+            : [];
+          existingHavaya = existingReport.havaya || '';
         }
       }
 
@@ -118,7 +122,7 @@ export const Questions = () => {
         opponent: match.opponent,
         position: match.player_position,
         havaya: report?.havaya || '',
-        actions: report?.actions || [],
+        actions: Array.isArray(report?.actions) ? report.actions as Action[] : [],
         answers
       });
       setShowSummary(true);
