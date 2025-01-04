@@ -43,7 +43,6 @@ export const PreMatchReport = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No authenticated user");
 
-      // Create new pre-match report
       const { data: report, error } = await supabase
         .from("pre_match_reports")
         .insert({
@@ -75,11 +74,20 @@ export const PreMatchReport = () => {
     if (!reportId) return;
 
     try {
+      // Convert Action[] to a JSON-compatible format
+      const jsonActions = actions.map(action => ({
+        id: action.id,
+        name: action.name,
+        goal: action.goal || null,
+        isSelected: action.isSelected
+      }));
+
       const { error } = await supabase
         .from("pre_match_reports")
         .update({
-          actions: actions,
-          havaya: havaya
+          actions: jsonActions,
+          // Join array elements with a comma to store as a single string
+          havaya: havaya.join(',')
         })
         .eq("id", reportId);
 
