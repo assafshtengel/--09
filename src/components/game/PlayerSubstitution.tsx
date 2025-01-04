@@ -75,7 +75,7 @@ export const PlayerSubstitution = ({
           <DialogHeader>
             <DialogTitle>האם יש אפשרות שהשחקן ייכנס בהמשך?</DialogTitle>
             <DialogDescription>
-              בחר את האפשרות המתאימה
+              בחר את האפשרות המתאימה לחילוף השחקן
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2 justify-end">
@@ -95,7 +95,7 @@ export const PlayerSubstitution = ({
           <DialogHeader>
             <DialogTitle>חזרת שחקן למשחק</DialogTitle>
             <DialogDescription>
-              לחץ על הכפתור כאשר השחקן חוזר למשחק
+              לחץ על הכפתור כאשר השחקן מוכן לחזור למשחק
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

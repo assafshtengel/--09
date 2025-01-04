@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
 import { GameScore } from "./GameScore";
@@ -40,9 +40,12 @@ export const HalftimeSummary = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md mx-auto">
+        <DialogTitle className="text-2xl font-bold text-right">סיכום מחצית ראשונה</DialogTitle>
+        <DialogDescription className="sr-only">
+          סיכום ביניים של המחצית הראשונה, כולל ציון, פעולות שבוצעו וטיפ למחצית השנייה
+        </DialogDescription>
+        
         <div className="space-y-6 p-4">
-          <h2 className="text-2xl font-bold text-right">סיכום מחצית ראשונה</h2>
-          
           <div className="p-4 border rounded-lg bg-primary/10">
             <h3 className="text-xl font-semibold text-right mb-2">ציון</h3>
             <GameScore actionLogs={actionLogs} />
