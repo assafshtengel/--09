@@ -16,6 +16,14 @@ import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog } from "@/
 import { Database } from "@/integrations/supabase/types";
 
 type PreMatchReport = Database['public']['Tables']['pre_match_reports']['Row'];
+type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
+
+interface ActionData {
+  id: string;
+  name: string;
+  goal?: string;
+  isSelected: boolean;
+}
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
@@ -58,10 +66,9 @@ export const GameTracker = () => {
           const rawActions = match.pre_match_reports.actions;
           console.log("Raw actions from DB:", rawActions);
           
-          // Type guard to check if rawActions is an array
           if (Array.isArray(rawActions)) {
             const validActions = rawActions
-              .filter((action): action is PreMatchReportActions => 
+              .filter((action): action is ActionData => 
                 typeof action === 'object' && 
                 action !== null && 
                 'id' in action && 
