@@ -6,6 +6,31 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { PreMatchSummaryView } from "@/components/pre-match/PreMatchSummaryView";
 import type { Action } from "@/components/ActionSelector";
+import type { Json } from "@/integrations/supabase/types";
+
+// Helper function to convert Json to Action type
+const convertJsonToAction = (json: Json): Action | null => {
+  if (typeof json === 'object' && json !== null && 
+      'id' in json && 
+      'name' in json && 
+      'isSelected' in json) {
+    return {
+      id: String(json.id),
+      name: String(json.name),
+      isSelected: Boolean(json.isSelected),
+      goal: 'goal' in json ? String(json.goal) : undefined
+    };
+  }
+  return null;
+};
+
+// Helper function to convert Json[] to Action[]
+const convertJsonArrayToActions = (jsonArray: Json): Action[] => {
+  if (!Array.isArray(jsonArray)) return [];
+  return jsonArray
+    .map(convertJsonToAction)
+    .filter((action): action is Action => action !== null);
+};
 
 export const Questions = () => {
   const { matchId } = useParams();
@@ -59,10 +84,7 @@ export const Questions = () => {
           .single();
           
         if (existingReport) {
-          // Ensure actions is parsed as an array
-          existingActions = Array.isArray(existingReport.actions) 
-            ? existingReport.actions as Action[]
-            : [];
+          existingActions = convertJsonArrayToActions(existingReport.actions);
           existingHavaya = existingReport.havaya || '';
         }
       }
@@ -78,7 +100,7 @@ export const Questions = () => {
             match_date: match.match_date,
             opponent: match.opponent,
             questions_answers: answers,
-            actions: existingActions,
+            actions: JSON.stringify(existingActions),
             havaya: existingHavaya,
             status: 'completed'
           })
@@ -122,7 +144,7 @@ export const Questions = () => {
         opponent: match.opponent,
         position: match.player_position,
         havaya: report?.havaya || '',
-        actions: Array.isArray(report?.actions) ? report.actions as Action[] : [],
+        actions: report?.actions ? convertJsonArrayToActions(report.actions) : [],
         answers
       });
       setShowSummary(true);
