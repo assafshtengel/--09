@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 export interface Action {
   id: string;
@@ -75,7 +76,7 @@ const getPositionActions = (position: string): Action[] => {
 
 interface ActionSelectorProps {
   position: string;
-  onSubmit: (actions: Action[]) => void;
+  onSubmit: (actions: Json) => void;
 }
 
 export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
@@ -135,8 +136,15 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
     }
 
     try {
+      // Convert actions to JSON-compatible format
+      const jsonActions = selectedActions.map(({ id, name, goal }) => ({
+        id,
+        name,
+        goal: goal || null
+      })) as Json;
+
       // First submit the actions
-      await onSubmit(selectedActions);
+      await onSubmit(jsonActions);
       
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
