@@ -5,8 +5,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { PreMatchReport } from "@/pages/PreMatchReport";
 import { PreMatchSummary } from "@/components/pre-match/PreMatchSummary";
 import Dashboard from "@/pages/Dashboard";
-import SignIn from "@/pages/SignIn";
-import SignUp from "@/pages/SignUp";
+import { SignIn } from "@/pages/SignIn";
+import { SignUp } from "@/pages/SignUp";
 import "./App.css";
 
 function App() {
