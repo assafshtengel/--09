@@ -4,7 +4,6 @@ import { ActionSelector } from "../ActionSelector";
 import { PreMatchQuestionnaire } from "./PreMatchQuestionnaire";
 import { motion } from "framer-motion";
 import { Json } from "@/integrations/supabase/types";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "../ui/button";
 
 interface PreMatchCombinedFormProps {
@@ -17,47 +16,16 @@ interface PreMatchCombinedFormProps {
 }
 
 export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFormProps) => {
-  const { toast } = useToast();
   const [havaya, setHavaya] = useState("");
   const [selectedActions, setSelectedActions] = useState<Json>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const handleSubmit = () => {
-    // Check if actions array exists and has items
-    const hasSelectedActions = Array.isArray(selectedActions) && selectedActions.length > 0 && selectedActions.some((action: any) => action.isSelected);
-
-    if (!hasSelectedActions) {
-      toast({
-        title: "שגיאה",
-        description: "אנא בחר לפחות פעולה אחת",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (Object.keys(answers).length === 0) {
-      toast({
-        title: "שגיאה",
-        description: "אנא ענה על השאלות",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Submit form data
     onSubmit({
       havaya,
       actions: selectedActions,
-      answers
+      answers,
     });
-  };
-
-  const handleActionsSubmit = (actions: Json) => {
-    setSelectedActions(actions);
-  };
-
-  const handleQuestionsSubmit = (questionAnswers: Record<string, string>) => {
-    setAnswers(questionAnswers);
   };
 
   return (
@@ -75,12 +43,12 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
         <section>
           <ActionSelector
             position={position}
-            onSubmit={handleActionsSubmit}
+            onSubmit={setSelectedActions}
           />
         </section>
 
         <section>
-          <PreMatchQuestionnaire onSubmit={handleQuestionsSubmit} />
+          <PreMatchQuestionnaire onSubmit={setAnswers} />
         </section>
 
         <div className="flex justify-center mt-8">
