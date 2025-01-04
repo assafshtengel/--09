@@ -40,7 +40,7 @@ export const GameTracker = () => {
         .from("matches")
         .select(`
           *,
-          pre_match_reports (
+          pre_match_reports!inner (
             *
           )
         `)
@@ -49,29 +49,41 @@ export const GameTracker = () => {
 
       if (matchError) throw matchError;
 
-      console.log("Loaded match data:", match); // Debug log
+      console.log("Loaded match data:", match);
 
       if (match?.pre_match_reports?.actions) {
-        const rawActions = match.pre_match_reports.actions as unknown;
-        const preMatchActions = rawActions as PreMatchReportActions[];
-        
-        const validActions = preMatchActions
-          .filter(action => 
-            typeof action === 'object' && 
-            action !== null && 
-            'id' in action && 
-            'name' in action && 
-            'isSelected' in action
-          )
-          .map(action => ({
-            id: action.id,
-            name: action.name,
-            goal: action.goal,
-            isSelected: action.isSelected
-          }));
+        try {
+          const rawActions = match.pre_match_reports.actions;
+          console.log("Raw actions from DB:", rawActions);
           
-        console.log("Parsed actions:", validActions); // Debug log
-        setActions(validActions);
+          // Ensure rawActions is an array
+          const actionsArray = Array.isArray(rawActions) ? rawActions : [];
+          
+          const validActions = actionsArray
+            .filter(action => 
+              typeof action === 'object' && 
+              action !== null && 
+              'id' in action && 
+              'name' in action && 
+              'isSelected' in action
+            )
+            .map(action => ({
+              id: action.id,
+              name: action.name,
+              goal: action.goal,
+              isSelected: action.isSelected
+            }));
+            
+          console.log("Parsed actions:", validActions);
+          setActions(validActions);
+        } catch (parseError) {
+          console.error("Error parsing actions:", parseError);
+          toast({
+            title: "שגיאה",
+            description: "שגיאה בטעינת הפעולות",
+            variant: "destructive",
+          });
+        }
       }
 
       // Load existing action logs
