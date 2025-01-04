@@ -6,13 +6,15 @@ import { PreMatchSummary } from "./PreMatchSummary";
 import { PreMatchDashboard } from "./PreMatchDashboard";
 import { SocialShareGoals } from "./SocialShareGoals";
 import { HavayaSelector } from "./HavayaSelector";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
-import { ChevronRight, ChevronLeft, Save } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const PreMatchReport = () => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<
     "dashboard" | "details" | "actions" | "questions" | "summary"
   >("dashboard");
@@ -23,7 +25,7 @@ export const PreMatchReport = () => {
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
   const [questionsAnswers, setQuestionsAnswers] = useState({});
   const [havaya, setHavaya] = useState<string[]>([]);
-  const { toast } = useToast();
+  const [reportId, setReportId] = useState<string | null>(null);
 
   const steps = [
     { id: "dashboard", label: "התחלה" },
@@ -36,38 +38,102 @@ export const PreMatchReport = () => {
   const currentStepIndex = steps.findIndex(step => step.id === currentStep);
   const progress = ((currentStepIndex + 1) / steps.length) * 100;
 
-  const handleMatchDetailsSubmit = (details) => {
-    setMatchDetails(details);
-    setCurrentStep("actions");
-    toast({
-      title: "פרטי המשחק נשמרו",
-      description: "הבה נמשיך להגדרת היעדים",
-    });
+  const handleMatchDetailsSubmit = async (details) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No authenticated user");
+
+      // Create new pre-match report
+      const { data: report, error } = await supabase
+        .from("pre_match_reports")
+        .insert({
+          player_id: user.id,
+          match_date: details.date,
+          match_time: details.time,
+          opponent: details.opponent,
+          status: "draft",
+          actions: [],
+          questions_answers: []
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setReportId(report.id);
+      setMatchDetails(details);
+      setCurrentStep("actions");
+      
+      toast.success("פרטי המשחק נשמרו");
+    } catch (error) {
+      console.error("Error saving match details:", error);
+      toast.error("שגיאה בשמירת פרטי המשחק");
+    }
   };
 
-  const handleActionsSubmit = (actions: Action[]) => {
-    setSelectedActions(actions);
-    setCurrentStep("questions");
-    toast({
-      title: "היעדים נשמרו",
-      description: "הבה נמשיך לשאלון",
-    });
+  const handleActionsSubmit = async (actions: Action[]) => {
+    if (!reportId) return;
+
+    try {
+      const { error } = await supabase
+        .from("pre_match_reports")
+        .update({
+          actions: actions,
+          havaya: havaya
+        })
+        .eq("id", reportId);
+
+      if (error) throw error;
+
+      setSelectedActions(actions);
+      setCurrentStep("questions");
+      toast.success("היעדים נשמרו");
+    } catch (error) {
+      console.error("Error saving actions:", error);
+      toast.error("שגיאה בשמירת היעדים");
+    }
   };
 
-  const handleQuestionsSubmit = (answers: Record<string, string>) => {
-    setQuestionsAnswers(answers);
-    setCurrentStep("summary");
-    toast({
-      title: "תשובותיך נשמרו",
-      description: "הבה נסכם את הדוח",
-    });
+  const handleQuestionsSubmit = async (answers: Record<string, string>) => {
+    if (!reportId) return;
+
+    try {
+      const { error } = await supabase
+        .from("pre_match_reports")
+        .update({
+          questions_answers: answers,
+          status: "completed"
+        })
+        .eq("id", reportId);
+
+      if (error) throw error;
+
+      setQuestionsAnswers(answers);
+      setCurrentStep("summary");
+      toast.success("תשובותיך נשמרו");
+    } catch (error) {
+      console.error("Error saving answers:", error);
+      toast.error("שגיאה בשמירת התשובות");
+    }
   };
 
   const handleFinalSubmit = async () => {
-    toast({
-      title: "הדוח נשלח בהצלחה",
-      description: "תודה על השיתוף!",
-    });
+    if (!reportId) return;
+
+    try {
+      const { error } = await supabase
+        .from("pre_match_reports")
+        .update({ status: "completed" })
+        .eq("id", reportId);
+
+      if (error) throw error;
+
+      toast.success("הדוח נשמר בהצלחה");
+      navigate("/game-selection");
+    } catch (error) {
+      console.error("Error completing report:", error);
+      toast.error("שגיאה בשמירת הדוח");
+    }
   };
 
   const renderStep = () => {
