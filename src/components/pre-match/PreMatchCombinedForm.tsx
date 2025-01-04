@@ -100,7 +100,7 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
       if (error) throw error;
 
       // Navigate to summary
-      navigate(`/match/${match.id}/summary`);
+      navigate(`/pre-match-summary/${match.id}`);
     } catch (error) {
       console.error('Error:', error);
       toast({
