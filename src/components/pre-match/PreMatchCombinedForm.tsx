@@ -24,6 +24,12 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
 
   const handleSubmit = () => {
     try {
+      console.log("Submitting form with data:", {
+        havaya,
+        actions: selectedActions,
+        answers,
+      });
+      
       onSubmit({
         havaya,
         actions: selectedActions,

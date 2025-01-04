@@ -61,6 +61,8 @@ export const usePreMatchReport = () => {
     if (!matchId) return;
 
     try {
+      console.log("Handling combined form submit with data:", data);
+      
       setHavaya(data.havaya);
       
       if (Array.isArray(data.actions)) {
