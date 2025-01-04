@@ -5,12 +5,13 @@ import { PreMatchQuestionnaire } from "./PreMatchQuestionnaire";
 import { Button } from "../ui/button";
 import { Action } from "../ActionSelector";
 import { motion } from "framer-motion";
+import { Json } from "@/integrations/supabase/types";
 
 interface PreMatchCombinedFormProps {
   position: string;
   onSubmit: (data: {
     havaya: string;
-    actions: Action[];
+    actions: Json;
     answers: Record<string, string>;
   }) => void;
 }
@@ -20,10 +21,28 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
+  const handleActionsSubmit = (actionsJson: Json) => {
+    // Convert Json back to Action[] for local state
+    const actions = Array.isArray(actionsJson) ? actionsJson.map(action => ({
+      id: String(action.id),
+      name: String(action.name),
+      isSelected: true,
+      goal: action.goal ? String(action.goal) : undefined
+    })) : [];
+    setSelectedActions(actions);
+  };
+
   const handleSubmit = () => {
+    // Convert selectedActions back to Json format for final submission
+    const actionsJson = selectedActions.map(({ id, name, goal }) => ({
+      id,
+      name,
+      goal: goal || null
+    })) as Json;
+
     onSubmit({
       havaya,
-      actions: selectedActions,
+      actions: actionsJson,
       answers
     });
   };
@@ -43,7 +62,7 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
         <section>
           <ActionSelector
             position={position}
-            onSubmit={setSelectedActions}
+            onSubmit={handleActionsSubmit}
           />
         </section>
 

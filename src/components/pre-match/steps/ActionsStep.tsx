@@ -3,13 +3,14 @@ import { ActionSelector } from "@/components/ActionSelector";
 import { SocialShareGoals } from "../SocialShareGoals";
 import { motion } from "framer-motion";
 import { Action } from "@/components/ActionSelector";
+import { Json } from "@/integrations/supabase/types";
 
 interface ActionsStepProps {
   position: string;
   havaya: string;
   selectedActions: Action[];
   onHavayaChange: (value: string) => void;
-  onActionsSubmit: (actions: Action[]) => void;
+  onActionsSubmit: (actions: Json) => void;
 }
 
 export const ActionsStep = ({
