@@ -6,37 +6,34 @@ import { useToast } from "@/hooks/use-toast";
 import { Send, Mail, Printer, Camera, Home } from "lucide-react";
 import html2canvas from "html2canvas";
 import { format } from "date-fns";
+import { Action } from "@/components/ActionSelector";
 
-export const PreMatchSummary = () => {
-  const { matchId } = useParams();
+interface MatchDetails {
+  date: string;
+  time?: string;
+  opponent?: string;
+}
+
+interface PreMatchSummaryProps {
+  matchDetails: MatchDetails;
+  actions: Action[];
+  answers: Record<string, string>;
+  havaya: string;
+  aiInsights: string[];
+  onFinish: () => void;
+}
+
+export const PreMatchSummary = ({
+  matchDetails,
+  actions,
+  answers,
+  havaya,
+  aiInsights,
+  onFinish
+}: PreMatchSummaryProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSending, setIsSending] = useState(false);
-  const [matchData, setMatchData] = useState<any>(null);
-
-  useEffect(() => {
-    const fetchMatchData = async () => {
-      if (!matchId) return;
-
-      const { data, error } = await supabase
-        .from('matches')
-        .select(`
-          *,
-          pre_match_reports (*)
-        `)
-        .eq('id', matchId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching match data:', error);
-        return;
-      }
-
-      setMatchData(data);
-    };
-
-    fetchMatchData();
-  }, [matchId]);
 
   const handlePrint = () => {
     window.print();
@@ -98,7 +95,7 @@ export const PreMatchSummary = () => {
       const { error } = await supabase.functions.invoke('send-pre-match-report', {
         body: {
           to: [emailTo],
-          subject: `דוח טרום משחק - ${format(new Date(), 'dd/MM/yyyy')}`,
+          subject: `דוח טרום משחק - ${format(new Date(matchDetails.date), 'dd/MM/yyyy')}`,
           html: htmlContent,
         },
       });
@@ -120,32 +117,28 @@ export const PreMatchSummary = () => {
     }
   };
 
-  if (!matchData) {
-    return <div>טוען...</div>;
-  }
-
   return (
     <div className="container mx-auto p-4 space-y-8">
       <div id="pre-match-summary" className="space-y-6 bg-white p-6 rounded-lg shadow-lg">
         <div className="border-b pb-4">
           <h2 className="text-2xl font-bold text-right">דוח טרום משחק</h2>
           <p className="text-muted-foreground text-right">
-            {format(new Date(matchData.match_date), 'dd/MM/yyyy')}
-            {matchData.opponent && ` | נגד: ${matchData.opponent}`}
+            {format(new Date(matchDetails.date), 'dd/MM/yyyy')}
+            {matchDetails.opponent && ` | נגד: ${matchDetails.opponent}`}
           </p>
         </div>
 
-        {matchData.pre_match_reports?.havaya && (
+        {havaya && (
           <div className="border p-4 rounded-lg">
             <h3 className="text-lg font-semibold mb-2 text-right">הוויה נבחרת</h3>
-            <p className="text-xl font-bold text-right">{matchData.pre_match_reports.havaya}</p>
+            <p className="text-xl font-bold text-right">{havaya}</p>
           </div>
         )}
 
         <div>
           <h3 className="text-lg font-semibold mb-2 text-right">פעולות</h3>
           <div className="space-y-2">
-            {matchData.pre_match_reports?.actions?.map((action: any, index: number) => (
+            {actions.map((action, index) => (
               <div key={index} className="border p-2 rounded text-right">
                 {action.name}
                 {action.goal && <div className="text-sm text-muted-foreground">יעד: {action.goal}</div>}
@@ -157,7 +150,7 @@ export const PreMatchSummary = () => {
         <div>
           <h3 className="text-lg font-semibold mb-2 text-right">תשובות לשאלות</h3>
           <div className="space-y-4">
-            {Object.entries(matchData.pre_match_reports?.questions_answers || {}).map(([question, answer]: [string, any], index: number) => (
+            {Object.entries(answers).map(([question, answer], index) => (
               <div key={index} className="border p-3 rounded">
                 <p className="font-medium text-right">{question}</p>
                 <p className="text-muted-foreground text-right">{answer}</p>
@@ -195,7 +188,7 @@ export const PreMatchSummary = () => {
           שלח למייל שלי
         </Button>
         <Button
-          onClick={() => navigate('/dashboard')}
+          onClick={onFinish}
           variant="outline"
           className="gap-2"
         >

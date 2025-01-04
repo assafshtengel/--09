@@ -3,12 +3,14 @@ import { ShareResults } from "../../social/ShareResults";
 import { motion } from "framer-motion";
 import { Action } from "@/components/ActionSelector";
 
+interface MatchDetails {
+  date: string;
+  time?: string;
+  opponent?: string;
+}
+
 interface SummaryStepProps {
-  matchDetails: {
-    date: string;
-    time?: string;
-    opponent?: string;
-  };
+  matchDetails: MatchDetails;
   actions: Action[];
   answers: Record<string, string>;
   havaya: string;
