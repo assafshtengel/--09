@@ -175,6 +175,28 @@ export const PreMatchSummary = ({
         )}
       </div>
 
+      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-6">
+        <h3 className="text-lg font-semibold text-blue-800 mb-3">למה כדאי לשתף את הדוח באינסטגרם?</h3>
+        <ul className="space-y-2 text-blue-700">
+          <li className="flex items-start gap-2">
+            <span className="font-bold ml-2">1.</span>
+            <span>מעקב אחר ההתקדמות - שיתוף היעדים והמטרות שלך יעזור לך לעקוב אחר ההתפתחות המקצועית שלך לאורך זמן</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="font-bold ml-2">2.</span>
+            <span>מחויבות ואחריות - פרסום היעדים שלך ברבים יגביר את המחויבות שלך להשיג אותם</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="font-bold ml-2">3.</span>
+            <span>השראה לאחרים - הסיפור שלך יכול להוות השראה לשחקנים אחרים ולעודד אותם להציב יעדים משלהם</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="font-bold ml-2">4.</span>
+            <span>בניית מותג אישי - שיתוף ההתקדמות המקצועית שלך יעזור לך לבנות נוכחות דיגיטלית חיובית כספורטאי</span>
+          </li>
+        </ul>
+      </div>
+
       <div className="flex flex-wrap gap-4 justify-end print:hidden">
         <Button onClick={() => sendEmail('coach')} variant="outline" className="flex items-center gap-2">
           <Mail className="h-4 w-4" />
