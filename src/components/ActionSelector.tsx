@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate, useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Action {
   id: string;
@@ -121,7 +122,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
     setCustomAction("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const selectedActions = actions.filter(action => action.isSelected);
     
@@ -134,9 +135,34 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
       return;
     }
 
-    onSubmit(selectedActions);
-    // Navigate to the questions page after submitting actions
-    navigate(`/match/${matchId}/questions`);
+    try {
+      // First submit the actions
+      await onSubmit(selectedActions);
+      
+      // Then create a new match record to get the match ID
+      const { data: match, error } = await supabase
+        .from('matches')
+        .insert([
+          { 
+            player_id: (await supabase.auth.getUser()).data.user?.id,
+            status: 'preview'
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Navigate to questions with the new match ID
+      navigate(`/match/${match.id}/questions`);
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בשמירת הפעולות",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

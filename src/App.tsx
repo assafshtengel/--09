@@ -19,6 +19,7 @@ import { Settings } from "@/pages/Settings";
 import Admin from "@/pages/Admin";
 import Profile from "@/pages/Profile";
 import { PreMatchReport } from "@/pages/PreMatchReport";
+import { Questions } from "@/pages/Questions"; // Add this import
 
 function App() {
   return (
@@ -41,6 +42,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Match />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/match/:matchId/questions"
+            element={
+              <ProtectedRoute>
+                <Questions />
               </ProtectedRoute>
             }
           />
