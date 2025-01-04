@@ -2,7 +2,6 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
 import { GameScore } from "./GameScore";
-import { GameStats } from "./GameStats";
 
 interface HalftimeSummaryProps {
   isOpen: boolean;
@@ -40,7 +39,6 @@ export const HalftimeSummary = ({
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-right">סיכום מחצית ראשונה</h2>
           
-          <GameStats actions={actions} actionLogs={actionLogs} />
           <GameScore actionLogs={actionLogs} />
           
           <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
