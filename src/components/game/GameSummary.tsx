@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Action } from "@/components/ActionSelector";
 import { SummaryLayout } from "./summary/SummaryLayout";
+import { StatisticsSection } from "./summary/StatisticsSection";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import html2canvas from "html2canvas";
@@ -28,6 +29,7 @@ interface GameSummaryProps {
   gamePhase?: "halftime" | "ended";
   onContinueGame?: () => void;
   matchId?: string;
+  opponent?: string;
 }
 
 export const GameSummary = ({ 
@@ -38,7 +40,8 @@ export const GameSummary = ({
   onClose,
   gamePhase = "ended",
   onContinueGame,
-  matchId
+  matchId,
+  opponent
 }: GameSummaryProps) => {
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const { toast } = useToast();
@@ -181,6 +184,9 @@ export const GameSummary = ({
       onSendEmail={sendEmail}
       onShareSocial={shareToSocial}
       onScreenshot={takeScreenshot}
-    />
+      opponent={opponent}
+    >
+      <StatisticsSection actions={actions} actionLogs={actionLogs} />
+    </SummaryLayout>
   );
 };

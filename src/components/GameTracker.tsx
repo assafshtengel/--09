@@ -27,6 +27,9 @@ export const GameTracker = () => {
   const [generalNotes, setGeneralNotes] = useState<Array<{ text: string; minute: number }>>([]);
   const [substitutions, setSubstitutions] = useState<SubstitutionLog[]>([]);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [matchDetails, setMatchDetails] = useState<{
+    opponent?: string;
+  }>({});
 
   useEffect(() => {
     loadMatchData();
@@ -36,7 +39,6 @@ export const GameTracker = () => {
     if (!matchId) return;
 
     try {
-      // Load match data including pre-match report with all its details
       const { data: match, error: matchError } = await supabase
         .from("matches")
         .select(`
@@ -50,7 +52,9 @@ export const GameTracker = () => {
 
       if (matchError) throw matchError;
 
-      console.log("Loaded match data:", match); // Debug log
+      setMatchDetails({
+        opponent: match.opponent
+      });
 
       if (match?.pre_match_reports?.actions) {
         const rawActions = match.pre_match_reports.actions as unknown;
@@ -410,6 +414,7 @@ export const GameTracker = () => {
                 onClose={() => setShowSummary(false)}
                 gamePhase="ended"
                 matchId={matchId}
+                opponent={matchDetails.opponent}
               />
             </DialogContent>
           </Dialog>
