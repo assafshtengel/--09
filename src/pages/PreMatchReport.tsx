@@ -1,15 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MatchDetailsStep } from "@/components/pre-match/steps/MatchDetailsStep";
-import { ActionsStep } from "@/components/pre-match/steps/ActionsStep";
-import { QuestionsStep } from "@/components/pre-match/steps/QuestionsStep";
-import { SummaryStep } from "@/components/pre-match/steps/SummaryStep";
+import { MatchDetailsForm } from "@/components/pre-match/MatchDetailsForm";
+import { PreMatchCombinedForm } from "@/components/pre-match/PreMatchCombinedForm";
+import { PreMatchSummaryView } from "@/components/pre-match/PreMatchSummaryView";
 import { Action } from "@/components/ActionSelector";
 import { useToast } from "@/hooks/use-toast";
-import { createOrUpdatePreMatchReport, updatePreMatchReportAnswers } from "@/services/pre-match-report.service";
 import { supabase } from "@/integrations/supabase/client";
 
-type Step = "details" | "actions" | "questions" | "summary";
+type Step = "details" | "form" | "summary";
 
 export const PreMatchReport = () => {
   const navigate = useNavigate();
@@ -17,6 +15,7 @@ export const PreMatchReport = () => {
   const [currentStep, setCurrentStep] = useState<Step>("details");
   const [matchDetails, setMatchDetails] = useState({
     date: new Date().toISOString().split("T")[0],
+    time: "",
     position: "forward",
     opponent: "",
   });
@@ -31,7 +30,6 @@ export const PreMatchReport = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user found');
 
-      // Create a new match record
       const { data: match, error: matchError } = await supabase
         .from('matches')
         .insert({
@@ -48,7 +46,7 @@ export const PreMatchReport = () => {
       
       setMatchId(match.id);
       setMatchDetails(details);
-      setCurrentStep("actions");
+      setCurrentStep("form");
     } catch (error) {
       console.error('Error saving match details:', error);
       toast({
@@ -59,102 +57,86 @@ export const PreMatchReport = () => {
     }
   };
 
-  const handleActionsSubmit = async (actions: Action[]) => {
+  const handleCombinedFormSubmit = async (data: {
+    havaya: string;
+    actions: Action[];
+    answers: Record<string, string>;
+  }) => {
     if (!matchId) return;
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user found');
 
-      const report = await createOrUpdatePreMatchReport({
-        player_id: user.id,
-        match_date: matchDetails.date,
-        opponent: matchDetails.opponent,
-        actions,
-        havaya
-      }, reportId);
+      const { data: report, error } = await supabase
+        .from('pre_match_reports')
+        .insert({
+          player_id: user.id,
+          match_date: matchDetails.date,
+          match_time: matchDetails.time,
+          opponent: matchDetails.opponent,
+          actions: data.actions,
+          havaya: data.havaya,
+          questions_answers: data.answers,
+          status: 'completed'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update match with report id
+      const { error: updateError } = await supabase
+        .from('matches')
+        .update({ pre_match_report_id: report.id })
+        .eq('id', matchId);
+
+      if (updateError) throw updateError;
 
       setReportId(report.id);
-
-      // Update match with report id if not already set
-      if (!reportId) {
-        const { error: updateError } = await supabase
-          .from('matches')
-          .update({ pre_match_report_id: report.id })
-          .eq('id', matchId);
-
-        if (updateError) throw updateError;
-      }
-
-      setSelectedActions(actions);
-      setCurrentStep("questions");
-    } catch (error) {
-      console.error('Error saving actions:', error);
-      toast({
-        title: "שגיאה",
-        description: "אירעה שגיאה בשמירת הפעולות",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleQuestionsSubmit = async (answers: Record<string, string>) => {
-    if (!reportId) return;
-
-    try {
-      await updatePreMatchReportAnswers(reportId, answers);
-      setQuestionsAnswers(answers);
+      setHavaya(data.havaya);
+      setSelectedActions(data.actions);
+      setQuestionsAnswers(data.answers);
       setCurrentStep("summary");
     } catch (error) {
-      console.error('Error saving answers:', error);
+      console.error('Error saving form data:', error);
       toast({
         title: "שגיאה",
-        description: "אירעה שגיאה בשמירת התשובות",
+        description: "אירעה שגיאה בשמירת הנתונים",
         variant: "destructive",
       });
     }
   };
 
-  const handleFinalSubmit = async () => {
-    if (matchId) {
-      navigate(`/match/${matchId}`);
-    } else {
-      navigate('/dashboard');
-    }
+  const handleFinish = () => {
+    navigate('/dashboard');
   };
 
   const renderStep = () => {
     switch (currentStep) {
       case "details":
         return (
-          <MatchDetailsStep
-            matchDetails={matchDetails}
+          <MatchDetailsForm
+            initialData={matchDetails}
             onSubmit={handleMatchDetailsSubmit}
           />
         );
-      case "actions":
+      case "form":
         return (
-          <ActionsStep
+          <PreMatchCombinedForm
             position={matchDetails.position}
-            havaya={havaya}
-            selectedActions={selectedActions}
-            onHavayaChange={setHavaya}
-            onActionsSubmit={handleActionsSubmit}
+            onSubmit={handleCombinedFormSubmit}
           />
-        );
-      case "questions":
-        return (
-          <QuestionsStep onSubmit={handleQuestionsSubmit} />
         );
       case "summary":
         return (
-          <SummaryStep
-            matchDetails={matchDetails}
+          <PreMatchSummaryView
+            matchDate={matchDetails.date}
+            opponent={matchDetails.opponent}
+            position={matchDetails.position}
+            havaya={havaya}
             actions={selectedActions}
             answers={questionsAnswers}
-            havaya={havaya}
-            aiInsights={[]}
-            onFinish={handleFinalSubmit}
           />
         );
       default:
