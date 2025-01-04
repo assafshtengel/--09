@@ -35,18 +35,21 @@ export const GameTracker = () => {
     if (!matchId) return;
 
     try {
+      // Load match data including pre-match report with all its details
       const { data: match, error: matchError } = await supabase
         .from("matches")
         .select(`
           *,
           pre_match_reports (
-            actions
+            *
           )
         `)
         .eq("id", matchId)
         .single();
 
       if (matchError) throw matchError;
+
+      console.log("Loaded match data:", match); // Debug log
 
       if (match?.pre_match_reports?.actions) {
         const rawActions = match.pre_match_reports.actions as unknown;
@@ -67,7 +70,56 @@ export const GameTracker = () => {
             isSelected: action.isSelected
           }));
           
+        console.log("Parsed actions:", validActions); // Debug log
         setActions(validActions);
+      }
+
+      // Load existing action logs
+      const { data: existingLogs, error: logsError } = await supabase
+        .from('match_actions')
+        .select('*')
+        .eq('match_id', matchId);
+
+      if (logsError) throw logsError;
+
+      if (existingLogs) {
+        setActionLogs(existingLogs.map(log => ({
+          actionId: log.action_id,
+          minute: log.minute,
+          result: log.result as "success" | "failure",
+          note: log.note
+        })));
+      }
+
+      // Load existing notes
+      const { data: existingNotes, error: notesError } = await supabase
+        .from('match_notes')
+        .select('*')
+        .eq('match_id', matchId);
+
+      if (notesError) throw notesError;
+
+      if (existingNotes) {
+        setGeneralNotes(existingNotes.map(note => ({
+          text: note.note,
+          minute: note.minute
+        })));
+      }
+
+      // Load existing substitutions
+      const { data: existingSubs, error: subsError } = await supabase
+        .from('match_substitutions')
+        .select('*')
+        .eq('match_id', matchId);
+
+      if (subsError) throw subsError;
+
+      if (existingSubs) {
+        setSubstitutions(existingSubs.map(sub => ({
+          playerIn: sub.player_in,
+          playerOut: sub.player_out,
+          minute: sub.minute
+        })));
       }
 
       setGamePhase(match.status as GamePhase);
