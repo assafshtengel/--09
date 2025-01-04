@@ -6,6 +6,9 @@ import { Button } from "../ui/button";
 import { Action } from "../ActionSelector";
 import { motion } from "framer-motion";
 import { Json } from "@/integrations/supabase/types";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface PreMatchCombinedFormProps {
   position: string;
@@ -16,15 +19,9 @@ interface PreMatchCombinedFormProps {
   }) => void;
 }
 
-// Type guard to check if a Json value is an object with specific properties
-const isActionJson = (json: Json): json is { id: string; name: string; goal?: string | null } => {
-  return typeof json === 'object' && 
-         json !== null && 
-         'id' in json && 
-         'name' in json;
-};
-
 export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFormProps) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [havaya, setHavaya] = useState("");
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -32,29 +29,78 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
   const handleActionsSubmit = (actionsJson: Json) => {
     if (Array.isArray(actionsJson)) {
       const actions = actionsJson
-        .filter(isActionJson)
+        .filter(action => typeof action === 'object' && action !== null && 'id' in action && 'name' in action)
         .map(action => ({
-          id: action.id,
-          name: action.name,
+          id: String(action.id),
+          name: String(action.name),
           isSelected: true,
-          goal: action.goal || undefined
+          goal: 'goal' in action ? String(action.goal) : undefined
         }));
       setSelectedActions(actions);
     }
   };
 
-  const handleSubmit = () => {
-    const actionsJson = selectedActions.map(({ id, name, goal }) => ({
-      id,
-      name,
-      goal: goal || null
-    })) as Json;
+  const handleSubmit = async () => {
+    if (selectedActions.length === 0) {
+      toast({
+        title: "שגיאה",
+        description: "אנא בחר לפחות פעולה אחת",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    onSubmit({
-      havaya,
-      actions: actionsJson,
-      answers
-    });
+    if (Object.keys(answers).length === 0) {
+      toast({
+        title: "שגיאה",
+        description: "אנא ענה על השאלות",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const actionsJson = selectedActions.map(({ id, name, goal }) => ({
+        id,
+        name,
+        goal: goal || null
+      })) as Json;
+
+      await onSubmit({
+        havaya,
+        actions: actionsJson,
+        answers
+      });
+
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('No authenticated user found');
+      }
+
+      // Create a new match record
+      const { data: match, error } = await supabase
+        .from('matches')
+        .insert({
+          player_id: user.id,
+          status: 'preview',
+          match_date: new Date().toISOString().split('T')[0],
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Navigate to summary
+      navigate(`/match/${match.id}/summary`);
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בשמירת הנתונים",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -84,7 +130,6 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
           <Button 
             onClick={handleSubmit}
             disabled={!havaya || selectedActions.length === 0 || Object.keys(answers).length === 0}
-            className="hidden"
           >
             המשך לסיכום
           </Button>
