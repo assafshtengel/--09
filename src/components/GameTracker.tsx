@@ -10,6 +10,7 @@ import { GameControls } from "./game/mobile/GameControls";
 import { ActionButtons } from "./game/mobile/ActionButtons";
 import { GameNotes } from "./game/GameNotes";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
+import { HalftimeSummary } from "./game/HalftimeSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog } from "@/types/game";
@@ -388,19 +389,31 @@ export const GameTracker = () => {
           onEndMatch={endMatch}
         />
 
-        <Dialog open={showSummary} onOpenChange={setShowSummary}>
-          <DialogContent className="max-w-md mx-auto">
-            <GameSummary
-              actions={actions}
-              actionLogs={actionLogs}
-              generalNotes={generalNotes}
-              substitutions={substitutions}
-              onClose={() => setShowSummary(false)}
-              gamePhase={gamePhase === "halftime" || gamePhase === "ended" ? gamePhase : "ended"}
-              matchId={matchId}
-            />
-          </DialogContent>
-        </Dialog>
+        {gamePhase === "halftime" && (
+          <HalftimeSummary
+            isOpen={showSummary}
+            onClose={() => setShowSummary(false)}
+            onStartSecondHalf={startSecondHalf}
+            actions={actions}
+            actionLogs={actionLogs}
+          />
+        )}
+
+        {gamePhase === "ended" && (
+          <Dialog open={showSummary} onOpenChange={setShowSummary}>
+            <DialogContent className="max-w-md mx-auto">
+              <GameSummary
+                actions={actions}
+                actionLogs={actionLogs}
+                generalNotes={generalNotes}
+                substitutions={substitutions}
+                onClose={() => setShowSummary(false)}
+                gamePhase="ended"
+                matchId={matchId}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </div>
   );

@@ -36,10 +36,13 @@ export const HalftimeSummary = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md mx-auto">
-        <div className="space-y-6">
+        <div className="space-y-6 p-4">
           <h2 className="text-2xl font-bold text-right">סיכום מחצית ראשונה</h2>
           
-          <GameScore actionLogs={actionLogs} />
+          <div className="p-4 border rounded-lg bg-primary/10">
+            <h3 className="text-xl font-semibold text-right mb-2">ציון</h3>
+            <GameScore actionLogs={actionLogs} />
+          </div>
           
           <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
             <p className="text-lg font-medium text-center text-yellow-800">
