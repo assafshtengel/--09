@@ -46,39 +46,48 @@ export const Questions = () => {
 
       try {
         // Get match details and existing pre-match report data
-        const { data: match } = await supabase
+        const { data: match, error: matchError } = await supabase
           .from('matches')
           .select(`
             match_date,
             opponent,
             player_position,
-            pre_match_report_id
+            pre_match_report_id,
+            pre_match_reports (
+              actions,
+              havaya,
+              questions_answers
+            )
           `)
           .eq('id', matchId)
           .single();
+
+        if (matchError) throw matchError;
 
         if (!match) {
           throw new Error('Match not found');
         }
 
-        // Get existing actions and havaya from pre-match report if it exists
-        if (match.pre_match_report_id) {
-          const { data: existingReport } = await supabase
-            .from('pre_match_reports')
-            .select('actions, havaya')
-            .eq('id', match.pre_match_report_id)
-            .single();
-            
-          if (existingReport) {
-            setSummaryData({
-              matchDate: match.match_date,
-              opponent: match.opponent,
-              position: match.player_position,
-              havaya: existingReport.havaya || '',
-              actions: convertJsonArrayToActions(existingReport.actions),
-              answers: {}
-            });
-          }
+        // If there's existing pre-match report data, use it
+        if (match.pre_match_reports) {
+          const report = match.pre_match_reports;
+          setSummaryData({
+            matchDate: match.match_date,
+            opponent: match.opponent,
+            position: match.player_position,
+            havaya: report.havaya || '',
+            actions: convertJsonArrayToActions(report.actions),
+            answers: report.questions_answers || {}
+          });
+        } else {
+          setSummaryData({
+            matchDate: match.match_date,
+            opponent: match.opponent,
+            position: match.player_position,
+            havaya: '',
+            actions: [],
+            answers: {}
+          });
         }
       } catch (error) {
         console.error('Error fetching match data:', error);
