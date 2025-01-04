@@ -6,6 +6,7 @@ import { QuestionsStep } from "@/components/pre-match/steps/QuestionsStep";
 import { SummaryStep } from "@/components/pre-match/steps/SummaryStep";
 import { Action } from "@/components/ActionSelector";
 import { useToast } from "@/hooks/use-toast";
+import { createOrUpdatePreMatchReport, updatePreMatchReportAnswers } from "@/services/pre-match-report.service";
 import { supabase } from "@/integrations/supabase/client";
 
 type Step = "details" | "actions" | "questions" | "summary";
@@ -65,39 +66,18 @@ export const PreMatchReport = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user found');
 
-      // Create or update pre-match report
-      const reportData = {
+      const report = await createOrUpdatePreMatchReport({
         player_id: user.id,
         match_date: matchDetails.date,
         opponent: matchDetails.opponent,
-        actions: JSON.stringify(actions),
-        havaya,
-        status: 'draft',
-      };
+        actions,
+        havaya
+      }, reportId);
 
-      let report;
-      if (reportId) {
-        const { data, error } = await supabase
-          .from('pre_match_reports')
-          .update(reportData)
-          .eq('id', reportId)
-          .select()
-          .single();
-          
-        if (error) throw error;
-        report = data;
-      } else {
-        const { data, error } = await supabase
-          .from('pre_match_reports')
-          .insert(reportData)
-          .select()
-          .single();
+      setReportId(report.id);
 
-        if (error) throw error;
-        report = data;
-        setReportId(report.id);
-
-        // Update match with report id
+      // Update match with report id if not already set
+      if (!reportId) {
         const { error: updateError } = await supabase
           .from('matches')
           .update({ pre_match_report_id: report.id })
@@ -122,16 +102,7 @@ export const PreMatchReport = () => {
     if (!reportId) return;
 
     try {
-      const { error } = await supabase
-        .from('pre_match_reports')
-        .update({
-          questions_answers: answers,
-          status: 'completed'
-        })
-        .eq('id', reportId);
-
-      if (error) throw error;
-
+      await updatePreMatchReportAnswers(reportId, answers);
       setQuestionsAnswers(answers);
       setCurrentStep("summary");
     } catch (error) {

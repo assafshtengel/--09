@@ -3,12 +3,12 @@ import { Action } from "@/components/ActionSelector";
 import { Json } from "@/integrations/supabase/types";
 
 export interface PreMatchReportData {
+  player_id: string;
   match_date: string;
   opponent?: string;
   actions: Action[];
   havaya?: string;
   questions_answers?: Record<string, string>;
-  player_id: string;
 }
 
 export const createOrUpdatePreMatchReport = async (data: PreMatchReportData, reportId?: string) => {
