@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Action {
@@ -81,7 +81,6 @@ interface ActionSelectorProps {
 export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { id: matchId } = useParams();
   const [actions, setActions] = useState<Action[]>(getPositionActions(position));
   const [customAction, setCustomAction] = useState("");
 
@@ -139,15 +138,20 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
       // First submit the actions
       await onSubmit(selectedActions);
       
-      // Then create a new match record to get the match ID
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('No authenticated user found');
+      }
+
+      // Create a new match record with all required fields
       const { data: match, error } = await supabase
         .from('matches')
-        .insert([
-          { 
-            player_id: (await supabase.auth.getUser()).data.user?.id,
-            status: 'preview'
-          }
-        ])
+        .insert({
+          player_id: user.id,
+          status: 'preview',
+          match_date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
+        })
         .select()
         .single();
 
