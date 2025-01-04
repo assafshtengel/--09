@@ -6,6 +6,7 @@ import { PreMatchSummaryView } from "@/components/pre-match/PreMatchSummaryView"
 import { Action } from "@/components/ActionSelector";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 type Step = "details" | "form" | "summary";
 
@@ -68,6 +69,14 @@ export const PreMatchReport = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user found');
 
+      // Convert actions array to JSON-compatible format
+      const jsonActions = data.actions.map(action => ({
+        id: action.id,
+        name: action.name,
+        goal: action.goal,
+        isSelected: action.isSelected
+      })) as Json;
+
       const { data: report, error } = await supabase
         .from('pre_match_reports')
         .insert({
@@ -75,9 +84,9 @@ export const PreMatchReport = () => {
           match_date: matchDetails.date,
           match_time: matchDetails.time,
           opponent: matchDetails.opponent,
-          actions: data.actions,
+          actions: jsonActions,
           havaya: data.havaya,
-          questions_answers: data.answers,
+          questions_answers: data.answers as Json,
           status: 'completed'
         })
         .select()
