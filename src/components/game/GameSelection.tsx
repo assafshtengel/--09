@@ -101,7 +101,7 @@ export const GameSelection = () => {
     }
   };
 
-  const handleDeleteGame = async (gameId: string, matchId?: string, e: React.MouseEvent) => {
+  const handleDeleteGame = async (e: React.MouseEvent, gameId: string, matchId?: string) => {
     e.stopPropagation(); // Prevent triggering the card click
 
     try {
@@ -171,7 +171,7 @@ export const GameSelection = () => {
                     "hover:bg-red-500 hover:text-white",
                     game.status === "completed" ? "text-white" : "text-red-500"
                   )}
-                  onClick={(e) => handleDeleteGame(game.id, game.match_id, e)}
+                  onClick={(e) => handleDeleteGame(e, game.id, game.match_id)}
                 >
                   <Trash2 className="h-5 w-5" />
                 </Button>
