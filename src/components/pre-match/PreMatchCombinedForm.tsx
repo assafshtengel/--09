@@ -55,38 +55,46 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
     setAnswers(questionAnswers);
   };
 
+  const handleHavayaChange = (value: string) => {
+    console.log("Selected havaya:", value);
+    setHavaya(value);
+  };
+
+  const handleActionsSubmit = (actions: Json) => {
+    console.log("Selected actions:", actions);
+    setSelectedActions(actions);
+  };
+
   return (
     <motion.div
-      className="space-y-8 max-w-4xl mx-auto p-6"
+      className="space-y-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
     >
-      <div className="space-y-12">
-        <section>
-          <HavayaSelector value={havaya} onChange={setHavaya} />
-        </section>
+      <section>
+        <HavayaSelector value={havaya} onChange={handleHavayaChange} />
+      </section>
 
-        <section>
-          <ActionSelector
-            position={position}
-            onSubmit={setSelectedActions}
-          />
-        </section>
+      <section>
+        <ActionSelector
+          position={position}
+          onSubmit={handleActionsSubmit}
+        />
+      </section>
 
-        <section>
-          <PreMatchQuestionnaire onSubmit={handleQuestionnaireSubmit} />
-        </section>
+      <section>
+        <PreMatchQuestionnaire onSubmit={handleQuestionnaireSubmit} />
+      </section>
 
-        <div className="flex justify-center mt-8">
-          <Button 
-            onClick={handleSubmit}
-            className="w-full max-w-md"
-            size="lg"
-          >
-            המשך לסיכום
-          </Button>
-        </div>
+      <div className="flex justify-center mt-8">
+        <Button 
+          onClick={handleSubmit}
+          className="w-full max-w-md"
+          size="lg"
+        >
+          המשך לסיכום
+        </Button>
       </div>
     </motion.div>
   );
