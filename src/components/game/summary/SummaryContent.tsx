@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { Action } from "@/components/ActionSelector";
-import { GameStats } from "../GameStats";
 import { GameInsights } from "../GameInsights";
 import { GoalsAchievement } from "../GoalsAchievement";
 import { PerformanceTable } from "../PerformanceTable";
 import { QuestionsSection } from "./QuestionsSection";
 import { NotesSection } from "./NotesSection";
-import { ActionsLogSection } from "./ActionsLogSection";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -88,10 +86,6 @@ export const SummaryContent = ({
       </div>
 
       <div className="mt-6">
-        <GameStats actions={actions} actionLogs={actionLogs} />
-      </div>
-
-      <div className="mt-6">
         <GameInsights actionLogs={actionLogs} />
       </div>
 
@@ -100,10 +94,6 @@ export const SummaryContent = ({
         <p className="text-2xl md:text-3xl font-bold text-center">
           {calculateScore(actionLogs)}
         </p>
-      </div>
-
-      <div className="mt-6">
-        <ActionsLogSection actions={actions} actionLogs={actionLogs} />
       </div>
     </div>
   );
