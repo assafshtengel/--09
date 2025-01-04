@@ -2,12 +2,12 @@ import { useState } from "react";
 import { HavayaSelector } from "./HavayaSelector";
 import { ActionSelector } from "../ActionSelector";
 import { PreMatchQuestionnaire } from "./PreMatchQuestionnaire";
-import { Action } from "../ActionSelector";
 import { motion } from "framer-motion";
 import { Json } from "@/integrations/supabase/types";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "../ui/button";
 
 interface PreMatchCombinedFormProps {
   position: string;
@@ -132,6 +132,16 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
         <section>
           <PreMatchQuestionnaire onSubmit={setAnswers} />
         </section>
+
+        <div className="flex justify-center mt-8">
+          <Button 
+            onClick={handleSubmit}
+            className="w-full max-w-md"
+            size="lg"
+          >
+            המשך לסיכום
+          </Button>
+        </div>
       </div>
     </motion.div>
   );
