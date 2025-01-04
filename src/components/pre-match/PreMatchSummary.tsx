@@ -8,32 +8,72 @@ import html2canvas from "html2canvas";
 import { format } from "date-fns";
 import { Action } from "@/components/ActionSelector";
 
-interface MatchDetails {
-  date: string;
-  time?: string;
-  opponent?: string;
-}
-
-interface PreMatchSummaryProps {
-  matchDetails: MatchDetails;
-  actions: Action[];
-  answers: Record<string, string>;
-  havaya: string;
-  aiInsights: string[];
-  onFinish: () => void;
-}
-
-export const PreMatchSummary = ({
-  matchDetails,
-  actions,
-  answers,
-  havaya,
-  aiInsights,
-  onFinish
-}: PreMatchSummaryProps) => {
+export const PreMatchSummary = () => {
+  const { matchId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSending, setIsSending] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [matchDetails, setMatchDetails] = useState<{
+    date: string;
+    time?: string;
+    opponent?: string;
+  }>({ date: '' });
+  const [actions, setActions] = useState<Action[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [havaya, setHavaya] = useState('');
+  const [aiInsights, setAiInsights] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchMatchData = async () => {
+      if (!matchId) return;
+
+      try {
+        const { data: match, error: matchError } = await supabase
+          .from('matches')
+          .select(`
+            match_date,
+            opponent,
+            pre_match_reports (
+              actions,
+              havaya,
+              questions_answers,
+              ai_insights
+            )
+          `)
+          .eq('id', matchId)
+          .single();
+
+        if (matchError) throw matchError;
+
+        if (match) {
+          setMatchDetails({
+            date: match.match_date,
+            opponent: match.opponent
+          });
+
+          if (match.pre_match_reports) {
+            const report = match.pre_match_reports;
+            setActions(report.actions as Action[]);
+            setHavaya(report.havaya || '');
+            setAnswers(report.questions_answers as Record<string, string>);
+            setAiInsights(report.ai_insights || []);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching match data:', error);
+        toast({
+          title: "שגיאה",
+          description: "אירעה שגיאה בטעינת נתוני המשחק",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMatchData();
+  }, [matchId, toast]);
 
   const handlePrint = () => {
     window.print();
@@ -117,6 +157,10 @@ export const PreMatchSummary = ({
     }
   };
 
+  if (isLoading) {
+    return <div className="flex justify-center items-center min-h-screen">טוען...</div>;
+  }
+
   return (
     <div className="container mx-auto p-4 space-y-8">
       <div id="pre-match-summary" className="space-y-6 bg-white p-6 rounded-lg shadow-lg">
@@ -188,7 +232,7 @@ export const PreMatchSummary = ({
           שלח למייל שלי
         </Button>
         <Button
-          onClick={onFinish}
+          onClick={() => navigate('/dashboard')}
           variant="outline"
           className="gap-2"
         >
