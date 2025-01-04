@@ -1,22 +1,17 @@
 import { useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Info } from "lucide-react";
+import { motion } from "framer-motion";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { Info } from "lucide-react";
-import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 interface HavayaSelectorProps {
-  value: string;
-  onChange: (value: string) => void;
+  value: string[];
+  onChange: (value: string[]) => void;
 }
 
 const havayaOptions = [
@@ -43,8 +38,27 @@ const havayaOptions = [
   { value: "נחוש", description: "מיקוד מוחלט בהשגת המטרות" },
 ];
 
-export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+const MAX_SELECTIONS = 4;
+const MIN_SELECTIONS = 3;
+
+export const HavayaSelector = ({ value = [], onChange }: HavayaSelectorProps) => {
+  const { toast } = useToast();
+
+  const handleSelect = (havaya: string) => {
+    if (value.includes(havaya)) {
+      onChange(value.filter((v) => v !== havaya));
+    } else {
+      if (value.length >= MAX_SELECTIONS) {
+        toast({
+          title: "מקסימום בחירות",
+          description: `ניתן לבחור עד ${MAX_SELECTIONS} הוויות`,
+          variant: "destructive",
+        });
+        return;
+      }
+      onChange([...value, havaya]);
+    }
+  };
 
   return (
     <motion.div 
@@ -63,48 +77,51 @@ export const HavayaSelector = ({ value, onChange }: HavayaSelectorProps) => {
           </HoverCardTrigger>
           <HoverCardContent className="w-80 text-right p-4">
             <p className="text-sm text-gray-600">
-              בחר את ההוויה שתלווה אותך במשחק. ההוויה היא מצב התודעה והגישה שאיתה
+              בחר {MIN_SELECTIONS}-{MAX_SELECTIONS} הוויות שילוו אותך במשחק. ההוויה היא מצב התודעה והגישה שאיתה
               אתה ניגש למשחק, והיא תשפיע על התנהגותך והביצועים שלך במגרש.
             </p>
           </HoverCardContent>
         </HoverCard>
       </div>
 
-      <Select 
-        value={value} 
-        onValueChange={onChange}
-        onOpenChange={setIsOpen}
-      >
-        <SelectTrigger 
-          className={`w-full transition-all duration-200 ${
-            isOpen ? 'ring-2 ring-primary ring-offset-2' : ''
-          }`}
-        >
-          <SelectValue placeholder="בחר הוויה למשחק" />
-        </SelectTrigger>
-        <SelectContent>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {havayaOptions.map((option) => (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
+            key={option.value}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            {havayaOptions.map((option) => (
-              <SelectItem 
-                key={option.value} 
-                value={option.value}
-                className="hover:bg-primary/5 transition-colors"
-              >
-                <div className="flex flex-col py-1">
-                  <span className="font-medium">{option.value}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {option.description}
-                  </span>
-                </div>
-              </SelectItem>
-            ))}
+            <button
+              onClick={() => handleSelect(option.value)}
+              className={`w-full p-3 rounded-lg text-right transition-all ${
+                value.includes(option.value)
+                  ? "bg-primary text-white shadow-lg"
+                  : "bg-gray-50 hover:bg-gray-100"
+              }`}
+            >
+              <div className="space-y-1">
+                <div className="font-medium">{option.value}</div>
+                <p className={`text-xs ${value.includes(option.value) ? "text-white/80" : "text-gray-500"}`}>
+                  {option.description}
+                </p>
+              </div>
+            </button>
           </motion.div>
-        </SelectContent>
-      </Select>
+        ))}
+      </div>
+
+      <div className="flex justify-between items-center pt-4">
+        <div className="text-sm text-gray-500">
+          נבחרו {value.length} מתוך {MAX_SELECTIONS} הוויות
+        </div>
+        <div className="flex gap-2">
+          {value.map((havaya) => (
+            <Badge key={havaya} variant="secondary">
+              {havaya}
+            </Badge>
+          ))}
+        </div>
+      </div>
     </motion.div>
   );
 };
