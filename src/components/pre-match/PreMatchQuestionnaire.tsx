@@ -8,7 +8,21 @@ const allQuestions = [
   "איך אתה מתמודד עם לחץ במהלך משחק?",
   "באיזה תחום היית רוצה להשתפר משמעותית במשחק הבא?",
   "מה המוטיבציה העיקרית שלך לשחק?",
-  "איך אתה מתכונן מנטלית למשחק?"
+  "איך אתה מתכונן מנטלית למשחק?",
+  "מה הדבר שהכי מאתגר אותך במשחק?",
+  "איך אתה מתמודד עם טעויות במהלך משחק?",
+  "מה עוזר לך להישאר ממוקד במהלך המשחק?",
+  "איך אתה מתקשר עם חברי הקבוצה שלך?",
+  "מה הציפיות שלך מעצמך במשחק הזה?",
+  "איך אתה מתכוון להתמודד עם אתגרים במשחק?",
+  "מה תעשה אם תרגיש שאתה מאבד ריכוז?",
+  "איך אתה מתכנן לתרום לקבוצה במשחק הזה?",
+  "מה יעזור לך להצליח במשחק הזה?",
+  "איך אתה מתכונן פיזית למשחק?",
+  "מה המחשבות שלך על היריב?",
+  "איך אתה מתמודד עם שינויים בתכנית המשחק?",
+  "מה עוזר לך להירגע לפני משחק?",
+  "איך אתה שומר על אנרגיה במהלך המשחק?"
 ];
 
 interface PreMatchQuestionnaireProps {
@@ -17,6 +31,12 @@ interface PreMatchQuestionnaireProps {
 
 export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) => {
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  
+  // Select 6 random questions on component mount
+  const [selectedQuestions] = useState(() => {
+    const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 6);
+  });
 
   const handleAnswerChange = (question: string, answer: string) => {
     setAnswers(prev => ({
@@ -33,7 +53,7 @@ export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-6">
-        {allQuestions.map((question, index) => (
+        {selectedQuestions.map((question, index) => (
           <div key={index} className="space-y-2">
             <label className="block text-right font-medium">
               {question}

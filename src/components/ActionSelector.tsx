@@ -135,6 +135,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
     }
 
     onSubmit(selectedActions);
+    // Navigate to the questions page after submitting actions
     navigate(`/match/${matchId}/questions`);
   };
 
