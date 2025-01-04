@@ -9,7 +9,7 @@ interface PreMatchSummaryProps {
   };
   actions: Action[];
   answers: Record<string, string>;
-  havaya: string;
+  havaya: string[];
   aiInsights: string[];
   onFinish: () => void;
 }
@@ -32,10 +32,16 @@ export const PreMatchSummary = ({
         </p>
       </div>
 
-      {havaya && (
+      {havaya.length > 0 && (
         <div className="border p-4 rounded-lg">
-          <h3 className="text-lg font-semibold mb-2">הוויה נבחרת</h3>
-          <p className="text-xl font-bold">{havaya}</p>
+          <h3 className="text-lg font-semibold mb-2">הוויות נבחרות</h3>
+          <div className="flex flex-wrap gap-2">
+            {havaya.map((h, index) => (
+              <span key={index} className="bg-primary/10 text-primary px-3 py-1 rounded-full">
+                {h}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 

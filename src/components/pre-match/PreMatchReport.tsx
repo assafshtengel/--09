@@ -22,7 +22,7 @@ export const PreMatchReport = () => {
   });
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
   const [questionsAnswers, setQuestionsAnswers] = useState({});
-  const [havaya, setHavaya] = useState("");
+  const [havaya, setHavaya] = useState<string[]>([]);
   const { toast } = useToast();
 
   const steps = [
