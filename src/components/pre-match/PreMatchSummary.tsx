@@ -50,14 +50,59 @@ export const PreMatchSummary = ({
         return;
       }
 
-      const htmlContent = document.getElementById('pre-match-summary')?.innerHTML;
-      if (!htmlContent) throw new Error("Could not generate email content");
+      // Create HTML content with proper spacing between havayot
+      const htmlContent = `
+        <div dir="rtl">
+          <h2>דוח טרום משחק</h2>
+          <div>
+            <h3>פרטי המשחק</h3>
+            <p>תאריך: ${format(new Date(matchDetails.date), 'dd/MM/yyyy')}</p>
+            ${matchDetails.opponent ? `<p>נגד: ${matchDetails.opponent}</p>` : ''}
+          </div>
+          
+          <div>
+            <h3>הוויות נבחרות</h3>
+            <p>${havaya.join(' • ')}</p>
+          </div>
+
+          <div>
+            <h3>יעדים למשחק</h3>
+            <ul>
+              ${actions.map(action => `
+                <li>
+                  ${action.name}
+                  ${action.goal ? `<br>יעד: ${action.goal}` : ''}
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+
+          <div>
+            <h3>תשובות לשאלות</h3>
+            ${Object.entries(answers).map(([question, answer]) => `
+              <div>
+                <p><strong>${question}</strong></p>
+                <p>${answer}</p>
+              </div>
+            `).join('')}
+          </div>
+
+          ${aiInsights.length > 0 ? `
+            <div>
+              <h3>תובנות AI</h3>
+              <ul>
+                ${aiInsights.map(insight => `<li>${insight}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+        </div>
+      `;
 
       const { error } = await supabase.functions.invoke('send-pre-match-report', {
         body: {
           to: recipientType === 'coach' ? [coachEmail] : [user.email],
           subject: `דוח טרום משחק - ${format(new Date(matchDetails.date), 'dd/MM/yyyy')}`,
-          html: `<div dir="rtl">${htmlContent}</div>`,
+          html: htmlContent,
         },
       });
 
