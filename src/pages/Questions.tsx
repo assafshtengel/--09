@@ -42,35 +42,64 @@ export const Questions = () => {
         .eq('id', matchId)
         .single();
 
-      if (!match?.pre_match_report_id) {
-        throw new Error('Pre-match report not found');
+      if (!match) {
+        throw new Error('Match not found');
       }
 
-      // Get pre-match report details
+      let reportId = match.pre_match_report_id;
+
+      // If no pre-match report exists, create one
+      if (!reportId) {
+        const { data: newReport, error: createError } = await supabase
+          .from('pre_match_reports')
+          .insert({
+            player_id: user.id,
+            match_date: match.match_date,
+            opponent: match.opponent,
+            questions_answers: answers,
+            status: 'completed'
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        
+        // Update match with new report id
+        const { error: updateMatchError } = await supabase
+          .from('matches')
+          .update({ pre_match_report_id: newReport.id })
+          .eq('id', matchId);
+
+        if (updateMatchError) throw updateMatchError;
+        
+        reportId = newReport.id;
+      } else {
+        // Update existing report
+        const { error: updateError } = await supabase
+          .from('pre_match_reports')
+          .update({ 
+            questions_answers: answers,
+            status: 'completed'
+          })
+          .eq('id', reportId);
+
+        if (updateError) throw updateError;
+      }
+
+      // Get the complete report data for summary
       const { data: report } = await supabase
         .from('pre_match_reports')
         .select('actions, havaya')
-        .eq('id', match.pre_match_report_id)
+        .eq('id', reportId)
         .single();
-
-      // Update the pre-match report with answers
-      const { error: updateError } = await supabase
-        .from('pre_match_reports')
-        .update({ 
-          questions_answers: answers,
-          status: 'completed'
-        })
-        .eq('id', match.pre_match_report_id);
-
-      if (updateError) throw updateError;
 
       // Set summary data and show summary view
       setSummaryData({
         matchDate: match.match_date,
         opponent: match.opponent,
         position: match.player_position,
-        havaya: report.havaya,
-        actions: report.actions,
+        havaya: report?.havaya,
+        actions: report?.actions,
         answers
       });
       setShowSummary(true);
