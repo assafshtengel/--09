@@ -61,34 +61,6 @@ export const usePreMatchReport = () => {
     if (!matchId) return;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user found');
-
-      const { data: report, error } = await supabase
-        .from('pre_match_reports')
-        .insert({
-          player_id: user.id,
-          match_date: matchDetails.date,
-          match_time: matchDetails.time,
-          opponent: matchDetails.opponent,
-          actions: data.actions,
-          havaya: data.havaya,
-          questions_answers: data.answers as Json,
-          status: 'completed'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const { error: updateError } = await supabase
-        .from('matches')
-        .update({ pre_match_report_id: report.id })
-        .eq('id', matchId);
-
-      if (updateError) throw updateError;
-
-      setReportId(report.id);
       setHavaya(data.havaya);
       
       if (Array.isArray(data.actions)) {
@@ -125,6 +97,8 @@ export const usePreMatchReport = () => {
     selectedActions,
     questionsAnswers,
     havaya,
+    matchId,
+    reportId,
     handleMatchDetailsSubmit,
     handleCombinedFormSubmit,
     handleFinish
