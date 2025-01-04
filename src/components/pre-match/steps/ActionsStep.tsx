@@ -35,7 +35,7 @@ export const ActionsStep = ({
       />
 
       {selectedActions.length > 0 && (
-        <SocialShareGoals actions={selectedActions} />
+        <SocialShareGoals goals={selectedActions} />
       )}
     </motion.div>
   );

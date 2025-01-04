@@ -96,16 +96,22 @@ export const PreMatchReport = () => {
 
       setReportId(report.id);
       setHavaya(data.havaya);
-      // Convert Json back to Action[] for local state
+      
       if (Array.isArray(data.actions)) {
-        const actions = data.actions.map(action => ({
-          id: String(action.id || ''),
-          name: String(action.name || ''),
-          isSelected: true,
-          goal: action.goal ? String(action.goal) : undefined
-        }));
+        const actions = data.actions.map(action => {
+          if (typeof action === 'object' && action !== null) {
+            return {
+              id: String(action.id || ''),
+              name: String(action.name || ''),
+              isSelected: true,
+              goal: action.goal ? String(action.goal) : undefined
+            };
+          }
+          return null;
+        }).filter((action): action is Action => action !== null);
         setSelectedActions(actions);
       }
+      
       setQuestionsAnswers(data.answers);
       setCurrentStep("summary");
     } catch (error) {

@@ -23,12 +23,17 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
 
   const handleActionsSubmit = (actionsJson: Json) => {
     if (Array.isArray(actionsJson)) {
-      const actions = actionsJson.map(action => ({
-        id: String(action.id || ''),
-        name: String(action.name || ''),
-        isSelected: true,
-        goal: action.goal ? String(action.goal) : undefined
-      }));
+      const actions = actionsJson.map(action => {
+        if (typeof action === 'object' && action !== null) {
+          return {
+            id: String(action.id || ''),
+            name: String(action.name || ''),
+            isSelected: true,
+            goal: action.goal ? String(action.goal) : undefined
+          };
+        }
+        return null;
+      }).filter((action): action is Action => action !== null);
       setSelectedActions(actions);
     }
   };
