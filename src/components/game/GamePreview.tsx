@@ -57,7 +57,7 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
           צלם מסך
         </Button>
         <Button onClick={onStartMatch} size="sm">
-          לחץ להמשך
+          המשך
         </Button>
       </div>
     </div>
