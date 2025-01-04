@@ -20,7 +20,10 @@ export const PreMatchReport = () => {
     handleCombinedFormSubmit,
     handleFinish,
     matchId,
-    reportId
+    reportId,
+    setSelectedActions,
+    setQuestionsAnswers,
+    setHavaya
   } = usePreMatchReport();
 
   const savePreMatchReport = async (data: {
@@ -71,6 +74,11 @@ export const PreMatchReport = () => {
 
       if (reportError) throw reportError;
       console.log('Saved pre-match report:', report);
+
+      // Update local state with the new data
+      setHavaya(data.havaya);
+      setSelectedActions(data.actions);
+      setQuestionsAnswers(data.answers);
 
       // If we have a matchId, update it with the report id
       if (matchId) {

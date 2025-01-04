@@ -99,6 +99,9 @@ export const usePreMatchReport = () => {
     havaya,
     matchId,
     reportId,
+    setSelectedActions,
+    setQuestionsAnswers,
+    setHavaya,
     handleMatchDetailsSubmit,
     handleCombinedFormSubmit,
     handleFinish
