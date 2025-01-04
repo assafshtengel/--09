@@ -18,6 +18,13 @@ interface PreMatchCombinedFormProps {
   }) => void;
 }
 
+interface Action {
+  id: string;
+  name: string;
+  isSelected: boolean;
+  goal?: string;
+}
+
 // Type guard to check if a Json value has the required Action properties
 const isActionJson = (json: Json): json is { id: string; name: string; goal?: string } => {
   return typeof json === 'object' && 
