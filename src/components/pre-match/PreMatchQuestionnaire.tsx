@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -16,11 +16,18 @@ export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) 
   });
 
   const handleAnswerChange = (question: string, answer: string) => {
-    setAnswers(prev => ({
-      ...prev,
+    const newAnswers = {
+      ...answers,
       [question]: answer
-    }));
+    };
+    setAnswers(newAnswers);
+    onSubmit(newAnswers); // Send answers to parent immediately when they change
   };
+
+  // Also submit answers when component mounts to ensure parent has initial state
+  useEffect(() => {
+    onSubmit(answers);
+  }, []);
 
   return (
     <form className="space-y-6">

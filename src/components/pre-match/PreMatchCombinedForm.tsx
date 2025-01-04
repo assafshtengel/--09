@@ -30,6 +30,11 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
         answers,
       });
       
+      // Validate that we have answers
+      if (Object.keys(answers).length === 0) {
+        console.warn("No answers provided before submission");
+      }
+
       onSubmit({
         havaya,
         actions: selectedActions,
@@ -43,6 +48,11 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
         variant: "destructive",
       });
     }
+  };
+
+  const handleQuestionnaireSubmit = (questionAnswers: Record<string, string>) => {
+    console.log("Received answers from questionnaire:", questionAnswers);
+    setAnswers(questionAnswers);
   };
 
   return (
@@ -65,7 +75,7 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
         </section>
 
         <section>
-          <PreMatchQuestionnaire onSubmit={setAnswers} />
+          <PreMatchQuestionnaire onSubmit={handleQuestionnaireSubmit} />
         </section>
 
         <div className="flex justify-center mt-8">
