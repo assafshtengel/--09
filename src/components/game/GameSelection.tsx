@@ -30,7 +30,6 @@ export const GameSelection = () => {
           return;
         }
 
-        // Fetch pre-match reports and their associated matches
         const { data, error } = await supabase
           .from("pre_match_reports")
           .select(`
@@ -45,7 +44,7 @@ export const GameSelection = () => {
           .eq("player_id", user.id)
           .eq("status", "completed")
           .order("match_date", { ascending: false })
-          .limit(10); // Changed from 3 to 10
+          .limit(10);
 
         if (error) throw error;
 
@@ -75,12 +74,10 @@ export const GameSelection = () => {
       if (!user) throw new Error("No authenticated user");
 
       if (game.status === "completed" && game.match_id) {
-        // Navigate to existing match summary
         navigate(`/match/${game.match_id}`);
         return;
       }
 
-      // Create a new match for non-completed games
       const { data: newMatch, error: createError } = await supabase
         .from("matches")
         .insert({
@@ -121,7 +118,7 @@ export const GameSelection = () => {
             key={game.id}
             className={cn(
               "cursor-pointer hover:shadow-lg transition-shadow",
-              game.status === "completed" ? "bg-red-100" : ""
+              game.status === "completed" ? "bg-[#ea384c] text-white" : "bg-white"
             )}
             onClick={() => handleGameSelect(game)}
           >
@@ -129,7 +126,7 @@ export const GameSelection = () => {
               <CardTitle className="text-right flex justify-between items-center">
                 <span>{format(new Date(game.match_date), "dd/MM/yyyy", { locale: he })}</span>
                 {game.status === "completed" && (
-                  <span className="text-sm text-red-600">הושלם</span>
+                  <span className="text-sm">הושלם</span>
                 )}
               </CardTitle>
             </CardHeader>
