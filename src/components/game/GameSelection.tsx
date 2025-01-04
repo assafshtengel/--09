@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Trash2 } from "lucide-react";
 
 interface Game {
   id: string;
@@ -100,6 +101,37 @@ export const GameSelection = () => {
     }
   };
 
+  const handleDeleteGame = async (gameId: string, matchId?: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the card click
+
+    try {
+      // Delete the match if it exists
+      if (matchId) {
+        const { error: matchError } = await supabase
+          .from("matches")
+          .delete()
+          .eq("id", matchId);
+
+        if (matchError) throw matchError;
+      }
+
+      // Delete the pre-match report
+      const { error: reportError } = await supabase
+        .from("pre_match_reports")
+        .delete()
+        .eq("id", gameId);
+
+      if (reportError) throw reportError;
+
+      // Update local state
+      setGames(games.filter(game => game.id !== gameId));
+      toast.success("המשחק נמחק בהצלחה");
+    } catch (error) {
+      console.error("Error deleting game:", error);
+      toast.error("שגיאה במחיקת המשחק");
+    }
+  };
+
   const handleNewGame = () => {
     navigate("/pre-match-report");
   };
@@ -117,7 +149,7 @@ export const GameSelection = () => {
           <Card 
             key={game.id}
             className={cn(
-              "cursor-pointer hover:shadow-lg transition-shadow",
+              "cursor-pointer hover:shadow-lg transition-shadow relative",
               game.status === "completed" ? "bg-[#ea384c] text-white" : "bg-white"
             )}
             onClick={() => handleGameSelect(game)}
@@ -131,9 +163,20 @@ export const GameSelection = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-right">
-                נגד: {game.opponent || "לא צוין"}
-              </p>
+              <div className="flex justify-between items-center">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "hover:bg-red-500 hover:text-white",
+                    game.status === "completed" ? "text-white" : "text-red-500"
+                  )}
+                  onClick={(e) => handleDeleteGame(game.id, game.match_id, e)}
+                >
+                  <Trash2 className="h-5 w-5" />
+                </Button>
+                <p>נגד: {game.opponent || "לא צוין"}</p>
+              </div>
             </CardContent>
           </Card>
         ))}
