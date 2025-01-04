@@ -53,14 +53,6 @@ export const usePreMatchReport = () => {
     }
   };
 
-  // Type guard for checking if a Json value has the required Action properties
-  const isActionJson = (json: Json): json is { id: string; name: string; goal?: string | null } => {
-    return typeof json === 'object' && 
-           json !== null && 
-           'id' in json && 
-           'name' in json;
-  };
-
   const handleCombinedFormSubmit = async (data: {
     havaya: string;
     actions: Json;
@@ -137,4 +129,12 @@ export const usePreMatchReport = () => {
     handleCombinedFormSubmit,
     handleFinish
   };
+};
+
+// Type guard to check if a Json value is an object with specific properties
+const isActionJson = (json: Json): json is { id: string; name: string; goal?: string | null } => {
+  return typeof json === 'object' && 
+         json !== null && 
+         'id' in json && 
+         'name' in json;
 };

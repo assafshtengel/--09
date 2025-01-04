@@ -5,6 +5,7 @@ import { PreMatchQuestionnaire } from "./PreMatchQuestionnaire";
 import { motion } from "framer-motion";
 import { Json } from "@/integrations/supabase/types";
 import { Button } from "../ui/button";
+import { useToast } from "../ui/use-toast";
 
 interface PreMatchCombinedFormProps {
   position: string;
@@ -16,16 +17,26 @@ interface PreMatchCombinedFormProps {
 }
 
 export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFormProps) => {
+  const { toast } = useToast();
   const [havaya, setHavaya] = useState("");
   const [selectedActions, setSelectedActions] = useState<Json>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const handleSubmit = () => {
-    onSubmit({
-      havaya,
-      actions: selectedActions,
-      answers,
-    });
+    try {
+      onSubmit({
+        havaya,
+        actions: selectedActions,
+        answers,
+      });
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בשמירת הנתונים",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
