@@ -19,3 +19,11 @@ export interface SubstitutionLog {
   playerOut: string;
   minute: number;
 }
+
+export interface Game {
+  id: string;
+  match_date: string;
+  opponent: string | null;
+  match_id?: string;
+  status: "completed" | "preview";
+}

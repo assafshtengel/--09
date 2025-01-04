@@ -1,21 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
-import { he } from "date-fns/locale";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { Trash2 } from "lucide-react";
-
-interface Game {
-  id: string;
-  match_date: string;
-  opponent: string | null;
-  match_id?: string;
-  status: "completed" | "preview";
-}
+import { Game } from "@/types/game";
+import { GameCard } from "./GameCard";
 
 export const GameSelection = () => {
   const navigate = useNavigate();
@@ -45,8 +34,7 @@ export const GameSelection = () => {
           `)
           .eq("player_id", user.id)
           .eq("status", "completed")
-          .order("match_date", { ascending: false })
-          .limit(10);
+          .order("match_date", { ascending: false }); // Removed .limit(10)
 
         if (error) throw error;
 
@@ -105,12 +93,11 @@ export const GameSelection = () => {
   const handleDeleteGame = async (e: React.MouseEvent, gameId: string, matchId?: string) => {
     e.stopPropagation();
     
-    if (isDeleting) return; // Prevent multiple deletion attempts
+    if (isDeleting) return;
     
     try {
       setIsDeleting(true);
       
-      // Delete the match if it exists
       if (matchId) {
         const { error: matchError } = await supabase
           .from("matches")
@@ -123,7 +110,6 @@ export const GameSelection = () => {
         }
       }
 
-      // Delete the pre-match report
       const { error: reportError } = await supabase
         .from("pre_match_reports")
         .delete()
@@ -134,7 +120,6 @@ export const GameSelection = () => {
         throw reportError;
       }
 
-      // Update local state
       setGames(prevGames => prevGames.filter(game => game.id !== gameId));
       toast.success("המשחק נמחק בהצלחה");
     } catch (error) {
@@ -159,40 +144,13 @@ export const GameSelection = () => {
       
       <div className="space-y-4">
         {games.map((game) => (
-          <Card 
+          <GameCard
             key={game.id}
-            className={cn(
-              "cursor-pointer hover:shadow-lg transition-shadow relative",
-              game.status === "completed" ? "bg-[#ea384c] text-white" : "bg-white"
-            )}
-            onClick={() => handleGameSelect(game)}
-          >
-            <CardHeader>
-              <CardTitle className="text-right flex justify-between items-center">
-                <span>{format(new Date(game.match_date), "dd/MM/yyyy", { locale: he })}</span>
-                {game.status === "completed" && (
-                  <span className="text-sm">הושלם</span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={cn(
-                    "hover:bg-red-500 hover:text-white",
-                    game.status === "completed" ? "text-white" : "text-red-500"
-                  )}
-                  onClick={(e) => handleDeleteGame(e, game.id, game.match_id)}
-                  disabled={isDeleting}
-                >
-                  <Trash2 className="h-5 w-5" />
-                </Button>
-                <p>נגד: {game.opponent || "לא צוין"}</p>
-              </div>
-            </CardContent>
-          </Card>
+            game={game}
+            onSelect={handleGameSelect}
+            onDelete={handleDeleteGame}
+            isDeleting={isDeleting}
+          />
         ))}
 
         {games.length === 0 && (
