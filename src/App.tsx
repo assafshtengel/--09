@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Navigation } from "@/components/Navigation";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -11,7 +11,7 @@ import "./App.css";
 
 function App() {
   return (
-    <Router>
+    <>
       <Navigation />
       <Routes>
         <Route path="/sign-in" element={<SignIn />} />
@@ -42,7 +42,7 @@ function App() {
         />
       </Routes>
       <Toaster />
-    </Router>
+    </>
   );
 }
 
