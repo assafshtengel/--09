@@ -1,45 +1,23 @@
-import { Route, Routes } from "react-router-dom";
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
-import { SignIn } from "./pages/SignIn";
-import { SignUp } from "./pages/SignUp";
-import Dashboard from "./pages/Dashboard";
-import { PreMatchReport } from "./pages/PreMatchReport";
-import { GameTracker } from "./pages/GameTracker";
-import { PreMatchSummary } from "./components/pre-match/PreMatchSummary";
-import { Toaster } from "./components/ui/toaster";
-import { useEffect } from "react";
-import { supabase } from "./integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import { Navigation } from "@/components/Navigation";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { PreMatchReport } from "@/pages/PreMatchReport";
+import { PreMatchSummary } from "@/components/pre-match/PreMatchSummary";
+import Dashboard from "@/pages/Dashboard";
+import SignIn from "@/pages/SignIn";
+import SignUp from "@/pages/SignUp";
+import "./App.css";
 
 function App() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
-        navigate('/dashboard');
-      }
-      if (event === 'SIGNED_OUT') {
-        navigate('/signin');
-      }
-    });
-  }, [navigate]);
-
   return (
-    <>
+    <Router>
+      <Navigation />
       <Routes>
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
+        <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/sign-up" element={<SignUp />} />
         <Route
           path="/"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />
@@ -55,15 +33,7 @@ function App() {
           }
         />
         <Route
-          path="/game/:id"
-          element={
-            <ProtectedRoute>
-              <GameTracker />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/pre-match-summary/:matchId"
+          path="/pre-match-summary/:reportId"
           element={
             <ProtectedRoute>
               <PreMatchSummary />
@@ -72,7 +42,7 @@ function App() {
         />
       </Routes>
       <Toaster />
-    </>
+    </Router>
   );
 }
 

@@ -8,9 +8,10 @@ import html2canvas from "html2canvas";
 import { format } from "date-fns";
 import { Action } from "@/components/ActionSelector";
 import { convertJsonArrayToActions } from "@/utils/typeConverters";
+import { PreMatchContent } from "./summary/PreMatchContent";
 
 export const PreMatchSummary = () => {
-  const { matchId } = useParams();
+  const { reportId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSending, setIsSending] = useState(false);
@@ -23,49 +24,35 @@ export const PreMatchSummary = () => {
   const [actions, setActions] = useState<Action[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [havaya, setHavaya] = useState('');
-  const [aiInsights, setAiInsights] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchMatchData = async () => {
-      if (!matchId) return;
+    const fetchReportData = async () => {
+      if (!reportId) return;
 
       try {
-        const { data: match, error: matchError } = await supabase
-          .from('matches')
-          .select(`
-            match_date,
-            opponent,
-            pre_match_reports (
-              actions,
-              havaya,
-              questions_answers,
-              ai_insights
-            )
-          `)
-          .eq('id', matchId)
+        const { data: report, error } = await supabase
+          .from('pre_match_reports')
+          .select('*')
+          .eq('id', reportId)
           .single();
 
-        if (matchError) throw matchError;
+        if (error) throw error;
 
-        if (match) {
+        if (report) {
           setMatchDetails({
-            date: match.match_date,
-            opponent: match.opponent
+            date: report.match_date,
+            time: report.match_time,
+            opponent: report.opponent
           });
-
-          if (match.pre_match_reports) {
-            const report = match.pre_match_reports;
-            setActions(convertJsonArrayToActions(report.actions));
-            setHavaya(report.havaya || '');
-            setAnswers(report.questions_answers as Record<string, string>);
-            setAiInsights(report.ai_insights || []);
-          }
+          setActions(convertJsonArrayToActions(report.actions));
+          setHavaya(report.havaya || '');
+          setAnswers(report.questions_answers as Record<string, string>);
         }
       } catch (error) {
-        console.error('Error fetching match data:', error);
+        console.error('Error fetching report data:', error);
         toast({
           title: "שגיאה",
-          description: "אירעה שגיאה בטעינת נתוני המשחק",
+          description: "אירעה שגיאה בטעינת נתוני הדוח",
           variant: "destructive",
         });
       } finally {
@@ -73,8 +60,8 @@ export const PreMatchSummary = () => {
       }
     };
 
-    fetchMatchData();
-  }, [matchId, toast]);
+    fetchReportData();
+  }, [reportId, toast]);
 
   const handlePrint = () => {
     window.print();
@@ -173,36 +160,11 @@ export const PreMatchSummary = () => {
           </p>
         </div>
 
-        {havaya && (
-          <div className="border p-4 rounded-lg">
-            <h3 className="text-lg font-semibold mb-2 text-right">הוויה נבחרת</h3>
-            <p className="text-xl font-bold text-right">{havaya}</p>
-          </div>
-        )}
-
-        <div>
-          <h3 className="text-lg font-semibold mb-2 text-right">פעולות</h3>
-          <div className="space-y-2">
-            {actions.map((action, index) => (
-              <div key={index} className="border p-2 rounded text-right">
-                {action.name}
-                {action.goal && <div className="text-sm text-muted-foreground">יעד: {action.goal}</div>}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-lg font-semibold mb-2 text-right">תשובות לשאלות</h3>
-          <div className="space-y-4">
-            {Object.entries(answers).map(([question, answer], index) => (
-              <div key={index} className="border p-3 rounded">
-                <p className="font-medium text-right">{question}</p>
-                <p className="text-muted-foreground text-right">{answer}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        <PreMatchContent
+          havaya={havaya}
+          actions={actions}
+          answers={answers}
+        />
       </div>
 
       <div className="flex flex-wrap gap-4 justify-end">
