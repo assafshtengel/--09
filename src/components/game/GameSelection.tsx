@@ -34,7 +34,7 @@ export const GameSelection = () => {
           `)
           .eq("player_id", user.id)
           .eq("status", "completed")
-          .order("match_date", { ascending: false }); // Removed .limit(10)
+          .order("match_date", { ascending: false });
 
         if (error) throw error;
 
@@ -98,7 +98,38 @@ export const GameSelection = () => {
     try {
       setIsDeleting(true);
       
+      // First, delete all related match_actions if there's a match
       if (matchId) {
+        const { error: actionsError } = await supabase
+          .from("match_actions")
+          .delete()
+          .eq("match_id", matchId);
+
+        if (actionsError) {
+          console.error("Error deleting match actions:", actionsError);
+        }
+
+        // Delete match notes
+        const { error: notesError } = await supabase
+          .from("match_notes")
+          .delete()
+          .eq("match_id", matchId);
+
+        if (notesError) {
+          console.error("Error deleting match notes:", notesError);
+        }
+
+        // Delete match substitutions
+        const { error: subsError } = await supabase
+          .from("match_substitutions")
+          .delete()
+          .eq("match_id", matchId);
+
+        if (subsError) {
+          console.error("Error deleting substitutions:", subsError);
+        }
+
+        // Delete the match itself
         const { error: matchError } = await supabase
           .from("matches")
           .delete()
@@ -110,6 +141,7 @@ export const GameSelection = () => {
         }
       }
 
+      // Finally, delete the pre-match report
       const { error: reportError } = await supabase
         .from("pre_match_reports")
         .delete()
