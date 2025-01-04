@@ -25,7 +25,7 @@ export const GameControls = ({
             size="lg"
             className="w-full md:w-auto"
           >
-            התחל משחק
+            לחץ להמשך
           </Button>
         )}
         {gamePhase === "playing" && (
