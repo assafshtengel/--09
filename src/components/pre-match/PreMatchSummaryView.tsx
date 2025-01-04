@@ -2,7 +2,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import html2canvas from "html2canvas";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PreMatchHeader } from "./summary/PreMatchHeader";
 import { PreMatchContent } from "./summary/PreMatchContent";
@@ -28,6 +28,17 @@ export const PreMatchSummaryView = ({
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isSending, setIsSending] = useState(false);
+
+  useEffect(() => {
+    console.log("PreMatchSummaryView props:", {
+      matchDate,
+      opponent,
+      position,
+      havaya,
+      actions,
+      answers,
+    });
+  }, [matchDate, opponent, position, havaya, actions, answers]);
 
   const handlePrint = () => {
     window.print();
