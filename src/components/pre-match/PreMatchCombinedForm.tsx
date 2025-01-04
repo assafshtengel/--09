@@ -22,18 +22,18 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const handleActionsSubmit = (actionsJson: Json) => {
-    // Convert Json back to Action[] for local state
-    const actions = Array.isArray(actionsJson) ? actionsJson.map(action => ({
-      id: String(action.id),
-      name: String(action.name),
-      isSelected: true,
-      goal: action.goal ? String(action.goal) : undefined
-    })) : [];
-    setSelectedActions(actions);
+    if (Array.isArray(actionsJson)) {
+      const actions = actionsJson.map(action => ({
+        id: String(action.id || ''),
+        name: String(action.name || ''),
+        isSelected: true,
+        goal: action.goal ? String(action.goal) : undefined
+      }));
+      setSelectedActions(actions);
+    }
   };
 
   const handleSubmit = () => {
-    // Convert selectedActions back to Json format for final submission
     const actionsJson = selectedActions.map(({ id, name, goal }) => ({
       id,
       name,
@@ -74,6 +74,7 @@ export const PreMatchCombinedForm = ({ position, onSubmit }: PreMatchCombinedFor
           <Button 
             onClick={handleSubmit}
             disabled={!havaya || selectedActions.length === 0 || Object.keys(answers).length === 0}
+            className="hidden"
           >
             המשך לסיכום
           </Button>

@@ -18,24 +18,25 @@ export const ActionsStep = ({
   havaya,
   selectedActions,
   onHavayaChange,
-  onActionsSubmit
+  onActionsSubmit,
 }: ActionsStepProps) => {
   return (
     <motion.div
-      className="w-full max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg space-y-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
+      className="space-y-8"
     >
-      <div className="space-y-8">
-        <HavayaSelector value={havaya} onChange={onHavayaChange} />
-        <ActionSelector
-          position={position}
-          onSubmit={onActionsSubmit}
-        />
-        <SocialShareGoals goals={selectedActions} />
-      </div>
+      <HavayaSelector value={havaya} onChange={onHavayaChange} />
+      
+      <ActionSelector
+        position={position}
+        onSubmit={onActionsSubmit}
+      />
+
+      {selectedActions.length > 0 && (
+        <SocialShareGoals actions={selectedActions} />
+      )}
     </motion.div>
   );
 };

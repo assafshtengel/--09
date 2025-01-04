@@ -60,7 +60,7 @@ export const PreMatchReport = () => {
 
   const handleCombinedFormSubmit = async (data: {
     havaya: string;
-    actions: Action[];
+    actions: Json;
     answers: Record<string, string>;
   }) => {
     if (!matchId) return;
@@ -69,14 +69,6 @@ export const PreMatchReport = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user found');
 
-      // Convert actions array to JSON-compatible format
-      const jsonActions = data.actions.map(action => ({
-        id: action.id,
-        name: action.name,
-        goal: action.goal,
-        isSelected: action.isSelected
-      })) as Json;
-
       const { data: report, error } = await supabase
         .from('pre_match_reports')
         .insert({
@@ -84,7 +76,7 @@ export const PreMatchReport = () => {
           match_date: matchDetails.date,
           match_time: matchDetails.time,
           opponent: matchDetails.opponent,
-          actions: jsonActions,
+          actions: data.actions,
           havaya: data.havaya,
           questions_answers: data.answers as Json,
           status: 'completed'
@@ -104,7 +96,16 @@ export const PreMatchReport = () => {
 
       setReportId(report.id);
       setHavaya(data.havaya);
-      setSelectedActions(data.actions);
+      // Convert Json back to Action[] for local state
+      if (Array.isArray(data.actions)) {
+        const actions = data.actions.map(action => ({
+          id: String(action.id || ''),
+          name: String(action.name || ''),
+          isSelected: true,
+          goal: action.goal ? String(action.goal) : undefined
+        }));
+        setSelectedActions(actions);
+      }
       setQuestionsAnswers(data.answers);
       setCurrentStep("summary");
     } catch (error) {
