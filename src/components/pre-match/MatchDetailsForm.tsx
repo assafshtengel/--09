@@ -4,8 +4,9 @@ import { useState } from "react";
 
 interface MatchDetails {
   date: string;
-  time: string;
+  time?: string;
   opponent?: string;
+  location?: string;
   position?: string;
 }
 
@@ -47,7 +48,6 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            required
             className="text-right"
           />
         </div>

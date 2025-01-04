@@ -1,172 +1,176 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { ActionSelector, Action } from "@/components/ActionSelector";
+import { PreMatchQuestionnaire } from "./PreMatchQuestionnaire";
 import { MatchDetailsForm } from "./MatchDetailsForm";
-import { PreMatchCombinedForm } from "./PreMatchCombinedForm";
-import { PreMatchSummaryView } from "./PreMatchSummaryView";
-import { Action } from "@/components/ActionSelector";
+import { PreMatchSummary } from "./PreMatchSummary";
+import { PreMatchDashboard } from "./PreMatchDashboard";
+import { SocialShareGoals } from "./SocialShareGoals";
+import { HavayaSelector } from "./HavayaSelector";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Json } from "@/integrations/supabase/types";
-
-type Step = "details" | "form" | "summary";
-
-// Type guard to check if a Json value is an object with specific properties
-const isActionJson = (json: Json): json is { id: string; name: string; goal?: string | null } => {
-  return typeof json === 'object' && 
-         json !== null && 
-         'id' in json && 
-         'name' in json;
-};
+import { motion, AnimatePresence } from "framer-motion";
+import { Progress } from "@/components/ui/progress";
+import { ChevronRight, ChevronLeft, Save } from "lucide-react";
 
 export const PreMatchReport = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [currentStep, setCurrentStep] = useState<Step>("details");
+  const [currentStep, setCurrentStep] = useState<
+    "dashboard" | "details" | "actions" | "questions" | "summary"
+  >("dashboard");
   const [matchDetails, setMatchDetails] = useState({
     date: new Date().toISOString().split("T")[0],
-    time: "",
     position: "forward",
-    opponent: "",
   });
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
-  const [questionsAnswers, setQuestionsAnswers] = useState<Record<string, string>>({});
+  const [questionsAnswers, setQuestionsAnswers] = useState({});
   const [havaya, setHavaya] = useState("");
-  const [matchId, setMatchId] = useState<string | null>(null);
-  const [reportId, setReportId] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  const handleMatchDetailsSubmit = async (details: any) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user found');
+  const steps = [
+    { id: "dashboard", label: "התחלה" },
+    { id: "details", label: "פרטי משחק" },
+    { id: "actions", label: "יעדים" },
+    { id: "questions", label: "שאלון" },
+    { id: "summary", label: "סיכום" },
+  ];
 
-      const { data: match, error: matchError } = await supabase
-        .from('matches')
-        .insert({
-          player_id: user.id,
-          match_date: details.date,
-          opponent: details.opponent,
-          player_position: details.position,
-          status: 'preview'
-        })
-        .select()
-        .single();
+  const currentStepIndex = steps.findIndex(step => step.id === currentStep);
+  const progress = ((currentStepIndex + 1) / steps.length) * 100;
 
-      if (matchError) throw matchError;
-      
-      setMatchId(match.id);
-      setMatchDetails(details);
-      setCurrentStep("form");
-    } catch (error) {
-      console.error('Error saving match details:', error);
-      toast({
-        title: "שגיאה",
-        description: "אירעה שגיאה בשמירת פרטי המשחק",
-        variant: "destructive",
-      });
-    }
+  const handleMatchDetailsSubmit = (details) => {
+    setMatchDetails(details);
+    setCurrentStep("actions");
+    toast({
+      title: "פרטי המשחק נשמרו",
+      description: "הבה נמשיך להגדרת היעדים",
+    });
   };
 
-  const handleCombinedFormSubmit = async (data: {
-    havaya: string;
-    actions: Json;
-    answers: Record<string, string>;
-  }) => {
-    if (!matchId) return;
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user found');
-
-      const { data: report, error } = await supabase
-        .from('pre_match_reports')
-        .insert({
-          player_id: user.id,
-          match_date: matchDetails.date,
-          match_time: matchDetails.time,
-          opponent: matchDetails.opponent,
-          actions: data.actions,
-          havaya: data.havaya,
-          questions_answers: data.answers as Json,
-          status: 'completed'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const { error: updateError } = await supabase
-        .from('matches')
-        .update({ pre_match_report_id: report.id })
-        .eq('id', matchId);
-
-      if (updateError) throw updateError;
-
-      setReportId(report.id);
-      setHavaya(data.havaya);
-      
-      if (Array.isArray(data.actions)) {
-        const actions = data.actions
-          .filter(isActionJson)
-          .map(action => ({
-            id: action.id,
-            name: action.name,
-            isSelected: true,
-            goal: action.goal || undefined
-          }));
-        setSelectedActions(actions);
-      }
-      
-      setQuestionsAnswers(data.answers);
-      setCurrentStep("summary");
-    } catch (error) {
-      console.error('Error saving form data:', error);
-      toast({
-        title: "שגיאה",
-        description: "אירעה שגיאה בשמירת הנתונים",
-        variant: "destructive",
-      });
-    }
+  const handleActionsSubmit = (actions: Action[]) => {
+    setSelectedActions(actions);
+    setCurrentStep("questions");
+    toast({
+      title: "היעדים נשמרו",
+      description: "הבה נמשיך לשאלון",
+    });
   };
 
-  const handleFinish = () => {
-    navigate('/dashboard');
+  const handleQuestionsSubmit = (answers: Record<string, string>) => {
+    setQuestionsAnswers(answers);
+    setCurrentStep("summary");
+    toast({
+      title: "תשובותיך נשמרו",
+      description: "הבה נסכם את הדוח",
+    });
+  };
+
+  const handleFinalSubmit = async () => {
+    toast({
+      title: "הדוח נשלח בהצלחה",
+      description: "תודה על השיתוף!",
+    });
   };
 
   const renderStep = () => {
-    switch (currentStep) {
-      case "details":
-        return (
-          <MatchDetailsForm
-            initialData={matchDetails}
-            onSubmit={handleMatchDetailsSubmit}
-          />
-        );
-      case "form":
-        return (
-          <PreMatchCombinedForm
-            position={matchDetails.position}
-            onSubmit={handleCombinedFormSubmit}
-          />
-        );
-      case "summary":
-        return (
-          <PreMatchSummaryView
-            matchDate={matchDetails.date}
-            opponent={matchDetails.opponent}
-            position={matchDetails.position}
-            havaya={havaya}
-            actions={selectedActions}
-            answers={questionsAnswers}
-          />
-        );
-      default:
-        return null;
-    }
+    const commonProps = {
+      className: "w-full max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg space-y-6",
+      initial: { opacity: 0, y: 20 },
+      animate: { opacity: 1, y: 0 },
+      exit: { opacity: 0, y: -20 },
+      transition: { duration: 0.3 }
+    };
+
+    return (
+      <AnimatePresence mode="wait">
+        {currentStep === "dashboard" && (
+          <motion.div {...commonProps} key="dashboard">
+            <PreMatchDashboard onCreateNew={() => setCurrentStep("details")} />
+          </motion.div>
+        )}
+
+        {currentStep === "details" && (
+          <motion.div {...commonProps} key="details">
+            <MatchDetailsForm
+              onSubmit={handleMatchDetailsSubmit}
+              initialData={matchDetails}
+            />
+          </motion.div>
+        )}
+
+        {currentStep === "actions" && (
+          <motion.div {...commonProps} key="actions">
+            <div className="space-y-8">
+              <HavayaSelector value={havaya} onChange={setHavaya} />
+              <ActionSelector
+                position={matchDetails.position || "forward"}
+                onSubmit={handleActionsSubmit}
+              />
+              <SocialShareGoals goals={selectedActions} />
+            </div>
+          </motion.div>
+        )}
+
+        {currentStep === "questions" && (
+          <motion.div {...commonProps} key="questions">
+            <PreMatchQuestionnaire onSubmit={handleQuestionsSubmit} />
+          </motion.div>
+        )}
+
+        {currentStep === "summary" && (
+          <motion.div {...commonProps} key="summary">
+            <PreMatchSummary
+              matchDetails={matchDetails}
+              actions={selectedActions}
+              answers={questionsAnswers}
+              havaya={havaya}
+              aiInsights={[]}
+              onFinish={handleFinalSubmit}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
+        {currentStep !== "dashboard" && (
+          <div className="mb-8 space-y-4">
+            <div className="flex justify-between items-center">
+              <h1 className="text-2xl font-bold text-right">
+                {steps.find(step => step.id === currentStep)?.label}
+              </h1>
+              <div className="text-sm text-gray-500">
+                שלב {currentStepIndex + 1} מתוך {steps.length}
+              </div>
+            </div>
+            
+            <Progress value={progress} className="h-2" />
+            
+            <div className="flex justify-between mt-4">
+              {currentStepIndex > 0 && (
+                <button
+                  onClick={() => setCurrentStep(steps[currentStepIndex - 1].id as any)}
+                  className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                  חזור
+                </button>
+              )}
+              
+              {currentStep !== "summary" && currentStepIndex < steps.length - 1 && (
+                <button
+                  onClick={() => setCurrentStep(steps[currentStepIndex + 1].id as any)}
+                  className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mr-auto"
+                >
+                  המשך
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {renderStep()}
       </div>
     </div>

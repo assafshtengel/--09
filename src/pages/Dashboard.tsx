@@ -1,112 +1,134 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Trophy, Timer, FileText, Calendar, Activity } from "lucide-react";
+import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
+import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
+import { StatsOverview } from "@/components/dashboard/StatsOverview";
 
-interface PreMatchReport {
-  id: string;
-  match_date: string;
-  opponent?: string;
-  havaya?: string;
-}
-
-export default function Dashboard() {
+const Dashboard = () => {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<any>(null);
-  const [reports, setReports] = useState<PreMatchReport[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
-    const getProfile = async () => {
+    const checkAuth = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-          setProfile(profileData);
-
-          // Fetch all pre-match reports for the user
-          const { data: reportsData, error } = await supabase
-            .from('pre_match_reports')
-            .select('*')
-            .eq('player_id', user.id)
-            .order('match_date', { ascending: false });
-
-          if (error) throw error;
-          setReports(reportsData || []);
+        
+        if (!user) {
+          navigate("/");
+          return;
         }
+
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (!profileData) {
+          navigate("/player");
+          return;
+        }
+
+        setProfile(profileData);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error checking auth:", error);
+        navigate("/");
       } finally {
         setIsLoading(false);
       }
     };
-    getProfile();
-  }, []);
+
+    checkAuth();
+  }, [navigate]);
 
   if (isLoading) {
     return <div className="flex justify-center items-center min-h-screen">טוען...</div>;
   }
 
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4 text-right">
-        {profile ? `ברוך הבא, ${profile.full_name}` : 'טוען...'}
-      </h1>
+  if (!profile) {
+    return null;
+  }
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-right mb-4">פעולות מהירות</h2>
-          <Button 
-            onClick={() => navigate('/pre-match-report')}
-            className="w-full"
+  const quickActions = [
+    {
+      title: "יעדי טרום משחק",
+      icon: <Trophy className="h-6 w-6 text-primary" />,
+      description: "הגדר יעדים ומטרות למשחק הבא",
+      onClick: () => navigate("/pre-match-report"),
+      gradient: "from-blue-500 to-blue-600"
+    },
+    {
+      title: "מעקב משחק",
+      icon: <Timer className="h-6 w-6 text-primary" />,
+      description: "עקוב אחר ביצועים במהלך המשחק",
+      onClick: () => navigate("/game-selection"),
+      gradient: "from-green-500 to-green-600"
+    },
+    {
+      title: "סיכום אימון",
+      icon: <FileText className="h-6 w-6 text-primary" />,
+      description: "תעד ונתח את האימון שלך",
+      onClick: () => navigate("/training-summary"),
+      gradient: "from-purple-500 to-purple-600"
+    },
+    {
+      title: "מערכת שעות",
+      icon: <Calendar className="h-6 w-6 text-primary" />,
+      description: "נהל את לוח הזמנים השבועי שלך",
+      onClick: () => navigate("/schedule"),
+      gradient: "from-orange-500 to-orange-600"
+    }
+  ];
+
+  return (
+    <div className="container mx-auto p-4 space-y-8">
+      {/* Header Section */}
+      <div className="text-right mb-8">
+        <h1 className="text-4xl font-bold mb-2">ברוך הבא, {profile.full_name}</h1>
+        <p className="text-muted-foreground text-lg">בחר באפשרות כדי להתחיל</p>
+      </div>
+
+      {/* Quick Actions Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        {quickActions.map((action, index) => (
+          <button
+            key={index}
+            onClick={action.onClick}
+            className={`p-6 rounded-xl bg-gradient-to-r ${action.gradient} transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl text-white`}
           >
-            דוח טרום משחק חדש
-          </Button>
+            <div className="flex flex-col items-end space-y-4">
+              <div className="bg-white/20 p-3 rounded-full">
+                {action.icon}
+              </div>
+              <h3 className="text-xl font-bold">{action.title}</h3>
+              <p className="text-sm opacity-90 text-right">{action.description}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Statistics Section */}
+      <div className="space-y-8">
+        <div className="flex justify-between items-center mb-6">
+          <div className="h-0.5 flex-grow bg-gradient-to-r from-transparent to-gray-200"></div>
+          <h2 className="text-2xl font-bold px-4">סטטיסטיקות וביצועים</h2>
+          <div className="h-0.5 flex-grow bg-gradient-to-l from-transparent to-gray-200"></div>
         </div>
 
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-right mb-4">דוחות קודמים</h2>
-          <ScrollArea className="h-[400px] rounded-md border p-4">
-            <div className="space-y-4">
-              {reports.length > 0 ? (
-                reports.map((report) => (
-                  <div
-                    key={report.id}
-                    className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                    onClick={() => navigate(`/pre-match-summary/${report.id}`)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="text-right">
-                        <p className="font-medium">
-                          {format(new Date(report.match_date), 'dd/MM/yyyy')}
-                        </p>
-                        {report.opponent && (
-                          <p className="text-sm text-gray-600">
-                            נגד: {report.opponent}
-                          </p>
-                        )}
-                        {report.havaya && (
-                          <p className="text-sm text-gray-600">
-                            הוויה: {report.havaya}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center text-gray-500">אין דוחות קודמים</p>
-              )}
-            </div>
-          </ScrollArea>
+        <StatsOverview />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <PerformanceChart />
+          <GoalsProgress />
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Dashboard;

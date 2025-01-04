@@ -1,26 +1,38 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Calendar } from "@/components/ui/calendar";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { QuestionSelector } from "./QuestionSelector";
-import { RatingSliders } from "./form/RatingSliders";
-import { DateTimeFields } from "./form/DateTimeFields";
-import { AIInsights } from "./AIInsights";
-import { WhatsAppShare } from "./form/WhatsAppShare";
-import { SubmitButton } from "./form/SubmitButton";
-import type { TrainingSummaryFormData } from "./types";
+import type { Database } from "@/integrations/supabase/types";
+
+type TrainingSummary = Database['public']['Tables']['training_summaries']['Insert'];
+
+interface TrainingSummaryFormData {
+  trainingDate: Date;
+  trainingTime: string;
+  satisfactionRating: number;
+  challengeHandlingRating: number;
+  energyFocusRating: number;
+  answers: Record<string, string>;
+}
 
 export const TrainingSummaryForm = () => {
   const { toast } = useToast();
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
-  const [insights, setInsights] = useState<string | null>(null);
-  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
-  const [shareWithCoach, setShareWithCoach] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
   const form = useForm<TrainingSummaryFormData>({
     defaultValues: {
       trainingDate: new Date(),
@@ -32,36 +44,7 @@ export const TrainingSummaryForm = () => {
     },
   });
 
-  const getAIInsights = async (data: TrainingSummaryFormData) => {
-    setIsLoadingInsights(true);
-    try {
-      const { data: aiResponse, error } = await supabase.functions.invoke('analyze-training', {
-        body: {
-          ratings: {
-            שביעות_רצון: data.satisfactionRating,
-            התמודדות_עם_אתגרים: data.challengeHandlingRating,
-            אנרגיה_וריכוז: data.energyFocusRating
-          },
-          answers: data.answers
-        }
-      });
-
-      if (error) throw error;
-      setInsights(aiResponse.insights);
-    } catch (error) {
-      console.error('Error getting AI insights:', error);
-      toast({
-        title: "שגיאה בקבלת תובנות AI",
-        description: "לא הצלחנו לקבל המלצות. אנא נסה שוב מאוחר יותר.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingInsights(false);
-    }
-  };
-
   const onSubmit = async (data: TrainingSummaryFormData) => {
-    setIsSubmitting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -69,10 +52,7 @@ export const TrainingSummaryForm = () => {
         throw new Error("לא נמצא משתמש מחובר");
       }
 
-      // Get AI insights before saving
-      await getAIInsights(data);
-
-      const summary = {
+      const summary: TrainingSummary = {
         player_id: user.id,
         training_date: format(data.trainingDate, "yyyy-MM-dd"),
         training_time: data.trainingTime,
@@ -88,44 +68,6 @@ export const TrainingSummaryForm = () => {
 
       if (error) throw error;
 
-      if (shareWithCoach) {
-        // Get coach's phone number from profile
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('coach_phone_number')
-          .eq('id', user.id)
-          .single();
-
-        if (profile?.coach_phone_number) {
-          const summaryText = `סיכום אימון מ-${format(data.trainingDate, "dd/MM/yyyy")}:\n` +
-            `שביעות רצון: ${data.satisfactionRating}/5\n` +
-            `התמודדות עם אתגרים: ${data.challengeHandlingRating}/5\n` +
-            `אנרגיה וריכוז: ${data.energyFocusRating}/5\n` +
-            `תובנות: ${insights || 'אין תובנות זמינות'}`;
-
-          const { error: whatsappError } = await supabase.functions.invoke('send-whatsapp', {
-            body: {
-              message: summaryText,
-              recipientNumber: profile.coach_phone_number
-            }
-          });
-
-          if (whatsappError) {
-            console.error('Error sending WhatsApp message:', whatsappError);
-            toast({
-              title: "שגיאה בשליחת ההודעה",
-              description: "לא הצלחנו לשלוח את ההודעה למאמן. אנא נסה שוב מאוחר יותר.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "נשלח בהצלחה",
-              description: "סיכום האימון נשלח למאמן",
-            });
-          }
-        }
-      }
-
       toast({
         title: "הסיכום נשמר בהצלחה",
         description: "תודה על מילוי הטופס",
@@ -140,8 +82,6 @@ export const TrainingSummaryForm = () => {
         description: "לא ניתן לשמור את הסיכום",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -149,8 +89,115 @@ export const TrainingSummaryForm = () => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-4">
-          <DateTimeFields form={form} />
-          <RatingSliders form={form} />
+          <FormField
+            control={form.control}
+            name="trainingDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>תאריך האימון</FormLabel>
+                <FormControl>
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={(date) => field.onChange(date)}
+                    className="rounded-md border"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="trainingTime"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>שעת האימון</FormLabel>
+                <FormControl>
+                  <Input type="time" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="space-y-6">
+            <FormField
+              control={form.control}
+              name="satisfactionRating"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>עד כמה אתה מרוצה מהביצועים שלך באימון היום?</FormLabel>
+                  <FormControl>
+                    <Slider
+                      min={1}
+                      max={7}
+                      step={1}
+                      value={[field.value]}
+                      onValueChange={(value) => field.onChange(value[0])}
+                      className="w-full"
+                    />
+                  </FormControl>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>חלש</span>
+                    <span>מצוין</span>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="challengeHandlingRating"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>איך התמודדת עם אתגרים או תרגילים קשים?</FormLabel>
+                  <FormControl>
+                    <Slider
+                      min={1}
+                      max={7}
+                      step={1}
+                      value={[field.value]}
+                      onValueChange={(value) => field.onChange(value[0])}
+                      className="w-full"
+                    />
+                  </FormControl>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>חלש</span>
+                    <span>מצוין</span>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="energyFocusRating"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>איך היו רמות האנרגיה והריכוז שלך במהלך האימון?</FormLabel>
+                  <FormControl>
+                    <Slider
+                      min={1}
+                      max={7}
+                      step={1}
+                      value={[field.value]}
+                      onValueChange={(value) => field.onChange(value[0])}
+                      className="w-full"
+                    />
+                  </FormControl>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>חלש</span>
+                    <span>מצוין</span>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <QuestionSelector
             onQuestionsSelected={(questions) => setSelectedQuestions(questions)}
@@ -172,16 +219,11 @@ export const TrainingSummaryForm = () => {
               )}
             />
           ))}
-
-          <WhatsAppShare
-            checked={shareWithCoach}
-            onCheckedChange={(checked) => setShareWithCoach(checked)}
-          />
         </div>
 
-        <AIInsights insights={insights} isLoading={isLoadingInsights} />
-
-        <SubmitButton isLoading={isSubmitting} />
+        <Button type="submit" className="w-full">
+          שמור סיכום אימון
+        </Button>
       </form>
     </Form>
   );

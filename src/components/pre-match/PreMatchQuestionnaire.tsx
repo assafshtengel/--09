@@ -1,55 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-
-interface PreMatchQuestionnaireProps {
-  onSubmit: (answers: Record<string, string>) => void;
-}
-
-export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) => {
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  
-  // Select 6 random questions on component mount
-  const [selectedQuestions] = useState(() => {
-    const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 6);
-  });
-
-  const handleAnswerChange = (question: string, answer: string) => {
-    const newAnswers = {
-      ...answers,
-      [question]: answer
-    };
-    setAnswers(newAnswers);
-    onSubmit(newAnswers); // Send answers to parent immediately when they change
-  };
-
-  // Also submit answers when component mounts to ensure parent has initial state
-  useEffect(() => {
-    onSubmit(answers);
-  }, []);
-
-  return (
-    <form className="space-y-6">
-      <div className="space-y-6">
-        {selectedQuestions.map((question, index) => (
-          <div key={index} className="space-y-2">
-            <label className="block text-right font-medium">
-              {question}
-            </label>
-            <Textarea
-              value={answers[question] || ""}
-              onChange={(e) => handleAnswerChange(question, e.target.value)}
-              className="w-full text-right"
-              placeholder="הכנס את תשובתך כאן..."
-              required
-            />
-          </div>
-        ))}
-      </div>
-    </form>
-  );
-};
 
 const allQuestions = [
   "מהי המטרה העיקרית שלך במשחק הקרוב?",
@@ -71,5 +22,66 @@ const allQuestions = [
   "מה המחשבות שלך על היריב?",
   "איך אתה מתמודד עם שינויים בתכנית המשחק?",
   "מה עוזר לך להירגע לפני משחק?",
-  "איך אתה שומר על אנרגיה במהלך המשחק?"
+  "איך אתה שומר על אנרגיה במהלך המשחק?",
+  "מה אתה עושה כשאתה מרגיש עייף?",
+  "איך אתה מתמודד עם ביקורת?",
+  "מה מניע אותך להצליח?",
+  "איך אתה מתכנן להתאושש אחרי המשחק?",
+  "מה אתה עושה כשאתה מרגיש חוסר ביטחון?",
+  "איך אתה מתמודד עם כישלון?",
+  "מה עוזר לך להתרכז בזמן אימונים?",
+  "איך אתה מתכונן ליום המשחק?",
+  "מה אתה עושה כשאתה מרגיש לחוץ?",
+  "איך אתה מתמודד עם הצלחה?"
 ];
+
+interface PreMatchQuestionnaireProps {
+  onSubmit: (answers: Record<string, string>) => void;
+}
+
+export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) => {
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  
+  // Select 5 random questions
+  const selectedQuestions = useState(() => {
+    const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 5);
+  })[0];
+
+  const handleAnswerChange = (question: string, answer: string) => {
+    setAnswers(prev => ({
+      ...prev,
+      [question]: answer
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(answers);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-6">
+        {selectedQuestions.map((question, index) => (
+          <div key={index} className="space-y-2">
+            <label className="block text-right font-medium">
+              {question}
+            </label>
+            <Textarea
+              value={answers[question] || ""}
+              onChange={(e) => handleAnswerChange(question, e.target.value)}
+              className="w-full text-right"
+              placeholder="הכנס את תשובתך כאן..."
+              required
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="flex justify-end">
+        <Button type="submit">המשך</Button>
+      </div>
+    </form>
+  );
+};
