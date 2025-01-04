@@ -127,10 +127,43 @@ export const GameSummary = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error("No user email found");
 
+      // Get performance ratings from the post_game_feedback table
+      const { data: feedback } = await supabase
+        .from('post_game_feedback')
+        .select('performance_ratings')
+        .eq('match_id', matchId)
+        .single();
+
+      const performanceRatings = feedback?.performance_ratings || {};
+
+      // Create the performance ratings table HTML
+      const ratingsTableHTML = `
+        <div style="margin-top: 20px; margin-bottom: 20px;">
+          <h3 style="text-align: right;">ציוני ביצוע</h3>
+          <table style="width: 100%; border-collapse: collapse; direction: rtl;">
+            <thead>
+              <tr>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">נושא</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">ציון</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Object.entries(performanceRatings).map(([aspect, rating]) => `
+                <tr>
+                  <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${aspect}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${rating}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
       const htmlContent = `
         <div dir="rtl">
           <h1>סיכום משחק</h1>
-          ${document.getElementById('game-summary-content')?.innerHTML}
+          ${document.getElementById('game-summary-content')?.innerHTML || ''}
+          ${ratingsTableHTML}
         </div>
       `;
 
