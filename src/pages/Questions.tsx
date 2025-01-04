@@ -30,7 +30,7 @@ export const Questions = () => {
         throw new Error('No authenticated user found');
       }
 
-      // Get match details
+      // Get match details and existing pre-match report data
       const { data: match } = await supabase
         .from('matches')
         .select(`
@@ -46,6 +46,23 @@ export const Questions = () => {
         throw new Error('Match not found');
       }
 
+      // Get existing actions and havaya from pre-match report if it exists
+      let existingActions = [];
+      let existingHavaya = '';
+      
+      if (match.pre_match_report_id) {
+        const { data: existingReport } = await supabase
+          .from('pre_match_reports')
+          .select('actions, havaya')
+          .eq('id', match.pre_match_report_id)
+          .single();
+          
+        if (existingReport) {
+          existingActions = existingReport.actions;
+          existingHavaya = existingReport.havaya;
+        }
+      }
+
       let reportId = match.pre_match_report_id;
 
       // If no pre-match report exists, create one
@@ -57,6 +74,8 @@ export const Questions = () => {
             match_date: match.match_date,
             opponent: match.opponent,
             questions_answers: answers,
+            actions: existingActions,
+            havaya: existingHavaya,
             status: 'completed'
           })
           .select()
@@ -74,7 +93,7 @@ export const Questions = () => {
         
         reportId = newReport.id;
       } else {
-        // Update existing report
+        // Update existing report while preserving actions and havaya
         const { error: updateError } = await supabase
           .from('pre_match_reports')
           .update({ 
@@ -98,8 +117,8 @@ export const Questions = () => {
         matchDate: match.match_date,
         opponent: match.opponent,
         position: match.player_position,
-        havaya: report?.havaya,
-        actions: report?.actions,
+        havaya: report?.havaya || '',
+        actions: report?.actions || [],
         answers
       });
       setShowSummary(true);
