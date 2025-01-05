@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { FormField } from "./player-form/FormField";
@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
+export const PlayerForm = ({ onSubmit, initialData }: PlayerFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,6 +30,13 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
   });
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+      setSelectedRoles(initialData.roles);
+    }
+  }, [initialData]);
 
   const ageCategories = [
     "טרום א'",
@@ -70,8 +77,6 @@ export const PlayerForm = ({ onSubmit }: PlayerFormProps) => {
       });
 
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      navigate("/dashboard");
       
       if (onSubmit) {
         await onSubmit();

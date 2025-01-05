@@ -11,4 +11,5 @@ export interface PlayerFormData {
 
 export interface PlayerFormProps {
   onSubmit: () => void;
+  initialData?: PlayerFormData | null;
 }
