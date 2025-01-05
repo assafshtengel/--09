@@ -158,7 +158,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
                   type="text"
                   value={action.goal || ""}
                   onChange={(e) => handleGoalChange(action.id, e.target.value)}
-                  placeholder="הגדר יעד (לדוגמה: 5 הצלחות)"
+                  placeholder="הגדר יעד (לדוגמה: 5 פעולות)"
                   className="text-right"
                 />
               </div>
