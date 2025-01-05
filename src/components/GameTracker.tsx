@@ -5,9 +5,8 @@ import { toast } from "@/hooks/use-toast";
 import { Action } from "@/components/ActionSelector";
 import { GamePreview } from "./game/GamePreview";
 import { GameSummary } from "./game/GameSummary";
-import { GameHeader } from "./game/mobile/GameHeader";
-import { GameControls } from "./game/mobile/GameControls";
-import { ActionButtons } from "./game/mobile/ActionButtons";
+import { GameLayout } from "./game/mobile/GameLayout";
+import { ActionsList } from "./game/mobile/ActionsList";
 import { GameNotes } from "./game/GameNotes";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { HalftimeSummary } from "./game/HalftimeSummary";
@@ -335,42 +334,34 @@ export const GameTracker = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-md mx-auto bg-white min-h-screen relative pb-24 md:pb-0">
-        {gamePhase !== "preview" && (
-          <GameHeader
-            isTimerRunning={isTimerRunning}
-            minute={minute}
-            onMinuteChange={setMinute}
+    <GameLayout
+      gamePhase={gamePhase}
+      isTimerRunning={isTimerRunning}
+      minute={minute}
+      onMinuteChange={setMinute}
+      actions={actions}
+      actionLogs={actionLogs}
+      onStartMatch={startMatch}
+      onEndHalf={endHalf}
+      onStartSecondHalf={startSecondHalf}
+      onEndMatch={endMatch}
+    >
+      {gamePhase === "preview" && (
+        <GamePreview
+          actions={actions}
+          onActionAdd={handleAddAction}
+          onStartMatch={startMatch}
+        />
+      )}
+
+      {(gamePhase === "playing" || gamePhase === "secondHalf") && (
+        <div className="h-full flex flex-col">
+          <ActionsList
             actions={actions}
-            actionLogs={actionLogs}
+            onLog={logAction}
           />
-        )}
-
-        {gamePhase === "preview" && (
-          <GamePreview
-            actions={actions}
-            onActionAdd={handleAddAction}
-            onStartMatch={startMatch}
-          />
-        )}
-
-        {(gamePhase === "playing" || gamePhase === "secondHalf") && (
-          <div className="space-y-6 p-4">
-            <div className="grid gap-6">
-              {actions.map(action => (
-                <div key={action.id} className="border rounded-lg p-4 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">{action.name}</span>
-                    <ActionButtons
-                      actionId={action.id}
-                      onLog={logAction}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
+          
+          <div className="p-4 space-y-4">
             <GameNotes
               generalNote={generalNote}
               onNoteChange={setGeneralNote}
@@ -383,43 +374,35 @@ export const GameTracker = () => {
               onPlayerReturn={handlePlayerReturn}
             />
           </div>
-        )}
+        </div>
+      )}
 
-        <GameControls
-          gamePhase={gamePhase}
-          onStartMatch={startMatch}
-          onEndHalf={endHalf}
+      {gamePhase === "halftime" && (
+        <HalftimeSummary
+          isOpen={showSummary}
+          onClose={() => setShowSummary(false)}
           onStartSecondHalf={startSecondHalf}
-          onEndMatch={endMatch}
+          actions={actions}
+          actionLogs={actionLogs}
         />
+      )}
 
-        {gamePhase === "halftime" && (
-          <HalftimeSummary
-            isOpen={showSummary}
-            onClose={() => setShowSummary(false)}
-            onStartSecondHalf={startSecondHalf}
-            actions={actions}
-            actionLogs={actionLogs}
-          />
-        )}
-
-        {gamePhase === "ended" && (
-          <Dialog open={showSummary} onOpenChange={setShowSummary}>
-            <DialogContent className="max-w-md mx-auto">
-              <GameSummary
-                actions={actions}
-                actionLogs={actionLogs}
-                generalNotes={generalNotes}
-                substitutions={substitutions}
-                onClose={() => setShowSummary(false)}
-                gamePhase="ended"
-                matchId={matchId}
-                opponent={matchDetails.opponent}
-              />
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
-    </div>
+      {gamePhase === "ended" && (
+        <Dialog open={showSummary} onOpenChange={setShowSummary}>
+          <DialogContent className="max-w-md mx-auto">
+            <GameSummary
+              actions={actions}
+              actionLogs={actionLogs}
+              generalNotes={generalNotes}
+              substitutions={substitutions}
+              onClose={() => setShowSummary(false)}
+              gamePhase="ended"
+              matchId={matchId}
+              opponent={matchDetails.opponent}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </GameLayout>
   );
 };

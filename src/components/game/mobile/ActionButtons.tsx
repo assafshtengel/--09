@@ -1,4 +1,4 @@
-import { ActionButton } from "../ActionButton";
+import { Button } from "@/components/ui/button";
 
 interface ActionButtonsProps {
   actionId: string;
@@ -7,19 +7,23 @@ interface ActionButtonsProps {
 
 export const ActionButtons = ({ actionId, onLog }: ActionButtonsProps) => {
   return (
-    <div className="flex gap-4 justify-center">
-      <ActionButton
-        actionId={actionId}
-        result="success"
+    <div className="flex gap-2 justify-center">
+      <Button
+        size="lg"
+        variant="outline"
+        className="w-12 h-12 rounded-full border-green-500 hover:bg-green-500 hover:text-white"
         onClick={() => onLog(actionId, "success")}
-        className="w-16 h-16 md:w-12 md:h-12"
-      />
-      <ActionButton
-        actionId={actionId}
-        result="failure"
+      >
+        ✓
+      </Button>
+      <Button
+        size="lg"
+        variant="outline"
+        className="w-12 h-12 rounded-full border-red-500 hover:bg-red-500 hover:text-white"
         onClick={() => onLog(actionId, "failure")}
-        className="w-16 h-16 md:w-12 md:h-12"
-      />
+      >
+        ✗
+      </Button>
     </div>
   );
 };
