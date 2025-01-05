@@ -4,19 +4,39 @@ import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
+    // Check for password reset error
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const error = hashParams.get("error");
+    const errorDescription = hashParams.get("error_description");
+    
+    if (error) {
+      toast({
+        title: "שגיאה",
+        description: errorDescription || "אירעה שגיאה בתהליך איפוס הסיסמה",
+        variant: "destructive",
+      });
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
         navigate("/");
+      } else if (event === "PASSWORD_RECOVERY") {
+        toast({
+          title: "איפוס סיסמה",
+          description: "הזן את הסיסמה החדשה שלך",
+        });
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-md min-h-screen flex items-center justify-center">
