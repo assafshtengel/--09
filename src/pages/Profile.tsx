@@ -11,16 +11,14 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [profileData, setProfileData] = useState<PlayerFormData | null>(null);
 
-  // Check session and fetch profile data
   useEffect(() => {
-    const fetchProfileData = async () => {
+    const checkSessionAndLoadProfile = async () => {
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
           console.error("Session error:", sessionError);
-          navigate("/auth");
-          return;
+          throw new Error("אירעה שגיאה באימות המשתמש");
         }
 
         if (!session) {
@@ -49,13 +47,14 @@ const Profile = () => {
             teamYear: profile.team_year?.toString() || "",
             dateOfBirth: profile.date_of_birth || "",
             ageCategory: profile.age_category || "",
+            coachEmail: profile.coach_email || "",
           });
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
         toast({
           title: "שגיאה",
-          description: "אירעה שגיאה בטעינת הפרופיל",
+          description: error.message || "אירעה שגיאה בטעינת הפרופיל",
           variant: "destructive",
         });
       } finally {
@@ -63,19 +62,16 @@ const Profile = () => {
       }
     };
 
-    fetchProfileData();
-  }, [navigate, toast]);
-
-  // Listen for auth state changes
-  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
         navigate('/auth');
       }
     });
 
+    checkSessionAndLoadProfile();
+
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   if (isLoading) {
     return (

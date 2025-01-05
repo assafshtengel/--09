@@ -3,6 +3,19 @@ import type { PlayerFormData } from "./types";
 
 export class ProfileUpdateService {
   static async updateProfile(formData: PlayerFormData, profilePictureUrl: string | null) {
+    // First get a fresh session
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      throw new Error('אירעה שגיאה באימות המשתמש');
+    }
+
+    if (!sessionData.session) {
+      console.error('No active session found');
+      throw new Error('נדרשת התחברות מחדש');
+    }
+
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError) {
