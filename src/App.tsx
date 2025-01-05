@@ -173,6 +173,7 @@ const App = () => (
               />
               <Route path="/coach" element={<Navigate to="/" replace />} />
               <Route path="/analyst" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
         </div>
