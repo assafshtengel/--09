@@ -14,11 +14,13 @@ const Profile = () => {
   useEffect(() => {
     const checkSessionAndLoadProfile = async () => {
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        // First refresh the session
+        const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
         
-        if (sessionError) {
-          console.error("Session error:", sessionError);
-          throw new Error("אירעה שגיאה באימות המשתמש");
+        if (refreshError) {
+          console.error("Session refresh error:", refreshError);
+          navigate("/auth");
+          return;
         }
 
         if (!session) {
@@ -27,6 +29,7 @@ const Profile = () => {
           return;
         }
 
+        // Now fetch profile data with fresh session
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("*")
@@ -51,23 +54,28 @@ const Profile = () => {
           });
         }
       } catch (error) {
-        console.error("Error fetching profile:", error);
+        console.error("Error loading profile:", error);
         toast({
           title: "שגיאה",
           description: error.message || "אירעה שגיאה בטעינת הפרופיל",
           variant: "destructive",
         });
+        navigate("/auth");
       } finally {
         setIsLoading(false);
       }
     };
 
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
         navigate('/auth');
+      } else if (event === 'SIGNED_IN') {
+        checkSessionAndLoadProfile();
       }
     });
 
+    // Initial load
     checkSessionAndLoadProfile();
 
     return () => subscription.unsubscribe();
