@@ -27,6 +27,7 @@ export const PlayerForm = ({ onSubmit, initialData }: PlayerFormProps) => {
     teamYear: "",
     dateOfBirth: "",
     ageCategory: "",
+    coachEmail: "",
   });
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
@@ -123,6 +124,15 @@ export const PlayerForm = ({ onSubmit, initialData }: PlayerFormProps) => {
           value={formData.phoneNumber}
           onChange={(value) => setFormData({ ...formData, phoneNumber: value })}
           placeholder="הכנס את מספר הטלפון שלך"
+        />
+
+        <FormField
+          id="coachEmail"
+          label="מייל מאמן"
+          type="email"
+          value={formData.coachEmail || ""}
+          onChange={(value) => setFormData({ ...formData, coachEmail: value })}
+          placeholder="הכנס את כתובת המייל של המאמן"
         />
 
         <div className="space-y-2">

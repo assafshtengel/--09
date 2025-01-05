@@ -28,6 +28,7 @@ export class ProfileUpdateService {
         team_year: parseInt(formData.teamYear),
         date_of_birth: formData.dateOfBirth,
         age_category: formData.ageCategory,
+        coach_email: formData.coachEmail,
       });
 
     if (updateError) {

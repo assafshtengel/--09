@@ -7,6 +7,7 @@ export interface PlayerFormData {
   dateOfBirth: string;
   profilePicture?: File;
   ageCategory?: string;
+  coachEmail?: string;
 }
 
 export interface PlayerFormProps {
