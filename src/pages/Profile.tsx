@@ -11,37 +11,33 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [profileData, setProfileData] = useState<PlayerFormData | null>(null);
 
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log("No active session found");
-        navigate("/auth");
-        return;
-      }
-    };
-
-    checkSession();
-  }, [navigate]);
-
+  // Check session and fetch profile data
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          console.log("No active session found in fetch");
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          navigate("/auth");
           return;
         }
 
-        const { data: profile, error } = await supabase
+        if (!session) {
+          console.log("No active session found");
+          navigate("/auth");
+          return;
+        }
+
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", session.user.id)
           .single();
 
-        if (error) {
-          console.error("Profile fetch error:", error);
-          throw error;
+        if (profileError) {
+          console.error("Profile fetch error:", profileError);
+          throw profileError;
         }
 
         if (profile) {
@@ -68,12 +64,12 @@ const Profile = () => {
     };
 
     fetchProfileData();
-  }, [toast]);
+  }, [navigate, toast]);
 
-  // Also listen for auth state changes
+  // Listen for auth state changes
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_OUT' || !session) {
         navigate('/auth');
       }
     });
