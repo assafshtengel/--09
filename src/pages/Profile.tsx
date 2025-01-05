@@ -2,29 +2,45 @@ import { useEffect, useState } from "react";
 import { PlayerForm } from "@/components/PlayerForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import type { PlayerFormData } from "@/components/player-form/types";
 
 const Profile = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [profileData, setProfileData] = useState<PlayerFormData | null>(null);
 
   useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log("No active session found");
+        navigate("/auth");
+        return;
+      }
+    };
+
+    checkSession();
+  }, [navigate]);
+
+  useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          throw new Error("לא נמצא משתמש מחובר");
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.log("No active session found in fetch");
+          return;
         }
 
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("*")
-          .eq("id", user.id)
+          .eq("id", session.user.id)
           .single();
 
         if (error) {
+          console.error("Profile fetch error:", error);
           throw error;
         }
 
@@ -53,6 +69,17 @@ const Profile = () => {
 
     fetchProfileData();
   }, [toast]);
+
+  // Also listen for auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        navigate('/auth');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   if (isLoading) {
     return (
