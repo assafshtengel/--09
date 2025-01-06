@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -17,19 +16,12 @@ import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { QuestionSelector } from "./QuestionSelector";
-import { Card } from "@/components/ui/card";
+import { RatingFields } from "./RatingFields";
+import { AIInsights } from "./AIInsights";
 import type { Database } from "@/integrations/supabase/types";
+import type { TrainingSummaryFormData } from "./types";
 
 type TrainingSummary = Database['public']['Tables']['training_summaries']['Insert'];
-
-interface TrainingSummaryFormData {
-  trainingDate: Date;
-  trainingTime: string;
-  satisfactionRating: number;
-  challengeHandlingRating: number;
-  energyFocusRating: number;
-  answers: Record<string, string>;
-}
 
 export const TrainingSummaryForm = () => {
   const { toast } = useToast();
@@ -50,11 +42,17 @@ export const TrainingSummaryForm = () => {
 
   const generateAiInsights = async (data: TrainingSummaryFormData) => {
     try {
+      console.log('Generating AI insights for training data:', data);
       const { data: insights, error } = await supabase.functions.invoke('generate-training-insights', {
         body: { trainingData: data }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error from Edge Function:', error);
+        throw error;
+      }
+
+      console.log('Received AI insights:', insights);
       return insights.insights;
     } catch (error) {
       console.error("Error generating AI insights:", error);
@@ -81,11 +79,11 @@ export const TrainingSummaryForm = () => {
         questions_answers: data.answers,
       };
 
-      const { error } = await supabase
+      const { error: saveError } = await supabase
         .from('training_summaries')
         .insert(summary);
 
-      if (error) throw error;
+      if (saveError) throw saveError;
 
       // Generate AI insights after successful submission
       const insights = await generateAiInsights(data);
@@ -146,82 +144,7 @@ export const TrainingSummaryForm = () => {
               )}
             />
 
-            <div className="space-y-6">
-              <FormField
-                control={form.control}
-                name="satisfactionRating"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>עד כמה אתה מרוצה מהביצועים שלך באימון היום?</FormLabel>
-                    <FormControl>
-                      <Slider
-                        min={1}
-                        max={7}
-                        step={1}
-                        value={[field.value]}
-                        onValueChange={(value) => field.onChange(value[0])}
-                        className="w-full"
-                      />
-                    </FormControl>
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>חלש</span>
-                      <span>מצוין</span>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="challengeHandlingRating"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>איך התמודדת עם אתגרים או תרגילים קשים?</FormLabel>
-                    <FormControl>
-                      <Slider
-                        min={1}
-                        max={7}
-                        step={1}
-                        value={[field.value]}
-                        onValueChange={(value) => field.onChange(value[0])}
-                        className="w-full"
-                      />
-                    </FormControl>
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>חלש</span>
-                      <span>מצוין</span>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="energyFocusRating"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>איך היו רמות האנרגיה והריכוז שלך במהלך האימון?</FormLabel>
-                    <FormControl>
-                      <Slider
-                        min={1}
-                        max={7}
-                        step={1}
-                        value={[field.value]}
-                        onValueChange={(value) => field.onChange(value[0])}
-                        className="w-full"
-                      />
-                    </FormControl>
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>חלש</span>
-                      <span>מצוין</span>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <RatingFields form={form} />
 
             <QuestionSelector
               onQuestionsSelected={(questions) => setSelectedQuestions(questions)}
@@ -251,12 +174,7 @@ export const TrainingSummaryForm = () => {
         </form>
       </Form>
 
-      {aiInsights && (
-        <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
-          <h3 className="text-xl font-bold mb-4 text-right">תובנות מקצועיות</h3>
-          <div className="text-right whitespace-pre-line">{aiInsights}</div>
-        </Card>
-      )}
+      {aiInsights && <AIInsights insights={aiInsights} />}
     </div>
   );
 };
