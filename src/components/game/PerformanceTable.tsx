@@ -31,7 +31,7 @@ export const PerformanceTable = ({ ratings, onRatingChange }: PerformanceTablePr
               <th className="text-right">נושא</th>
               {[1, 2, 3, 4, 5].map(rating => (
                 <th key={rating} className="text-center">
-                  {rating === 5 ? "מצוין (5)" : rating === 1 ? "חלש (1)" : `(${rating})`}
+                  {rating === 1 ? "חלש (1)" : rating === 5 ? "מצוין (5)" : `(${rating})`}
                 </th>
               ))}
               <th className="text-right pr-4">ציון נוכחי</th>
