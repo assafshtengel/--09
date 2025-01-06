@@ -1,7 +1,6 @@
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
-import { GameScore } from "./GameScore";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface HalftimeSummaryProps {
@@ -42,13 +41,15 @@ export const HalftimeSummary = ({
       <DialogContent className="max-w-md mx-auto">
         <DialogTitle className="text-2xl font-bold text-right">סיכום מחצית ראשונה</DialogTitle>
         <DialogDescription className="sr-only">
-          סיכום ביניים של המחצית הראשונה, כולל ציון, פעולות שבוצעו וטיפ למחצית השנייה
+          סיכום ביניים של המחצית הראשונה, כולל פעולות שבוצעו וטיפ למחצית השנייה
         </DialogDescription>
         
         <div className="space-y-6 p-4">
           <div className="p-4 border rounded-lg bg-primary/10">
-            <h3 className="text-xl font-semibold text-right mb-2">ציון</h3>
-            <GameScore actionLogs={actionLogs} />
+            <h3 className="text-xl font-semibold text-right mb-2">תזכורת אישית למחצית השנייה</h3>
+            <p className="text-lg text-center text-primary">
+              "אני רוצה להמשיך להתמקד בבעיטות מדויקות לשער"
+            </p>
           </div>
 
           <div className="border rounded-lg p-4">
