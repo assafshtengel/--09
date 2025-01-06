@@ -11,11 +11,11 @@ interface ActionButtonProps {
 
 export const ActionButton = ({ actionId, result, onClick, className }: ActionButtonProps) => {
   const handleClick = () => {
-    // Show toast notification
+    // Show toast notification for 1.2 seconds
     toast({
       title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
       className: result === "success" ? "bg-green-500" : "bg-red-500",
-      duration: 1000,
+      duration: 1200, // Changed from 1000 to 1200 milliseconds
     });
     
     // Trigger vibration on mobile if supported
