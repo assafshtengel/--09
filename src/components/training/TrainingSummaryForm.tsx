@@ -169,7 +169,7 @@ export const TrainingSummaryForm = () => {
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "שומר..." : "שמור סיכום אימון"}
+            {isLoading ? "מעבד את הנתונים ומיד יוצגו לך תובנות האימון..." : "שמור סיכום אימון"}
           </Button>
         </form>
       </Form>
