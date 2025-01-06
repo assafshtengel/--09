@@ -19,22 +19,22 @@ export const ActionModal = ({ isOpen, onClose, actionName, onResult }: ActionMod
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-sm mx-auto">
         <DialogHeader>
-          <DialogTitle className="text-right">{actionName}</DialogTitle>
+          <DialogTitle className="text-center text-xl">{actionName}</DialogTitle>
         </DialogHeader>
-        <div className="flex justify-center gap-4 p-4">
+        <div className="flex justify-center gap-8 p-6">
           <Button
             variant="outline"
-            className="h-16 w-16 rounded-full border-2 border-green-500 hover:bg-green-500 hover:text-white"
-            onClick={() => handleResult("success")}
-          >
-            <Check className="h-8 w-8" />
-          </Button>
-          <Button
-            variant="outline"
-            className="h-16 w-16 rounded-full border-2 border-red-500 hover:bg-red-500 hover:text-white"
+            className="h-20 w-32 rounded-lg border-2 border-red-500 hover:bg-red-500 hover:text-white flex flex-col items-center justify-center gap-2"
             onClick={() => handleResult("failure")}
           >
             <X className="h-8 w-8" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-20 w-32 rounded-lg border-2 border-green-500 hover:bg-green-500 hover:text-white flex flex-col items-center justify-center gap-2"
+            onClick={() => handleResult("success")}
+          >
+            <Check className="h-8 w-8" />
           </Button>
         </div>
       </DialogContent>
