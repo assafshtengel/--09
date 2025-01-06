@@ -27,8 +27,8 @@ export const RatingFields = ({ form }: RatingFieldsProps) => {
               />
             </FormControl>
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>חלש (1)</span>
               <span>מצוין (7)</span>
+              <span>חלש (1)</span>
             </div>
             <FormMessage />
           </FormItem>
@@ -52,8 +52,8 @@ export const RatingFields = ({ form }: RatingFieldsProps) => {
               />
             </FormControl>
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>חלש (1)</span>
               <span>מצוין (7)</span>
+              <span>חלש (1)</span>
             </div>
             <FormMessage />
           </FormItem>
@@ -77,8 +77,8 @@ export const RatingFields = ({ form }: RatingFieldsProps) => {
               />
             </FormControl>
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>חלש (1)</span>
               <span>מצוין (7)</span>
+              <span>חלש (1)</span>
             </div>
             <FormMessage />
           </FormItem>
