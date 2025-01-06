@@ -51,7 +51,7 @@ export const PerformanceChart = () => {
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
-              <Line type="monotone" dataKey="successRate" stroke="#8884d8" name="אחוז הצלחה" />
+              <Line type="monotone" dataKey="successRate" stroke="#ea384c" name="אחוז הצלחה" />
             </LineChart>
           </ResponsiveContainer>
         </div>
