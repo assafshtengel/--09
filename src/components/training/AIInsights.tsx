@@ -1,16 +1,36 @@
-import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
 
 interface AIInsightsProps {
   insights: string;
 }
 
 export const AIInsights = ({ insights }: AIInsightsProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (insights) {
+      setIsOpen(true);
+    }
+  }, [insights]);
+
   if (!insights) return null;
 
   return (
-    <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
-      <h3 className="text-xl font-bold mb-4 text-right">תובנות מקצועיות</h3>
-      <div className="text-right whitespace-pre-line">{insights}</div>
-    </Card>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="max-w-[800px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold text-right">
+            תובנות מקצועיות
+          </DialogTitle>
+        </DialogHeader>
+        <div className="text-right whitespace-pre-line mt-4">{insights}</div>
+      </DialogContent>
+    </Dialog>
   );
 };
