@@ -20,6 +20,7 @@ import { GameSelection } from "@/components/game/GameSelection";
 import { GameTracker } from "@/components/GameTracker";
 import NotificationsManager from "./pages/NotificationsManager";
 import PlayerPortfolio from "./pages/PlayerPortfolio";
+import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryDashboard";
 
 const queryClient = new QueryClient();
 
@@ -168,6 +169,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <PlayerPortfolio />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/training-summary"
+                element={
+                  <ProtectedRoute>
+                    <TrainingSummaryDashboard />
                   </ProtectedRoute>
                 }
               />
