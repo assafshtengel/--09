@@ -29,9 +29,21 @@ export const PerformanceTable = ({ ratings, onRatingChange }: PerformanceTablePr
           <thead>
             <tr>
               <th className="text-right">נושא</th>
-              {[1, 2, 3, 4, 5].map(rating => (
+              {[1, 2, 3, 4, 5, 6, 7].map(rating => (
                 <th key={rating} className="text-center">
-                  {rating === 1 ? "חלש (1)" : rating === 5 ? "מצוין (5)" : `(${rating})`}
+                  {rating === 1 ? (
+                    <div className="text-center">
+                      <span>חלש</span>
+                      <span className="block text-sm text-gray-500">(1)</span>
+                    </div>
+                  ) : rating === 7 ? (
+                    <div className="text-center">
+                      <span>מצוין</span>
+                      <span className="block text-sm text-gray-500">(7)</span>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-gray-500">({rating})</span>
+                  )}
                 </th>
               ))}
               <th className="text-right pr-4">ציון נוכחי</th>
@@ -41,7 +53,7 @@ export const PerformanceTable = ({ ratings, onRatingChange }: PerformanceTablePr
             {PERFORMANCE_ASPECTS.map(aspect => (
               <tr key={aspect}>
                 <td className="text-right py-2">{aspect}</td>
-                {[1, 2, 3, 4, 5].map(rating => (
+                {[1, 2, 3, 4, 5, 6, 7].map(rating => (
                   <td key={rating} className="text-center">
                     <input
                       type="radio"
