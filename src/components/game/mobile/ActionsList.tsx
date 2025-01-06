@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Action } from "@/components/ActionSelector";
 import { ActionModal } from "@/components/game/ActionModal";
 import { toast } from "@/hooks/use-toast";
-import { Ball, Goal, Running, Shield, Target, Swords } from "lucide-react";
+import { CircleDot, Goal, Activity, Shield, Target, Swords } from "lucide-react";
 
 interface ActionsListProps {
   actions: Action[];
@@ -10,7 +10,7 @@ interface ActionsListProps {
 }
 
 const getActionIcon = (index: number) => {
-  const icons = [Ball, Goal, Running, Shield, Target, Swords];
+  const icons = [CircleDot, Goal, Activity, Shield, Target, Swords];
   const Icon = icons[index % icons.length];
   return <Icon className="h-6 w-6" />;
 };
