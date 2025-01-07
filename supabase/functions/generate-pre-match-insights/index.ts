@@ -49,7 +49,7 @@ serve(async (req) => {
 
     // Add insights based on havaya if available
     if (havaya.length > 0) {
-      insights.push(`התמקד בתחושות ${havaya.join(', ')} שבחרת למשחק זה`)
+      insights.push(`התמקד בתחושות ${havaya.join(', ')} שבחרת למשחק זה. אלו התחושות שיובילו אותך להצלחה!`)
     }
 
     // Helper function to add insights based on answers
@@ -57,28 +57,28 @@ serve(async (req) => {
       if (answer && answer.trim()) {
         switch (question) {
           case "מהי המטרה העיקרית שלך במשחק הקרוב?":
-            insights.push(`זכור את המטרה העיקרית שלך למשחק: ${answer}`)
+            insights.push(`זכור את המטרה העיקרית שלך למשחק: ${answer}. תן לה להוביל אותך בכל רגע במשחק.`)
             break
           case "מהן שלוש החוזקות שלך כשחקן?":
-            insights.push(`נצל את החוזקות שלך: ${answer}`)
+            insights.push(`החוזקות שלך הן המפתח להצלחה: ${answer}. השתמש בהן!`)
             break
           case "איך אתה מתמודד עם לחץ במהלך משחק?":
-            insights.push(`כשתרגיש לחץ במשחק, זכור: ${answer}`)
+            insights.push(`כשתרגיש לחץ במשחק, זכור את הדרך שלך להתמודד: ${answer}`)
             break
           case "באיזה תחום היית רוצה להשתפר משמעותית במשחק הבא?":
-            insights.push(`זה המשחק להתמקד בשיפור ${answer}`)
+            insights.push(`זה המשחק להתמקד בשיפור ${answer}. כל ניסיון הוא צעד קדימה!`)
             break
           case "מה המוטיבציה העיקרית שלך לשחק?":
-            insights.push(`המוטיבציה שלך היא ${answer} - תן לה להוביל אותך`)
+            insights.push(`המוטיבציה שלך היא ${answer} - תן לה להוביל אותך ולהעניק לך כוח`)
             break
           case "איך אתה מתכונן מנטלית למשחק?":
-            insights.push(`הכנה מנטלית: ${answer}`)
+            insights.push(`ההכנה המנטלית שלך חשובה: ${answer}. המשך עם זה!`)
             break
           case "מה עוזר לך להישאר ממוקד במהלך המשחק?":
-            insights.push(`כדי להישאר ממוקד, זכור: ${answer}`)
+            insights.push(`כדי להישאר ממוקד, זכור: ${answer}. זה המפתח להצלחה שלך`)
             break
           case "מה הציפיות שלך מעצמך במשחק הזה?":
-            insights.push(`הצבת לעצמך יעד: ${answer}`)
+            insights.push(`היעד שהצבת לעצמך: ${answer}. אתה יכול להשיג אותו!`)
             break
         }
       }
@@ -89,15 +89,18 @@ serve(async (req) => {
       addInsightIfAnswered(question, answer as string)
     })
 
-    // Add general pre-game insights and motivational messages
+    // Add general pre-game insights and motivational messages in Hebrew
     const generalInsights = [
       "קח נשימה עמוקה והתמקד במה שאתה יודע לעשות הכי טוב",
       "זכור שכל משחק הוא הזדמנות ללמידה והתפתחות",
-      "תן לעצמך להנות מהמשחק ולהיות נוכח ברגע",
+      "תן לעצמך ליהנות מהמשחק ולהיות נוכח ברגע",
       "התמקד בתהליך ולא רק בתוצאה",
       "אתה מוכן למשחק הזה, סמוך על היכולות שלך",
       "תן את המקסימום שלך ותהיה גאה בעצמך",
-      "זכור - אתה כאן כי אתה אוהב את המשחק"
+      "זכור - אתה כאן כי אתה אוהב את המשחק",
+      "אתה חזק מנטלית, תאמין בעצמך",
+      "כל החלטה שתקבל במגרש - תעשה אותה בביטחון מלא",
+      "תיהנה מכל רגע במשחק, אתה עושה את מה שאתה אוהב"
     ]
 
     // Add general insights if we don't have enough from the answers
