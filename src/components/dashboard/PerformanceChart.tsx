@@ -30,7 +30,7 @@ export const PerformanceChart = () => {
               match_date
             )
           `)
-          .order('matches(match_date)', { ascending: true });
+          .order('match_date', { foreignTable: 'matches', ascending: true });
 
         if (error) {
           console.error("Error fetching match actions:", error);
