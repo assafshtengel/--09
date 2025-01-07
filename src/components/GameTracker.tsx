@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Action } from "@/components/ActionSelector";
-import { GamePreview } from "./game/GamePreview";
+import { GamePreviewSection } from "./game/GamePreviewSection";
 import { GameSummary } from "./game/GameSummary";
 import { GameLayout } from "./game/mobile/GameLayout";
 import { ActionsList } from "./game/mobile/ActionsList";
@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match } from "@/types/game";
 import { Button } from "@/components/ui/button";
-import { Home, UserPlus, Video } from "lucide-react";
+import { Home } from "lucide-react";
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
@@ -391,35 +391,17 @@ export const GameTracker = () => {
         onMinuteChange={setMinute}
         actions={actions}
         actionLogs={actionLogs}
-        onStartMatch={() => {}} // We'll handle this differently now
+        onStartMatch={() => {}} // We handle this differently now
         onEndHalf={endHalf}
         onStartSecondHalf={startSecondHalf}
         onEndMatch={endMatch}
       >
         {gamePhase === "preview" && (
-          <div className="space-y-6">
-            <GamePreview
-              actions={actions}
-              onActionAdd={handleAddAction}
-              onStartMatch={() => {}} // We'll handle this differently now
-            />
-            <div className="flex flex-col gap-4 p-4">
-              <Button
-                onClick={() => startMatchWithObserver("parent")}
-                className="bg-accent hover:bg-accent/90 text-white flex items-center gap-2 h-12"
-              >
-                <UserPlus className="h-5 w-5" />
-                לחץ למילוי הורה במהלך המשחק
-              </Button>
-              <Button
-                onClick={() => startMatchWithObserver("player")}
-                className="bg-primary hover:bg-primary/90 text-white flex items-center gap-2 h-12"
-              >
-                <Video className="h-5 w-5" />
-                לחץ למילוי שחקן בצפייה בשידור המשחק
-              </Button>
-            </div>
-          </div>
+          <GamePreviewSection
+            actions={actions}
+            onActionAdd={handleAddAction}
+            onStartMatch={startMatchWithObserver}
+          />
         )}
 
         {gamePhase === "playing" && (
