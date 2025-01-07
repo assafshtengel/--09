@@ -17,6 +17,8 @@ interface GamePreviewProps {
 export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewProps) => {
   const { id: matchId } = useParams<{ id: string }>();
   const [havaya, setHavaya] = useState<string[]>([]);
+  const [insights, setInsights] = useState<string>("");
+  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
 
   useEffect(() => {
     const loadHavaya = async () => {
@@ -48,7 +50,31 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
       }
     };
 
+    const loadInsights = async () => {
+      if (!matchId) return;
+      
+      setIsLoadingInsights(true);
+      try {
+        const response = await supabase.functions.invoke('generate-pre-match-insights', {
+          body: { matchId },
+        });
+
+        if (response.error) throw response.error;
+        setInsights(response.data.insights);
+      } catch (error) {
+        console.error('Error loading insights:', error);
+        toast({
+          title: "שגיאה",
+          description: "לא ניתן לטעון את התובנות",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingInsights(false);
+      }
+    };
+
     loadHavaya();
+    loadInsights();
   }, [matchId]);
 
   const takeScreenshot = async () => {
@@ -106,6 +132,21 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
           ))}
         </div>
       </div>
+
+      {insights && (
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <h2 className="text-xl font-bold text-right mb-4">רגע לפני...</h2>
+          <div className="text-right whitespace-pre-line">
+            {insights}
+          </div>
+        </div>
+      )}
+
+      {isLoadingInsights && (
+        <div className="text-center text-gray-500">
+          מכין תובנות אישיות...
+        </div>
+      )}
 
       <AdditionalActions onActionSelect={onActionAdd} selectedActions={actions} />
       
