@@ -37,3 +37,11 @@ export type Match = {
   player_role: string | null;
   observer_type?: "parent" | "player";
 };
+
+export type Game = {
+  id: string;
+  match_date: string;
+  opponent: string | null;
+  match_id?: string;
+  status: "preview" | "completed";
+};
