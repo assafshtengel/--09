@@ -8,7 +8,7 @@ import { useState, useMemo } from "react";
 interface HalftimeSummaryProps {
   isOpen: boolean;
   onClose: () => void;
-  onStartSecondHalf: () => void;
+  onStartSecondHalf: (notes: string) => void;
   actions: Action[];
   actionLogs: Array<{
     actionId: string;
@@ -43,6 +43,10 @@ export const HalftimeSummary = ({
 
   // Sort action logs by minute
   const sortedLogs = [...actionLogs].sort((a, b) => a.minute - b.minute);
+
+  const handleStartSecondHalf = () => {
+    onStartSecondHalf(halftimeNotes);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -108,7 +112,7 @@ export const HalftimeSummary = ({
           </div>
 
           <div className="flex justify-end gap-4 mt-6">
-            <Button onClick={onStartSecondHalf} className="bg-primary">
+            <Button onClick={handleStartSecondHalf} className="bg-primary">
               התחל מחצית שנייה
             </Button>
             <Button onClick={onClose} variant="outline">

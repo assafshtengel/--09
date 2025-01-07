@@ -12,7 +12,7 @@ import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { HalftimeSummary } from "./game/HalftimeSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match, PreMatchReport } from "@/types/game";
+import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match } from "@/types/game";
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
@@ -251,6 +251,35 @@ export const GameTracker = () => {
     }
   };
 
+  const saveHalftimeNotes = async (notes: string) => {
+    if (!matchId || !notes.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('match_halftime_notes')
+        .insert([
+          {
+            match_id: matchId,
+            notes: notes
+          }
+        ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "הערות נשמרו",
+        description: "הערות המחצית נשמרו בהצלחה",
+      });
+    } catch (error) {
+      console.error('Error saving halftime notes:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את הערות המחצית",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleAddAction = (newAction: Action) => {
     setActions(prev => [...prev, newAction]);
     toast({
@@ -318,7 +347,11 @@ export const GameTracker = () => {
     setShowSummary(true);
   };
 
-  const startSecondHalf = async () => {
+  const startSecondHalf = async (halftimeNotes: string) => {
+    if (halftimeNotes.trim()) {
+      await saveHalftimeNotes(halftimeNotes);
+    }
+    
     setGamePhase("secondHalf");
     await updateMatchStatus("secondHalf");
     setMinute(45);
