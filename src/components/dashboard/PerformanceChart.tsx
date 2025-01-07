@@ -1,37 +1,59 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+interface PerformanceData {
+  date: string;
+  successRate: number;
+}
+
 export const PerformanceChart = () => {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<PerformanceData[]>([]);
 
   useEffect(() => {
     const fetchPerformanceData = async () => {
-      const { data: matches } = await supabase
-        .from('matches')
-        .select(`
-          id,
-          match_date,
-          match_actions (
-            result
-          )
-        `)
-        .order('match_date', { ascending: true });
+      try {
+        const { data: matchActions, error } = await supabase
+          .from("match_actions")
+          .select("*")
+          .order("created_at", { ascending: true });
 
-      if (matches) {
-        const performanceData = matches.map(match => {
-          const successCount = match.match_actions?.filter((action: any) => action.result === 'success').length || 0;
-          const totalActions = match.match_actions?.length || 1;
-          const successRate = (successCount / totalActions) * 100;
+        if (error) {
+          console.error("Error fetching match actions:", error);
+          return;
+        }
 
-          return {
-            date: new Date(match.match_date).toLocaleDateString('he-IL'),
-            successRate: Math.round(successRate),
-          };
-        });
+        // Process the data to calculate success rates by date
+        const processedData = matchActions.reduce((acc: Record<string, { success: number; total: number }>, action) => {
+          const date = new Date(action.created_at).toLocaleDateString();
+          if (!acc[date]) {
+            acc[date] = { success: 0, total: 0 };
+          }
+          acc[date].total += 1;
+          if (action.result === "success") {
+            acc[date].success += 1;
+          }
+          return acc;
+        }, {});
 
-        setData(performanceData);
+        // Convert to array format for the chart
+        const chartData = Object.entries(processedData).map(([date, stats]) => ({
+          date,
+          successRate: Math.round((stats.success / stats.total) * 100),
+        }));
+
+        setData(chartData);
+      } catch (error) {
+        console.error("Error processing performance data:", error);
       }
     };
 
@@ -39,12 +61,12 @@ export const PerformanceChart = () => {
   }, []);
 
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
-        <CardTitle>התקדמות ביצועים</CardTitle>
+        <CardTitle>ביצועים לאורך זמן</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px] w-full">
+        <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" />
