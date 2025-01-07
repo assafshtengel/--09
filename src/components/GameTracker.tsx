@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
-import { Action } from "@/components/ActionSelector";
+import { Action } from "@/types/game";
 import { GameLayout } from "./game/mobile/GameLayout";
 import { GamePhases } from "./game/GamePhases";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,15 +43,20 @@ export const GameTracker = () => {
 
       if (matchError) throw matchError;
 
-      setMatchDetails({
+      const matchData: Match = {
         ...match,
         opponent: match.opponent,
-        observer_type: match.observer_type
-      });
+        observer_type: match.observer_type as "parent" | "player" | undefined,
+        pre_match_reports: {
+          actions: match.pre_match_reports?.actions as PreMatchReportActions[] | undefined,
+          questions_answers: match.pre_match_reports?.questions_answers
+        }
+      };
 
-      if (match?.pre_match_reports?.actions) {
-        const rawActions = match.pre_match_reports.actions as unknown;
-        const preMatchActions = rawActions as PreMatchReportActions[];
+      setMatchDetails(matchData);
+
+      if (matchData.pre_match_reports?.actions) {
+        const preMatchActions = matchData.pre_match_reports.actions;
         
         const validActions = preMatchActions
           .filter(action => 
