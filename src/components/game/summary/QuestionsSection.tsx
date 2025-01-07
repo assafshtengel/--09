@@ -21,7 +21,7 @@ const OPEN_ENDED_QUESTIONS = [
   "נא רשום סיכום מלא שלך על המשחק"
 ];
 
-interface QuestionsSectionProps {
+export interface QuestionsSectionProps {
   onAnswersChange: (answers: Record<string, any>) => void;
 }
 

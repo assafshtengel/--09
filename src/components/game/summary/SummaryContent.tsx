@@ -29,15 +29,12 @@ export const SummaryContent = ({
   generalNotes,
   gamePhase
 }: SummaryContentProps) => {
-  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [performanceRatings, setPerformanceRatings] = useState<Record<string, number>>({});
   const { toast } = useToast();
 
-  const handleAnswerChange = (question: string, answer: string) => {
-    setAnswers(prev => ({
-      ...prev,
-      [question]: answer
-    }));
+  const handleAnswersChange = (answers: Record<string, any>) => {
+    // Handle answers change
+    console.log('Answers changed:', answers);
   };
 
   const handlePerformanceRating = (aspect: string, rating: number) => {
@@ -103,10 +100,7 @@ export const SummaryContent = ({
       {gamePhase === "ended" && (
         <>
           <div className="mt-6">
-            <QuestionsSection
-              answers={answers}
-              onAnswerChange={handleAnswerChange}
-            />
+            <QuestionsSection onAnswersChange={handleAnswersChange} />
           </div>
 
           <div className="mt-6">
