@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
 import { AdditionalActions } from "./AdditionalActions";
 import { GameNotes } from "./GameNotes";
-import html2canvas from "html2canvas";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
@@ -79,29 +78,6 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
     loadHavaya();
     loadInsights();
   }, [matchId]);
-
-  const takeScreenshot = async () => {
-    try {
-      const element = document.getElementById('goals-preview');
-      if (element) {
-        const canvas = await html2canvas(element);
-        const link = document.createElement('a');
-        link.download = 'game-goals.png';
-        link.href = canvas.toDataURL();
-        link.click();
-        toast({
-          title: "צילום מסך הושלם",
-          description: "התמונה נשמרה בהצלחה",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן היה לצלם את המסך",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleAddNote = async () => {
     if (!matchId || !generalNote.trim()) return;
@@ -194,10 +170,7 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
         />
       </div>
 
-      <div className="flex gap-3 justify-end">
-        <Button onClick={takeScreenshot} variant="outline" size="sm">
-          צלם מסך
-        </Button>
+      <div className="flex justify-end">
         <Button onClick={onStartMatch} size="sm">
           המשך
         </Button>
