@@ -24,8 +24,8 @@ export const PerformanceChart = () => {
       try {
         const { data: matchActions, error } = await supabase
           .from("match_actions")
-          .select("*")
-          .order("created_at", { ascending: true });
+          .select("*, matches!inner(match_date)")
+          .order("matches.match_date", { ascending: true });
 
         if (error) {
           console.error("Error fetching match actions:", error);
@@ -34,7 +34,7 @@ export const PerformanceChart = () => {
 
         // Process the data to calculate success rates by date
         const processedData = matchActions.reduce((acc: Record<string, { success: number; total: number }>, action) => {
-          const date = new Date(action.created_at).toLocaleDateString();
+          const date = new Date(action.matches.match_date).toLocaleDateString();
           if (!acc[date]) {
             acc[date] = { success: 0, total: 0 };
           }
