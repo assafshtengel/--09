@@ -1,40 +1,10 @@
-export interface Match {
-  id: string;
-  player_id: string;
-  created_at: string;
-  match_date: string;
-  opponent: string | null;
-  location: string | null;
-  status: string;
-  pre_match_report_id: string | null;
-  match_type: string | null;
-  final_score: string | null;
-  player_position: string | null;
-  team: string | null;
-  team_name: string | null;
-  player_role: string | null;
-  observer_type?: "parent" | "player";
-}
-
-export interface Game {
-  id: string;
-  match_date: string;
-  opponent: string | null;
-  match_id?: string;
-  status: "preview" | "completed";
-}
-
-export interface PreMatchReport {
-  id: string;
-  match_id: string;
-  actions: PreMatchReportActions[];
-}
+export type GamePhase = "preview" | "playing" | "halftime" | "secondHalf" | "ended";
 
 export interface PreMatchReportActions {
   id: string;
   name: string;
-  isSelected: boolean;
   goal?: string;
+  isSelected: boolean;
 }
 
 export interface ActionLog {
@@ -50,11 +20,34 @@ export interface SubstitutionLog {
   minute: number;
 }
 
-export type GamePhase = "preview" | "playing" | "halftime" | "secondHalf" | "ended";
-
-export interface Action {
+export interface Game {
   id: string;
-  name: string;
-  goal?: string;
-  isSelected: boolean;
+  match_date: string;
+  opponent: string | null;
+  match_id?: string;
+  status: "completed" | "preview";
+}
+
+export interface PreMatchReport {
+  actions: PreMatchReportActions[];
+  questions_answers: Record<string, any>;
+}
+
+export interface Match {
+  id: string;
+  player_id: string;
+  created_at: string;
+  match_date: string;
+  opponent: string | null;
+  location: string | null;
+  status: string;
+  pre_match_report_id: string | null;
+  match_type: string | null;
+  final_score: string | null;
+  player_position: string | null;
+  team: string | null;
+  team_name: string | null;
+  player_role: string | null;
+  observer_type?: string;
+  pre_match_reports?: PreMatchReport;
 }
