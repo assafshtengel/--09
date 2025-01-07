@@ -14,7 +14,7 @@ export const GamePreviewSection = ({
   onStartMatch,
 }: GamePreviewSectionProps) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <GamePreview
         actions={actions}
         onActionAdd={onActionAdd}
