@@ -14,15 +14,22 @@ export const GoalsComparison = ({ actions, actionLogs }: GoalsComparisonProps) =
     const actionAttempts = actionLogs.filter(log => log.actionId === action.id);
     const totalAttempts = actionAttempts.length;
     const successfulAttempts = actionAttempts.filter(log => log.result === "success").length;
-    const goalTarget = action.goal ? parseInt(action.goal) : totalAttempts;
-    const completionRate = totalAttempts > 0 ? (totalAttempts / goalTarget) * 100 : 0;
+    
+    // If there's a goal set, use it, otherwise use total attempts as the target
+    const goalTarget = action.goal ? parseInt(action.goal) : totalAttempts || 1;
+    
+    // Calculate completion rate (total attempts / goal) - cap at 100%
+    const completionRate = Math.min((totalAttempts / goalTarget) * 100, 100);
+    
+    // Calculate success rate (successful / total attempts)
+    // If no attempts, return 0
     const successRate = totalAttempts > 0 ? (successfulAttempts / totalAttempts) * 100 : 0;
 
     return {
       totalAttempts,
       successfulAttempts,
       goalTarget,
-      completionRate: Math.min(completionRate, 100),
+      completionRate,
       successRate
     };
   };
@@ -45,17 +52,26 @@ export const GoalsComparison = ({ actions, actionLogs }: GoalsComparisonProps) =
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <span>ביצוע מול יעד</span>
-                  <span>{stats.totalAttempts}/{stats.goalTarget} פעולות</span>
+                  <span dir="ltr">{stats.totalAttempts}/{stats.goalTarget}</span>
                 </div>
-                <Progress value={stats.completionRate} className="h-2" />
+                <Progress 
+                  value={stats.completionRate} 
+                  className="h-2"
+                />
+                <div className="text-sm text-right text-muted-foreground">
+                  {stats.completionRate.toFixed(1)}% הושלמו
+                </div>
               </div>
 
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <span>אחוז הצלחה</span>
-                  <span>{stats.successRate.toFixed(1)}%</span>
+                  <span dir="ltr">{stats.successRate.toFixed(1)}%</span>
                 </div>
-                <Progress value={stats.successRate} className="h-2" />
+                <Progress 
+                  value={stats.successRate} 
+                  className="h-2"
+                />
               </div>
 
               {action.goal && (
