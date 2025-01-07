@@ -17,29 +17,33 @@ export const GameControls = ({
   onEndMatch
 }: GameControlsProps) => {
   return (
-    <div className="p-4 border-t bg-white">
-      <div className="flex justify-center gap-4">
+    <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t shadow-lg md:relative md:shadow-none md:border-none">
+      <div className="flex justify-center gap-3">
         {gamePhase === "preview" && (
-          <Button onClick={onStartMatch} className="bg-primary">
-            התחל משחק
+          <Button 
+            onClick={onStartMatch} 
+            size="lg"
+            className="w-full md:w-auto"
+          >
+            לחץ להמשך
           </Button>
         )}
-        
         {gamePhase === "playing" && (
-          <Button onClick={onEndHalf} className="bg-primary">
-            סיים מחצית
+          <Button 
+            onClick={onEndHalf} 
+            size="lg"
+            className="w-full md:w-auto"
+          >
+            סיום מחצית ראשונה
           </Button>
         )}
-        
-        {gamePhase === "halftime" && (
-          <Button onClick={onStartSecondHalf} className="bg-primary">
-            התחל מחצית שנייה
-          </Button>
-        )}
-        
         {gamePhase === "secondHalf" && (
-          <Button onClick={onEndMatch} className="bg-primary">
-            סיים משחק
+          <Button 
+            onClick={onEndMatch} 
+            size="lg"
+            className="w-full md:w-auto"
+          >
+            סיום משחק
           </Button>
         )}
       </div>

@@ -124,35 +124,6 @@ export type Database = {
           },
         ]
       }
-      match_halftime_notes: {
-        Row: {
-          created_at: string
-          id: string
-          match_id: string
-          notes: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          match_id: string
-          notes: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          match_id?: string
-          notes?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "match_halftime_notes_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "matches"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       match_mental_feedback: {
         Row: {
           coach_feedback: string | null
