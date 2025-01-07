@@ -5,35 +5,39 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { Action } from "@/components/ActionSelector";
 
-const defaultActions: Omit<Action, "isSelected">[] = [
-  { id: "extra1", name: "בעיטה לשער" },
-  { id: "extra2", name: "בעיטה מחוץ למסגרת" },
-  { id: "extra3", name: "מסירת עומק" },
-  { id: "extra4", name: "מעבר שחקן 1 על 1" },
-  { id: "extra5", name: "חילוץ כדור" },
-  { id: "extra6", name: "כדור ראשון" },
-  { id: "extra7", name: "חיפוי" },
-  { id: "extra8", name: "בלימה" },
-  { id: "extra9", name: "הגבהה" },
-  { id: "extra10", name: "כדור שני" },
-  { id: "extra11", name: "חסימה" },
-  { id: "extra12", name: "בניית התקפה" }
-];
-
 interface AdditionalActionsProps {
   onActionSelect: (action: Action) => void;
+  selectedActions: Action[]; // Add this prop to receive already selected actions
 }
 
-export const AdditionalActions = ({ onActionSelect }: AdditionalActionsProps) => {
+export const AdditionalActions = ({ onActionSelect, selectedActions }: AdditionalActionsProps) => {
   const { toast } = useToast();
   const [customAction, setCustomAction] = useState("");
-  const [selectedActions, setSelectedActions] = useState<string[]>([]);
+  const [selectedAdditionalActions, setSelectedAdditionalActions] = useState<string[]>([]);
+
+  // Filter out actions that are already selected in game goals
+  const defaultActions: Omit<Action, "isSelected">[] = [
+    { id: "extra1", name: "בעיטה לשער" },
+    { id: "extra2", name: "בעיטה מחוץ למסגרת" },
+    { id: "extra3", name: "מסירת עומק" },
+    { id: "extra4", name: "מעבר שחקן 1 על 1" },
+    { id: "extra5", name: "חילוץ כדור" },
+    { id: "extra6", name: "כדור ראשון" },
+    { id: "extra7", name: "חיפוי" },
+    { id: "extra8", name: "בלימה" },
+    { id: "extra9", name: "הגבהה" },
+    { id: "extra10", name: "כדור שני" },
+    { id: "extra11", name: "חסימה" },
+    { id: "extra12", name: "בניית התקפה" }
+  ].filter(action => !selectedActions.some(selectedAction => 
+    selectedAction.name.toLowerCase() === action.name.toLowerCase()
+  ));
 
   const handleActionToggle = (actionId: string, actionName: string) => {
-    if (selectedActions.includes(actionId)) {
-      setSelectedActions(prev => prev.filter(id => id !== actionId));
+    if (selectedAdditionalActions.includes(actionId)) {
+      setSelectedAdditionalActions(prev => prev.filter(id => id !== actionId));
     } else {
-      setSelectedActions(prev => [...prev, actionId]);
+      setSelectedAdditionalActions(prev => [...prev, actionId]);
       onActionSelect({
         id: actionId,
         name: actionName,
@@ -47,6 +51,18 @@ export const AdditionalActions = ({ onActionSelect }: AdditionalActionsProps) =>
       toast({
         title: "שגיאה",
         description: "אנא הכנס שם לפעולה",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if custom action already exists in selected actions
+    if (selectedActions.some(action => 
+      action.name.toLowerCase() === customAction.toLowerCase()
+    )) {
+      toast({
+        title: "שגיאה",
+        description: "פעולה זו כבר קיימת ביעדי המשחק",
         variant: "destructive",
       });
       return;
@@ -78,7 +94,7 @@ export const AdditionalActions = ({ onActionSelect }: AdditionalActionsProps) =>
           >
             <Checkbox
               id={action.id}
-              checked={selectedActions.includes(action.id)}
+              checked={selectedAdditionalActions.includes(action.id)}
               onCheckedChange={() => handleActionToggle(action.id, action.name)}
             />
             <label

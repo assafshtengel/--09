@@ -36,7 +36,6 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
         if (error) throw error;
 
         if (match?.pre_match_reports?.havaya) {
-          // Split the comma-separated string into an array
           setHavaya(match.pre_match_reports.havaya.split(','));
         }
       } catch (error) {
@@ -108,7 +107,7 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
         </div>
       </div>
 
-      <AdditionalActions onActionSelect={onActionAdd} />
+      <AdditionalActions onActionSelect={onActionAdd} selectedActions={actions} />
       
       <div className="flex gap-3 justify-end">
         <Button onClick={takeScreenshot} variant="outline" size="sm">
