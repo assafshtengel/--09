@@ -6,7 +6,7 @@ import { GameLayout } from "./game/mobile/GameLayout";
 import { GamePhases } from "./game/GamePhases";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog } from "@/types/game";
+import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match } from "@/types/game";
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
@@ -20,9 +20,7 @@ export const GameTracker = () => {
   const [generalNotes, setGeneralNotes] = useState<Array<{ text: string; minute: number }>>([]);
   const [substitutions, setSubstitutions] = useState<SubstitutionLog[]>([]);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [matchDetails, setMatchDetails] = useState<{
-    opponent?: string;
-  }>({});
+  const [matchDetails, setMatchDetails] = useState<Match>({});
 
   useEffect(() => {
     loadMatchData();
@@ -46,7 +44,8 @@ export const GameTracker = () => {
       if (matchError) throw matchError;
 
       setMatchDetails({
-        opponent: match.opponent
+        opponent: match.opponent,
+        observer_type: match.observer_type // Added observer_type
       });
 
       if (match?.pre_match_reports?.actions) {
