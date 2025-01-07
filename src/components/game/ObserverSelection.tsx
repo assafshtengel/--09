@@ -24,4 +24,3 @@ export const ObserverSelection = ({ onStartMatch }: ObserverSelectionProps) => {
       </Button>
     </div>
   );
-};
