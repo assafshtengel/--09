@@ -12,7 +12,7 @@ import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { HalftimeSummary } from "./game/HalftimeSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match, PreMatchReport } from "@/types/game";
+import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match } from "@/types/game";
 import { Button } from "@/components/ui/button";
 import { Home, UserPlus, Video } from "lucide-react";
 
