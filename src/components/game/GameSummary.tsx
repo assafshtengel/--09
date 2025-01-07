@@ -150,108 +150,110 @@ export const GameSummary = ({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl mx-auto">
-        <div className="space-y-6">
-          <SummaryHeader 
-            gamePhase={gamePhase as "halftime" | "ended"}
-            matchId={matchId}
-            opponent={opponent}
-          />
+      <DialogContent className="max-w-4xl mx-auto h-[90vh]">
+        <ScrollArea className="h-full pr-4">
+          <div className="space-y-6">
+            <SummaryHeader 
+              gamePhase={gamePhase as "halftime" | "ended"}
+              matchId={matchId}
+              opponent={opponent}
+            />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>סטטיסטיקות</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <StatisticsSection 
+                    actions={actions}
+                    actionLogs={actionLogs}
+                  />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>הערות והתובנות</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <NotesSection notes={generalNotes} />
+                    
+                    {isLoadingInsights ? (
+                      <div className="text-center text-gray-500">
+                        טוען תובנות...
+                      </div>
+                    ) : insights ? (
+                      <div className="mt-4">
+                        <h3 className="text-lg font-semibold mb-2">תובנות AI</h3>
+                        <ScrollArea className="h-[200px]">
+                          <div className="space-y-2 text-right">
+                            {insights.split('\n\n').map((insight, index) => (
+                              <p key={index} className="text-gray-700">
+                                {insight}
+                              </p>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    ) : null}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             <Card>
               <CardHeader>
-                <CardTitle>סטטיסטיקות</CardTitle>
+                <CardTitle>השוואת יעדים</CardTitle>
               </CardHeader>
               <CardContent>
-                <StatisticsSection 
+                <GoalsComparison 
                   actions={actions}
                   actionLogs={actionLogs}
                 />
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>הערות והתובנות</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <NotesSection notes={generalNotes} />
-                  
-                  {isLoadingInsights ? (
-                    <div className="text-center text-gray-500">
-                      טוען תובנות...
-                    </div>
-                  ) : insights ? (
-                    <div className="mt-4">
-                      <h3 className="text-lg font-semibold mb-2">תובנות AI</h3>
-                      <ScrollArea className="h-[200px]">
-                        <div className="space-y-2 text-right">
-                          {insights.split('\n\n').map((insight, index) => (
-                            <p key={index} className="text-gray-700">
-                              {insight}
-                            </p>
-                          ))}
+            {substitutions.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>חילופים</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {substitutions.map((sub, index) => (
+                      <div key={index} className="flex justify-between items-center p-2 bg-muted rounded-lg">
+                        <span>דקה {sub.minute}'</span>
+                        <div className="text-right">
+                          {sub.playerIn && <div className="text-green-600">נכנס: {sub.playerIn}</div>}
+                          {sub.playerOut && <div className="text-red-600">יצא: {sub.playerOut}</div>}
                         </div>
-                      </ScrollArea>
-                    </div>
-                  ) : null}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>השוואת יעדים</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <GoalsComparison 
-                actions={actions}
-                actionLogs={actionLogs}
-              />
-            </CardContent>
-          </Card>
-
-          {substitutions.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>חילופים</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {substitutions.map((sub, index) => (
-                    <div key={index} className="flex justify-between items-center p-2 bg-muted rounded-lg">
-                      <span>דקה {sub.minute}'</span>
-                      <div className="text-right">
-                        {sub.playerIn && <div className="text-green-600">נכנס: {sub.playerIn}</div>}
-                        {sub.playerOut && <div className="text-red-600">יצא: {sub.playerOut}</div>}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-          <SummaryActions
-            gamePhase={gamePhase as "halftime" | "ended"}
-            isSendingEmail={isSendingEmail}
-            onSubmit={() => {
-              toast({
-                title: "נשמר בהצלחה",
-                description: "סיכום המשחק נשמר במערכת",
-              });
-              onClose();
-            }}
-            onSendEmail={handleEmailSend}
-            onShareSocial={handleShareSocial}
-            onScreenshot={handleScreenshot}
-            onClose={onClose}
-            matchId={matchId}
-          />
-        </div>
+            <SummaryActions
+              gamePhase={gamePhase as "halftime" | "ended"}
+              isSendingEmail={isSendingEmail}
+              onSubmit={() => {
+                toast({
+                  title: "נשמר בהצלחה",
+                  description: "סיכום המשחק נשמר במערכת",
+                });
+                onClose();
+              }}
+              onSendEmail={handleEmailSend}
+              onShareSocial={handleShareSocial}
+              onScreenshot={handleScreenshot}
+              onClose={onClose}
+              matchId={matchId}
+            />
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
