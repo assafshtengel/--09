@@ -10,7 +10,7 @@ interface AdditionalActionsProps {
   selectedActions: Action[]; // Add this prop to receive already selected actions
 }
 
-export const AdditionalActions = ({ onActionSelect, selectedActions }: AdditionalActionsProps) => {
+export const AdditionalActions = ({ onActionSelect, selectedActions = [] }: AdditionalActionsProps) => {
   const { toast } = useToast();
   const [customAction, setCustomAction] = useState("");
   const [selectedAdditionalActions, setSelectedAdditionalActions] = useState<string[]>([]);
@@ -29,9 +29,11 @@ export const AdditionalActions = ({ onActionSelect, selectedActions }: Additiona
     { id: "extra10", name: "כדור שני" },
     { id: "extra11", name: "חסימה" },
     { id: "extra12", name: "בניית התקפה" }
-  ].filter(action => !selectedActions.some(selectedAction => 
-    selectedAction.name.toLowerCase() === action.name.toLowerCase()
-  ));
+  ].filter(action => 
+    !selectedActions?.some(selectedAction => 
+      selectedAction.name.toLowerCase() === action.name.toLowerCase()
+    )
+  );
 
   const handleActionToggle = (actionId: string, actionName: string) => {
     if (selectedAdditionalActions.includes(actionId)) {
@@ -57,7 +59,7 @@ export const AdditionalActions = ({ onActionSelect, selectedActions }: Additiona
     }
 
     // Check if custom action already exists in selected actions
-    if (selectedActions.some(action => 
+    if (selectedActions?.some(action => 
       action.name.toLowerCase() === customAction.toLowerCase()
     )) {
       toast({
