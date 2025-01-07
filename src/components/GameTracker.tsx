@@ -1,101 +1,424 @@
-import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match, PreMatchReport } from "@/types/game";
-import { GameTimer } from "./game/GameTimer";
-import { GameScore } from "./game/GameScore";
-import { GameActionsList } from "./game/GameActionsList";
-import { GameNotes } from "./game/GameNotes";
-import { GameSummary } from "./game/GameSummary";
+import { useParams } from "react-router-dom";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { toast } from "@/hooks/use-toast";
+import { Action } from "@/components/ActionSelector";
 import { GamePreview } from "./game/GamePreview";
+import { GameSummary } from "./game/GameSummary";
+import { GameLayout } from "./game/mobile/GameLayout";
+import { ActionsList } from "./game/mobile/ActionsList";
+import { GameNotes } from "./game/GameNotes";
+import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { HalftimeSummary } from "./game/HalftimeSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { Home } from "lucide-react";
+import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match, PreMatchReport } from "@/types/game";
 
 export const GameTracker = () => {
-  const navigate = useNavigate();
   const { id: matchId } = useParams<{ id: string }>();
   const { toast } = useToast();
-  const [match, setMatch] = useState<Match | null>(null);
-  const [preMatchReport, setPreMatchReport] = useState<PreMatchReport | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [gamePhase, setGamePhase] = useState<GamePhase>("pre-match");
+  const [gamePhase, setGamePhase] = useState<GamePhase>("preview");
+  const [minute, setMinute] = useState(0);
   const [actionLogs, setActionLogs] = useState<ActionLog[]>([]);
-  const [substitutionLogs, setSubstitutionLogs] = useState<SubstitutionLog[]>([]);
-
-  const handleHomeClick = () => {
-    navigate("/");
-  };
+  const [showSummary, setShowSummary] = useState(false);
+  const [actions, setActions] = useState<Action[]>([]);
+  const [generalNote, setGeneralNote] = useState("");
+  const [generalNotes, setGeneralNotes] = useState<Array<{ text: string; minute: number }>>([]);
+  const [substitutions, setSubstitutions] = useState<SubstitutionLog[]>([]);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [matchDetails, setMatchDetails] = useState<Match>({
+    id: "",
+    player_id: "",
+    created_at: "",
+    match_date: "",
+    opponent: null,
+    location: null,
+    status: "preview",
+    pre_match_report_id: null,
+    match_type: null,
+    final_score: null,
+    player_position: null,
+    team: null,
+    team_name: null,
+    player_role: null,
+    observer_type: undefined,
+  });
 
   useEffect(() => {
-    const fetchMatchData = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from("matches")
-          .select("*")
-          .eq("id", matchId)
-          .single();
+    loadMatchData();
+  }, [matchId]);
 
-        if (error) throw error;
-        setMatch(data);
-        // Fetch related pre-match report and logs
-        const { data: reportData } = await supabase
-          .from("pre_match_reports")
-          .select("*")
-          .eq("id", data.pre_match_report_id)
-          .single();
-        setPreMatchReport(reportData);
+  const loadMatchData = async () => {
+    if (!matchId) return;
 
-        // Fetch action logs
-        const { data: actionsData } = await supabase
-          .from("match_actions")
-          .select("*")
-          .eq("match_id", matchId);
-        setActionLogs(actionsData);
+    try {
+      const { data: match, error: matchError } = await supabase
+        .from("matches")
+        .select(`
+          *,
+          pre_match_reports (
+            *
+          )
+        `)
+        .eq("id", matchId)
+        .single();
 
-        // Fetch substitution logs
-        const { data: subsData } = await supabase
-          .from("match_substitutions")
-          .select("*")
-          .eq("match_id", matchId);
-        setSubstitutionLogs(subsData);
-      } catch (err) {
-        setError("Error fetching match data");
-        toast.error("Error fetching match data");
-      } finally {
-        setLoading(false);
+      if (matchError) throw matchError;
+
+      // Type assertion for match data
+      const typedMatch = match as unknown as Match;
+      setMatchDetails(typedMatch);
+
+      if (match?.pre_match_reports?.actions) {
+        const rawActions = match.pre_match_reports.actions as unknown as PreMatchReportActions[];
+        
+        const validActions = rawActions
+          .filter(action => 
+            typeof action === 'object' && 
+            action !== null && 
+            'id' in action && 
+            'name' in action && 
+            'isSelected' in action
+          )
+          .map(action => ({
+            id: action.id,
+            name: action.name,
+            goal: action.goal,
+            isSelected: action.isSelected
+          }));
+          
+        console.log("Parsed actions:", validActions);
+        setActions(validActions);
       }
+
+      // Load existing action logs
+      const { data: existingLogs, error: logsError } = await supabase
+        .from('match_actions')
+        .select('*')
+        .eq('match_id', matchId);
+
+      if (logsError) throw logsError;
+
+      if (existingLogs) {
+        setActionLogs(existingLogs.map(log => ({
+          actionId: log.action_id,
+          minute: log.minute,
+          result: log.result as "success" | "failure",
+          note: log.note
+        })));
+      }
+
+      // Load existing notes
+      const { data: existingNotes, error: notesError } = await supabase
+        .from('match_notes')
+        .select('*')
+        .eq('match_id', matchId);
+
+      if (notesError) throw notesError;
+
+      if (existingNotes) {
+        setGeneralNotes(existingNotes.map(note => ({
+          text: note.note,
+          minute: note.minute
+        })));
+      }
+
+      // Load existing substitutions
+      const { data: existingSubs, error: subsError } = await supabase
+        .from('match_substitutions')
+        .select('*')
+        .eq('match_id', matchId);
+
+      if (subsError) throw subsError;
+
+      if (existingSubs) {
+        setSubstitutions(existingSubs.map(sub => ({
+          playerIn: sub.player_in,
+          playerOut: sub.player_out,
+          minute: sub.minute
+        })));
+      }
+
+      setGamePhase(match.status as GamePhase);
+    } catch (error) {
+      console.error("Error loading match data:", error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לטעון את נתוני המשחק",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveActionLog = async (actionId: string, result: "success" | "failure", note?: string) => {
+    if (!matchId) return;
+
+    try {
+      const { error } = await supabase
+        .from('match_actions')
+        .insert([
+          {
+            match_id: matchId,
+            action_id: actionId,
+            minute,
+            result,
+            note
+          }
+        ]);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving action:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את הפעולה",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveNote = async (note: string) => {
+    if (!matchId) return;
+
+    try {
+      const { error } = await supabase
+        .from('match_notes')
+        .insert([
+          {
+            match_id: matchId,
+            minute,
+            note
+          }
+        ]);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving note:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את ההערה",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveSubstitution = async (sub: SubstitutionLog) => {
+    if (!matchId) return;
+
+    try {
+      const { error } = await supabase
+        .from('match_substitutions')
+        .insert([
+          {
+            match_id: matchId,
+            minute: sub.minute,
+            player_in: sub.playerIn,
+            player_out: sub.playerOut
+          }
+        ]);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving substitution:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את החילוף",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateMatchStatus = async (status: GamePhase) => {
+    if (!matchId) return;
+
+    try {
+      const { error } = await supabase
+        .from('matches')
+        .update({ 
+          status,
+          observer_type: matchDetails.observer_type 
+        })
+        .eq('id', matchId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating match status:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לעדכן את סטטוס המשחק",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddAction = (newAction: Action) => {
+    setActions(prev => [...prev, newAction]);
+    toast({
+      title: "פעולה נוספה",
+      description: `הפעולה ${newAction.name} נוספה למעקב`,
+    });
+  };
+
+  const handleAddGeneralNote = async () => {
+    if (!generalNote.trim()) {
+      toast({
+        title: "שגיאה",
+        description: "יש להזין טקסט להערה",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await saveNote(generalNote);
+    setGeneralNotes(prev => [...prev, { text: generalNote, minute }]);
+    setGeneralNote("");
+    toast({
+      title: "ההערה נשמרה",
+      description: "ההערה נשמרה בהצלחה",
+    });
+  };
+
+  const handlePlayerExit = async (playerName: string, canReturn: boolean) => {
+    const sub: SubstitutionLog = {
+      playerIn: "",
+      playerOut: playerName,
+      minute
     };
 
-    fetchMatchData();
-  }, [matchId, toast]);
+    await saveSubstitution(sub);
+    setSubstitutions(prev => [...prev, sub]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+    if (!canReturn) {
+      endMatch();
+    }
+  };
+
+  const handlePlayerReturn = async (playerName: string) => {
+    const sub: SubstitutionLog = {
+      playerIn: playerName,
+      playerOut: "",
+      minute
+    };
+
+    await saveSubstitution(sub);
+    setSubstitutions(prev => [...prev, sub]);
+  };
+
+  const startMatch = async () => {
+    setGamePhase("playing");
+    await updateMatchStatus("playing");
+    setMinute(0);
+    setIsTimerRunning(true);
+  };
+
+  const endHalf = async () => {
+    setIsTimerRunning(false);
+    setGamePhase("halftime");
+    await updateMatchStatus("halftime");
+    setShowSummary(true);
+  };
+
+  const startSecondHalf = async () => {
+    setGamePhase("secondHalf");
+    await updateMatchStatus("secondHalf");
+    setMinute(45);
+    setIsTimerRunning(true);
+    setShowSummary(false);
+  };
+
+  const endMatch = async () => {
+    setIsTimerRunning(false);
+    setGamePhase("ended");
+    await updateMatchStatus("ended");
+    setShowSummary(true);
+  };
+
+  const logAction = async (actionId: string, result: "success" | "failure", note?: string) => {
+    await saveActionLog(actionId, result, note);
+    setActionLogs(prev => [...prev, {
+      actionId,
+      minute,
+      result,
+      note
+    }]);
+
+    toast({
+      title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
+      className: result === "success" ? "bg-green-500" : "bg-red-500",
+      duration: 1000,
+    });
+  };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
-        <Button 
-          variant="ghost" 
-          onClick={handleHomeClick}
-          className="flex items-center gap-2"
-        >
-          <Home className="h-4 w-4" />
-          חזרה לדף הבית
-        </Button>
-      </div>
-      
-      <GameTimer match={match} />
-      <GameScore match={match} />
-      <GameActionsList actions={actionLogs} />
-      <GameNotes match={match} />
-      <GameSummary match={match} />
-      <GamePreview preMatchReport={preMatchReport} />
-      <HalftimeSummary match={match} />
-    </div>
+    <GameLayout
+      gamePhase={gamePhase}
+      isTimerRunning={isTimerRunning}
+      minute={minute}
+      onMinuteChange={setMinute}
+      actions={actions}
+      actionLogs={actionLogs}
+      onStartMatch={startMatch}
+      onEndHalf={endHalf}
+      onStartSecondHalf={startSecondHalf}
+      onEndMatch={endMatch}
+    >
+      {gamePhase === "preview" && (
+        <GamePreview
+          actions={actions}
+          onActionAdd={handleAddAction}
+          onStartMatch={startMatch}
+        />
+      )}
+
+      {(gamePhase === "playing" || gamePhase === "secondHalf") && (
+        <div className="h-full flex flex-col">
+          <ActionsList
+            actions={actions}
+            onLog={logAction}
+          />
+          
+          <div className="p-4 space-y-4">
+            <GameNotes
+              generalNote={generalNote}
+              onNoteChange={setGeneralNote}
+              onAddNote={handleAddGeneralNote}
+            />
+
+            <PlayerSubstitution
+              minute={minute}
+              onPlayerExit={handlePlayerExit}
+              onPlayerReturn={handlePlayerReturn}
+            />
+          </div>
+        </div>
+      )}
+
+      {gamePhase === "halftime" && (
+        <HalftimeSummary
+          isOpen={showSummary}
+          onClose={() => setShowSummary(false)}
+          onStartSecondHalf={startSecondHalf}
+          actions={actions}
+          actionLogs={actionLogs}
+        />
+      )}
+
+      {gamePhase === "ended" && (
+        <Dialog open={showSummary} onOpenChange={setShowSummary}>
+          <DialogContent className="max-w-md mx-auto">
+            <GameSummary
+              actions={actions}
+              actionLogs={actionLogs}
+              generalNotes={generalNotes}
+              substitutions={substitutions}
+              onClose={() => setShowSummary(false)}
+              gamePhase="ended"
+              matchId={matchId}
+              opponent={matchDetails.opponent}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </GameLayout>
   );
 };
