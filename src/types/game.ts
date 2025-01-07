@@ -1,4 +1,4 @@
-export type GamePhase = "preview" | "playing" | "halftime" | "secondHalf" | "ended";
+export type GamePhase = "preview" | "observer_selection" | "playing" | "halftime" | "secondHalf" | "ended";
 
 export interface PreMatchReportActions {
   id: string;
