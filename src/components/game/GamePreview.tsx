@@ -3,6 +3,10 @@ import { Action } from "@/components/ActionSelector";
 import { AdditionalActions } from "./AdditionalActions";
 import html2canvas from "html2canvas";
 import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GamePreviewProps {
   actions: Action[];
@@ -11,6 +15,43 @@ interface GamePreviewProps {
 }
 
 export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewProps) => {
+  const { id: matchId } = useParams<{ id: string }>();
+  const [havaya, setHavaya] = useState<string[]>([]);
+
+  useEffect(() => {
+    const loadHavaya = async () => {
+      if (!matchId) return;
+
+      try {
+        const { data: match, error } = await supabase
+          .from('matches')
+          .select(`
+            pre_match_reports (
+              havaya
+            )
+          `)
+          .eq('id', matchId)
+          .single();
+
+        if (error) throw error;
+
+        if (match?.pre_match_reports?.havaya) {
+          // Split the comma-separated string into an array
+          setHavaya(match.pre_match_reports.havaya.split(','));
+        }
+      } catch (error) {
+        console.error('Error loading havaya:', error);
+        toast({
+          title: "שגיאה",
+          description: "לא ניתן לטעון את ההוויות",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadHavaya();
+  }, [matchId]);
+
   const takeScreenshot = async () => {
     try {
       const element = document.getElementById('goals-preview');
@@ -36,6 +77,19 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
 
   return (
     <div id="goals-preview" className="space-y-4">
+      {havaya.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <h2 className="text-xl font-bold text-right mb-4">הוויות נבחרות</h2>
+          <div className="flex flex-wrap gap-2 justify-end">
+            {havaya.map((h, index) => (
+              <Badge key={index} variant="secondary" className="text-base">
+                {h}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow-md p-4">
         <h2 className="text-xl font-bold text-right mb-4">יעדי המשחק</h2>
         <div className="grid gap-3">
