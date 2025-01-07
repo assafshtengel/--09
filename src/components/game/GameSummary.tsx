@@ -70,12 +70,12 @@ export const GameSummary = ({
 
   const handleRatingsChange = async (ratings: Record<string, number>) => {
     setPerformanceRatings(ratings);
-    await saveToDatabase({ ...ratings }, additionalAnswers);
+    await saveToDatabase(ratings, additionalAnswers);
   };
 
   const handleAnswersChange = async (answers: Record<string, any>) => {
     setAdditionalAnswers(answers);
-    await saveToDatabase(performanceRatings, { ...answers });
+    await saveToDatabase(performanceRatings, answers);
   };
 
   const saveToDatabase = async (ratings: Record<string, number>, answers: Record<string, any>) => {
