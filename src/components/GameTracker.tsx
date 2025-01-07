@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Action } from "@/components/ActionSelector";
@@ -13,9 +13,12 @@ import { HalftimeSummary } from "./game/HalftimeSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match, PreMatchReport } from "@/types/game";
+import { Button } from "@/components/ui/button";
+import { Home } from "lucide-react";
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [gamePhase, setGamePhase] = useState<GamePhase>("preview");
   const [minute, setMinute] = useState(0);
@@ -349,76 +352,97 @@ export const GameTracker = () => {
     });
   };
 
+  const handleHomeClick = () => {
+    navigate('/');
+  };
+
   return (
-    <GameLayout
-      gamePhase={gamePhase}
-      isTimerRunning={isTimerRunning}
-      minute={minute}
-      onMinuteChange={setMinute}
-      actions={actions}
-      actionLogs={actionLogs}
-      onStartMatch={startMatch}
-      onEndHalf={endHalf}
-      onStartSecondHalf={startSecondHalf}
-      onEndMatch={endMatch}
-    >
-      {gamePhase === "preview" && (
-        <GamePreview
-          actions={actions}
-          onActionAdd={handleAddAction}
-          onStartMatch={startMatch}
-        />
-      )}
+    <div className="flex flex-col h-full">
+      <div className="flex justify-between items-center p-4 bg-white border-b">
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={handleHomeClick}
+          className="flex items-center gap-2"
+        >
+          <Home className="h-4 w-4" />
+          חזרה לדף הבית
+        </Button>
+        <h1 className="text-lg font-semibold">
+          {matchDetails.opponent ? `משחק מול ${matchDetails.opponent}` : 'משחק חדש'}
+        </h1>
+      </div>
 
-      {(gamePhase === "playing" || gamePhase === "secondHalf") && (
-        <div className="h-full flex flex-col">
-          <ActionsList
+      <GameLayout
+        gamePhase={gamePhase}
+        isTimerRunning={isTimerRunning}
+        minute={minute}
+        onMinuteChange={setMinute}
+        actions={actions}
+        actionLogs={actionLogs}
+        onStartMatch={startMatch}
+        onEndHalf={endHalf}
+        onStartSecondHalf={startSecondHalf}
+        onEndMatch={endMatch}
+      >
+        {gamePhase === "preview" && (
+          <GamePreview
             actions={actions}
-            onLog={logAction}
+            onActionAdd={handleAddAction}
+            onStartMatch={startMatch}
           />
-          
-          <div className="p-4 space-y-4">
-            <GameNotes
-              generalNote={generalNote}
-              onNoteChange={setGeneralNote}
-              onAddNote={handleAddGeneralNote}
-            />
+        )}
 
-            <PlayerSubstitution
-              minute={minute}
-              onPlayerExit={handlePlayerExit}
-              onPlayerReturn={handlePlayerReturn}
-            />
-          </div>
-        </div>
-      )}
-
-      {gamePhase === "halftime" && (
-        <HalftimeSummary
-          isOpen={showSummary}
-          onClose={() => setShowSummary(false)}
-          onStartSecondHalf={startSecondHalf}
-          actions={actions}
-          actionLogs={actionLogs}
-        />
-      )}
-
-      {gamePhase === "ended" && (
-        <Dialog open={showSummary} onOpenChange={setShowSummary}>
-          <DialogContent className="max-w-md mx-auto">
-            <GameSummary
+        {(gamePhase === "playing" || gamePhase === "secondHalf") && (
+          <div className="h-full flex flex-col">
+            <ActionsList
               actions={actions}
-              actionLogs={actionLogs}
-              generalNotes={generalNotes}
-              substitutions={substitutions}
-              onClose={() => setShowSummary(false)}
-              gamePhase="ended"
-              matchId={matchId}
-              opponent={matchDetails.opponent}
+              onLog={logAction}
             />
-          </DialogContent>
-        </Dialog>
-      )}
-    </GameLayout>
+            
+            <div className="p-4 space-y-4">
+              <GameNotes
+                generalNote={generalNote}
+                onNoteChange={setGeneralNote}
+                onAddNote={handleAddGeneralNote}
+              />
+
+              <PlayerSubstitution
+                minute={minute}
+                onPlayerExit={handlePlayerExit}
+                onPlayerReturn={handlePlayerReturn}
+              />
+            </div>
+          </div>
+        )}
+
+        {gamePhase === "halftime" && (
+          <HalftimeSummary
+            isOpen={showSummary}
+            onClose={() => setShowSummary(false)}
+            onStartSecondHalf={startSecondHalf}
+            actions={actions}
+            actionLogs={actionLogs}
+          />
+        )}
+
+        {gamePhase === "ended" && (
+          <Dialog open={showSummary} onOpenChange={setShowSummary}>
+            <DialogContent className="max-w-md mx-auto">
+              <GameSummary
+                actions={actions}
+                actionLogs={actionLogs}
+                generalNotes={generalNotes}
+                substitutions={substitutions}
+                onClose={() => setShowSummary(false)}
+                gamePhase="ended"
+                matchId={matchId}
+                opponent={matchDetails.opponent}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
+      </GameLayout>
+    </div>
   );
 };
