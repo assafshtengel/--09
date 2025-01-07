@@ -44,8 +44,9 @@ export const GameTracker = () => {
       if (matchError) throw matchError;
 
       setMatchDetails({
+        ...match,
         opponent: match.opponent,
-        observer_type: match.observer_type // Added observer_type
+        observer_type: match.observer_type
       });
 
       if (match?.pre_match_reports?.actions) {
@@ -67,7 +68,7 @@ export const GameTracker = () => {
             isSelected: action.isSelected
           }));
           
-        console.log("Parsed actions:", validActions); // Debug log
+        console.log("Parsed actions:", validActions);
         setActions(validActions);
       }
 
