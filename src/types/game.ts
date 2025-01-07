@@ -1,26 +1,39 @@
 export type GamePhase = "preview" | "playing" | "halftime" | "secondHalf" | "ended";
 
-export type PreMatchReportActions = {
+export interface PreMatchReportActions {
   id: string;
   name: string;
   goal?: string;
   isSelected: boolean;
-};
+}
 
-export type ActionLog = {
+export interface ActionLog {
   actionId: string;
   minute: number;
   result: "success" | "failure";
   note?: string;
-};
+}
 
-export type SubstitutionLog = {
-  playerIn: string | null;
-  playerOut: string | null;
+export interface SubstitutionLog {
+  playerIn: string;
+  playerOut: string;
   minute: number;
-};
+}
 
-export type Match = {
+export interface Game {
+  id: string;
+  match_date: string;
+  opponent: string | null;
+  match_id?: string;
+  status: "completed" | "preview";
+}
+
+export interface PreMatchReport {
+  actions: PreMatchReportActions[];
+  questions_answers: Record<string, any>;
+}
+
+export interface Match {
   id: string;
   player_id: string;
   created_at: string;
@@ -35,13 +48,6 @@ export type Match = {
   team: string | null;
   team_name: string | null;
   player_role: string | null;
-  observer_type?: "parent" | "player";
-};
-
-export type Game = {
-  id: string;
-  match_date: string;
-  opponent: string | null;
-  match_id?: string;
-  status: "preview" | "completed";
-};
+  observer_type?: string;
+  pre_match_reports?: PreMatchReport;
+}
