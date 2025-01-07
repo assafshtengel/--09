@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Action } from "@/types/game";
+import { Action } from "@/components/ActionSelector";
+import { GamePreview } from "./game/GamePreview";
+import { GameSummary } from "./game/GameSummary";
 import { GameLayout } from "./game/mobile/GameLayout";
-import { GamePhases } from "./game/GamePhases";
+import { ActionsList } from "./game/mobile/ActionsList";
+import { GameNotes } from "./game/GameNotes";
+import { PlayerSubstitution } from "./game/PlayerSubstitution";
+import { HalftimeSummary } from "./game/HalftimeSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match } from "@/types/game";
+import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog } from "@/types/game";
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
@@ -20,7 +26,9 @@ export const GameTracker = () => {
   const [generalNotes, setGeneralNotes] = useState<Array<{ text: string; minute: number }>>([]);
   const [substitutions, setSubstitutions] = useState<SubstitutionLog[]>([]);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [matchDetails, setMatchDetails] = useState<Match>({});
+  const [matchDetails, setMatchDetails] = useState<{
+    opponent?: string;
+  }>({});
 
   useEffect(() => {
     loadMatchData();
@@ -43,20 +51,13 @@ export const GameTracker = () => {
 
       if (matchError) throw matchError;
 
-      const matchData: Match = {
-        ...match,
-        opponent: match.opponent,
-        observer_type: match.observer_type as "parent" | "player" | undefined,
-        pre_match_reports: {
-          actions: match.pre_match_reports?.actions as PreMatchReportActions[] | undefined,
-          questions_answers: match.pre_match_reports?.questions_answers
-        }
-      };
+      setMatchDetails({
+        opponent: match.opponent
+      });
 
-      setMatchDetails(matchData);
-
-      if (matchData.pre_match_reports?.actions) {
-        const preMatchActions = matchData.pre_match_reports.actions;
+      if (match?.pre_match_reports?.actions) {
+        const rawActions = match.pre_match_reports.actions as unknown;
+        const preMatchActions = rawActions as PreMatchReportActions[];
         
         const validActions = preMatchActions
           .filter(action => 
@@ -73,7 +74,7 @@ export const GameTracker = () => {
             isSelected: action.isSelected
           }));
           
-        console.log("Parsed actions:", validActions);
+        console.log("Parsed actions:", validActions); // Debug log
         setActions(validActions);
       }
 
@@ -131,28 +132,6 @@ export const GameTracker = () => {
       toast({
         title: "שגיאה",
         description: "לא ניתן לטעון את נתוני המשחק",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleObserverSelect = async (observer: "parent" | "player") => {
-    if (!matchId) return;
-
-    try {
-      const { error } = await supabase
-        .from('matches')
-        .update({ observer_type: observer })
-        .eq('id', matchId);
-
-      if (error) throw error;
-
-      startMatch();
-    } catch (error) {
-      console.error('Error saving observer type:', error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לשמור את בחירת הצופה",
         variant: "destructive",
       });
     }
@@ -367,28 +346,63 @@ export const GameTracker = () => {
       onStartSecondHalf={startSecondHalf}
       onEndMatch={endMatch}
     >
-      <GamePhases
-        gamePhase={gamePhase}
-        actions={actions}
-        actionLogs={actionLogs}
-        generalNotes={generalNotes}
-        substitutions={substitutions}
-        showSummary={showSummary}
-        minute={minute}
-        matchId={matchId}
-        opponent={matchDetails.opponent}
-        onActionAdd={handleAddAction}
-        onStartMatch={startMatch}
-        onStartSecondHalf={startSecondHalf}
-        onLog={logAction}
-        onPlayerExit={handlePlayerExit}
-        onPlayerReturn={handlePlayerReturn}
-        onShowSummaryChange={setShowSummary}
-        onObserverSelect={handleObserverSelect}
-        generalNote={generalNote}
-        onNoteChange={setGeneralNote}
-        onAddNote={handleAddGeneralNote}
-      />
+      {gamePhase === "preview" && (
+        <GamePreview
+          actions={actions}
+          onActionAdd={handleAddAction}
+          onStartMatch={startMatch}
+        />
+      )}
+
+      {(gamePhase === "playing" || gamePhase === "secondHalf") && (
+        <div className="h-full flex flex-col">
+          <ActionsList
+            actions={actions}
+            onLog={logAction}
+          />
+          
+          <div className="p-4 space-y-4">
+            <GameNotes
+              generalNote={generalNote}
+              onNoteChange={setGeneralNote}
+              onAddNote={handleAddGeneralNote}
+            />
+
+            <PlayerSubstitution
+              minute={minute}
+              onPlayerExit={handlePlayerExit}
+              onPlayerReturn={handlePlayerReturn}
+            />
+          </div>
+        </div>
+      )}
+
+      {gamePhase === "halftime" && (
+        <HalftimeSummary
+          isOpen={showSummary}
+          onClose={() => setShowSummary(false)}
+          onStartSecondHalf={startSecondHalf}
+          actions={actions}
+          actionLogs={actionLogs}
+        />
+      )}
+
+      {gamePhase === "ended" && (
+        <Dialog open={showSummary} onOpenChange={setShowSummary}>
+          <DialogContent className="max-w-md mx-auto">
+            <GameSummary
+              actions={actions}
+              actionLogs={actionLogs}
+              generalNotes={generalNotes}
+              substitutions={substitutions}
+              onClose={() => setShowSummary(false)}
+              gamePhase="ended"
+              matchId={matchId}
+              opponent={matchDetails.opponent}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </GameLayout>
   );
 };
