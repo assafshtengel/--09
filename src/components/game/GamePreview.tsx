@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
 import { AdditionalActions } from "./AdditionalActions";
+import { GameNotes } from "./GameNotes";
 import html2canvas from "html2canvas";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
   const [havaya, setHavaya] = useState<string[]>([]);
   const [insights, setInsights] = useState<string>("");
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+  const [generalNote, setGeneralNote] = useState<string>("");
 
   useEffect(() => {
     const loadHavaya = async () => {
@@ -100,6 +102,32 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
     }
   };
 
+  const handleAddNote = async () => {
+    if (!matchId || !generalNote.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('match_notes')
+        .insert([
+          { match_id: matchId, minute: 0, note: generalNote }
+        ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "ההערה נשמרה בהצלחה",
+      });
+      setGeneralNote("");
+    } catch (error) {
+      console.error('Error saving note:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את ההערה",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div id="goals-preview" className="space-y-4">
       {havaya.length > 0 && (
@@ -150,6 +178,15 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
 
       <AdditionalActions onActionSelect={onActionAdd} selectedActions={actions} />
       
+      <div className="bg-white rounded-lg shadow-md p-4">
+        <h2 className="text-xl font-bold text-right mb-4">רגע לפני המשחק מעוניין לרשום לעצמך עוד משהו? זה המקום להוציא כל מה שיש לך</h2>
+        <GameNotes
+          generalNote={generalNote}
+          onNoteChange={setGeneralNote}
+          onAddNote={handleAddNote}
+        />
+      </div>
+
       <div className="flex gap-3 justify-end">
         <Button onClick={takeScreenshot} variant="outline" size="sm">
           צלם מסך
