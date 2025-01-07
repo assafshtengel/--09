@@ -28,6 +28,11 @@ export interface Game {
   status: "completed" | "preview";
 }
 
+export interface PreMatchReport {
+  actions: PreMatchReportActions[];
+  questions_answers: Record<string, any>;
+}
+
 export interface Match {
   id: string;
   player_id: string;
@@ -44,8 +49,5 @@ export interface Match {
   team_name: string | null;
   player_role: string | null;
   observer_type?: string;
-  pre_match_reports?: {
-    actions: PreMatchReportActions[];
-    questions_answers: Record<string, any>;
-  };
+  pre_match_reports?: PreMatchReport;
 }

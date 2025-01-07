@@ -12,7 +12,7 @@ import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { HalftimeSummary } from "./game/HalftimeSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match } from "@/types/game";
+import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match, PreMatchReport } from "@/types/game";
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
@@ -66,11 +66,11 @@ export const GameTracker = () => {
       if (matchError) throw matchError;
 
       // Type assertion for match data
-      const typedMatch = match as Match;
+      const typedMatch = match as unknown as Match;
       setMatchDetails(typedMatch);
 
       if (match?.pre_match_reports?.actions) {
-        const rawActions = match.pre_match_reports.actions as PreMatchReportActions[];
+        const rawActions = match.pre_match_reports.actions as unknown as PreMatchReportActions[];
         
         const validActions = rawActions
           .filter(action => 

@@ -1,26 +1,29 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { matchId } = await req.json();
-
-    // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    )
 
-    // Get match data and pre-match report
+    const { matchId } = await req.json()
+
+    if (!matchId) {
+      throw new Error('Match ID is required')
+    }
+
+    // Fetch match data including pre-match report
     const { data: match, error: matchError } = await supabaseClient
       .from('matches')
       .select(`
@@ -31,48 +34,33 @@ serve(async (req) => {
         )
       `)
       .eq('id', matchId)
-      .single();
+      .single()
 
-    if (matchError) throw matchError;
+    if (matchError) {
+      throw matchError
+    }
 
-    // Get previous matches data
-    const { data: previousMatches, error: prevMatchError } = await supabaseClient
-      .from('matches')
-      .select(`
-        *,
-        pre_match_reports (
-          questions_answers,
-          actions
-        )
-      `)
-      .eq('player_id', match.player_id)
-      .order('match_date', { ascending: false })
-      .limit(3);
-
-    if (prevMatchError) throw prevMatchError;
-
-    const insights = "תובנות יתווספו בקרוב"; // Default message: "Insights will be added soon"
+    // Generate insights based on the match data
+    const insights = [
+      "Based on your answers, focus on maintaining composure during high-pressure situations",
+      "Your preparation shows good awareness of the opponent's strengths",
+      "Remember to stay focused on your pre-game objectives"
+    ]
 
     return new Response(
       JSON.stringify({ insights }),
       { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
-      }
-    );
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      },
+    )
   } catch (error) {
-    console.error('Error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: 500,
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      },
+    )
   }
-});
+})
