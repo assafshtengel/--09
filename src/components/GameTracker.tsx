@@ -58,6 +58,7 @@ export const GameTracker = () => {
         .from('matches')
         .update({ 
           observer_type: type,
+          status: type === "parent" ? "playing" : "preview"
         })
         .eq('id', matchId);
 
@@ -101,9 +102,7 @@ export const GameTracker = () => {
 
       if (matchError) throw matchError;
 
-      // Type assertion for match data
-      const typedMatch = match as unknown as Match;
-      setMatchDetails(typedMatch);
+      setMatchDetails(match as Match);
 
       if (match?.pre_match_reports?.actions) {
         const rawActions = match.pre_match_reports.actions as unknown as PreMatchReportActions[];
@@ -119,7 +118,7 @@ export const GameTracker = () => {
           .map(action => ({
             id: action.id,
             name: action.name,
-            goal: action.goal,
+            goal: action.goal || "",
             isSelected: action.isSelected
           }));
           

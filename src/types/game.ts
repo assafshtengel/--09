@@ -16,6 +16,14 @@ export interface Match {
   observer_type?: "parent" | "player";
 }
 
+export interface Game {
+  id: string;
+  match_date: string;
+  opponent: string | null;
+  match_id?: string;
+  status: "preview" | "completed";
+}
+
 export interface PreMatchReport {
   id: string;
   match_id: string;
@@ -26,7 +34,7 @@ export interface PreMatchReportActions {
   id: string;
   name: string;
   isSelected: boolean;
-  goal?: boolean;
+  goal?: string;
 }
 
 export interface ActionLog {
@@ -43,3 +51,10 @@ export interface SubstitutionLog {
 }
 
 export type GamePhase = "preview" | "playing" | "halftime" | "secondHalf" | "ended";
+
+export interface Action {
+  id: string;
+  name: string;
+  goal?: string;
+  isSelected: boolean;
+}
