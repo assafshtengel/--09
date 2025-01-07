@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match, PreMatchReport } from "@/types/game";
 import { Button } from "@/components/ui/button";
-import { Home } from "lucide-react";
+import { Home, UserPlus, Video } from "lucide-react";
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
@@ -68,7 +68,6 @@ export const GameTracker = () => {
 
       if (matchError) throw matchError;
 
-      // Type assertion for match data
       const typedMatch = match as unknown as Match;
       setMatchDetails(typedMatch);
 
@@ -94,7 +93,6 @@ export const GameTracker = () => {
         setActions(validActions);
       }
 
-      // Load existing action logs
       const { data: existingLogs, error: logsError } = await supabase
         .from('match_actions')
         .select('*')
@@ -111,7 +109,6 @@ export const GameTracker = () => {
         })));
       }
 
-      // Load existing notes
       const { data: existingNotes, error: notesError } = await supabase
         .from('match_notes')
         .select('*')
@@ -126,7 +123,6 @@ export const GameTracker = () => {
         })));
       }
 
-      // Load existing substitutions
       const { data: existingSubs, error: subsError } = await supabase
         .from('match_substitutions')
         .select('*')
@@ -153,203 +149,34 @@ export const GameTracker = () => {
     }
   };
 
-  const saveActionLog = async (actionId: string, result: "success" | "failure", note?: string) => {
-    if (!matchId) return;
-
+  const startMatchWithObserver = async (observerType: "parent" | "player") => {
     try {
-      const { error } = await supabase
-        .from('match_actions')
-        .insert([
-          {
-            match_id: matchId,
-            action_id: actionId,
-            minute,
-            result,
-            note
-          }
-        ]);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving action:', error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לשמור את הפעולה",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const saveNote = async (note: string) => {
-    if (!matchId) return;
-
-    try {
-      const { error } = await supabase
-        .from('match_notes')
-        .insert([
-          {
-            match_id: matchId,
-            minute,
-            note
-          }
-        ]);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving note:', error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לשמור את ההערה",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const saveSubstitution = async (sub: SubstitutionLog) => {
-    if (!matchId) return;
-
-    try {
-      const { error } = await supabase
-        .from('match_substitutions')
-        .insert([
-          {
-            match_id: matchId,
-            minute: sub.minute,
-            player_in: sub.playerIn,
-            player_out: sub.playerOut
-          }
-        ]);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving substitution:', error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לשמור את החילוף",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const updateMatchStatus = async (status: GamePhase) => {
-    if (!matchId) return;
-
-    try {
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from('matches')
         .update({ 
-          status,
-          observer_type: matchDetails.observer_type 
+          status: "playing",
+          observer_type: observerType 
         })
         .eq('id', matchId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      setGamePhase("playing");
+      setMinute(0);
+      setIsTimerRunning(true);
+
+      toast({
+        title: observerType === "parent" ? "הורה ימלא במהלך המשחק" : "שחקן ימלא בצפייה בשידור",
+        duration: 3000,
+      });
     } catch (error) {
-      console.error('Error updating match status:', error);
+      console.error('Error starting match:', error);
       toast({
         title: "שגיאה",
-        description: "לא ניתן לעדכן את סטטוס המשחק",
+        description: "לא ניתן להתחיל את המשחק",
         variant: "destructive",
       });
     }
-  };
-
-  const handleAddAction = (newAction: Action) => {
-    setActions(prev => [...prev, newAction]);
-    toast({
-      title: "פעולה נוספה",
-      description: `הפעולה ${newAction.name} נוספה למעקב`,
-    });
-  };
-
-  const handleAddGeneralNote = async () => {
-    if (!generalNote.trim()) {
-      toast({
-        title: "שגיאה",
-        description: "יש להזין טקסט להערה",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    await saveNote(generalNote);
-    setGeneralNotes(prev => [...prev, { text: generalNote, minute }]);
-    setGeneralNote("");
-    toast({
-      title: "ההערה נשמרה",
-      description: "ההערה נשמרה בהצלחה",
-    });
-  };
-
-  const handlePlayerExit = async (playerName: string, canReturn: boolean) => {
-    const sub: SubstitutionLog = {
-      playerIn: "",
-      playerOut: playerName,
-      minute
-    };
-
-    await saveSubstitution(sub);
-    setSubstitutions(prev => [...prev, sub]);
-
-    if (!canReturn) {
-      endMatch();
-    }
-  };
-
-  const handlePlayerReturn = async (playerName: string) => {
-    const sub: SubstitutionLog = {
-      playerIn: playerName,
-      playerOut: "",
-      minute
-    };
-
-    await saveSubstitution(sub);
-    setSubstitutions(prev => [...prev, sub]);
-  };
-
-  const startMatch = async () => {
-    setGamePhase("playing");
-    await updateMatchStatus("playing");
-    setMinute(0);
-    setIsTimerRunning(true);
-  };
-
-  const endHalf = async () => {
-    setIsTimerRunning(false);
-    setGamePhase("halftime");
-    await updateMatchStatus("halftime");
-    setShowSummary(true);
-  };
-
-  const startSecondHalf = async () => {
-    setGamePhase("secondHalf");
-    await updateMatchStatus("secondHalf");
-    setMinute(45);
-    setIsTimerRunning(true);
-    setShowSummary(false);
-  };
-
-  const endMatch = async () => {
-    setIsTimerRunning(false);
-    setGamePhase("ended");
-    await updateMatchStatus("ended");
-    setShowSummary(true);
-  };
-
-  const logAction = async (actionId: string, result: "success" | "failure", note?: string) => {
-    await saveActionLog(actionId, result, note);
-    setActionLogs(prev => [...prev, {
-      actionId,
-      minute,
-      result,
-      note
-    }]);
-
-    toast({
-      title: result === "success" ? "פעולה הצליחה" : "פעולה נכשלה",
-      className: result === "success" ? "bg-green-500" : "bg-red-500",
-      duration: 1000,
-    });
   };
 
   const handleHomeClick = () => {
@@ -380,20 +207,38 @@ export const GameTracker = () => {
         onMinuteChange={setMinute}
         actions={actions}
         actionLogs={actionLogs}
-        onStartMatch={startMatch}
+        onStartMatch={() => {}} // We'll handle this differently now
         onEndHalf={endHalf}
         onStartSecondHalf={startSecondHalf}
         onEndMatch={endMatch}
       >
         {gamePhase === "preview" && (
-          <GamePreview
-            actions={actions}
-            onActionAdd={handleAddAction}
-            onStartMatch={startMatch}
-          />
+          <div className="space-y-6">
+            <GamePreview
+              actions={actions}
+              onActionAdd={handleAddAction}
+              onStartMatch={() => {}} // We'll handle this differently now
+            />
+            <div className="flex flex-col gap-4 p-4">
+              <Button
+                onClick={() => startMatchWithObserver("parent")}
+                className="bg-accent hover:bg-accent/90 text-white flex items-center gap-2 h-12"
+              >
+                <UserPlus className="h-5 w-5" />
+                לחץ למילוי הורה במהלך המשחק
+              </Button>
+              <Button
+                onClick={() => startMatchWithObserver("player")}
+                className="bg-primary hover:bg-primary/90 text-white flex items-center gap-2 h-12"
+              >
+                <Video className="h-5 w-5" />
+                לחץ למילוי שחקן בצפייה בשידור המשחק
+              </Button>
+            </div>
+          </div>
         )}
 
-        {(gamePhase === "playing" || gamePhase === "secondHalf") && (
+        {gamePhase === "playing" && (
           <div className="h-full flex flex-col">
             <ActionsList
               actions={actions}
