@@ -80,9 +80,13 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
       {havaya.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-4">
           <h2 className="text-xl font-bold text-right mb-4">הוויות נבחרות</h2>
-          <div className="flex flex-wrap gap-2 justify-end">
+          <div className="flex flex-wrap gap-3 justify-end">
             {havaya.map((h, index) => (
-              <Badge key={index} variant="secondary" className="text-base">
+              <Badge 
+                key={index} 
+                variant="secondary" 
+                className="text-lg py-2 px-4"
+              >
                 {h}
               </Badge>
             ))}
