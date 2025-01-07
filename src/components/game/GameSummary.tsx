@@ -1,5 +1,4 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { NotesSection } from "./summary/NotesSection";
 import { SummaryHeader } from "./summary/SummaryHeader";
 import { SummaryActions } from "./summary/SummaryActions";
 import { GoalsComparison } from "./summary/GoalsComparison";
+import { PerformanceRatings } from "./summary/PerformanceRatings";
 import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import html2canvas from "html2canvas";
@@ -37,6 +37,7 @@ export const GameSummary = ({
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [insights, setInsights] = useState<string>("");
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+  const [performanceRatings, setPerformanceRatings] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const loadInsights = async () => {
@@ -64,6 +65,45 @@ export const GameSummary = ({
 
     loadInsights();
   }, [matchId]);
+
+  const handleRatingsChange = async (ratings: Record<string, number>) => {
+    setPerformanceRatings(ratings);
+    if (!matchId) return;
+
+    try {
+      const { data: existingFeedback } = await supabase
+        .from('post_game_feedback')
+        .select('*')
+        .eq('match_id', matchId)
+        .maybeSingle();
+
+      if (existingFeedback) {
+        await supabase
+          .from('post_game_feedback')
+          .update({ performance_ratings: ratings })
+          .eq('match_id', matchId);
+      } else {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user?.id) return;
+
+        await supabase
+          .from('post_game_feedback')
+          .insert({
+            match_id: matchId,
+            player_id: user.id,
+            performance_ratings: ratings,
+            questions_answers: {}
+          });
+      }
+    } catch (error) {
+      console.error('Error saving ratings:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את הדירוגים",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleEmailSend = async () => {
     try {
@@ -214,6 +254,8 @@ export const GameSummary = ({
                 />
               </CardContent>
             </Card>
+
+            <PerformanceRatings onRatingsChange={handleRatingsChange} />
 
             {substitutions.length > 0 && (
               <Card>
