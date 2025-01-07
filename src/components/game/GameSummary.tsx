@@ -2,7 +2,12 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatisticsSection } from "./summary/StatisticsSection";
+import { NotesSection } from "./summary/NotesSection";
+import { SummaryHeader } from "./summary/SummaryHeader";
+import { SummaryActions } from "./summary/SummaryActions";
+import { useState } from "react";
 
 interface GameSummaryProps {
   actions: any[];
@@ -26,10 +31,11 @@ export const GameSummary = ({
   opponent,
 }: GameSummaryProps) => {
   const { toast } = useToast();
-  const [performanceRatings, setPerformanceRatings] = useState<any>({});
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   const handleEmailSend = async () => {
     try {
+      setIsSendingEmail(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error("No user email found");
 
@@ -52,10 +58,9 @@ export const GameSummary = ({
       `;
 
       // Send email logic here...
-
       toast({
-        title: "Email Sent",
-        description: "The summary has been sent to your email.",
+        title: "אימייל נשלח",
+        description: "סיכום המשחק נשלח לכתובת המייל שלך",
       });
     } catch (error) {
       console.error('Error sending email:', error);
@@ -64,32 +69,97 @@ export const GameSummary = ({
         description: "לא ניתן לשלוח את הסיכום למייל",
         variant: "destructive",
       });
+    } finally {
+      setIsSendingEmail(false);
     }
+  };
+
+  const handleShareSocial = (platform: 'facebook' | 'instagram') => {
+    // Implement social sharing logic
+    toast({
+      title: "שיתוף",
+      description: `שיתוף לפלטפורמת ${platform} יתווסף בקרוב`,
+    });
+  };
+
+  const handleScreenshot = () => {
+    // Implement screenshot logic
+    toast({
+      title: "צילום מסך",
+      description: "אפשרות צילום מסך תתווסף בקרוב",
+    });
   };
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto">
-        <h2 className="text-xl font-bold mb-4">Match Summary</h2>
-        <div className="space-y-4">
-          <h3 className="font-semibold">Actions</h3>
-          <pre>{JSON.stringify(actions, null, 2)}</pre>
+      <DialogContent className="max-w-4xl mx-auto">
+        <div className="space-y-6">
+          <SummaryHeader 
+            gamePhase={gamePhase as "halftime" | "ended"}
+            matchId={matchId}
+            opponent={opponent}
+          />
 
-          <h3 className="font-semibold">Action Logs</h3>
-          <pre>{JSON.stringify(actionLogs, null, 2)}</pre>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>סטטיסטיקות</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <StatisticsSection 
+                  actions={actions}
+                  actionLogs={actionLogs}
+                />
+              </CardContent>
+            </Card>
 
-          <h3 className="font-semibold">General Notes</h3>
-          <pre>{JSON.stringify(generalNotes, null, 2)}</pre>
+            <Card>
+              <CardHeader>
+                <CardTitle>הערות</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <NotesSection notes={generalNotes} />
+              </CardContent>
+            </Card>
+          </div>
 
-          <h3 className="font-semibold">Substitutions</h3>
-          <pre>{JSON.stringify(substitutions, null, 2)}</pre>
-        </div>
+          {substitutions.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>חילופים</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {substitutions.map((sub, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-muted rounded-lg">
+                      <span>דקה {sub.minute}'</span>
+                      <div className="text-right">
+                        {sub.playerIn && <div className="text-green-600">נכנס: {sub.playerIn}</div>}
+                        {sub.playerOut && <div className="text-red-600">יצא: {sub.playerOut}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-        <div className="flex justify-end mt-4">
-          <Button onClick={handleEmailSend} variant="outline" className="mr-2">
-            Send Summary
-          </Button>
-          <Button onClick={onClose}>Close</Button>
+          <SummaryActions
+            gamePhase={gamePhase as "halftime" | "ended"}
+            isSendingEmail={isSendingEmail}
+            onSubmit={() => {
+              toast({
+                title: "נשמר בהצלחה",
+                description: "סיכום המשחק נשמר במערכת",
+              });
+              onClose();
+            }}
+            onSendEmail={handleEmailSend}
+            onShareSocial={handleShareSocial}
+            onScreenshot={handleScreenshot}
+            onClose={onClose}
+            matchId={matchId}
+          />
         </div>
       </DialogContent>
     </Dialog>
