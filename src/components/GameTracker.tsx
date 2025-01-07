@@ -46,10 +46,6 @@ export const GameTracker = () => {
     observer_type: undefined,
   });
 
-  useEffect(() => {
-    loadMatchData();
-  }, [matchId]);
-
   const handleObserverSelect = async (type: "parent" | "player") => {
     if (!matchId) return;
 
@@ -57,11 +53,10 @@ export const GameTracker = () => {
       const { error } = await supabase
         .from('matches')
         .update({ 
-          observer_type: type,
-          status: type === "parent" ? "playing" : "preview"
+          status: type === "parent" ? "playing" : "preview",
+          observer_type: type 
         })
-        .eq('id', matchId)
-        .select();
+        .eq('id', matchId);
 
       if (error) {
         console.error('Error updating observer type:', error);
@@ -97,7 +92,21 @@ export const GameTracker = () => {
       const { data: match, error: matchError } = await supabase
         .from("matches")
         .select(`
-          *,
+          id,
+          player_id,
+          created_at,
+          match_date,
+          opponent,
+          location,
+          status,
+          pre_match_report_id,
+          match_type,
+          final_score,
+          player_position,
+          team,
+          team_name,
+          player_role,
+          observer_type,
           pre_match_reports (
             *
           )
@@ -274,10 +283,7 @@ export const GameTracker = () => {
     try {
       const { error } = await supabase
         .from('matches')
-        .update({ 
-          status,
-          observer_type: matchDetails.observer_type 
-        })
+        .update({ status })
         .eq('id', matchId);
 
       if (error) throw error;
@@ -388,6 +394,10 @@ export const GameTracker = () => {
       duration: 1000,
     });
   };
+
+  useEffect(() => {
+    loadMatchData();
+  }, [matchId]);
 
   return (
     <>
