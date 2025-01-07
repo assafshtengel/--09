@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 interface HalftimeSummaryProps {
   isOpen: boolean;
@@ -34,7 +34,12 @@ export const HalftimeSummary = ({
   actionLogs,
 }: HalftimeSummaryProps) => {
   const [halftimeNotes, setHalftimeNotes] = useState("");
-  const randomTip = HALFTIME_TIPS[Math.floor(Math.random() * HALFTIME_TIPS.length)];
+  
+  // Use useMemo to keep the same tip throughout the component's lifecycle
+  const randomTip = useMemo(() => 
+    HALFTIME_TIPS[Math.floor(Math.random() * HALFTIME_TIPS.length)],
+    [] // Empty dependency array means this will only run once when component mounts
+  );
 
   // Sort action logs by minute
   const sortedLogs = [...actionLogs].sort((a, b) => a.minute - b.minute);
