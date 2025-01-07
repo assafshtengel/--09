@@ -60,13 +60,18 @@ export const GameTracker = () => {
           observer_type: type,
           status: type === "parent" ? "playing" : "preview"
         })
-        .eq('id', matchId);
+        .eq('id', matchId)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating observer type:', error);
+        throw error;
+      }
 
       setMatchDetails(prev => ({
         ...prev,
-        observer_type: type
+        observer_type: type,
+        status: type === "parent" ? "playing" : "preview"
       }));
       
       setShowObserverDialog(false);
