@@ -8,6 +8,7 @@ import { SummaryHeader } from "./summary/SummaryHeader";
 import { SummaryActions } from "./summary/SummaryActions";
 import { GoalsComparison } from "./summary/GoalsComparison";
 import { PerformanceRatings } from "./summary/PerformanceRatings";
+import { QuestionsSection } from "./summary/QuestionsSection";
 import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import html2canvas from "html2canvas";
@@ -38,6 +39,7 @@ export const GameSummary = ({
   const [insights, setInsights] = useState<string>("");
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
   const [performanceRatings, setPerformanceRatings] = useState<Record<string, number>>({});
+  const [additionalAnswers, setAdditionalAnswers] = useState<Record<string, any>>({});
 
   useEffect(() => {
     const loadInsights = async () => {
@@ -68,6 +70,15 @@ export const GameSummary = ({
 
   const handleRatingsChange = async (ratings: Record<string, number>) => {
     setPerformanceRatings(ratings);
+    await saveToDatabase(ratings, additionalAnswers);
+  };
+
+  const handleAnswersChange = async (answers: Record<string, any>) => {
+    setAdditionalAnswers(answers);
+    await saveToDatabase(performanceRatings, answers);
+  };
+
+  const saveToDatabase = async (ratings: Record<string, number>, answers: Record<string, any>) => {
     if (!matchId) return;
 
     try {
@@ -77,10 +88,18 @@ export const GameSummary = ({
         .eq('match_id', matchId)
         .maybeSingle();
 
+      const feedbackData = {
+        performance_ratings: ratings,
+        questions_answers: {
+          ...existingFeedback?.questions_answers,
+          additionalQuestions: answers
+        }
+      };
+
       if (existingFeedback) {
         await supabase
           .from('post_game_feedback')
-          .update({ performance_ratings: ratings })
+          .update(feedbackData)
           .eq('match_id', matchId);
       } else {
         const { data: { user } } = await supabase.auth.getUser();
@@ -91,15 +110,14 @@ export const GameSummary = ({
           .insert({
             match_id: matchId,
             player_id: user.id,
-            performance_ratings: ratings,
-            questions_answers: {}
+            ...feedbackData
           });
       }
     } catch (error) {
-      console.error('Error saving ratings:', error);
+      console.error('Error saving feedback:', error);
       toast({
         title: "שגיאה",
-        description: "לא ניתן לשמור את הדירוגים",
+        description: "לא ניתן לשמור את המשוב",
         variant: "destructive",
       });
     }
@@ -256,6 +274,8 @@ export const GameSummary = ({
             </Card>
 
             <PerformanceRatings onRatingsChange={handleRatingsChange} />
+
+            <QuestionsSection onAnswersChange={handleAnswersChange} />
 
             {substitutions.length > 0 && (
               <Card>
