@@ -9,6 +9,7 @@ import { SummaryHeader } from "./summary/SummaryHeader";
 import { SummaryActions } from "./summary/SummaryActions";
 import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import html2canvas from "html2canvas";
 
 interface GameSummaryProps {
   actions: any[];
@@ -114,6 +115,38 @@ export const GameSummary = ({
     });
   };
 
+  const handleScreenshot = async () => {
+    try {
+      const element = document.getElementById('game-summary-content');
+      if (!element) {
+        throw new Error('Summary content element not found');
+      }
+
+      const canvas = await html2canvas(element);
+      const dataUrl = canvas.toDataURL('image/png');
+      
+      // Create a temporary link element to trigger the download
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `game-summary-${new Date().toISOString()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "צילום מסך נשמר",
+        description: "התמונה נשמרה בהצלחה",
+      });
+    } catch (error) {
+      console.error('Error taking screenshot:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את צילום המסך",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-4xl mx-auto">
@@ -201,6 +234,7 @@ export const GameSummary = ({
             }}
             onSendEmail={handleEmailSend}
             onShareSocial={handleShareSocial}
+            onScreenshot={handleScreenshot}
             onClose={onClose}
             matchId={matchId}
           />
