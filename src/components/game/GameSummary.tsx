@@ -7,7 +7,8 @@ import { StatisticsSection } from "./summary/StatisticsSection";
 import { NotesSection } from "./summary/NotesSection";
 import { SummaryHeader } from "./summary/SummaryHeader";
 import { SummaryActions } from "./summary/SummaryActions";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface GameSummaryProps {
   actions: any[];
@@ -32,6 +33,35 @@ export const GameSummary = ({
 }: GameSummaryProps) => {
   const { toast } = useToast();
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [insights, setInsights] = useState<string>("");
+  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+
+  useEffect(() => {
+    const loadInsights = async () => {
+      if (!matchId) return;
+      
+      setIsLoadingInsights(true);
+      try {
+        const response = await supabase.functions.invoke('generate-game-insights', {
+          body: { matchId },
+        });
+
+        if (response.error) throw response.error;
+        setInsights(response.data.insights);
+      } catch (error) {
+        console.error('Error loading insights:', error);
+        toast({
+          title: "שגיאה",
+          description: "לא ניתן לטעון את התובנות",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingInsights(false);
+      }
+    };
+
+    loadInsights();
+  }, [matchId]);
 
   const handleEmailSend = async () => {
     try {
@@ -55,6 +85,9 @@ export const GameSummary = ({
         Action Logs: ${JSON.stringify(actionLogs, null, 2)}
         General Notes: ${JSON.stringify(generalNotes, null, 2)}
         Substitutions: ${JSON.stringify(substitutions, null, 2)}
+        
+        AI Insights:
+        ${insights}
       `;
 
       // Send email logic here...
@@ -75,18 +108,9 @@ export const GameSummary = ({
   };
 
   const handleShareSocial = (platform: 'facebook' | 'instagram') => {
-    // Implement social sharing logic
     toast({
       title: "שיתוף",
       description: `שיתוף לפלטפורמת ${platform} יתווסף בקרוב`,
-    });
-  };
-
-  const handleScreenshot = () => {
-    // Implement screenshot logic
-    toast({
-      title: "צילום מסך",
-      description: "אפשרות צילום מסך תתווסף בקרוב",
     });
   };
 
@@ -115,10 +139,31 @@ export const GameSummary = ({
 
             <Card>
               <CardHeader>
-                <CardTitle>הערות</CardTitle>
+                <CardTitle>הערות והתובנות</CardTitle>
               </CardHeader>
               <CardContent>
-                <NotesSection notes={generalNotes} />
+                <div className="space-y-4">
+                  <NotesSection notes={generalNotes} />
+                  
+                  {isLoadingInsights ? (
+                    <div className="text-center text-gray-500">
+                      טוען תובנות...
+                    </div>
+                  ) : insights ? (
+                    <div className="mt-4">
+                      <h3 className="text-lg font-semibold mb-2">תובנות AI</h3>
+                      <ScrollArea className="h-[200px]">
+                        <div className="space-y-2 text-right">
+                          {insights.split('\n\n').map((insight, index) => (
+                            <p key={index} className="text-gray-700">
+                              {insight}
+                            </p>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  ) : null}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -156,7 +201,6 @@ export const GameSummary = ({
             }}
             onSendEmail={handleEmailSend}
             onShareSocial={handleShareSocial}
-            onScreenshot={handleScreenshot}
             onClose={onClose}
             matchId={matchId}
           />
