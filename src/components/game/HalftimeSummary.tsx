@@ -2,6 +2,8 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
 
 interface HalftimeSummaryProps {
   isOpen: boolean;
@@ -31,6 +33,7 @@ export const HalftimeSummary = ({
   actions,
   actionLogs,
 }: HalftimeSummaryProps) => {
+  const [halftimeNotes, setHalftimeNotes] = useState("");
   const randomTip = HALFTIME_TIPS[Math.floor(Math.random() * HALFTIME_TIPS.length)];
 
   // Sort action logs by minute
@@ -79,6 +82,17 @@ export const HalftimeSummary = ({
                 })}
               </div>
             </ScrollArea>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-right">הערות למחצית</h3>
+            <Textarea
+              value={halftimeNotes}
+              onChange={(e) => setHalftimeNotes(e.target.value)}
+              placeholder="רשום כאן את ההערות שלך למחצית..."
+              className="min-h-[100px] text-right"
+              dir="rtl"
+            />
           </div>
           
           <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
