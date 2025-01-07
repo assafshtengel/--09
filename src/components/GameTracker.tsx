@@ -10,6 +10,7 @@ import { ActionsList } from "./game/mobile/ActionsList";
 import { GameNotes } from "./game/GameNotes";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { HalftimeSummary } from "./game/HalftimeSummary";
+import { ObserverSelectionDialog } from "./game/ObserverSelectionDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match, PreMatchReport } from "@/types/game";
@@ -18,6 +19,7 @@ export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
   const { toast } = useToast();
   const [gamePhase, setGamePhase] = useState<GamePhase>("preview");
+  const [showObserverDialog, setShowObserverDialog] = useState(true);
   const [minute, setMinute] = useState(0);
   const [actionLogs, setActionLogs] = useState<ActionLog[]>([]);
   const [showSummary, setShowSummary] = useState(false);
@@ -47,6 +49,40 @@ export const GameTracker = () => {
   useEffect(() => {
     loadMatchData();
   }, [matchId]);
+
+  const handleObserverSelect = async (type: "parent" | "player") => {
+    if (!matchId) return;
+
+    try {
+      const { error } = await supabase
+        .from('matches')
+        .update({ 
+          observer_type: type,
+        })
+        .eq('id', matchId);
+
+      if (error) throw error;
+
+      setMatchDetails(prev => ({
+        ...prev,
+        observer_type: type
+      }));
+      
+      setShowObserverDialog(false);
+
+      if (type === "parent") {
+        setGamePhase("playing");
+        startMatch();
+      }
+    } catch (error) {
+      console.error('Error updating observer type:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לעדכן את סוג הצופה",
+        variant: "destructive",
+      });
+    }
+  };
 
   const loadMatchData = async () => {
     if (!matchId) return;
@@ -350,18 +386,24 @@ export const GameTracker = () => {
   };
 
   return (
-    <GameLayout
-      gamePhase={gamePhase}
-      isTimerRunning={isTimerRunning}
-      minute={minute}
-      onMinuteChange={setMinute}
-      actions={actions}
-      actionLogs={actionLogs}
-      onStartMatch={startMatch}
-      onEndHalf={endHalf}
-      onStartSecondHalf={startSecondHalf}
-      onEndMatch={endMatch}
-    >
+    <>
+      <ObserverSelectionDialog 
+        isOpen={showObserverDialog} 
+        onSelect={handleObserverSelect}
+      />
+      
+      <GameLayout
+        gamePhase={gamePhase}
+        isTimerRunning={isTimerRunning}
+        minute={minute}
+        onMinuteChange={setMinute}
+        actions={actions}
+        actionLogs={actionLogs}
+        onStartMatch={startMatch}
+        onEndHalf={endHalf}
+        onStartSecondHalf={startSecondHalf}
+        onEndMatch={endMatch}
+      >
       {gamePhase === "preview" && (
         <GamePreview
           actions={actions}
@@ -419,6 +461,7 @@ export const GameTracker = () => {
           </DialogContent>
         </Dialog>
       )}
-    </GameLayout>
+      </GameLayout>
+    </>
   );
 };
