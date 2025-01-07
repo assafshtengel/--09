@@ -24,8 +24,13 @@ export const PerformanceChart = () => {
       try {
         const { data: matchActions, error } = await supabase
           .from("match_actions")
-          .select("*, matches!inner(match_date)")
-          .order("matches.match_date", { ascending: true });
+          .select(`
+            *,
+            matches (
+              match_date
+            )
+          `)
+          .order('matches(match_date)', { ascending: true });
 
         if (error) {
           console.error("Error fetching match actions:", error);
