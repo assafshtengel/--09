@@ -12,9 +12,10 @@ import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { HalftimeSummary } from "./game/HalftimeSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match } from "@/types/game";
+import { GamePhase } from "@/types/game";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
+import { useMatchData } from "@/hooks/use-match-data";
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
@@ -22,136 +23,32 @@ export const GameTracker = () => {
   const { toast } = useToast();
   const [gamePhase, setGamePhase] = useState<GamePhase>("preview");
   const [minute, setMinute] = useState(0);
-  const [actionLogs, setActionLogs] = useState<ActionLog[]>([]);
   const [showSummary, setShowSummary] = useState(false);
-  const [actions, setActions] = useState<Action[]>([]);
   const [generalNote, setGeneralNote] = useState("");
-  const [generalNotes, setGeneralNotes] = useState<Array<{ text: string; minute: number }>>([]);
-  const [substitutions, setSubstitutions] = useState<SubstitutionLog[]>([]);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [matchDetails, setMatchDetails] = useState<Match>({
-    id: "",
-    player_id: "",
-    created_at: "",
-    match_date: "",
-    opponent: null,
-    location: null,
-    status: "preview",
-    pre_match_report_id: null,
-    match_type: null,
-    final_score: null,
-    player_position: null,
-    team: null,
-    team_name: null,
-    player_role: null,
-    observer_type: undefined,
-  });
+
+  const {
+    matchDetails,
+    actionLogs,
+    actions,
+    generalNotes,
+    substitutions,
+    loadMatchData,
+    setActionLogs,
+    setActions,
+    setGeneralNotes,
+    setSubstitutions,
+  } = useMatchData(matchId);
 
   useEffect(() => {
     loadMatchData();
   }, [matchId]);
 
-  const loadMatchData = async () => {
+  const startMatchWithObserver = async (observerType: "parent" | "player") => {
     if (!matchId) return;
 
     try {
-      const { data: match, error: matchError } = await supabase
-        .from("matches")
-        .select(`
-          *,
-          pre_match_reports (
-            *
-          )
-        `)
-        .eq("id", matchId)
-        .single();
-
-      if (matchError) throw matchError;
-
-      const typedMatch = match as unknown as Match;
-      setMatchDetails(typedMatch);
-
-      if (match?.pre_match_reports?.actions) {
-        const rawActions = match.pre_match_reports.actions as unknown as PreMatchReportActions[];
-        
-        const validActions = rawActions
-          .filter(action => 
-            typeof action === 'object' && 
-            action !== null && 
-            'id' in action && 
-            'name' in action && 
-            'isSelected' in action
-          )
-          .map(action => ({
-            id: action.id,
-            name: action.name,
-            goal: action.goal,
-            isSelected: action.isSelected
-          }));
-          
-        console.log("Parsed actions:", validActions);
-        setActions(validActions);
-      }
-
-      const { data: existingLogs, error: logsError } = await supabase
-        .from('match_actions')
-        .select('*')
-        .eq('match_id', matchId);
-
-      if (logsError) throw logsError;
-
-      if (existingLogs) {
-        setActionLogs(existingLogs.map(log => ({
-          actionId: log.action_id,
-          minute: log.minute,
-          result: log.result as "success" | "failure",
-          note: log.note
-        })));
-      }
-
-      const { data: existingNotes, error: notesError } = await supabase
-        .from('match_notes')
-        .select('*')
-        .eq('match_id', matchId);
-
-      if (notesError) throw notesError;
-
-      if (existingNotes) {
-        setGeneralNotes(existingNotes.map(note => ({
-          text: note.note,
-          minute: note.minute
-        })));
-      }
-
-      const { data: existingSubs, error: subsError } = await supabase
-        .from('match_substitutions')
-        .select('*')
-        .eq('match_id', matchId);
-
-      if (subsError) throw subsError;
-
-      if (existingSubs) {
-        setSubstitutions(existingSubs.map(sub => ({
-          playerIn: sub.player_in,
-          playerOut: sub.player_out,
-          minute: sub.minute
-        })));
-      }
-
-      setGamePhase(match.status as GamePhase);
-    } catch (error) {
-      console.error("Error loading match data:", error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לטעון את נתוני המשחק",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const startMatchWithObserver = async (observerType: "parent" | "player") => {
-    try {
-      const { error: updateError } = await supabase
+      const { error } = await supabase
         .from('matches')
         .update({ 
           status: "playing",
@@ -159,7 +56,7 @@ export const GameTracker = () => {
         })
         .eq('id', matchId);
 
-      if (updateError) throw updateError;
+      if (error) throw error;
 
       setGamePhase("playing");
       setMinute(0);
@@ -250,6 +147,8 @@ export const GameTracker = () => {
   };
 
   const logAction = async (actionId: string, result: "success" | "failure", note?: string) => {
+    if (!matchId) return;
+
     try {
       const newActionLog = {
         actionId,
@@ -282,7 +181,7 @@ export const GameTracker = () => {
   };
 
   const handleAddGeneralNote = async () => {
-    if (!generalNote.trim()) return;
+    if (!matchId || !generalNote.trim()) return;
 
     try {
       const { error } = await supabase
@@ -308,6 +207,8 @@ export const GameTracker = () => {
   };
 
   const handlePlayerExit = async (playerName: string, canReturn: boolean) => {
+    if (!matchId) return;
+
     try {
       const { error } = await supabase
         .from('match_substitutions')
@@ -336,6 +237,8 @@ export const GameTracker = () => {
   };
 
   const handlePlayerReturn = async (playerName: string) => {
+    if (!matchId) return;
+
     try {
       const { error } = await supabase
         .from('match_substitutions')
