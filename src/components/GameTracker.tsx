@@ -12,7 +12,7 @@ import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { HalftimeSummary } from "./game/HalftimeSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog } from "@/types/game";
+import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match } from "@/types/game";
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
@@ -26,9 +26,23 @@ export const GameTracker = () => {
   const [generalNotes, setGeneralNotes] = useState<Array<{ text: string; minute: number }>>([]);
   const [substitutions, setSubstitutions] = useState<SubstitutionLog[]>([]);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [matchDetails, setMatchDetails] = useState<{
-    opponent?: string;
-  }>({});
+  const [matchDetails, setMatchDetails] = useState<Match>({
+    id: "",
+    player_id: "",
+    created_at: "",
+    match_date: "",
+    opponent: null,
+    location: null,
+    status: "preview",
+    pre_match_report_id: null,
+    match_type: null,
+    final_score: null,
+    player_position: null,
+    team: null,
+    team_name: null,
+    player_role: null,
+    observer_type: undefined,
+  });
 
   useEffect(() => {
     loadMatchData();
@@ -51,15 +65,14 @@ export const GameTracker = () => {
 
       if (matchError) throw matchError;
 
-      setMatchDetails({
-        opponent: match.opponent
-      });
+      // Type assertion for match data
+      const typedMatch = match as Match;
+      setMatchDetails(typedMatch);
 
       if (match?.pre_match_reports?.actions) {
-        const rawActions = match.pre_match_reports.actions as unknown;
-        const preMatchActions = rawActions as PreMatchReportActions[];
+        const rawActions = match.pre_match_reports.actions as PreMatchReportActions[];
         
-        const validActions = preMatchActions
+        const validActions = rawActions
           .filter(action => 
             typeof action === 'object' && 
             action !== null && 
@@ -74,7 +87,7 @@ export const GameTracker = () => {
             isSelected: action.isSelected
           }));
           
-        console.log("Parsed actions:", validActions); // Debug log
+        console.log("Parsed actions:", validActions);
         setActions(validActions);
       }
 
@@ -221,7 +234,10 @@ export const GameTracker = () => {
     try {
       const { error } = await supabase
         .from('matches')
-        .update({ status })
+        .update({ 
+          status,
+          observer_type: matchDetails.observer_type 
+        })
         .eq('id', matchId);
 
       if (error) throw error;

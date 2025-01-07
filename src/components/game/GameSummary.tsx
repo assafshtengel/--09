@@ -128,11 +128,11 @@ export const GameSummary = ({
       if (!user?.email) throw new Error("No user email found");
 
       // Get performance ratings from the post_game_feedback table
-      const { data: feedback } = await supabase
+      const { data: feedback, error } = await supabase
         .from('post_game_feedback')
         .select('performance_ratings')
         .eq('match_id', matchId)
-        .single();
+        .maybeSingle();  // Changed from single() to maybeSingle()
 
       const performanceRatings = feedback?.performance_ratings || {};
 
@@ -167,7 +167,7 @@ export const GameSummary = ({
         </div>
       `;
 
-      const { error } = await supabase.functions.invoke('send-game-summary', {
+      const { error: emailError } = await supabase.functions.invoke('send-game-summary', {
         body: {
           to: [user.email],
           subject: `סיכום משחק - ${format(new Date(), 'dd/MM/yyyy')}`,
@@ -175,7 +175,7 @@ export const GameSummary = ({
         },
       });
 
-      if (error) throw error;
+      if (emailError) throw emailError;
       toast({
         title: "הסיכום נשלח בהצלחה למייל",
         variant: "default",

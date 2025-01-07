@@ -27,3 +27,25 @@ export interface Game {
   match_id?: string;
   status: "completed" | "preview";
 }
+
+export interface Match {
+  id: string;
+  player_id: string;
+  created_at: string;
+  match_date: string;
+  opponent: string | null;
+  location: string | null;
+  status: string;
+  pre_match_report_id: string | null;
+  match_type: string | null;
+  final_score: string | null;
+  player_position: string | null;
+  team: string | null;
+  team_name: string | null;
+  player_role: string | null;
+  observer_type?: string;
+  pre_match_reports?: {
+    actions: PreMatchReportActions[];
+    questions_answers: Record<string, any>;
+  };
+}
