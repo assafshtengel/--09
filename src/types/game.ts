@@ -32,7 +32,7 @@ export interface Action {
   id: string;
   name: string;
   goal?: string;
-  isSelected: boolean; // Changed from optional to required
+  isSelected: boolean;
 }
 
 export interface Match {
@@ -53,5 +53,6 @@ export interface Match {
   observer_type?: "parent" | "player";
   pre_match_reports?: {
     actions?: PreMatchReportActions[];
+    questions_answers?: Record<string, any>;
   };
 }
