@@ -14,7 +14,7 @@ interface GameLayoutProps {
   actionLogs: Array<{ actionId: string; result: "success" | "failure" }>;
   onStartMatch: () => void;
   onEndHalf: () => void;
-  onStartSecondHalf: () => void;
+  onStartSecondHalf: (notes: string) => void;
   onEndMatch: () => void;
 }
 
@@ -51,7 +51,7 @@ export const GameLayout = ({
         gamePhase={gamePhase}
         onStartMatch={onStartMatch}
         onEndHalf={onEndHalf}
-        onStartSecondHalf={onStartSecondHalf}
+        onStartSecondHalf={() => onStartSecondHalf("")}
         onEndMatch={onEndMatch}
       />
     </div>
