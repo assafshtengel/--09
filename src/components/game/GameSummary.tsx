@@ -7,6 +7,7 @@ import { StatisticsSection } from "./summary/StatisticsSection";
 import { NotesSection } from "./summary/NotesSection";
 import { SummaryHeader } from "./summary/SummaryHeader";
 import { SummaryActions } from "./summary/SummaryActions";
+import { GoalsComparison } from "./summary/GoalsComparison";
 import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import html2canvas from "html2canvas";
@@ -200,6 +201,18 @@ export const GameSummary = ({
               </CardContent>
             </Card>
           </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>השוואת יעדים</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <GoalsComparison 
+                actions={actions}
+                actionLogs={actionLogs}
+              />
+            </CardContent>
+          </Card>
 
           {substitutions.length > 0 && (
             <Card>
