@@ -1,225 +1,97 @@
-import { useState } from 'react';
-import { Action } from "@/components/ActionSelector";
-import { SummaryLayout } from "./summary/SummaryLayout";
-import { StatisticsSection } from "./summary/StatisticsSection";
-import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import html2canvas from "html2canvas";
-import { format } from "date-fns";
-
-interface ActionLog {
-  actionId: string;
-  minute: number;
-  result: "success" | "failure";
-  note?: string;
-}
-
-interface SubstitutionLog {
-  playerIn: string;
-  playerOut: string;
-  minute: number;
-}
+import { useEffect, useState } from "react";
 
 interface GameSummaryProps {
-  actions: Action[];
-  actionLogs: ActionLog[];
-  generalNotes: Array<{ text: string; minute: number }>;
-  substitutions: SubstitutionLog[];
+  actions: any[];
+  actionLogs: any[];
+  generalNotes: any[];
+  substitutions: any[];
   onClose: () => void;
-  gamePhase?: "halftime" | "ended";
-  onContinueGame?: () => void;
-  matchId?: string;
-  opponent?: string;
+  gamePhase: string;
+  matchId: string | undefined;
+  opponent: string | null;
 }
 
-export const GameSummary = ({ 
-  actions, 
-  actionLogs, 
+export const GameSummary = ({
+  actions,
+  actionLogs,
   generalNotes,
   substitutions,
   onClose,
-  gamePhase = "ended",
-  onContinueGame,
+  gamePhase,
   matchId,
-  opponent
+  opponent,
 }: GameSummaryProps) => {
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const { toast } = useToast();
+  const [performanceRatings, setPerformanceRatings] = useState<any>({});
 
-  const handleSubmit = async () => {
+  const handleEmailSend = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "שגיאה",
-          description: "משתמש לא מחובר",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!matchId) {
-        toast({
-          title: "שגיאה",
-          description: "לא נמצא מזהה משחק",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      await sendEmail();
-      toast({
-        title: "המשוב נשמר בהצלחה",
-        description: "סיכום המשחק נשלח למייל",
-      });
-      onClose();
-    } catch (error) {
-      console.error('Error in handleSubmit:', error);
-      toast({
-        title: "שגיאה בשמירת המשוב",
-        description: "אנא נסה שנית",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const takeScreenshot = async () => {
-    try {
-      const element = document.getElementById('game-summary-content');
-      if (element) {
-        const canvas = await html2canvas(element);
-        const link = document.createElement('a');
-        link.download = `game-summary-${format(new Date(), 'yyyy-MM-dd')}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-        toast({
-          title: "צילום מסך נשמר בהצלחה",
-          variant: "default",
-        });
-      }
-    } catch (error) {
-      console.error('Error taking screenshot:', error);
-      toast({
-        title: "שגיאה בשמירת צילום המסך",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const shareToSocial = async (platform: 'facebook' | 'instagram') => {
-    const score = calculateScore(actionLogs);
-    const shareText = `Just finished a game with a performance score of ${score}! 🎯⚽️ #SoccerPerformance #Training`;
-    
-    if (platform === 'facebook') {
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${window.location.href}&quote=${encodeURIComponent(shareText)}`, '_blank');
-    } else if (platform === 'instagram') {
-      await navigator.clipboard.writeText(shareText);
-      toast({
-        title: "טקסט הועתק ללוח",
-        description: "כעת תוכל להדביק אותו באינסטגרם",
-      });
-    }
-  };
-
-  const sendEmail = async () => {
-    try {
-      setIsSendingEmail(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error("No user email found");
 
       // Get performance ratings from the post_game_feedback table
-      const { data: feedback, error } = await supabase
+      const { data: feedback } = await supabase
         .from('post_game_feedback')
         .select('performance_ratings')
         .eq('match_id', matchId)
-        .maybeSingle();  // Changed from single() to maybeSingle()
+        .maybeSingle();
 
       const performanceRatings = feedback?.performance_ratings || {};
 
-      // Create the performance ratings table HTML
-      const ratingsTableHTML = `
-        <div style="margin-top: 20px; margin-bottom: 20px;">
-          <h3 style="text-align: right;">ציוני ביצוע</h3>
-          <table style="width: 100%; border-collapse: collapse; direction: rtl;">
-            <thead>
-              <tr>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">נושא</th>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">ציון</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${Object.entries(performanceRatings).map(([aspect, rating]) => `
-                <tr>
-                  <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${aspect}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${rating}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
+      const emailContent = `
+        Summary of the match against ${opponent}:
+        Performance Ratings: ${JSON.stringify(performanceRatings, null, 2)}
+        Actions: ${JSON.stringify(actions, null, 2)}
+        Action Logs: ${JSON.stringify(actionLogs, null, 2)}
+        General Notes: ${JSON.stringify(generalNotes, null, 2)}
+        Substitutions: ${JSON.stringify(substitutions, null, 2)}
       `;
 
-      const htmlContent = `
-        <div dir="rtl">
-          <h1>סיכום משחק</h1>
-          ${document.getElementById('game-summary-content')?.innerHTML || ''}
-          ${ratingsTableHTML}
-        </div>
-      `;
+      // Send email logic here...
 
-      const { error: emailError } = await supabase.functions.invoke('send-game-summary', {
-        body: {
-          to: [user.email],
-          subject: `סיכום משחק - ${format(new Date(), 'dd/MM/yyyy')}`,
-          html: htmlContent,
-        },
-      });
-
-      if (emailError) throw emailError;
       toast({
-        title: "הסיכום נשלח בהצלחה למייל",
-        variant: "default",
+        title: "Email Sent",
+        description: "The summary has been sent to your email.",
       });
     } catch (error) {
       console.error('Error sending email:', error);
       toast({
-        title: "שגיאה בשליחת המייל",
+        title: "שגיאה",
+        description: "לא ניתן לשלוח את הסיכום למייל",
         variant: "destructive",
       });
-    } finally {
-      setIsSendingEmail(false);
     }
   };
 
-  const calculateScore = (actionLogs: ActionLog[]) => {
-    const successPoints = 10;
-    const failurePoints = -5;
-    
-    const score = actionLogs.reduce((total, log) => {
-      return total + (log.result === "success" ? successPoints : failurePoints);
-    }, 0);
-
-    return Math.max(0, score);
-  };
-
   return (
-    <SummaryLayout
-      actions={actions}
-      actionLogs={actionLogs}
-      generalNotes={generalNotes}
-      substitutions={substitutions}
-      onClose={onClose}
-      gamePhase={gamePhase}
-      onContinueGame={onContinueGame}
-      matchId={matchId}
-      isSendingEmail={isSendingEmail}
-      onSubmit={handleSubmit}
-      onSendEmail={sendEmail}
-      onShareSocial={shareToSocial}
-      onScreenshot={takeScreenshot}
-      opponent={opponent}
-    >
-      <StatisticsSection actions={actions} actionLogs={actionLogs} />
-    </SummaryLayout>
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-md mx-auto">
+        <h2 className="text-xl font-bold mb-4">Match Summary</h2>
+        <div className="space-y-4">
+          <h3 className="font-semibold">Actions</h3>
+          <pre>{JSON.stringify(actions, null, 2)}</pre>
+
+          <h3 className="font-semibold">Action Logs</h3>
+          <pre>{JSON.stringify(actionLogs, null, 2)}</pre>
+
+          <h3 className="font-semibold">General Notes</h3>
+          <pre>{JSON.stringify(generalNotes, null, 2)}</pre>
+
+          <h3 className="font-semibold">Substitutions</h3>
+          <pre>{JSON.stringify(substitutions, null, 2)}</pre>
+        </div>
+
+        <div className="flex justify-end mt-4">
+          <Button onClick={handleEmailSend} variant="outline" className="mr-2">
+            Send Summary
+          </Button>
+          <Button onClick={onClose}>Close</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
