@@ -18,6 +18,7 @@ export const GamePreviewSection = ({
       <GamePreview
         actions={actions}
         onActionAdd={onActionAdd}
+        onStartMatch={() => {}} // We handle this differently now
       />
       <ObserverSelection onStartMatch={onStartMatch} />
     </div>
