@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface GamePreviewProps {
   actions: Action[];
@@ -164,9 +165,15 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
       {insights && (
         <div className="bg-white rounded-lg shadow-md p-4">
           <h2 className="text-xl font-bold text-right mb-4">רגע לפני...</h2>
-          <div className="text-right whitespace-pre-line">
-            {insights}
-          </div>
+          <ScrollArea className="h-[200px] w-full">
+            <div className="text-right space-y-4 px-4">
+              {insights.split('\n\n').map((insight, index) => (
+                <p key={index} className="text-lg leading-relaxed">
+                  {insight}
+                </p>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
       )}
 
