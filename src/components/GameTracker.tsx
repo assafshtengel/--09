@@ -179,6 +179,190 @@ export const GameTracker = () => {
     }
   };
 
+  const endHalf = async () => {
+    try {
+      const { error } = await supabase
+        .from('matches')
+        .update({ status: 'halftime' })
+        .eq('id', matchId);
+
+      if (error) throw error;
+
+      setGamePhase("halftime");
+      setShowSummary(true);
+      setIsTimerRunning(false);
+    } catch (error) {
+      console.error('Error ending half:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לסיים את המחצית",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const startSecondHalf = async () => {
+    try {
+      const { error } = await supabase
+        .from('matches')
+        .update({ status: 'secondHalf' })
+        .eq('id', matchId);
+
+      if (error) throw error;
+
+      setGamePhase("secondHalf");
+      setShowSummary(false);
+      setIsTimerRunning(true);
+    } catch (error) {
+      console.error('Error starting second half:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן להתחיל את המחצית השנייה",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const endMatch = async () => {
+    try {
+      const { error } = await supabase
+        .from('matches')
+        .update({ status: 'ended' })
+        .eq('id', matchId);
+
+      if (error) throw error;
+
+      setGamePhase("ended");
+      setShowSummary(true);
+      setIsTimerRunning(false);
+    } catch (error) {
+      console.error('Error ending match:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לסיים את המשחק",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddAction = (action: Action) => {
+    setActions(prev => [...prev, action]);
+  };
+
+  const logAction = async (actionId: string, result: "success" | "failure", note?: string) => {
+    try {
+      const newActionLog = {
+        actionId,
+        minute,
+        result,
+        note
+      };
+
+      const { error } = await supabase
+        .from('match_actions')
+        .insert([{
+          match_id: matchId,
+          action_id: actionId,
+          minute,
+          result,
+          note
+        }]);
+
+      if (error) throw error;
+
+      setActionLogs(prev => [...prev, newActionLog]);
+    } catch (error) {
+      console.error('Error logging action:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את הפעולה",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddGeneralNote = async () => {
+    if (!generalNote.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('match_notes')
+        .insert([{
+          match_id: matchId,
+          minute,
+          note: generalNote
+        }]);
+
+      if (error) throw error;
+
+      setGeneralNotes(prev => [...prev, { text: generalNote, minute }]);
+      setGeneralNote("");
+    } catch (error) {
+      console.error('Error adding note:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את ההערה",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePlayerExit = async (playerName: string, canReturn: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('match_substitutions')
+        .insert([{
+          match_id: matchId,
+          minute,
+          player_out: playerName,
+          player_in: canReturn ? playerName : null
+        }]);
+
+      if (error) throw error;
+
+      setSubstitutions(prev => [...prev, {
+        playerOut: playerName,
+        playerIn: canReturn ? playerName : null,
+        minute
+      }]);
+    } catch (error) {
+      console.error('Error handling player exit:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את החילוף",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePlayerReturn = async (playerName: string) => {
+    try {
+      const { error } = await supabase
+        .from('match_substitutions')
+        .insert([{
+          match_id: matchId,
+          minute,
+          player_in: playerName,
+          player_out: null
+        }]);
+
+      if (error) throw error;
+
+      setSubstitutions(prev => [...prev, {
+        playerIn: playerName,
+        playerOut: null,
+        minute
+      }]);
+    } catch (error) {
+      console.error('Error handling player return:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור את החזרה למשחק",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleHomeClick = () => {
     navigate('/');
   };
