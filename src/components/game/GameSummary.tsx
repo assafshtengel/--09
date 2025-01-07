@@ -24,6 +24,13 @@ interface GameSummaryProps {
   opponent: string | null;
 }
 
+interface FeedbackData {
+  performance_ratings: Record<string, number>;
+  questions_answers: {
+    additionalQuestions: Record<string, any>;
+  };
+}
+
 export const GameSummary = ({
   actions,
   actionLogs,
@@ -88,10 +95,9 @@ export const GameSummary = ({
         .eq('match_id', matchId)
         .maybeSingle();
 
-      const feedbackData = {
+      const feedbackData: FeedbackData = {
         performance_ratings: ratings,
         questions_answers: {
-          ...existingFeedback?.questions_answers,
           additionalQuestions: answers
         }
       };
