@@ -1,22 +1,34 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Action } from "@/components/ActionSelector";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-interface ActionLog {
-  actionId: string;
-  minute: number;
-  result: "success" | "failure";
-  note?: string;
-}
+import { Action } from "@/components/ActionSelector";
 
 interface ActionsLogSectionProps {
   actions: Action[];
-  actionLogs: ActionLog[];
+  actionLogs: Array<{
+    actionId: string;
+    result: "success" | "failure";
+    minute: number;
+    note?: string;
+  }>;
 }
 
 export const ActionsLogSection = ({ actions, actionLogs }: ActionsLogSectionProps) => {
   // Sort logs by minute
   const sortedLogs = [...actionLogs].sort((a, b) => a.minute - b.minute);
+
+  const formatMinute = (minute: number) => {
+    if (minute >= 45) {
+      const secondHalfMinute = minute - 45;
+      return `${secondHalfMinute} (2)`;
+    }
+    return `${minute} (1)`;
+  };
 
   return (
     <div className="space-y-2">
@@ -25,23 +37,23 @@ export const ActionsLogSection = ({ actions, actionLogs }: ActionsLogSectionProp
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-right whitespace-nowrap px-2 md:px-4">דקה</TableHead>
-              <TableHead className="text-right whitespace-nowrap px-2 md:px-4">פעולה</TableHead>
-              <TableHead className="text-right whitespace-nowrap px-2 md:px-4">תוצאה</TableHead>
-              <TableHead className="text-right hidden md:table-cell">הערה</TableHead>
+              <TableCell className="text-right">דקה</TableCell>
+              <TableCell className="text-right">פעולה</TableCell>
+              <TableCell className="text-right">תוצאה</TableCell>
+              <TableCell className="text-right">הערות</TableCell>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sortedLogs.map((log, index) => (
               <TableRow key={index}>
-                <TableCell className="px-2 md:px-4">{log.minute}'</TableCell>
+                <TableCell className="px-2 md:px-4">{formatMinute(log.minute)}'</TableCell>
                 <TableCell className="text-right px-2 md:px-4 text-sm md:text-base">
-                  {actions.find(a => a.id === log.actionId)?.name}
+                  {actions.find(action => action.id === log.actionId)?.name || log.actionId}
                 </TableCell>
-                <TableCell className="px-2 md:px-4">
+                <TableCell className="text-right px-2 md:px-4">
                   {log.result === "success" ? "✅" : "❌"}
                 </TableCell>
-                <TableCell className="text-right hidden md:table-cell">
+                <TableCell className="text-right px-2 md:px-4 text-sm md:text-base">
                   {log.note || "-"}
                 </TableCell>
               </TableRow>
