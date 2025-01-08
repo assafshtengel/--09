@@ -258,6 +258,11 @@ export const GameSummary = ({
               onShareSocial={handleShareSocial}
               onScreenshot={handleScreenshot}
               isSendingEmail={isSendingEmail}
+              actions={actions}
+              actionLogs={actionLogs}
+              insights={insights}
+              matchId={matchId}
+              opponent={opponent}
             />
           </div>
         </ScrollArea>
