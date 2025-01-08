@@ -1,66 +1,74 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Action } from "@/components/ActionSelector";
+import { CheckCircle2, XCircle } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface ActionsLogSectionProps {
-  actions: Action[];
+  actions: Array<{
+    id: string;
+    name: string;
+  }>;
   actionLogs: Array<{
     actionId: string;
-    result: "success" | "failure";
     minute: number;
+    result: "success" | "failure";
     note?: string;
   }>;
 }
 
 export const ActionsLogSection = ({ actions, actionLogs }: ActionsLogSectionProps) => {
-  // Sort logs by minute
-  const sortedLogs = [...actionLogs].sort((a, b) => a.minute - b.minute);
-
   const formatMinute = (minute: number) => {
-    if (minute >= 45) {
-      const secondHalfMinute = minute - 45;
-      return `${secondHalfMinute} (2)`;
+    if (minute <= 45) {
+      return `${minute} (1)`;
+    } else {
+      return `${minute - 45} (2)`;
     }
-    return `${minute} (1)`;
   };
 
+  const sortedLogs = [...actionLogs].sort((a, b) => a.minute - b.minute);
+
   return (
-    <div className="space-y-2">
-      <h3 className="text-lg md:text-xl font-semibold text-right">פעולות במשחק</h3>
-      <ScrollArea className="h-[300px] w-full rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableCell className="text-right">דקה</TableCell>
-              <TableCell className="text-right">פעולה</TableCell>
-              <TableCell className="text-right">תוצאה</TableCell>
-              <TableCell className="text-right">הערות</TableCell>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedLogs.map((log, index) => (
-              <TableRow key={index}>
-                <TableCell className="px-2 md:px-4">{formatMinute(log.minute)}'</TableCell>
-                <TableCell className="text-right px-2 md:px-4 text-sm md:text-base">
-                  {actions.find(action => action.id === log.actionId)?.name || log.actionId}
-                </TableCell>
-                <TableCell className="text-right px-2 md:px-4">
-                  {log.result === "success" ? "✅" : "❌"}
-                </TableCell>
-                <TableCell className="text-right px-2 md:px-4 text-sm md:text-base">
-                  {log.note || "-"}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </ScrollArea>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>יומן פעולות</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ScrollArea className="h-[300px] w-full">
+          <div className="space-y-2">
+            {sortedLogs.map((log, index) => {
+              const action = actions.find(a => a.id === log.actionId);
+              if (!action) return null;
+
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    {log.result === "success" ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                    <span className="text-sm text-muted-foreground">
+                      דקה {formatMinute(log.minute)}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-medium">{action.name}</span>
+                    {log.note && (
+                      <p className="text-sm text-muted-foreground mt-1">{log.note}</p>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
   );
 };

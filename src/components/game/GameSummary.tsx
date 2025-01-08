@@ -1,18 +1,17 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatisticsSection } from "./summary/StatisticsSection";
-import { NotesSection } from "./summary/NotesSection";
-import { SummaryHeader } from "./summary/SummaryHeader";
-import { SummaryActions } from "./summary/SummaryActions";
-import { GoalsComparison } from "./summary/GoalsComparison";
-import { PerformanceRatings } from "./summary/PerformanceRatings";
-import { QuestionsSection } from "./summary/QuestionsSection";
-import { ActionsLogSection } from "./summary/ActionsLogSection";
-import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import html2canvas from "html2canvas";
+import { useState, useEffect } from "react";
+import { SummaryHeader } from "./summary/SummaryHeader";
+import { StatisticsSection } from "./summary/StatisticsSection";
+import { InsightsSection } from "./summary/InsightsSection";
+import { SharingSection } from "./summary/SharingSection";
+import { QuestionsSection } from "./summary/QuestionsSection";
+import { PerformanceRatings } from "./summary/PerformanceRatings";
+import { ActionsLogSection } from "./summary/ActionsLogSection";
+import { NotesSection } from "./summary/NotesSection";
+import { GoalsComparison } from "./summary/GoalsComparison";
 
 interface GameSummaryProps {
   actions: any[];
@@ -23,13 +22,6 @@ interface GameSummaryProps {
   gamePhase: string;
   matchId: string | undefined;
   opponent: string | null;
-}
-
-interface FeedbackData {
-  performance_ratings: Record<string, number>;
-  questions_answers: {
-    additionalQuestions: Record<string, any>;
-  };
 }
 
 export const GameSummary = ({
@@ -90,18 +82,21 @@ export const GameSummary = ({
     if (!matchId) return;
 
     try {
-      const { data: existingFeedback } = await supabase
-        .from('post_game_feedback')
-        .select('*')
-        .eq('match_id', matchId)
-        .maybeSingle();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) return;
 
-      const feedbackData: FeedbackData = {
+      const feedbackData = {
         performance_ratings: ratings,
         questions_answers: {
           additionalQuestions: answers
         }
       };
+
+      const { data: existingFeedback } = await supabase
+        .from('post_game_feedback')
+        .select('*')
+        .eq('match_id', matchId)
+        .maybeSingle();
 
       if (existingFeedback) {
         await supabase
@@ -109,9 +104,6 @@ export const GameSummary = ({
           .update(feedbackData)
           .eq('match_id', matchId);
       } else {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user?.id) return;
-
         await supabase
           .from('post_game_feedback')
           .insert({
@@ -136,7 +128,6 @@ export const GameSummary = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error("No user email found");
 
-      // Get performance ratings from the post_game_feedback table
       const { data: feedback } = await supabase
         .from('post_game_feedback')
         .select('performance_ratings')
@@ -157,7 +148,16 @@ export const GameSummary = ({
         ${insights}
       `;
 
-      // Send email logic here...
+      const { error } = await supabase.functions.invoke('send-game-summary', {
+        body: {
+          to: [user.email],
+          subject: `סיכום משחק - ${opponent || 'ללא יריב'}`,
+          html: emailContent,
+        },
+      });
+
+      if (error) throw error;
+
       toast({
         title: "אימייל נשלח",
         description: "סיכום המשחק נשלח לכתובת המייל שלך",
@@ -191,7 +191,6 @@ export const GameSummary = ({
       const canvas = await html2canvas(element);
       const dataUrl = canvas.toDataURL('image/png');
       
-      // Create a temporary link element to trigger the download
       const link = document.createElement('a');
       link.href = dataUrl;
       link.download = `game-summary-${new Date().toISOString()}.png`;
@@ -217,121 +216,47 @@ export const GameSummary = ({
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-4xl mx-auto h-[90vh]">
         <ScrollArea className="h-full pr-4">
-          <div className="space-y-6">
-            <SummaryHeader 
+          <div id="game-summary-content" className="space-y-6">
+            <SummaryHeader
               gamePhase={gamePhase as "halftime" | "ended"}
               matchId={matchId}
               opponent={opponent}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>סטטיסטיקות</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <StatisticsSection 
-                    actions={actions}
-                    actionLogs={actionLogs}
-                  />
-                </CardContent>
-              </Card>
+            <StatisticsSection
+              actions={actions}
+              actionLogs={actionLogs}
+            />
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>הערות והתובנות</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <NotesSection notes={generalNotes} />
-                    
-                    {isLoadingInsights ? (
-                      <div className="text-center text-gray-500">
-                        טוען תובנות...
-                      </div>
-                    ) : insights ? (
-                      <div className="mt-4">
-                        <h3 className="text-lg font-semibold mb-2">תובנות AI</h3>
-                        <ScrollArea className="h-[200px]">
-                          <div className="space-y-2 text-right">
-                            {insights.split('\n\n').map((insight, index) => (
-                              <p key={index} className="text-gray-700">
-                                {insight}
-                              </p>
-                            ))}
-                          </div>
-                        </ScrollArea>
-                      </div>
-                    ) : null}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <InsightsSection
+              insights={insights}
+              isLoading={isLoadingInsights}
+            />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>פעולות במשחק</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ActionsLogSection 
-                  actions={actions}
-                  actionLogs={actionLogs}
-                />
-              </CardContent>
-            </Card>
+            <ActionsLogSection
+              actions={actions}
+              actionLogs={actionLogs}
+            />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>השוואת יעדים</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <GoalsComparison 
-                  actions={actions}
-                  actionLogs={actionLogs}
-                />
-              </CardContent>
-            </Card>
+            <GoalsComparison
+              actions={actions}
+              actionLogs={actionLogs}
+            />
 
-            <PerformanceRatings onRatingsChange={handleRatingsChange} />
-
-            <QuestionsSection onAnswersChange={handleAnswersChange} />
-
-            {substitutions.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>חילופים</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {substitutions.map((sub, index) => (
-                      <div key={index} className="flex justify-between items-center p-2 bg-muted rounded-lg">
-                        <span>דקה {sub.minute}'</span>
-                        <div className="text-right">
-                          {sub.playerIn && <div className="text-green-600">נכנס: {sub.playerIn}</div>}
-                          {sub.playerOut && <div className="text-red-600">יצא: {sub.playerOut}</div>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+            {gamePhase === "ended" && (
+              <>
+                <PerformanceRatings onRatingsChange={handleRatingsChange} />
+                <QuestionsSection onAnswersChange={handleAnswersChange} />
+              </>
             )}
 
-            <SummaryActions
-              gamePhase={gamePhase as "halftime" | "ended"}
-              isSendingEmail={isSendingEmail}
-              onSubmit={() => {
-                toast({
-                  title: "נשמר בהצלחה",
-                  description: "סיכום המשחק נשמר במערכת",
-                });
-                onClose();
-              }}
-              onSendEmail={handleEmailSend}
+            <NotesSection notes={generalNotes} />
+
+            <SharingSection
+              onEmailSend={handleEmailSend}
               onShareSocial={handleShareSocial}
               onScreenshot={handleScreenshot}
-              onClose={onClose}
-              matchId={matchId}
+              isSendingEmail={isSendingEmail}
             />
           </div>
         </ScrollArea>
