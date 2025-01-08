@@ -18,6 +18,9 @@ const Auth = () => {
           if (error.message.includes("Invalid login credentials")) {
             return "שם משתמש או סיסמה שגויים. אנא נסה שוב.";
           }
+          if (error.message.includes("Email rate limit exceeded")) {
+            return "נשלחו יותר מדי בקשות לאיפוס סיסמה. אנא נסה שוב מאוחר יותר.";
+          }
           return "אירעה שגיאה בתהליך ההתחברות. אנא נסה שוב.";
         case 422:
           return "אנא וודא שהזנת את כל הפרטים הנדרשים.";
@@ -25,7 +28,7 @@ const Auth = () => {
           return error.message;
       }
     }
-    return "אירעה שגיאה. אנא נסה שוב מאוחר יותר.";
+    return error.message;
   };
 
   useEffect(() => {
@@ -58,6 +61,12 @@ const Auth = () => {
             description: getErrorMessage(error),
             variant: "destructive",
           });
+        } else {
+          toast({
+            title: "הצלחה",
+            description: "הסיסמה עודכנה בהצלחה",
+          });
+          navigate("/");
         }
       }
     });
@@ -111,10 +120,16 @@ const Auth = () => {
                 },
                 forgotten_password: {
                   email_label: "אימייל",
-                  password_label: "סיסמה",
                   button_label: "שלח הוראות איפוס סיסמה",
                   loading_button_label: "שולח הוראות...",
                   link_text: "שכחת סיסמה?",
+                  confirmation_text: "בדוק את תיבת הדואר שלך להוראות איפוס הסיסמה",
+                },
+                update_password: {
+                  password_label: "סיסמה חדשה",
+                  button_label: "עדכן סיסמה",
+                  loading_button_label: "מעדכן סיסמה...",
+                  confirmation_text: "הסיסמה עודכנה בהצלחה",
                 },
               },
             }}
