@@ -12,6 +12,7 @@ import { PerformanceRatings } from "./summary/PerformanceRatings";
 import { ActionsLogSection } from "./summary/ActionsLogSection";
 import { NotesSection } from "./summary/NotesSection";
 import { GoalsComparison } from "./summary/GoalsComparison";
+import html2canvas from 'html2canvas';
 
 interface GameSummaryProps {
   actions: any[];

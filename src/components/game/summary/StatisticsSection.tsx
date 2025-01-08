@@ -1,11 +1,15 @@
+import { Action } from "@/components/ActionSelector";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Activity, Goal, Shield, Timer } from "lucide-react";
+import { Activity, Goal, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface StatisticsSectionProps {
-  actions: any[];
-  actionLogs: any[];
+  actions: Action[];
+  actionLogs: Array<{
+    actionId: string;
+    result: "success" | "failure";
+  }>;
 }
 
 export const StatisticsSection = ({ actions, actionLogs }: StatisticsSectionProps) => {
@@ -45,9 +49,9 @@ export const StatisticsSection = ({ actions, actionLogs }: StatisticsSectionProp
       </motion.div>
 
       {actions.map((action, index) => {
-        const actionLogs = actionLogs.filter(log => log.actionId === action.id);
-        const successCount = actionLogs.filter(log => log.result === "success").length;
-        const successRate = actionLogs.length > 0 ? (successCount / actionLogs.length) * 100 : 0;
+        const actionStats = actionLogs.filter(log => log.actionId === action.id);
+        const successCount = actionStats.filter(log => log.result === "success").length;
+        const successRate = actionStats.length > 0 ? (successCount / actionStats.length) * 100 : 0;
 
         return (
           <motion.div
@@ -69,7 +73,7 @@ export const StatisticsSection = ({ actions, actionLogs }: StatisticsSectionProp
                     <Progress value={successRate} className="mt-2" />
                     <p className="text-2xl font-bold mt-2">{successRate.toFixed(1)}%</p>
                     <p className="text-sm text-muted-foreground">
-                      {successCount} הצלחות מתוך {actionLogs.length} ניסיונות
+                      {successCount} הצלחות מתוך {actionStats.length} ניסיונות
                     </p>
                   </div>
                 </div>
