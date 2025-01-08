@@ -32,6 +32,12 @@ const Auth = () => {
           return "אירעה שגיאה בתהליך ההתחברות. אנא נסה שוב.";
         case 422:
           return "אנא וודא שהזנת את כל הפרטים הנדרשים.";
+        case 401:
+          if (error.message.includes("Invalid API key")) {
+            console.error("Invalid API key error. Please check Supabase configuration.");
+            return "אירעה שגיאה בהתחברות למערכת. אנא פנה למנהל המערכת.";
+          }
+          return error.message;
         default:
           return error.message;
       }
