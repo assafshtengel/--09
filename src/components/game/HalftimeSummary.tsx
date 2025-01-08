@@ -2,8 +2,6 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
-import { useState, useMemo } from "react";
 
 interface HalftimeSummaryProps {
   isOpen: boolean;
@@ -18,14 +16,6 @@ interface HalftimeSummaryProps {
   }>;
 }
 
-const HALFTIME_TIPS = [
-  "שחק בחדות!",
-  "המשך להרים את הראש",
-  "שמור על ריכוז גבוה!",
-  "תן את המקסימום!",
-  "המשך להילחם על כל כדור!",
-];
-
 export const HalftimeSummary = ({
   isOpen,
   onClose,
@@ -33,14 +23,6 @@ export const HalftimeSummary = ({
   actions,
   actionLogs,
 }: HalftimeSummaryProps) => {
-  const [halftimeNotes, setHalftimeNotes] = useState("");
-  
-  // Use useMemo to keep the same tip throughout the component's lifecycle
-  const randomTip = useMemo(() => 
-    HALFTIME_TIPS[Math.floor(Math.random() * HALFTIME_TIPS.length)],
-    [] // Empty dependency array means this will only run once when component mounts
-  );
-
   // Sort action logs by minute
   const sortedLogs = [...actionLogs].sort((a, b) => a.minute - b.minute);
 
@@ -89,30 +71,9 @@ export const HalftimeSummary = ({
             </ScrollArea>
           </div>
 
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-right">הערות למחצית</h3>
-            <Textarea
-              value={halftimeNotes}
-              onChange={(e) => setHalftimeNotes(e.target.value)}
-              placeholder="רשום כאן את ההערות שלך למחצית..."
-              className="min-h-[100px] text-right"
-              dir="rtl"
-            />
-          </div>
-          
-          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-            <p className="text-lg font-medium text-center text-yellow-800">
-              טיפ למחצית השנייה:
-            </p>
-            <p className="text-center text-yellow-700 mt-2">{randomTip}</p>
-          </div>
-
-          <div className="flex justify-end gap-4 mt-6">
+          <div className="flex justify-center">
             <Button onClick={onStartSecondHalf} className="bg-primary">
               התחל מחצית שנייה
-            </Button>
-            <Button onClick={onClose} variant="outline">
-              סגור
             </Button>
           </div>
         </div>
