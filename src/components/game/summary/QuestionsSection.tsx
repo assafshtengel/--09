@@ -2,7 +2,13 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const OPEN_ENDED_QUESTIONS = [
   "רשום את נקודות החוזקה שלך במשחק",
@@ -21,13 +27,39 @@ const OPEN_ENDED_QUESTIONS = [
   "נא רשום סיכום מלא שלך על המשחק"
 ];
 
+const STRESS_LEVELS = [
+  { value: "1", label: "1 - רגוע מאוד" },
+  { value: "2", label: "2 - רגוע" },
+  { value: "3", label: "3 - רגוע יחסית" },
+  { value: "4", label: "4 - מעט לחץ" },
+  { value: "5", label: "5 - לחץ בינוני" },
+  { value: "6", label: "6 - לחוץ" },
+  { value: "7", label: "7 - לחוץ מאוד" },
+  { value: "8", label: "8 - לחץ גבוה" },
+  { value: "9", label: "9 - לחץ גבוה מאוד" },
+  { value: "10", label: "10 - לחץ מקסימלי" }
+];
+
+const SELF_RATINGS = [
+  { value: "1", label: "1 - חלש מאוד" },
+  { value: "2", label: "2 - חלש" },
+  { value: "3", label: "3 - מתחת לממוצע" },
+  { value: "4", label: "4 - ממוצע" },
+  { value: "5", label: "5 - מעל הממוצע" },
+  { value: "6", label: "6 - טוב" },
+  { value: "7", label: "7 - טוב מאוד" },
+  { value: "8", label: "8 - מצוין" },
+  { value: "9", label: "9 - יוצא מן הכלל" },
+  { value: "10", label: "10 - מושלם" }
+];
+
 export interface QuestionsSectionProps {
   onAnswersChange: (answers: Record<string, any>) => void;
 }
 
 export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => {
-  const [stressLevel, setStressLevel] = useState<number>(5);
-  const [selfRating, setSelfRating] = useState<number>(5);
+  const [stressLevel, setStressLevel] = useState<string>("5");
+  const [selfRating, setSelfRating] = useState<string>("5");
   const [openEndedAnswers, setOpenEndedAnswers] = useState<Record<string, string>>({});
   
   // Select 3 random questions
@@ -44,26 +76,26 @@ export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => 
     setOpenEndedAnswers(newAnswers);
     
     onAnswersChange({
-      stressLevel,
-      selfRating,
+      stressLevel: parseInt(stressLevel),
+      selfRating: parseInt(selfRating),
       openEndedAnswers: newAnswers
     });
   };
 
-  const handleStressLevelChange = (value: number[]) => {
-    setStressLevel(value[0]);
+  const handleStressLevelChange = (value: string) => {
+    setStressLevel(value);
     onAnswersChange({
-      stressLevel: value[0],
-      selfRating,
+      stressLevel: parseInt(value),
+      selfRating: parseInt(selfRating),
       openEndedAnswers
     });
   };
 
-  const handleSelfRatingChange = (value: number[]) => {
-    setSelfRating(value[0]);
+  const handleSelfRatingChange = (value: string) => {
+    setSelfRating(value);
     onAnswersChange({
-      stressLevel,
-      selfRating: value[0],
+      stressLevel: parseInt(stressLevel),
+      selfRating: parseInt(value),
       openEndedAnswers
     });
   };
@@ -75,32 +107,42 @@ export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => 
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
-          <div>
-            <Label>מה רמת הלחץ שבה היית לפני המשחק? (1 הכי גרוע, 10 הטוב ביותר)</Label>
-            <div className="pt-2">
-              <Slider
-                value={[stressLevel]}
-                onValueChange={handleStressLevelChange}
-                max={10}
-                min={1}
-                step={1}
-              />
-              <div className="text-center mt-2">{stressLevel}</div>
-            </div>
+          <div className="space-y-2">
+            <Label>מה רמת הלחץ שבה היית לפני המשחק?</Label>
+            <Select
+              value={stressLevel}
+              onValueChange={handleStressLevelChange}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="בחר רמת לחץ" />
+              </SelectTrigger>
+              <SelectContent>
+                {STRESS_LEVELS.map((level) => (
+                  <SelectItem key={level.value} value={level.value}>
+                    {level.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div>
-            <Label>איזה ציון אתה נותן לעצמך על המשחק? (1 הכי גרוע, 10 הטוב ביותר)</Label>
-            <div className="pt-2">
-              <Slider
-                value={[selfRating]}
-                onValueChange={handleSelfRatingChange}
-                max={10}
-                min={1}
-                step={1}
-              />
-              <div className="text-center mt-2">{selfRating}</div>
-            </div>
+          <div className="space-y-2">
+            <Label>איזה ציון אתה נותן לעצמך על המשחק?</Label>
+            <Select
+              value={selfRating}
+              onValueChange={handleSelfRatingChange}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="בחר ציון" />
+              </SelectTrigger>
+              <SelectContent>
+                {SELF_RATINGS.map((rating) => (
+                  <SelectItem key={rating.value} value={rating.value}>
+                    {rating.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
