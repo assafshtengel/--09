@@ -12,6 +12,8 @@ const Auth = () => {
   const { toast } = useToast();
 
   const getErrorMessage = (error: AuthError) => {
+    console.error("Auth error details:", error);
+    
     if (error instanceof AuthApiError) {
       switch (error.status) {
         case 400:
@@ -49,6 +51,8 @@ const Auth = () => {
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session);
+      
       if (event === "SIGNED_IN" && session) {
         navigate("/");
       } else if (event === "PASSWORD_RECOVERY") {
