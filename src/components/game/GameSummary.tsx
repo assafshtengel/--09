@@ -242,37 +242,6 @@ export const GameSummary = ({
     });
   };
 
-  const handleScreenshot = async () => {
-    try {
-      const element = document.getElementById('game-summary-content');
-      if (!element) {
-        throw new Error('Summary content element not found');
-      }
-
-      const canvas = await html2canvas(element);
-      const dataUrl = canvas.toDataURL('image/png');
-      
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = `game-summary-${new Date().toISOString()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      toast({
-        title: "צילום מסך נשמר",
-        description: "התמונה נשמרה בהצלחה",
-      });
-    } catch (error) {
-      console.error('Error taking screenshot:', error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לשמור את צילום המסך",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-4xl mx-auto h-[90vh]">
@@ -316,7 +285,6 @@ export const GameSummary = ({
             <SharingSection
               onEmailSend={handleEmailSend}
               onShareSocial={handleShareSocial}
-              onScreenshot={handleScreenshot}
               isSendingEmail={isSendingEmail}
               actions={actions}
               actionLogs={actionLogs}
