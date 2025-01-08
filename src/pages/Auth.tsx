@@ -26,6 +26,9 @@ const Auth = () => {
           if (error.message.includes("provider is not enabled")) {
             return "התחברות באמצעות Google אינה מוגדרת. אנא פנה למנהל המערכת.";
           }
+          if (error.message.includes("Invalid API key")) {
+            return "אירעה שגיאה בתהליך איפוס הסיסמה. אנא פנה למנהל המערכת.";
+          }
           return "אירעה שגיאה בתהליך ההתחברות. אנא נסה שוב.";
         case 422:
           return "אנא וודא שהזנת את כל הפרטים הנדרשים.";
