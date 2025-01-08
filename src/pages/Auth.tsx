@@ -5,10 +5,28 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { AuthError, AuthApiError } from "@supabase/supabase-js";
 
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const getErrorMessage = (error: AuthError) => {
+    if (error instanceof AuthApiError) {
+      switch (error.status) {
+        case 400:
+          if (error.message.includes("Invalid login credentials")) {
+            return "שם משתמש או סיסמה שגויים. אנא נסה שוב.";
+          }
+          return "אירעה שגיאה בתהליך ההתחברות. אנא נסה שוב.";
+        case 422:
+          return "אנא וודא שהזנת את כל הפרטים הנדרשים.";
+        default:
+          return error.message;
+      }
+    }
+    return "אירעה שגיאה. אנא נסה שוב מאוחר יותר.";
+  };
 
   useEffect(() => {
     // Check for password reset error
@@ -24,7 +42,7 @@ const Auth = () => {
       });
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
         navigate("/");
       } else if (event === "PASSWORD_RECOVERY") {
@@ -32,6 +50,15 @@ const Auth = () => {
           title: "איפוס סיסמה",
           description: "הזן את הסיסמה החדשה שלך",
         });
+      } else if (event === "USER_UPDATED") {
+        const { error } = await supabase.auth.getSession();
+        if (error) {
+          toast({
+            title: "שגיאה",
+            description: getErrorMessage(error),
+            variant: "destructive",
+          });
+        }
       }
     });
 
