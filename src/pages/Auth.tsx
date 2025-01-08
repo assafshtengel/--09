@@ -23,21 +23,15 @@ const Auth = () => {
           if (error.message.includes("Email rate limit exceeded")) {
             return "נשלחו יותר מדי בקשות לאיפוס סיסמה. אנא נסה שוב מאוחר יותר.";
           }
-          if (error.message.includes("provider is not enabled")) {
-            return "התחברות באמצעות Google אינה מוגדרת. אנא פנה למנהל המערכת.";
-          }
-          if (error.message.includes("Invalid API key")) {
-            return "אירעה שגיאה בתהליך איפוס הסיסמה. אנא פנה למנהל המערכת.";
-          }
           return "אירעה שגיאה בתהליך ההתחברות. אנא נסה שוב.";
-        case 422:
-          return "אנא וודא שהזנת את כל הפרטים הנדרשים.";
         case 401:
           if (error.message.includes("Invalid API key")) {
             console.error("Invalid API key error. Please check Supabase configuration.");
             return "אירעה שגיאה בהתחברות למערכת. אנא פנה למנהל המערכת.";
           }
-          return error.message;
+          return "אירעה שגיאה בהתחברות למערכת. אנא נסה שוב.";
+        case 422:
+          return "אנא וודא שהזנת את כל הפרטים הנדרשים.";
         default:
           return error.message;
       }
