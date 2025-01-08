@@ -1,17 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Instagram, Mail, Share2 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { InstagramSummary } from "./InstagramSummary";
+import { Download, Instagram, Mail, Share2 } from "lucide-react";
 import html2canvas from 'html2canvas';
+import { Action } from "@/components/ActionSelector";
 
 interface SharingSectionProps {
   onEmailSend: () => Promise<void>;
   onShareSocial: (platform: 'facebook' | 'instagram') => void;
-  onScreenshot: () => Promise<void>;
   isSendingEmail: boolean;
-  actions: any[];
+  actions: Action[];
   actionLogs: any[];
   insights: string;
   matchId: string | undefined;
@@ -108,7 +108,7 @@ export const SharingSection = ({
             <Button
               variant="outline"
               className="flex items-center gap-2"
-              onClick={onScreenshot}
+              onClick={handleInstagramShare}
             >
               <Download className="h-4 w-4" />
               שמור צילום מסך
