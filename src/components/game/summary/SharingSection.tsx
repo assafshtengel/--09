@@ -4,6 +4,7 @@ import { Download, Instagram, Mail, Share2 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { InstagramSummary } from "./InstagramSummary";
+import html2canvas from 'html2canvas';
 
 interface SharingSectionProps {
   onEmailSend: () => Promise<void>;
@@ -20,7 +21,6 @@ interface SharingSectionProps {
 export const SharingSection = ({
   onEmailSend,
   onShareSocial,
-  onScreenshot,
   isSendingEmail,
   actions,
   actionLogs,
@@ -39,13 +39,32 @@ export const SharingSection = ({
   const handleInstagramShare = async () => {
     setIsSharing(true);
     try {
-      await onScreenshot();
+      const element = document.getElementById('instagram-summary');
+      if (!element) {
+        throw new Error('Instagram summary element not found');
+      }
+
+      const canvas = await html2canvas(element, {
+        backgroundColor: null,
+        useCORS: true,
+        scale: 2, // Higher quality
+      });
+      
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `game-summary-${new Date().toISOString()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
       toast({
         title: "צילום מסך נשמר",
         description: "כעת תוכל לשתף את התמונה באינסטגרם",
       });
       onShareSocial('instagram');
     } catch (error) {
+      console.error('Error taking screenshot:', error);
       toast({
         title: "שגיאה",
         description: "לא ניתן לשתף את הסיכום",
