@@ -66,7 +66,8 @@ export const InstagramSummary = ({
 
           if (report) {
             setHavaya(report.havaya?.split(',') || []);
-            setPreMatchAnswers(report.questions_answers || {});
+            // Ensure we're setting an object for preMatchAnswers
+            setPreMatchAnswers(report.questions_answers as Record<string, any> || {});
           }
         }
       }
