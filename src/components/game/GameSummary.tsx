@@ -137,9 +137,13 @@ export const GameSummary = ({
 
       const performanceRatings = feedback?.performance_ratings || {};
 
-      // Create a more structured and readable email content
       const emailContent = `
         <div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #1E40AF; font-size: 24px;">⚽ המסע להצלחה ⚽</h1>
+            <p style="color: #4B5563; font-style: italic;">"כל משחק הוא צעד קדימה"</p>
+          </div>
+          
           <h2 style="color: #2563eb;">סיכום משחק נגד ${opponent || 'ללא יריב'}</h2>
           
           <div style="margin: 20px 0;">
