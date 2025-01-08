@@ -137,16 +137,72 @@ export const GameSummary = ({
 
       const performanceRatings = feedback?.performance_ratings || {};
 
+      // Create a more structured and readable email content
       const emailContent = `
-        Summary of the match against ${opponent}:
-        Performance Ratings: ${JSON.stringify(performanceRatings, null, 2)}
-        Actions: ${JSON.stringify(actions, null, 2)}
-        Action Logs: ${JSON.stringify(actionLogs, null, 2)}
-        General Notes: ${JSON.stringify(generalNotes, null, 2)}
-        Substitutions: ${JSON.stringify(substitutions, null, 2)}
-        
-        AI Insights:
-        ${insights}
+        <div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h2 style="color: #2563eb;">סיכום משחק נגד ${opponent || 'ללא יריב'}</h2>
+          
+          <div style="margin: 20px 0;">
+            <h3 style="color: #4b5563;">דירוגי ביצועים</h3>
+            <ul style="list-style-type: none; padding: 0;">
+              ${Object.entries(performanceRatings).map(([key, value]) => `
+                <li style="margin: 5px 0;">${key}: ${value}/5</li>
+              `).join('')}
+            </ul>
+          </div>
+
+          <div style="margin: 20px 0;">
+            <h3 style="color: #4b5563;">פעולות במשחק</h3>
+            <ul style="list-style-type: none; padding: 0;">
+              ${actions.map(action => `
+                <li style="margin: 5px 0;">${action.name} - יעד: ${action.goal || 'לא הוגדר'}</li>
+              `).join('')}
+            </ul>
+          </div>
+
+          ${actionLogs.length > 0 ? `
+            <div style="margin: 20px 0;">
+              <h3 style="color: #4b5563;">יומן פעולות</h3>
+              <ul style="list-style-type: none; padding: 0;">
+                ${actionLogs.map(log => `
+                  <li style="margin: 5px 0;">
+                    דקה ${log.minute}: ${log.actionId} - ${log.result}
+                    ${log.note ? `<br>הערה: ${log.note}` : ''}
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          ` : ''}
+
+          ${generalNotes.length > 0 ? `
+            <div style="margin: 20px 0;">
+              <h3 style="color: #4b5563;">הערות כלליות</h3>
+              <ul style="list-style-type: none; padding: 0;">
+                ${generalNotes.map(note => `<li style="margin: 5px 0;">${note}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+
+          ${substitutions.length > 0 ? `
+            <div style="margin: 20px 0;">
+              <h3 style="color: #4b5563;">חילופים</h3>
+              <ul style="list-style-type: none; padding: 0;">
+                ${substitutions.map(sub => `
+                  <li style="margin: 5px 0;">
+                    דקה ${sub.minute}: ${sub.playerOut} יצא, ${sub.playerIn} נכנס
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          ` : ''}
+
+          ${insights ? `
+            <div style="margin: 20px 0;">
+              <h3 style="color: #4b5563;">תובנות AI</h3>
+              <p style="margin: 10px 0;">${insights}</p>
+            </div>
+          ` : ''}
+        </div>
       `;
 
       const { error } = await supabase.functions.invoke('send-game-summary', {
