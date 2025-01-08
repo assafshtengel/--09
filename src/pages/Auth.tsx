@@ -100,6 +100,7 @@ const Auth = () => {
                 input: 'text-right',
               },
             }}
+            providers={["google"]}
             localization={{
               variables: {
                 sign_in: {
@@ -133,7 +134,6 @@ const Auth = () => {
                 },
               },
             }}
-            providers={[]}
           />
         </CardContent>
       </Card>
