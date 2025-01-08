@@ -16,6 +16,20 @@ interface PerformanceData {
   successRate: number;
 }
 
+interface MatchAction {
+  result: string;
+  matches: {
+    match_date: string;
+  };
+}
+
+interface ProcessedData {
+  [key: string]: {
+    success: number;
+    total: number;
+  };
+}
+
 export const PerformanceChart = () => {
   const [data, setData] = useState<PerformanceData[]>([]);
 
@@ -38,7 +52,7 @@ export const PerformanceChart = () => {
         }
 
         // Process the data to calculate success rates by date
-        const processedData = matchActions.reduce((acc: Record<string, { success: number; total: number }>, action) => {
+        const processedData = (matchActions as MatchAction[]).reduce((acc: ProcessedData, action) => {
           const date = new Date(action.matches.match_date).toLocaleDateString();
           if (!acc[date]) {
             acc[date] = { success: 0, total: 0 };

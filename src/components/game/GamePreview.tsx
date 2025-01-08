@@ -15,6 +15,12 @@ interface GamePreviewProps {
   onStartMatch: () => void;
 }
 
+interface PreMatchReport {
+  pre_match_reports: {
+    havaya: string;
+  }[];
+}
+
 export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewProps) => {
   const { id: matchId } = useParams<{ id: string }>();
   const [havaya, setHavaya] = useState<string[]>([]);
