@@ -21,6 +21,9 @@ const Auth = () => {
           if (error.message.includes("Email rate limit exceeded")) {
             return "נשלחו יותר מדי בקשות לאיפוס סיסמה. אנא נסה שוב מאוחר יותר.";
           }
+          if (error.message.includes("provider is not enabled")) {
+            return "התחברות באמצעות Google אינה מוגדרת. אנא פנה למנהל המערכת.";
+          }
           return "אירעה שגיאה בתהליך ההתחברות. אנא נסה שוב.";
         case 422:
           return "אנא וודא שהזנת את כל הפרטים הנדרשים.";
