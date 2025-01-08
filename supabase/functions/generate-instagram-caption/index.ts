@@ -53,18 +53,16 @@ serve(async (req) => {
     const successfulActions = actions.filter((a: any) => a.result === 'success').length;
     const successRate = totalActions > 0 ? ((successfulActions / totalActions) * 100).toFixed(1) : 0;
 
-    // Get pre-match feelings and goals
+    // Get pre-match feelings and post-match feedback
     const preMatchAnswers = match.pre_match_reports?.questions_answers || {};
     const havaya = match.pre_match_reports?.havaya?.split(',') || [];
-    
-    // Get post-match feedback
     const performanceRatings = match.post_game_feedback?.performance_ratings || {};
     const postMatchAnswers = match.post_game_feedback?.questions_answers || {};
 
-    // Find strongest and weakest areas based on performance ratings
+    // Find strongest and weakest areas
     const ratings = Object.entries(performanceRatings);
-    const strongestSkill = ratings.reduce((a, b) => (b[1] > a[1] ? b : a))[0];
-    const weakestSkill = ratings.reduce((a, b) => (b[1] < a[1] ? b : a))[0];
+    const strongestSkill = ratings.reduce((a, b) => (b[1] > a[1] ? b : a), ['', 0])[0];
+    const weakestSkill = ratings.reduce((a, b) => (b[1] < a[1] ? b : a), ['', 5])[0];
 
     // Generate the caption using GPT-4
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -78,18 +76,44 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a professional sports content writer who creates engaging Instagram captions for soccer players. Write in Hebrew, be motivational and authentic.'
+            content: `You are a professional sports content writer who creates engaging Instagram captions for soccer players in Hebrew. 
+            Write motivational and authentic content that follows this structure:
+            1. Introduction with game context and pre-game feelings
+            2. Performance highlights with specific statistics
+            3. Personal feelings about strengths and areas for improvement
+            4. Conclusion with lessons learned and next goals
+            5. Closing with hashtags
+            Use emojis appropriately and maintain an inspirational tone.`
           },
           {
             role: 'user',
-            content: `Create an Instagram caption for a soccer game with the following details:
+            content: `Create an Instagram caption in Hebrew for a soccer game with the following details:
               - Opponent: ${match.opponent}
+              - Total Actions: ${totalActions}
               - Success rate: ${successRate}%
               - Pre-game feelings: ${havaya.join(', ')}
               - Strongest skill: ${strongestSkill}
               - Area to improve: ${weakestSkill}
+              - Post-game feelings: ${JSON.stringify(postMatchAnswers)}
               
-              Format the text with emojis and make it engaging for Instagram. Include relevant hashtags.`
+              Follow this structure:
+              "סיכום המשחק שלי! 🔥
+              
+              [פתיחה עם הקשר המשחק ותחושות לפני]
+              
+              ⚽ מה עשיתי במגרש?
+              [סטטיסטיקות וביצועים]
+              
+              🙌 איך הרגשתי מבחינת יכולת אישית?
+              [תחושות על חוזקות ונקודות לשיפור]
+              
+              💡 המסקנה שלי:
+              [לקחים ומסקנות]
+              
+              🏆 היעד הבא:
+              [יעד ספציפי לשיפור]
+              
+              [סיום עם תודות והאשטגים]"`
           }
         ],
       }),
