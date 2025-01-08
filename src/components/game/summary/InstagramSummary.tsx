@@ -1,8 +1,8 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Trophy, TrendingUp, Share2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { Trophy, TrendingUp, Share2, Instagram, Quote, Target, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useState, useEffect } from "react";
@@ -29,6 +29,9 @@ export const InstagramSummary = ({
 }: InstagramSummaryProps) => {
   const [playerName, setPlayerName] = useState<string>("");
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [havaya, setHavaya] = useState<string[]>([]);
+  const [preMatchAnswers, setPreMatchAnswers] = useState<Record<string, any>>({});
+  const [isSharing, setIsSharing] = useState(false);
 
   useEffect(() => {
     const fetchPlayerProfile = async () => {
@@ -45,10 +48,32 @@ export const InstagramSummary = ({
         setPlayerName(profile.full_name || "");
         setProfilePicture(profile.profile_picture_url);
       }
+
+      // Fetch pre-match report data
+      if (matchId) {
+        const { data: match } = await supabase
+          .from('matches')
+          .select('pre_match_report_id')
+          .eq('id', matchId)
+          .single();
+
+        if (match?.pre_match_report_id) {
+          const { data: report } = await supabase
+            .from('pre_match_reports')
+            .select('havaya, questions_answers')
+            .eq('id', match.pre_match_report_id)
+            .single();
+
+          if (report) {
+            setHavaya(report.havaya?.split(',') || []);
+            setPreMatchAnswers(report.questions_answers || {});
+          }
+        }
+      }
     };
 
     fetchPlayerProfile();
-  }, []);
+  }, [matchId]);
 
   const calculateOverallSuccess = () => {
     if (!actionLogs.length) return 0;
@@ -75,10 +100,37 @@ export const InstagramSummary = ({
     return insightsList[0] || "Keep pushing forward! 💪";
   };
 
+  const getMotivationalQuote = () => {
+    const quotes = [
+      "כל משחק הוא הזדמנות להתקדם צעד נוסף קדימה!",
+      "ההצלחה שלך היא תוצאה של העבודה הקשה שלך!",
+      "אתה משתפר בכל משחק, המשך כך!",
+      "תמשיך להאמין בעצמך ובדרך שלך!",
+    ];
+    return quotes[Math.floor(Math.random() * quotes.length)];
+  };
+
+  const handleShare = async () => {
+    setIsSharing(true);
+    try {
+      await onShare();
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-md mx-auto p-0 overflow-hidden">
-        <div id="instagram-summary" className="bg-gradient-to-br from-blue-500/10 to-green-500/10 p-6 space-y-6">
+        <div 
+          id="instagram-summary" 
+          className={`bg-gradient-to-br from-primary/10 to-secondary/10 p-6 space-y-6 min-h-[600px]`}
+        >
+          {/* Logo */}
+          <div className="absolute top-4 right-4 opacity-50">
+            <img src="/logo.png" alt="Logo" className="h-8 w-auto" />
+          </div>
+
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -86,7 +138,15 @@ export const InstagramSummary = ({
             className="flex items-center justify-between"
           >
             <div className="flex items-center gap-3">
-              <Trophy className="h-8 w-8 text-yellow-500" />
+              {profilePicture ? (
+                <img 
+                  src={profilePicture} 
+                  alt={playerName} 
+                  className="h-16 w-16 rounded-full object-cover border-2 border-primary"
+                />
+              ) : (
+                <Trophy className="h-8 w-8 text-yellow-500" />
+              )}
               <div>
                 <h2 className="text-xl font-bold">{playerName}</h2>
                 <p className="text-sm text-muted-foreground">
@@ -102,7 +162,7 @@ export const InstagramSummary = ({
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="bg-gradient-to-r from-blue-500/5 to-green-500/5">
+            <Card className="bg-gradient-to-r from-primary/5 to-secondary/5">
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <TrendingUp className="h-8 w-8 text-primary" />
@@ -118,6 +178,25 @@ export const InstagramSummary = ({
             </Card>
           </motion.div>
 
+          {/* Havaya Section */}
+          {havaya.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-wrap gap-2"
+            >
+              {havaya.map((h, index) => (
+                <span
+                  key={index}
+                  className="px-3 py-1 rounded-full bg-accent/10 text-accent-foreground text-sm font-medium"
+                >
+                  {h}
+                </span>
+              ))}
+            </motion.div>
+          )}
+
           {/* Top Actions */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -125,9 +204,12 @@ export const InstagramSummary = ({
             transition={{ delay: 0.4 }}
             className="space-y-4"
           >
-            <h3 className="text-lg font-semibold">פעולות מובילות</h3>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              פעולות מובילות
+            </h3>
             {getTopActions().map((action, index) => (
-              <Card key={index} className="bg-gradient-to-r from-blue-500/5 to-green-500/5">
+              <Card key={index} className="bg-gradient-to-r from-primary/5 to-secondary/5">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">
@@ -141,6 +223,17 @@ export const InstagramSummary = ({
             ))}
           </motion.div>
 
+          {/* Motivational Quote */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex items-center gap-2 text-primary"
+          >
+            <Quote className="h-5 w-5" />
+            <p className="text-sm font-medium italic">{getMotivationalQuote()}</p>
+          </motion.div>
+
           {/* AI Insight */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -148,7 +241,11 @@ export const InstagramSummary = ({
             transition={{ delay: 0.6 }}
             className="bg-primary/10 p-4 rounded-lg"
           >
-            <p className="text-center font-medium">{getKeyInsight()}</p>
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold">תובנת AI</h3>
+            </div>
+            <p className="text-sm">{getKeyInsight()}</p>
           </motion.div>
 
           {/* Share Button */}
@@ -156,14 +253,15 @@ export const InstagramSummary = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="flex justify-center"
+            className="flex justify-center pt-4"
           >
             <Button
-              onClick={onShare}
-              className="bg-gradient-to-r from-blue-500 to-green-500 text-white"
+              onClick={handleShare}
+              disabled={isSharing}
+              className="bg-gradient-to-r from-primary to-secondary text-white gap-2 px-6 py-2 rounded-full hover:opacity-90 transition-all"
             >
-              <Share2 className="h-4 w-4 mr-2" />
-              שתף באינסטגרם
+              <Instagram className="h-5 w-5" />
+              {isSharing ? "מכין תמונה..." : "שתף באינסטגרם"}
             </Button>
           </motion.div>
         </div>
