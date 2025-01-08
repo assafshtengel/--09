@@ -15,9 +15,12 @@ interface ActionsLogSectionProps {
 }
 
 export const ActionsLogSection = ({ actions, actionLogs }: ActionsLogSectionProps) => {
+  // Sort logs by minute
+  const sortedLogs = [...actionLogs].sort((a, b) => a.minute - b.minute);
+
   return (
     <div className="space-y-2">
-      <h3 className="text-lg md:text-xl font-semibold text-right">פעולות</h3>
+      <h3 className="text-lg md:text-xl font-semibold text-right">פעולות במשחק</h3>
       <ScrollArea className="h-[300px] w-full rounded-md">
         <Table>
           <TableHeader>
@@ -29,7 +32,7 @@ export const ActionsLogSection = ({ actions, actionLogs }: ActionsLogSectionProp
             </TableRow>
           </TableHeader>
           <TableBody>
-            {actionLogs.map((log, index) => (
+            {sortedLogs.map((log, index) => (
               <TableRow key={index}>
                 <TableCell className="px-2 md:px-4">{log.minute}'</TableCell>
                 <TableCell className="text-right px-2 md:px-4 text-sm md:text-base">

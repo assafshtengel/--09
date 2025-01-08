@@ -9,6 +9,7 @@ import { SummaryActions } from "./summary/SummaryActions";
 import { GoalsComparison } from "./summary/GoalsComparison";
 import { PerformanceRatings } from "./summary/PerformanceRatings";
 import { QuestionsSection } from "./summary/QuestionsSection";
+import { ActionsLogSection } from "./summary/ActionsLogSection";
 import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import html2canvas from "html2canvas";
@@ -266,6 +267,18 @@ export const GameSummary = ({
                 </CardContent>
               </Card>
             </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>פעולות במשחק</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ActionsLogSection 
+                  actions={actions}
+                  actionLogs={actionLogs}
+                />
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>
