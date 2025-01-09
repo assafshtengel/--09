@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Instagram, Upload } from "lucide-react";
+import { Instagram, Upload, Copy } from "lucide-react";
 import { motion } from "framer-motion";
 import html2canvas from 'html2canvas';
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ interface InstagramPreMatchSummaryProps {
   havaya: string[];
   onClose: () => void;
   onShare: () => void;
+  matchId?: string;
 }
 
 export const InstagramPreMatchSummary = ({
@@ -29,9 +30,12 @@ export const InstagramPreMatchSummary = ({
   havaya,
   onClose,
   onShare,
+  matchId,
 }: InstagramPreMatchSummaryProps) => {
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState<string | null>(null);
+  const [caption, setCaption] = useState<string>("");
+  const [showCaptionPopup, setShowCaptionPopup] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -50,8 +54,29 @@ export const InstagramPreMatchSummary = ({
       }
     };
 
+    const generateCaption = async () => {
+      if (!matchId) return;
+
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-pre-match-instagram-caption', {
+          body: { matchId },
+        });
+
+        if (error) throw error;
+        setCaption(data.caption);
+      } catch (error) {
+        console.error('Error generating caption:', error);
+        toast({
+          title: "שגיאה",
+          description: "לא ניתן ליצור כיתוב לאינסטגרם",
+          variant: "destructive",
+        });
+      }
+    };
+
     fetchPlayerProfile();
-  }, []);
+    generateCaption();
+  }, [matchId]);
 
   const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -94,7 +119,6 @@ export const InstagramPreMatchSummary = ({
       const element = document.getElementById('instagram-pre-match-summary');
       if (!element) return;
 
-      // Load background image before taking screenshot
       if (backgroundImage) {
         const img = new Image();
         img.src = backgroundImage;
@@ -106,9 +130,9 @@ export const InstagramPreMatchSummary = ({
       const canvas = await html2canvas(element, {
         backgroundColor: '#ffffff',
         scale: 2,
-        useCORS: true, // Enable CORS for external images
-        allowTaint: true, // Allow loading cross-origin images
-        logging: true, // Enable logging for debugging
+        useCORS: true,
+        allowTaint: true,
+        logging: true,
       });
 
       const blob = await new Promise<Blob>((resolve) => {
@@ -137,6 +161,22 @@ export const InstagramPreMatchSummary = ({
     }
   };
 
+  const handleCopyCaption = async () => {
+    try {
+      await navigator.clipboard.writeText(caption);
+      toast({
+        title: "הטקסט הועתק",
+        description: "כעת תוכל להדביק את הטקסט באינסטגרם",
+      });
+    } catch (error) {
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן להעתיק את הטקסט",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-md mx-auto p-0 overflow-hidden">
@@ -145,7 +185,7 @@ export const InstagramPreMatchSummary = ({
             id="instagram-pre-match-summary" 
             className="relative min-h-[600px] overflow-hidden"
           >
-            {/* Background Image */}
+            {/* Background Image with Overlay */}
             <div 
               className="absolute inset-0 bg-cover bg-center"
               style={backgroundImage ? {
@@ -154,14 +194,21 @@ export const InstagramPreMatchSummary = ({
                 background: 'linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)'
               }}
             />
-            
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
+            <div className="absolute inset-0 bg-black/40" />
 
-            {/* Match Details */}
+            {/* Content */}
             <div className="relative z-10 p-4">
               <div className="text-white text-right">
-                <div className="text-sm opacity-80">{format(new Date(matchDetails.date), 'dd/MM/yyyy')}</div>
+                <div className="text-sm opacity-80">
+                  {(() => {
+                    try {
+                      return format(new Date(matchDetails.date), 'dd/MM/yyyy');
+                    } catch (error) {
+                      console.error('Error formatting date:', error);
+                      return format(new Date(), 'dd/MM/yyyy');
+                    }
+                  })()}
+                </div>
                 {matchDetails.opponent && (
                   <div className="text-lg font-semibold">נגד: {matchDetails.opponent}</div>
                 )}
@@ -171,10 +218,7 @@ export const InstagramPreMatchSummary = ({
               </div>
             </div>
 
-            {/* Vertical Havaya Menu */}
             <VerticalHavayaMenu havaya={havaya} />
-
-            {/* Goals Footer */}
             <GoalsFooter actions={actions} />
           </div>
 
@@ -192,6 +236,22 @@ export const InstagramPreMatchSummary = ({
                 <Upload className="h-5 w-5 text-gray-400" />
               </div>
             </div>
+
+            {caption && (
+              <div className="space-y-2">
+                <Button
+                  onClick={handleCopyCaption}
+                  variant="outline"
+                  className="w-full flex items-center gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  העתק טקסט לאינסטגרם
+                </Button>
+                <div className="bg-gray-50 p-4 rounded-lg text-sm whitespace-pre-line text-right">
+                  {caption}
+                </div>
+              </div>
+            )}
             
             <Button
               onClick={handleShare}
