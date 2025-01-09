@@ -86,9 +86,9 @@ export const InstagramPreMatchSummary = ({
             id="instagram-pre-match-summary" 
             className="bg-white p-6 space-y-6"
           >
-            {/* Header */}
+            {/* Header with Player Name */}
             <div className="flex justify-between items-center border-b pb-4">
-              <h2 className="text-xl font-bold">הטופס חיפה</h2>
+              <h2 className="text-xl font-bold">{playerName}</h2>
               <div className="text-right">
                 <div className="text-gray-500">{format(new Date(matchDetails.date), 'dd/MM/yyyy')}</div>
                 {matchDetails.opponent && (
