@@ -107,38 +107,48 @@ export const InstagramPreMatchSummary = ({
                 )}
               </div>
               
-              {/* Surrounding Icons */}
+              {/* Top Icon - Goals and Targets */}
               <motion.div 
-                className="absolute top-0 left-1/2 -translate-x-1/2 bg-green-100 p-3 rounded-full"
+                className="absolute top-0 left-1/2 -translate-x-1/2 bg-green-100 p-3 rounded-full flex flex-col items-center"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2 }}
               >
                 <Target className="h-6 w-6 text-green-600" />
+                <span className="text-xs text-green-600 mt-1 whitespace-nowrap">יעדים</span>
               </motion.div>
+
+              {/* Bottom Icon - Mental Preparation */}
               <motion.div 
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-blue-100 p-3 rounded-full"
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-blue-100 p-3 rounded-full flex flex-col items-center"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.4 }}
               >
                 <Brain className="h-6 w-6 text-blue-600" />
+                <span className="text-xs text-blue-600 mt-1 whitespace-nowrap">הכנה מנטלית</span>
               </motion.div>
+
+              {/* Left Icon - Performance */}
               <motion.div 
-                className="absolute left-0 top-1/2 -translate-y-1/2 bg-yellow-100 p-3 rounded-full"
+                className="absolute left-0 top-1/2 -translate-y-1/2 bg-yellow-100 p-3 rounded-full flex flex-col items-center"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.6 }}
               >
                 <Trophy className="h-6 w-6 text-yellow-600" />
+                <span className="text-xs text-yellow-600 mt-1 whitespace-nowrap">ביצועים</span>
               </motion.div>
+
+              {/* Right Icon - Energy and Focus */}
               <motion.div 
-                className="absolute right-0 top-1/2 -translate-y-1/2 bg-orange-100 p-3 rounded-full"
+                className="absolute right-0 top-1/2 -translate-y-1/2 bg-orange-100 p-3 rounded-full flex flex-col items-center"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.8 }}
               >
                 <Sparkles className="h-6 w-6 text-orange-600" />
+                <span className="text-xs text-orange-600 mt-1 whitespace-nowrap">אנרגיה</span>
               </motion.div>
             </div>
 
