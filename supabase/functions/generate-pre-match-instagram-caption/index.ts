@@ -1,30 +1,29 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Starting caption generation process...');
-    const { reportId } = await req.json()
+    const { reportId } = await req.json();
 
     if (!reportId) {
-      throw new Error('Report ID is required')
+      throw new Error('Report ID is required');
     }
 
     console.log('Creating Supabase client...');
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    );
 
     console.log('Fetching report data for ID:', reportId);
     const { data: report, error: reportError } = await supabaseClient
@@ -35,8 +34,7 @@ serve(async (req) => {
           full_name
         )
       `)
-      .eq('id', reportId)
-      .single()
+      .maybeSingle();
 
     if (reportError) {
       console.error('Error fetching report:', reportError);
@@ -49,35 +47,41 @@ serve(async (req) => {
     }
 
     console.log('Processing report data...');
-    const havaya = report.havaya ? report.havaya.split(',') : []
-    const actions = report.actions || []
-    const answers = report.questions_answers || {}
+    const havaya = report.havaya ? report.havaya.split(',') : [];
+    const actions = report.actions || [];
+    const answers = report.questions_answers || {};
 
     console.log('Preparing OpenAI prompt...');
     const prompt = `
-      Create an engaging Instagram caption in Hebrew for a pre-match report. Use these details:
+      Create an engaging Instagram caption in Hebrew for a pre-match report with these details:
+      - Player: ${report.profiles?.full_name || 'שחקן'}
       - Opponent: ${report.opponent || 'היריבה'}
       - Selected feelings: ${havaya.join(', ')}
-      - Game goals: ${actions.map(a => a.name + (a.goal ? ` (${a.goal})` : '')).join(', ')}
-      - Player's answers:
-      ${Object.entries(answers).map(([q, a]) => `${q}: ${a}`).join('\n')}
+      - Game goals: ${actions.map((a: any) => a.name + (a.goal ? ` (${a.goal})` : '')).join(', ')}
+      - Player's answers: ${Object.entries(answers).map(([q, a]) => `${q}: ${a}`).join('\n')}
 
       The caption should:
-      1. Be enthusiastic and motivational
-      2. Include emojis
+      1. Start with an enthusiastic opening statement
+      2. Include relevant emojis
       3. List the feelings and goals
-      4. Include a call to action for followers
-      5. Include relevant hashtags in Hebrew
+      4. Include a personal message about motivation
+      5. Add relevant Hebrew hashtags
       6. Follow this structure:
-      - Opening statement with fire emoji
-      - List of feelings with emojis
-      - Goals with check mark emojis
-      - Personal reflections
-      - Why sharing is important (4 numbered points)
-      - Closing statement
-      - Question for followers
-      - Hashtags
-    `
+      
+      [פתיחה נלהבת] 🔥
+      
+      היום אני מתכונן למשחק מול [שם היריבה] ⚽
+      
+      התחושות שלי:
+      [רשימת תחושות עם אימוג'ים]
+      
+      היעדים שלי למשחק:
+      [רשימת יעדים עם אימוג'ים]
+      
+      [מסר אישי על מוטיבציה]
+      
+      [האשטגים]
+    `;
 
     console.log('Calling OpenAI API...');
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -101,36 +105,36 @@ serve(async (req) => {
         temperature: 0.7,
         max_tokens: 500,
       }),
-    })
+    });
 
     if (!openAIResponse.ok) {
       console.error('OpenAI API error:', await openAIResponse.text());
       throw new Error('OpenAI API error');
     }
 
-    const aiData = await openAIResponse.json()
+    const aiData = await openAIResponse.json();
     console.log('Received response from OpenAI');
     
     if (!aiData.choices?.[0]?.message?.content) {
       console.error('Invalid OpenAI response:', aiData);
-      throw new Error('Invalid response from OpenAI')
+      throw new Error('Invalid response from OpenAI');
     }
 
-    const caption = aiData.choices[0].message.content
+    const caption = aiData.choices[0].message.content;
     console.log('Successfully generated caption');
 
     return new Response(
       JSON.stringify({ caption }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
+    );
   } catch (error) {
-    console.error('Error generating caption:', error)
+    console.error('Error generating caption:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: 500,
       },
-    )
+    );
   }
-})
+});

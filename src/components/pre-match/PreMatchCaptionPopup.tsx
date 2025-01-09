@@ -18,7 +18,6 @@ export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCapt
   const { toast } = useToast();
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
     let isMounted = true;
     
     const generateCaption = async () => {
@@ -65,7 +64,6 @@ export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCapt
 
     return () => {
       isMounted = false;
-      if (timeoutId) clearTimeout(timeoutId);
     };
   }, [isOpen, reportId]);
 
