@@ -4,38 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Eye, RefreshCw } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Json } from "@/integrations/supabase/types";
-
-interface GameHistoryItem {
-  id: string;
-  match_date: string;
-  opponent: string | null;
-  pre_match_report?: {
-    actions: Json;
-    questions_answers: Json;
-  };
-  match_actions?: {
-    id: string;
-    match_id: string;
-    action_id: string;
-    minute: number;
-    result: string;
-    note: string | null;
-  }[];
-}
+import { Eye, RefreshCw, Target, ChartBar } from "lucide-react";
+import { GameHistoryItem } from "@/components/game/history/types";
+import { GameDetailsDialog } from "@/components/game/history/GameDetailsDialog";
+import { PreMatchGoalsDialog } from "@/components/game/history/PreMatchGoalsDialog";
+import { GameSummaryDialog } from "@/components/game/history/GameSummaryDialog";
 
 const GameHistory = () => {
   const navigate = useNavigate();
   const [games, setGames] = useState<GameHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedGame, setSelectedGame] = useState<GameHistoryItem | null>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showGoalsDialog, setShowGoalsDialog] = useState(false);
+  const [showSummaryDialog, setShowSummaryDialog] = useState(false);
 
   useEffect(() => {
     fetchGames();
@@ -57,7 +39,8 @@ const GameHistory = () => {
           opponent,
           pre_match_report:pre_match_report_id (
             actions,
-            questions_answers
+            questions_answers,
+            havaya
           ),
           match_actions (*)
         `)
@@ -77,7 +60,6 @@ const GameHistory = () => {
 
   const handleResetGame = async (gameId: string) => {
     try {
-      // Delete existing match actions
       const { error: deleteError } = await supabase
         .from("match_actions")
         .delete()
@@ -85,7 +67,6 @@ const GameHistory = () => {
 
       if (deleteError) throw deleteError;
 
-      // Reset match status to preview
       const { error: updateError } = await supabase
         .from("matches")
         .update({ status: "preview" })
@@ -128,53 +109,36 @@ const GameHistory = () => {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="icon">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl">
-                      <DialogHeader>
-                        <DialogTitle>פרטי משחק</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-6 mt-4">
-                        <div>
-                          <h3 className="font-semibold mb-2">נתוני טרום משחק</h3>
-                          {game.pre_match_report && (
-                            <div className="space-y-4">
-                              <div>
-                                <h4 className="text-sm font-medium">יעדים</h4>
-                                <ul className="list-disc list-inside">
-                                  {Array.isArray(game.pre_match_report.actions) &&
-                                    game.pre_match_report.actions.map((action: any, index: number) => (
-                                      <li key={index}>
-                                        {action.name} - יעד: {action.goal || "לא הוגדר"}
-                                      </li>
-                                    ))}
-                                </ul>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <h3 className="font-semibold mb-2">נתוני משחק</h3>
-                          {game.match_actions && game.match_actions.length > 0 ? (
-                            <ul className="space-y-2">
-                              {game.match_actions.map((action) => (
-                                <li key={action.id} className="flex justify-between">
-                                  <span>{action.result}</span>
-                                  <span>דקה {action.minute}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-muted-foreground">אין נתוני משחק</p>
-                          )}
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedGame(game);
+                      setShowDetailsDialog(true);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedGame(game);
+                      setShowGoalsDialog(true);
+                    }}
+                  >
+                    <Target className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedGame(game);
+                      setShowSummaryDialog(true);
+                    }}
+                  >
+                    <ChartBar className="h-4 w-4" />
+                  </Button>
                   <Button
                     variant="outline"
                     size="icon"
@@ -194,6 +158,35 @@ const GameHistory = () => {
           </div>
         )}
       </div>
+
+      {selectedGame && (
+        <>
+          <GameDetailsDialog
+            isOpen={showDetailsDialog}
+            onClose={() => {
+              setShowDetailsDialog(false);
+              setSelectedGame(null);
+            }}
+            game={selectedGame}
+          />
+          <PreMatchGoalsDialog
+            isOpen={showGoalsDialog}
+            onClose={() => {
+              setShowGoalsDialog(false);
+              setSelectedGame(null);
+            }}
+            preMatchReport={selectedGame.pre_match_report}
+          />
+          <GameSummaryDialog
+            isOpen={showSummaryDialog}
+            onClose={() => {
+              setShowSummaryDialog(false);
+              setSelectedGame(null);
+            }}
+            game={selectedGame}
+          />
+        </>
+      )}
     </div>
   );
 };
