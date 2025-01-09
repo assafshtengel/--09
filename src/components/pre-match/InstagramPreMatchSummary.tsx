@@ -54,16 +54,15 @@ export const InstagramPreMatchSummary = ({
 
       const canvas = await html2canvas(element, {
         backgroundColor: '#ffffff',
+        scale: 2,
       });
 
-      // Convert canvas to blob
       const blob = await new Promise<Blob>((resolve) => {
         canvas.toBlob((blob) => {
           resolve(blob!);
         }, 'image/png');
       });
 
-      // Create download link
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -90,14 +89,22 @@ export const InstagramPreMatchSummary = ({
             {/* Header */}
             <div className="flex justify-between items-center border-b pb-4">
               <h2 className="text-xl font-bold">הטופס חיפה</h2>
-              <span className="text-gray-500">{format(new Date(matchDetails.date), 'dd/MM/yyyy')}</span>
+              <div className="text-right">
+                <div className="text-gray-500">{format(new Date(matchDetails.date), 'dd/MM/yyyy')}</div>
+                {matchDetails.opponent && (
+                  <div className="text-sm text-gray-600">נגד: {matchDetails.opponent}</div>
+                )}
+              </div>
             </div>
 
             {/* Main Circle with Icons */}
             <div className="relative w-full aspect-square max-w-sm mx-auto">
               {/* Center Circle with Player Icon */}
-              <div className="absolute inset-1/4 bg-gray-100 rounded-full flex items-center justify-center">
+              <div className="absolute inset-1/4 bg-gray-100 rounded-full flex items-center justify-center flex-col gap-2">
                 <Activity className="h-12 w-12 text-gray-600" />
+                {playerName && (
+                  <span className="text-sm font-medium text-gray-600">{playerName}</span>
+                )}
               </div>
               
               {/* Surrounding Icons */}
@@ -135,8 +142,26 @@ export const InstagramPreMatchSummary = ({
               </motion.div>
             </div>
 
+            {/* Havaya Section */}
+            {havaya.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold text-right mb-3">הוויות נבחרות</h3>
+                <div className="flex flex-wrap gap-2 justify-end">
+                  {havaya.map((h, index) => (
+                    <span 
+                      key={index}
+                      className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm"
+                    >
+                      {h}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Goals Chart */}
             <div className="mt-8">
+              <h3 className="text-lg font-semibold text-right mb-3">יעדים למשחק</h3>
               <div className="grid grid-cols-2 gap-4">
                 {actions.slice(0, 4).map((action, index) => (
                   <div 
@@ -151,8 +176,13 @@ export const InstagramPreMatchSummary = ({
                       } 100%, #f3f4f6 100%)`
                     }}
                   >
-                    <div className="absolute inset-2 bg-white rounded-lg flex items-center justify-center">
-                      <span className="text-sm font-medium text-center">{action.name}</span>
+                    <div className="absolute inset-2 bg-white rounded-lg flex items-center justify-center p-2">
+                      <div className="text-center">
+                        <span className="text-sm font-medium block">{action.name}</span>
+                        {action.goal && (
+                          <span className="text-xs text-gray-500 block mt-1">יעד: {action.goal}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
