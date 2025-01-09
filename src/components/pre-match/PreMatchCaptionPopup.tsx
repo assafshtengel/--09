@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Sparkles, Copy, Loader2 } from "lucide-react";
@@ -69,6 +69,9 @@ export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCapt
             <Sparkles className="h-5 w-5 text-primary" />
             כיתוב לאינסטגרם
           </DialogTitle>
+          <DialogDescription>
+            הכיתוב נוצר על בסיס היעדים וההוויות שבחרת למשחק
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
