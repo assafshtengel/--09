@@ -123,36 +123,36 @@ export const GameSummary = ({
     }
   };
 
-  const handleEmailSend = async () => {
+  const sendEmail = async (recipientType: 'user' | 'coach') => {
     try {
       setIsSendingEmail(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error("No user email found");
 
-      const { data: feedback } = await supabase
-        .from('post_game_feedback')
-        .select('performance_ratings')
-        .eq('match_id', matchId)
-        .maybeSingle();
+      // Get player's profile including coach's email
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, coach_email')
+        .eq('id', user.id)
+        .single();
 
-      const performanceRatings = feedback?.performance_ratings || {};
+      if (recipientType === 'coach' && !profile?.coach_email) {
+        toast({
+          title: "שגיאה",
+          description: "לא נמצא מייל של המאמן בפרופיל",
+          variant: "destructive",
+        });
+        return;
+      }
 
+      const playerName = profile?.full_name || "שחקן";
       const emailContent = `
         <div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <div style="text-align: center; margin-bottom: 20px;">
-            <h1 style="color: #1E40AF; font-size: 24px;">⚽ המסע להצלחה ⚽</h1>
-            <p style="color: #4B5563; font-style: italic;">"כל משחק הוא צעד קדימה"</p>
-          </div>
-          
-          <h2 style="color: #2563eb;">סיכום משחק נגד ${opponent || 'ללא יריב'}</h2>
+          <h1 style="color: #1E40AF; font-size: 24px;">סיכום משחק - ${playerName}</h1>
           
           <div style="margin: 20px 0;">
-            <h3 style="color: #4b5563;">דירוגי ביצועים</h3>
-            <ul style="list-style-type: none; padding: 0;">
-              ${Object.entries(performanceRatings).map(([key, value]) => `
-                <li style="margin: 5px 0;">${key}: ${value}/5</li>
-              `).join('')}
-            </ul>
+            <h2 style="color: #2563eb;">פרטי המשחק</h2>
+            ${opponent ? `<p>נגד: ${opponent}</p>` : ''}
           </div>
 
           <div style="margin: 20px 0;">
@@ -182,20 +182,7 @@ export const GameSummary = ({
             <div style="margin: 20px 0;">
               <h3 style="color: #4b5563;">הערות כלליות</h3>
               <ul style="list-style-type: none; padding: 0;">
-                ${generalNotes.map(note => `<li style="margin: 5px 0;">${note}</li>`).join('')}
-              </ul>
-            </div>
-          ` : ''}
-
-          ${substitutions.length > 0 ? `
-            <div style="margin: 20px 0;">
-              <h3 style="color: #4b5563;">חילופים</h3>
-              <ul style="list-style-type: none; padding: 0;">
-                ${substitutions.map(sub => `
-                  <li style="margin: 5px 0;">
-                    דקה ${sub.minute}: ${sub.playerOut} יצא, ${sub.playerIn} נכנס
-                  </li>
-                `).join('')}
+                ${generalNotes.map(note => `<li style="margin: 5px 0;">${note.text}</li>`).join('')}
               </ul>
             </div>
           ` : ''}
@@ -206,13 +193,24 @@ export const GameSummary = ({
               <p style="margin: 10px 0;">${insights}</p>
             </div>
           ` : ''}
+
+          ${Object.keys(performanceRatings).length > 0 ? `
+            <div style="margin: 20px 0;">
+              <h3 style="color: #4b5563;">דירוגי ביצועים</h3>
+              <ul style="list-style-type: none; padding: 0;">
+                ${Object.entries(performanceRatings).map(([key, value]) => `
+                  <li style="margin: 5px 0;">${key}: ${value}/10</li>
+                `).join('')}
+              </ul>
+            </div>
+          ` : ''}
         </div>
       `;
 
       const { error } = await supabase.functions.invoke('send-game-summary', {
         body: {
-          to: [user.email],
-          subject: `סיכום משחק - ${opponent || 'ללא יריב'}`,
+          to: recipientType === 'coach' ? [profile.coach_email] : [user.email],
+          subject: `סיכום משחק - ${playerName} ${opponent ? `נגד ${opponent}` : ''}`,
           html: emailContent,
         },
       });
@@ -220,8 +218,8 @@ export const GameSummary = ({
       if (error) throw error;
 
       toast({
-        title: "אימייל נשלח",
-        description: "סיכום המשחק נשלח לכתובת המייל שלך",
+        title: "המייל נשלח בהצלחה",
+        description: recipientType === 'coach' ? "הסיכום נשלח למאמן" : "הסיכום נשלח למייל שלך",
       });
     } catch (error) {
       console.error('Error sending email:', error);
@@ -233,13 +231,6 @@ export const GameSummary = ({
     } finally {
       setIsSendingEmail(false);
     }
-  };
-
-  const handleShareSocial = (platform: 'facebook' | 'instagram') => {
-    toast({
-      title: "שיתוף",
-      description: `שיתוף לפלטפורמת ${platform} יתווסף בקרוב`,
-    });
   };
 
   return (
@@ -283,8 +274,13 @@ export const GameSummary = ({
             <NotesSection notes={generalNotes} />
 
             <SharingSection
-              onEmailSend={handleEmailSend}
-              onShareSocial={handleShareSocial}
+              onEmailSend={sendEmail}
+              onShareSocial={(platform) => {
+                toast({
+                  title: "שיתוף",
+                  description: `שיתוף לפלטפורמת ${platform} יתווסף בקרוב`,
+                });
+              }}
               isSendingEmail={isSendingEmail}
               actions={actions}
               actionLogs={actionLogs}

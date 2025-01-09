@@ -3,12 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { InstagramSummary } from "./InstagramSummary";
-import { Download, Instagram, Mail, Share2 } from "lucide-react";
+import { Download, Instagram, Mail, Share2, User } from "lucide-react";
 import html2canvas from 'html2canvas';
 import { Action } from "@/components/ActionSelector";
 
 interface SharingSectionProps {
-  onEmailSend: () => Promise<void>;
+  onEmailSend: (recipientType: 'user' | 'coach') => Promise<void>;
   onShareSocial: (platform: 'facebook' | 'instagram') => void;
   isSendingEmail: boolean;
   actions: Action[];
@@ -47,7 +47,7 @@ export const SharingSection = ({
       const canvas = await html2canvas(element, {
         backgroundColor: null,
         useCORS: true,
-        scale: 2, // Higher quality
+        scale: 2,
       });
       
       const dataUrl = canvas.toDataURL('image/png');
@@ -99,11 +99,20 @@ export const SharingSection = ({
             <Button
               variant="outline"
               className="flex items-center gap-2"
-              onClick={onEmailSend}
+              onClick={() => onEmailSend('user')}
               disabled={isSendingEmail}
             >
               <Mail className="h-4 w-4" />
-              {isSendingEmail ? "שולח..." : "שלח למייל"}
+              {isSendingEmail ? "שולח..." : "שלח למייל שלי"}
+            </Button>
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={() => onEmailSend('coach')}
+              disabled={isSendingEmail}
+            >
+              <User className="h-4 w-4" />
+              {isSendingEmail ? "שולח..." : "שלח למאמן"}
             </Button>
             <Button
               variant="outline"
