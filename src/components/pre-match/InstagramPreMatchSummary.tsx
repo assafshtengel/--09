@@ -2,14 +2,15 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Instagram, Upload } from "lucide-react";
 import { motion } from "framer-motion";
 import html2canvas from 'html2canvas';
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { PerformanceChart } from "./components/PerformanceChart";
+import { VerticalHavayaMenu } from "./components/VerticalHavayaMenu";
+import { GoalsFooter } from "./components/GoalsFooter";
 
 interface InstagramPreMatchSummaryProps {
   matchDetails: {
@@ -29,28 +30,8 @@ export const InstagramPreMatchSummary = ({
   onClose,
   onShare,
 }: InstagramPreMatchSummaryProps) => {
-  const [playerName, setPlayerName] = useState<string>("");
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchPlayerProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (profile) {
-        setPlayerName(profile.full_name || "");
-      }
-    };
-
-    fetchPlayerProfile();
-  }, []);
 
   const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -125,74 +106,36 @@ export const InstagramPreMatchSummary = ({
         <ScrollArea className="h-[80vh] md:h-[600px]">
           <div 
             id="instagram-pre-match-summary" 
-            className="relative min-h-[600px] p-6 space-y-6"
-            style={backgroundImage ? {
-              backgroundImage: `url(${backgroundImage})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            } : {
-              background: 'linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)'
-            }}
+            className="relative min-h-[600px] overflow-hidden"
           >
-            {/* Semi-transparent overlay for better text readability */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/70" />
+            {/* Background Image */}
+            <div 
+              className="absolute inset-0 bg-cover bg-center"
+              style={backgroundImage ? {
+                backgroundImage: `url(${backgroundImage})`,
+              } : {
+                background: 'linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)'
+              }}
+            />
             
-            {/* Content container */}
-            <div className="relative z-10 flex flex-col h-full">
-              {/* Header with match details */}
-              <div className="bg-white/90 rounded-lg p-4 shadow-lg backdrop-blur-sm mb-4">
-                <div className="text-right">
-                  <div className="text-gray-500">{format(new Date(matchDetails.date), 'dd/MM/yyyy')}</div>
-                  {matchDetails.opponent && (
-                    <div className="text-sm text-gray-600">נגד: {matchDetails.opponent}</div>
-                  )}
-                </div>
-              </div>
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
 
-              {/* Main content area with flexible spacing */}
-              <div className="flex-grow flex">
-                {/* Havaya section on the right */}
-                {havaya.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="w-1/3 ml-4"
-                  >
-                    <div className="bg-white/90 rounded-lg p-4 shadow-lg backdrop-blur-sm h-full">
-                      <h3 className="text-lg font-semibold text-right mb-3">הוויות נבחרות</h3>
-                      <div className="flex flex-col gap-2">
-                        {havaya.map((h, index) => (
-                          <motion.span
-                            key={index}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="bg-gradient-to-r from-primary/10 to-blue-400/10 text-primary px-3 py-2 rounded-full text-sm font-medium shadow-sm text-center"
-                          >
-                            {h}
-                          </motion.span>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
+            {/* Match Details */}
+            <div className="relative z-10 p-4">
+              <div className="text-white text-right">
+                <div className="text-sm opacity-80">{format(new Date(matchDetails.date), 'dd/MM/yyyy')}</div>
+                {matchDetails.opponent && (
+                  <div className="text-lg font-semibold">נגד: {matchDetails.opponent}</div>
                 )}
-
-                {/* Goals section at the bottom */}
-                <div className="flex-grow">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-auto"
-                  >
-                    <div className="bg-white/90 rounded-lg p-4 shadow-lg backdrop-blur-sm">
-                      <h3 className="text-lg font-semibold text-right mb-3">יעדים למשחק</h3>
-                      <PerformanceChart actions={actions} />
-                    </div>
-                  </motion.div>
-                </div>
               </div>
             </div>
+
+            {/* Vertical Havaya Menu */}
+            <VerticalHavayaMenu havaya={havaya} />
+
+            {/* Goals Footer */}
+            <GoalsFooter actions={actions} />
           </div>
 
           {/* Controls Section */}
