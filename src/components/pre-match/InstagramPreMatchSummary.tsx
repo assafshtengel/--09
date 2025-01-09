@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Activity, Brain, Target, Trophy, Sparkles, Instagram } from "lucide-react";
+import { Trophy, Instagram, Upload } from "lucide-react";
 import { motion } from "framer-motion";
 import html2canvas from 'html2canvas';
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 interface InstagramPreMatchSummaryProps {
   matchDetails: {
@@ -27,6 +29,8 @@ export const InstagramPreMatchSummary = ({
   onShare,
 }: InstagramPreMatchSummaryProps) => {
   const [playerName, setPlayerName] = useState<string>("");
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchPlayerProfile = async () => {
@@ -46,6 +50,42 @@ export const InstagramPreMatchSummary = ({
 
     fetchPlayerProfile();
   }, []);
+
+  const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('player-media')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('player-media')
+        .getPublicUrl(filePath);
+
+      setBackgroundImage(publicUrl);
+      toast({
+        title: "התמונה הועלתה בהצלחה",
+        description: "התמונה תשמש כרקע לתמונת האינסטגרם",
+      });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "שגיאה בהעלאת התמונה",
+        description: "אנא נסה שנית",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleShare = async () => {
     try {
@@ -84,131 +124,118 @@ export const InstagramPreMatchSummary = ({
         <ScrollArea className="h-[80vh] md:h-[600px]">
           <div 
             id="instagram-pre-match-summary" 
-            className="bg-white p-6 space-y-6"
+            className="relative min-h-[600px] p-6 space-y-6 bg-gradient-to-br from-purple-100 to-blue-50"
+            style={backgroundImage ? {
+              backgroundImage: `url(${backgroundImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            } : undefined}
           >
-            {/* Header with Player Name */}
-            <div className="flex justify-between items-center border-b pb-4">
-              <h2 className="text-xl font-bold">{playerName}</h2>
-              <div className="text-right">
-                <div className="text-gray-500">{format(new Date(matchDetails.date), 'dd/MM/yyyy')}</div>
-                {matchDetails.opponent && (
-                  <div className="text-sm text-gray-600">נגד: {matchDetails.opponent}</div>
-                )}
-              </div>
-            </div>
-
-            {/* Main Circle with Icons */}
-            <div className="relative w-full aspect-square max-w-sm mx-auto">
-              {/* Center Circle with Player Icon */}
-              <div className="absolute inset-1/4 bg-gray-100 rounded-full flex items-center justify-center flex-col gap-2">
-                <Activity className="h-12 w-12 text-gray-600" />
-                {playerName && (
-                  <span className="text-sm font-medium text-gray-600">{playerName}</span>
-                )}
-              </div>
-              
-              {/* Top Icon - Goals and Targets */}
-              <motion.div 
-                className="absolute top-0 left-1/2 -translate-x-1/2 bg-green-100 p-3 rounded-full flex flex-col items-center"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <Target className="h-6 w-6 text-green-600" />
-                <span className="text-xs text-green-600 mt-1 whitespace-nowrap">יעדים</span>
-              </motion.div>
-
-              {/* Bottom Icon - Mental Preparation */}
-              <motion.div 
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-blue-100 p-3 rounded-full flex flex-col items-center"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.4 }}
-              >
-                <Brain className="h-6 w-6 text-blue-600" />
-                <span className="text-xs text-blue-600 mt-1 whitespace-nowrap">הכנה מנטלית</span>
-              </motion.div>
-
-              {/* Left Icon - Performance */}
-              <motion.div 
-                className="absolute left-0 top-1/2 -translate-y-1/2 bg-yellow-100 p-3 rounded-full flex flex-col items-center"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.6 }}
-              >
-                <Trophy className="h-6 w-6 text-yellow-600" />
-                <span className="text-xs text-yellow-600 mt-1 whitespace-nowrap">ביצועים</span>
-              </motion.div>
-
-              {/* Right Icon - Energy and Focus */}
-              <motion.div 
-                className="absolute right-0 top-1/2 -translate-y-1/2 bg-orange-100 p-3 rounded-full flex flex-col items-center"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.8 }}
-              >
-                <Sparkles className="h-6 w-6 text-orange-600" />
-                <span className="text-xs text-orange-600 mt-1 whitespace-nowrap">אנרגיה</span>
-              </motion.div>
-            </div>
-
-            {/* Havaya Section */}
-            {havaya.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold text-right mb-3">הוויות נבחרות</h3>
-                <div className="flex flex-wrap gap-2 justify-end">
-                  {havaya.map((h, index) => (
-                    <span 
-                      key={index}
-                      className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm"
-                    >
-                      {h}
-                    </span>
-                  ))}
+            {/* Semi-transparent overlay for better text readability */}
+            {backgroundImage && (
+              <div className="absolute inset-0 bg-white/80" />
+            )}
+            
+            {/* Content container */}
+            <div className="relative z-10">
+              {/* Header with Player Name */}
+              <div className="bg-white/90 rounded-lg p-4 shadow-lg">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                    {playerName}
+                  </h2>
+                  <div className="text-right">
+                    <div className="text-gray-500">{format(new Date(matchDetails.date), 'dd/MM/yyyy')}</div>
+                    {matchDetails.opponent && (
+                      <div className="text-sm text-gray-600">נגד: {matchDetails.opponent}</div>
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Goals Chart */}
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold text-right mb-3">יעדים למשחק</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {actions.slice(0, 4).map((action, index) => (
-                  <div 
-                    key={index} 
-                    className="relative aspect-square rounded-lg overflow-hidden"
-                    style={{
-                      background: `conic-gradient(${
-                        index === 0 ? '#22c55e' : 
-                        index === 1 ? '#eab308' : 
-                        index === 2 ? '#3b82f6' :
-                        '#f97316'
-                      } 100%, #f3f4f6 100%)`
-                    }}
-                  >
-                    <div className="absolute inset-2 bg-white rounded-lg flex items-center justify-center p-2">
-                      <div className="text-center">
-                        <span className="text-sm font-medium block">{action.name}</span>
-                        {action.goal && (
-                          <span className="text-xs text-gray-500 block mt-1">יעד: {action.goal}</span>
-                        )}
-                      </div>
+              {/* Goals Section */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6"
+              >
+                <div className="bg-white/90 rounded-lg p-4 shadow-lg">
+                  <h3 className="text-lg font-semibold text-right mb-3 flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-yellow-500" />
+                    יעדים למשחק
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {actions.map((action, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 rounded-lg shadow-sm"
+                      >
+                        <div className="text-center">
+                          <span className="font-medium text-primary">{action.name}</span>
+                          {action.goal && (
+                            <span className="block mt-1 text-sm text-gray-600">יעד: {action.goal}</span>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Havaya Section */}
+              {havaya.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="mt-6"
+                >
+                  <div className="bg-white/90 rounded-lg p-4 shadow-lg">
+                    <h3 className="text-lg font-semibold text-right mb-3">הוויות נבחרות</h3>
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      {havaya.map((h, index) => (
+                        <motion.span
+                          key={index}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="bg-gradient-to-r from-primary/10 to-blue-400/10 text-primary px-4 py-2 rounded-full text-sm font-medium shadow-sm"
+                        >
+                          {h}
+                        </motion.span>
+                      ))}
                     </div>
                   </div>
-                ))}
+                </motion.div>
+              )}
+            </div>
+          </div>
+
+          {/* Controls Section */}
+          <div className="p-4 space-y-4 bg-white border-t">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">העלה תמונת רקע</label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBackgroundUpload}
+                  className="text-sm"
+                />
+                <Upload className="h-5 w-5 text-gray-400" />
               </div>
             </div>
-
-            {/* Share Button */}
-            <div className="flex justify-center pt-4">
-              <Button
-                onClick={handleShare}
-                className="bg-gradient-to-r from-primary to-secondary text-white gap-2 px-6 py-2 rounded-full hover:opacity-90 transition-all"
-              >
-                <Instagram className="h-5 w-5" />
-                שתף באינסטגרם
-              </Button>
-            </div>
+            
+            <Button
+              onClick={handleShare}
+              className="w-full bg-gradient-to-r from-primary to-blue-600 text-white gap-2"
+            >
+              <Instagram className="h-5 w-5" />
+              שתף באינסטגרם
+            </Button>
           </div>
         </ScrollArea>
       </DialogContent>
