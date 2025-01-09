@@ -34,9 +34,10 @@ export const PreMatchSummary = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error("No user email found");
 
+      // Get player's name from profiles
       const { data: profile } = await supabase
         .from('profiles')
-        .select('coach_email')
+        .select('full_name, coach_email')
         .eq('id', user.id)
         .single();
 
@@ -50,10 +51,12 @@ export const PreMatchSummary = ({
         return;
       }
 
-      // Create HTML content with proper spacing between havayot
+      const playerName = profile?.full_name || "שחקן";
+
+      // Create HTML content with player name at the top
       const htmlContent = `
         <div dir="rtl">
-          <h2>דוח טרום משחק</h2>
+          <h2>דוח טרום משחק - ${playerName}</h2>
           <div>
             <h3>פרטי המשחק</h3>
             <p>תאריך: ${format(new Date(matchDetails.date), 'dd/MM/yyyy')}</p>
@@ -101,7 +104,7 @@ export const PreMatchSummary = ({
       const { error } = await supabase.functions.invoke('send-pre-match-report', {
         body: {
           to: recipientType === 'coach' ? [coachEmail] : [user.email],
-          subject: `דוח טרום משחק - ${format(new Date(matchDetails.date), 'dd/MM/yyyy')}`,
+          subject: `דוח טרום משחק - ${playerName} - ${format(new Date(matchDetails.date), 'dd/MM/yyyy')}`,
           html: htmlContent,
         },
       });
