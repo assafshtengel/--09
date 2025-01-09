@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Copy } from "lucide-react";
 
 export const PreGamePlanner = () => {
   const [currentTime, setCurrentTime] = useState("");
@@ -41,13 +42,20 @@ export const PreGamePlanner = () => {
     }
   };
 
+  const copySchedule = () => {
+    if (schedule) {
+      navigator.clipboard.writeText(schedule);
+      toast.success("הטקסט הועתק!");
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-right">תכנון 24 שעות לפני משחק</h1>
+      <h1 className="text-2xl font-bold text-right text-primary">תכנון 24 שעות לפני משחק</h1>
       
       <div className="space-y-4">
         <div>
-          <Label htmlFor="currentTime">מה השעה כעת?</Label>
+          <Label htmlFor="currentTime" className="text-primary">מה השעה כעת?</Label>
           <Input
             id="currentTime"
             type="time"
@@ -59,7 +67,7 @@ export const PreGamePlanner = () => {
         </div>
 
         <div>
-          <Label htmlFor="gameTime">מתי שעת המשחק?</Label>
+          <Label htmlFor="gameTime" className="text-primary">מתי שעת המשחק?</Label>
           <Input
             id="gameTime"
             type="time"
@@ -71,7 +79,7 @@ export const PreGamePlanner = () => {
         </div>
 
         <div>
-          <Label htmlFor="commitments">האם יש בית ספר או מחויבויות נוספות?</Label>
+          <Label htmlFor="commitments" className="text-primary">האם יש בית ספר או מחויבויות נוספות?</Label>
           <Textarea
             id="commitments"
             value={commitments}
@@ -90,10 +98,18 @@ export const PreGamePlanner = () => {
         </Button>
 
         {schedule && (
-          <Card className="p-4 mt-4">
-            <pre className="whitespace-pre-wrap text-right" dir="rtl">
+          <Card className="p-4 mt-4 relative">
+            <pre className="whitespace-pre-wrap text-right text-lg leading-relaxed text-primary" dir="rtl">
               {schedule}
             </pre>
+            <Button
+              onClick={copySchedule}
+              variant="secondary"
+              className="mt-4 gap-2"
+            >
+              <Copy className="h-4 w-4" />
+              העתק סדר יום
+            </Button>
           </Card>
         )}
       </div>
