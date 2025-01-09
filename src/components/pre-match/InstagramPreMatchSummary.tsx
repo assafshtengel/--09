@@ -2,7 +2,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Instagram, Upload } from "lucide-react";
 import { motion } from "framer-motion";
@@ -31,7 +31,27 @@ export const InstagramPreMatchSummary = ({
   onShare,
 }: InstagramPreMatchSummaryProps) => {
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+  const [playerName, setPlayerName] = useState<string | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchPlayerProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        setPlayerName(profile.full_name);
+      }
+    };
+
+    fetchPlayerProfile();
+  }, []);
 
   const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -127,6 +147,9 @@ export const InstagramPreMatchSummary = ({
                 <div className="text-sm opacity-80">{format(new Date(matchDetails.date), 'dd/MM/yyyy')}</div>
                 {matchDetails.opponent && (
                   <div className="text-lg font-semibold">נגד: {matchDetails.opponent}</div>
+                )}
+                {playerName && (
+                  <div className="text-xl font-bold mt-2">{playerName}</div>
                 )}
               </div>
             </div>
