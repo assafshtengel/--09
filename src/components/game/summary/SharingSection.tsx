@@ -9,6 +9,7 @@ import { Action } from "@/components/ActionSelector";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
 interface SharingSectionProps {
   onEmailSend: (recipientType: 'user' | 'coach') => Promise<void>;
@@ -19,6 +20,7 @@ interface SharingSectionProps {
   insights: string;
   matchId: string | undefined;
   opponent: string | null;
+  matchDate: string;
 }
 
 export const SharingSection = ({
@@ -29,7 +31,8 @@ export const SharingSection = ({
   actionLogs,
   insights,
   matchId,
-  opponent
+  opponent,
+  matchDate,
 }: SharingSectionProps) => {
   const [isSharing, setIsSharing] = useState(false);
   const [showInstagramSummary, setShowInstagramSummary] = useState(false);
@@ -197,7 +200,10 @@ export const SharingSection = ({
               <div className="absolute inset-0 bg-black/40" />
               <div className="relative z-10 flex flex-col h-full text-white">
                 <div className="flex-1 space-y-6">
-                  <h2 className="text-3xl font-bold">סיכום משחק</h2>
+                  <div className="flex justify-between items-start">
+                    <h2 className="text-3xl font-bold">סיכום משחק</h2>
+                    <span className="text-lg">{format(new Date(matchDate), 'dd/MM/yyyy')}</span>
+                  </div>
                   {opponent && (
                     <p className="text-xl">נגד {opponent}</p>
                   )}
