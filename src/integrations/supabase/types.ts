@@ -260,6 +260,7 @@ export type Database = {
           location: string | null
           match_date: string
           match_type: string | null
+          observer_token: string | null
           opponent: string | null
           player_id: string
           player_position: string | null
@@ -276,6 +277,7 @@ export type Database = {
           location?: string | null
           match_date: string
           match_type?: string | null
+          observer_token?: string | null
           opponent?: string | null
           player_id: string
           player_position?: string | null
@@ -292,6 +294,7 @@ export type Database = {
           location?: string | null
           match_date?: string
           match_type?: string | null
+          observer_token?: string | null
           opponent?: string | null
           player_id?: string
           player_position?: string | null

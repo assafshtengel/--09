@@ -6,12 +6,14 @@ import { PreMatchSummary } from "./PreMatchSummary";
 import { PreMatchDashboard } from "./PreMatchDashboard";
 import { SocialShareGoals } from "./SocialShareGoals";
 import { HavayaSelector } from "./HavayaSelector";
+import { ObserverLinkDialog } from "./ObserverLinkDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, Link } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 export const PreMatchReport = () => {
   const navigate = useNavigate();
@@ -26,6 +28,8 @@ export const PreMatchReport = () => {
   const [questionsAnswers, setQuestionsAnswers] = useState({});
   const [havaya, setHavaya] = useState<string[]>([]);
   const [reportId, setReportId] = useState<string | null>(null);
+  const [showObserverLink, setShowObserverLink] = useState(false);
+  const [observerToken, setObserverToken] = useState<string | null>(null);
 
   const steps = [
     { id: "dashboard", label: "התחלה" },
@@ -59,8 +63,24 @@ export const PreMatchReport = () => {
 
       if (error) throw error;
       
+      // Create match record with observer token
+      const { data: match, error: matchError } = await supabase
+        .from("matches")
+        .insert({
+          player_id: user.id,
+          match_date: details.date,
+          opponent: details.opponent,
+          pre_match_report_id: report.id,
+          status: 'preview'
+        })
+        .select('observer_token')
+        .single();
+
+      if (matchError) throw matchError;
+      
       setReportId(report.id);
       setMatchDetails(details);
+      setObserverToken(match.observer_token);
       setCurrentStep("actions");
       
       toast.success("פרטי המשחק נשמרו");
@@ -173,6 +193,18 @@ export const PreMatchReport = () => {
         {currentStep === "actions" && (
           <motion.div {...commonProps} key="actions">
             <div className="space-y-8">
+              {observerToken && (
+                <div className="flex justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowObserverLink(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Link className="h-4 w-4" />
+                    קישור למשקיף
+                  </Button>
+                </div>
+              )}
               <HavayaSelector value={havaya} onChange={setHavaya} />
               <ActionSelector
                 position={matchDetails.position || "forward"}
@@ -246,6 +278,12 @@ export const PreMatchReport = () => {
         )}
 
         {renderStep()}
+
+        <ObserverLinkDialog
+          open={showObserverLink}
+          onOpenChange={setShowObserverLink}
+          observerToken={observerToken}
+        />
       </div>
     </div>
   );
