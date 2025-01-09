@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
-import { Mail, Printer, Instagram, Share2 } from "lucide-react";
+import { Mail, Printer, Instagram } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import html2canvas from "html2canvas";
 import { format } from "date-fns";
+import { useState } from "react";
+import { InstagramPreMatchSummary } from "./InstagramPreMatchSummary";
 
 interface PreMatchSummaryProps {
   matchDetails: {
@@ -28,7 +30,8 @@ export const PreMatchSummary = ({
   onFinish,
 }: PreMatchSummaryProps) => {
   const { toast } = useToast();
-
+  const [showInstagramSummary, setShowInstagramSummary] = useState(false);
+  
   const sendEmail = async (recipientType: 'user' | 'coach') => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -129,36 +132,8 @@ export const PreMatchSummary = ({
     window.print();
   };
 
-  const shareToInstagram = async () => {
-    try {
-      const element = document.getElementById('pre-match-summary');
-      if (!element) return;
-
-      const canvas = await html2canvas(element);
-      const imageUrl = canvas.toDataURL();
-
-      // Copy share text to clipboard
-      const shareText = `דוח טרום משחק נגד ${matchDetails.opponent}\n#כדורגל #אימון #ביצועים`;
-      await navigator.clipboard.writeText(shareText);
-
-      // Download image
-      const link = document.createElement('a');
-      link.download = `pre-match-report-${format(new Date(matchDetails.date), 'yyyy-MM-dd')}.png`;
-      link.href = imageUrl;
-      link.click();
-
-      toast({
-        title: "הטקסט הועתק",
-        description: "התמונה הורדה, כעת תוכל להדביק את הטקסט באינסטגרם",
-      });
-    } catch (error) {
-      console.error('Error sharing to Instagram:', error);
-      toast({
-        title: "שגיאה בשיתוף",
-        description: "אנא נסה שנית",
-        variant: "destructive",
-      });
-    }
+  const shareToInstagram = () => {
+    setShowInstagramSummary(true);
   };
 
   return (
@@ -264,6 +239,22 @@ export const PreMatchSummary = ({
         </Button>
         <Button onClick={onFinish}>סיים</Button>
       </div>
+
+      {showInstagramSummary && (
+        <InstagramPreMatchSummary
+          matchDetails={matchDetails}
+          actions={actions}
+          havaya={havaya}
+          onClose={() => setShowInstagramSummary(false)}
+          onShare={() => {
+            setShowInstagramSummary(false);
+            toast({
+              title: "התמונה הורדה בהצלחה",
+              description: "כעת תוכל להעלות אותה לאינסטגרם",
+            });
+          }}
+        />
+      )}
     </div>
   );
 };
