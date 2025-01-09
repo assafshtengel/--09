@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { VerticalHavayaMenu } from "./components/VerticalHavayaMenu";
 import { GoalsFooter } from "./components/GoalsFooter";
+import { AICaptionPopup } from "./components/AICaptionPopup";
 
 interface InstagramPreMatchSummaryProps {
   matchDetails: {
@@ -32,6 +33,7 @@ export const InstagramPreMatchSummary = ({
 }: InstagramPreMatchSummaryProps) => {
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState<string | null>(null);
+  const [showAICaption, setShowAICaption] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -106,9 +108,9 @@ export const InstagramPreMatchSummary = ({
       const canvas = await html2canvas(element, {
         backgroundColor: '#ffffff',
         scale: 2,
-        useCORS: true, // Enable CORS for external images
-        allowTaint: true, // Allow loading cross-origin images
-        logging: true, // Enable logging for debugging
+        useCORS: true,
+        allowTaint: true,
+        logging: true,
       });
 
       const blob = await new Promise<Blob>((resolve) => {
@@ -126,6 +128,7 @@ export const InstagramPreMatchSummary = ({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
+      setShowAICaption(true);
       onShare();
     } catch (error) {
       console.error('Error generating image:', error);
@@ -203,6 +206,12 @@ export const InstagramPreMatchSummary = ({
           </div>
         </ScrollArea>
       </DialogContent>
+
+      <AICaptionPopup
+        isOpen={showAICaption}
+        onClose={() => setShowAICaption(false)}
+        matchId={matchDetails.date}
+      />
     </Dialog>
   );
 };
