@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import MentalLearning from "./pages/MentalLearning";
+import GameHistory from "./pages/GameHistory";
 import { PreMatchReport } from "@/components/pre-match/PreMatchReport";
 import { WeeklyScheduleWizard } from "@/components/schedule/WeeklyScheduleWizard";
 import { DailyRoutineForm } from "@/components/daily-routine/DailyRoutineForm";
@@ -137,6 +138,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <DailyRoutineForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/game-history"
+                element={
+                  <ProtectedRoute>
+                    <GameHistory />
                   </ProtectedRoute>
                 }
               />

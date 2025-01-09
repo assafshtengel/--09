@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Timer, FileText, Calendar, Activity } from "lucide-react";
+import { Trophy, Timer, FileText, Calendar, Activity, History } from "lucide-react";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
@@ -82,6 +82,13 @@ const Dashboard = () => {
       description: "נהל את לוח הזמנים השבועי שלך",
       onClick: () => navigate("/schedule"),
       gradient: "from-orange-500 to-orange-600"
+    },
+    {
+      title: "היסטוריית משחקים",
+      icon: <History className="h-6 w-6 text-primary" />,
+      description: "צפה בכל המשחקים הקודמים שלך",
+      onClick: () => navigate("/game-history"),
+      gradient: "from-pink-500 to-pink-600"
     }
   ];
 
