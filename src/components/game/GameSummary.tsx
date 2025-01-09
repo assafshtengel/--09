@@ -126,56 +126,12 @@ export const GameSummary = ({
     }
   };
 
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl mx-auto h-[90vh]">
-        <ScrollArea className="h-full pr-4">
-          <div id="game-summary-content" className="space-y-6">
-            <SummaryHeader
-              gamePhase={gamePhase as "halftime" | "ended"}
-              matchId={matchId}
-              opponent={opponent}
-            />
-
-            <StatisticsSection
-              actions={actions}
-              actionLogs={actionLogs}
-            />
-
-            <InsightsSection
-              insights={insights}
-              isLoading={isLoadingInsights}
-            />
-
-            <ActionsLogSection
-              actions={actions}
-              actionLogs={actionLogs}
-            />
-
-            <GoalsComparison
-              actions={actions}
-              actionLogs={actionLogs}
-            />
-
-            {gamePhase === "ended" && (
-              <>
-                <PerformanceRatings onRatingsChange={handleRatingsChange} />
-                <QuestionsSection onAnswersChange={handleAnswersChange} />
-              </>
-            )}
-
-            <NotesSection notes={generalNotes} />
-
-            <SharingSection
-              onEmailSend={(recipientType) => {
-                setIsSendingEmail(true);
-                return new Promise((resolve) => {
+  const handleEmailSend = async (recipientType: 'user' | 'coach') => {
     try {
       setIsSendingEmail(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error("No user email found");
 
-      // Get player's profile including coach's email
       const { data: profile } = await supabase
         .from('profiles')
         .select('full_name, coach_email')
@@ -275,10 +231,52 @@ export const GameSummary = ({
         variant: "destructive",
       });
     } finally {
-                  setIsSendingEmail(false);
-                  resolve();
-                });
-              }}
+      setIsSendingEmail(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl mx-auto h-[90vh]">
+        <ScrollArea className="h-full pr-4">
+          <div id="game-summary-content" className="space-y-6">
+            <SummaryHeader
+              gamePhase={gamePhase as "halftime" | "ended"}
+              matchId={matchId}
+              opponent={opponent}
+            />
+
+            <StatisticsSection
+              actions={actions}
+              actionLogs={actionLogs}
+            />
+
+            <InsightsSection
+              insights={insights}
+              isLoading={isLoadingInsights}
+            />
+
+            <ActionsLogSection
+              actions={actions}
+              actionLogs={actionLogs}
+            />
+
+            <GoalsComparison
+              actions={actions}
+              actionLogs={actionLogs}
+            />
+
+            {gamePhase === "ended" && (
+              <>
+                <PerformanceRatings onRatingsChange={handleRatingsChange} />
+                <QuestionsSection onAnswersChange={handleAnswersChange} />
+              </>
+            )}
+
+            <NotesSection notes={generalNotes} />
+
+            <SharingSection
+              onEmailSend={handleEmailSend}
               onShareSocial={(platform) => {
                 toast({
                   title: "שיתוף",
