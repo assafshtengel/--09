@@ -19,7 +19,6 @@ interface PreMatchSummaryProps {
   havaya: string[];
   aiInsights: string[];
   onFinish: () => void;
-  matchId?: string; // Add matchId prop
 }
 
 export const PreMatchSummary = ({
@@ -29,7 +28,6 @@ export const PreMatchSummary = ({
   havaya,
   aiInsights,
   onFinish,
-  matchId, // Add matchId to props
 }: PreMatchSummaryProps) => {
   const { toast } = useToast();
   const [showInstagramSummary, setShowInstagramSummary] = useState(false);
@@ -247,7 +245,6 @@ export const PreMatchSummary = ({
           matchDetails={matchDetails}
           actions={actions}
           havaya={havaya}
-          matchId={matchId} // Pass matchId prop
           onClose={() => setShowInstagramSummary(false)}
           onShare={() => {
             setShowInstagramSummary(false);
