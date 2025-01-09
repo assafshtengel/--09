@@ -7,6 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { AICaptionPopup } from "./components/AICaptionPopup";
 import { Activity, Brain, Target, Trophy, Sparkles, Instagram, Text } from "lucide-react";
 import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
+import html2canvas from "html2canvas";
+import { VerticalHavayaMenu } from "./components/VerticalHavayaMenu";
+import { GoalsFooter } from "./components/GoalsFooter";
 
 interface InstagramPreMatchSummaryProps {
   matchDetails: {
@@ -140,7 +144,6 @@ export const InstagramPreMatchSummary = ({
       <Dialog open onOpenChange={onClose}>
         <DialogContent className="max-w-md mx-auto p-0 overflow-hidden">
           <ScrollArea className="h-[80vh] md:h-[600px]">
-            {/* Background Image */}
             <div 
               id="instagram-pre-match-summary" 
               className="relative min-h-[600px] overflow-hidden"
@@ -174,7 +177,7 @@ export const InstagramPreMatchSummary = ({
 
             <div className="flex justify-center gap-2 pt-4">
               <Button
-                onClick={onShare}
+                onClick={handleShare}
                 className="bg-gradient-to-r from-primary to-secondary text-white gap-2 px-6 py-2 rounded-full hover:opacity-90 transition-all"
               >
                 <Instagram className="h-5 w-5" />
@@ -182,7 +185,7 @@ export const InstagramPreMatchSummary = ({
               </Button>
               
               <Button
-                onClick={() => setShowCaptionPopup(true)}
+                onClick={() => setShowAICaption(true)}
                 className="bg-gradient-to-r from-primary to-secondary text-white gap-2 px-6 py-2 rounded-full hover:opacity-90 transition-all"
               >
                 <Text className="h-5 w-5" />
@@ -194,8 +197,8 @@ export const InstagramPreMatchSummary = ({
       </Dialog>
 
       <AICaptionPopup
-        isOpen={showCaptionPopup}
-        onClose={() => setShowCaptionPopup(false)}
+        isOpen={showAICaption}
+        onClose={() => setShowAICaption(false)}
         matchId={matchDetails.date}
       />
     </>
