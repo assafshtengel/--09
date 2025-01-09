@@ -94,9 +94,21 @@ export const InstagramPreMatchSummary = ({
       const element = document.getElementById('instagram-pre-match-summary');
       if (!element) return;
 
+      // Load background image before taking screenshot
+      if (backgroundImage) {
+        const img = new Image();
+        img.src = backgroundImage;
+        await new Promise((resolve) => {
+          img.onload = resolve;
+        });
+      }
+
       const canvas = await html2canvas(element, {
         backgroundColor: '#ffffff',
         scale: 2,
+        useCORS: true, // Enable CORS for external images
+        allowTaint: true, // Allow loading cross-origin images
+        logging: true, // Enable logging for debugging
       });
 
       const blob = await new Promise<Blob>((resolve) => {
@@ -117,6 +129,11 @@ export const InstagramPreMatchSummary = ({
       onShare();
     } catch (error) {
       console.error('Error generating image:', error);
+      toast({
+        title: "שגיאה ביצירת התמונה",
+        description: "אנא נסה שנית",
+        variant: "destructive",
+      });
     }
   };
 
