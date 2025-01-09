@@ -4,14 +4,9 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Instagram, Upload } from "lucide-react";
-import { motion } from "framer-motion";
-import html2canvas from 'html2canvas';
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { VerticalHavayaMenu } from "./components/VerticalHavayaMenu";
-import { GoalsFooter } from "./components/GoalsFooter";
 import { AICaptionPopup } from "./components/AICaptionPopup";
+import { Activity, Brain, Target, Trophy, Sparkles, Instagram, Text } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface InstagramPreMatchSummaryProps {
   matchDetails: {
@@ -141,77 +136,68 @@ export const InstagramPreMatchSummary = ({
   };
 
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto p-0 overflow-hidden">
-        <ScrollArea className="h-[80vh] md:h-[600px]">
-          <div 
-            id="instagram-pre-match-summary" 
-            className="relative min-h-[600px] overflow-hidden"
-          >
+    <>
+      <Dialog open onOpenChange={onClose}>
+        <DialogContent className="max-w-md mx-auto p-0 overflow-hidden">
+          <ScrollArea className="h-[80vh] md:h-[600px]">
             {/* Background Image */}
             <div 
-              className="absolute inset-0 bg-cover bg-center"
-              style={backgroundImage ? {
-                backgroundImage: `url(${backgroundImage})`,
-              } : {
-                background: 'linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)'
-              }}
-            />
-            
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
-
-            {/* Match Details */}
-            <div className="relative z-10 p-4">
-              <div className="text-white text-right">
-                <div className="text-sm opacity-80">{format(new Date(matchDetails.date), 'dd/MM/yyyy')}</div>
-                {matchDetails.opponent && (
-                  <div className="text-lg font-semibold">נגד: {matchDetails.opponent}</div>
-                )}
-                {playerName && (
-                  <div className="text-xl font-bold mt-2">{playerName}</div>
-                )}
-              </div>
-            </div>
-
-            {/* Vertical Havaya Menu */}
-            <VerticalHavayaMenu havaya={havaya} />
-
-            {/* Goals Footer */}
-            <GoalsFooter actions={actions} />
-          </div>
-
-          {/* Controls Section */}
-          <div className="p-4 space-y-4 bg-white border-t">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">העלה תמונת רקע</label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleBackgroundUpload}
-                  className="text-sm"
-                />
-                <Upload className="h-5 w-5 text-gray-400" />
-              </div>
-            </div>
-            
-            <Button
-              onClick={handleShare}
-              className="w-full bg-gradient-to-r from-primary to-blue-600 text-white gap-2"
+              id="instagram-pre-match-summary" 
+              className="relative min-h-[600px] overflow-hidden"
             >
-              <Instagram className="h-5 w-5" />
-              שתף באינסטגרם
-            </Button>
-          </div>
-        </ScrollArea>
-      </DialogContent>
+              <div 
+                className="absolute inset-0 bg-cover bg-center"
+                style={backgroundImage ? {
+                  backgroundImage: `url(${backgroundImage})`,
+                } : {
+                  background: 'linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)'
+                }}
+              />
+              
+              <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
+
+              <div className="relative z-10 p-4">
+                <div className="text-white text-right">
+                  <div className="text-sm opacity-80">{format(new Date(matchDetails.date), 'dd/MM/yyyy')}</div>
+                  {matchDetails.opponent && (
+                    <div className="text-lg font-semibold">נגד: {matchDetails.opponent}</div>
+                  )}
+                  {playerName && (
+                    <div className="text-xl font-bold mt-2">{playerName}</div>
+                  )}
+                </div>
+              </div>
+
+              <VerticalHavayaMenu havaya={havaya} />
+              <GoalsFooter actions={actions} />
+            </div>
+
+            <div className="flex justify-center gap-2 pt-4">
+              <Button
+                onClick={onShare}
+                className="bg-gradient-to-r from-primary to-secondary text-white gap-2 px-6 py-2 rounded-full hover:opacity-90 transition-all"
+              >
+                <Instagram className="h-5 w-5" />
+                שתף באינסטגרם
+              </Button>
+              
+              <Button
+                onClick={() => setShowCaptionPopup(true)}
+                className="bg-gradient-to-r from-primary to-secondary text-white gap-2 px-6 py-2 rounded-full hover:opacity-90 transition-all"
+              >
+                <Text className="h-5 w-5" />
+                טקסט לאינסטגרם
+              </Button>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       <AICaptionPopup
-        isOpen={showAICaption}
-        onClose={() => setShowAICaption(false)}
+        isOpen={showCaptionPopup}
+        onClose={() => setShowCaptionPopup(false)}
         matchId={matchDetails.date}
       />
-    </Dialog>
+    </>
   );
 };
