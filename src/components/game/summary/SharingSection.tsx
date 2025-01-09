@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { InstagramSummary } from "./InstagramSummary";
-import { Download, Instagram, Mail, Share2, User } from "lucide-react";
+import { Download, Instagram, Mail, Share2, User, Image, Copy } from "lucide-react";
 import html2canvas from 'html2canvas';
 import { Action } from "@/components/ActionSelector";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface SharingSectionProps {
   onEmailSend: (recipientType: 'user' | 'coach') => Promise<void>;
@@ -30,10 +31,15 @@ export const SharingSection = ({
 }: SharingSectionProps) => {
   const [isSharing, setIsSharing] = useState(false);
   const [showInstagramSummary, setShowInstagramSummary] = useState(false);
+  const [showPostImage, setShowPostImage] = useState(false);
   const { toast } = useToast();
 
   const handleShare = async () => {
     setShowInstagramSummary(true);
+  };
+
+  const handlePostImage = async () => {
+    setShowPostImage(true);
   };
 
   const handleInstagramShare = async () => {
@@ -117,10 +123,10 @@ export const SharingSection = ({
             <Button
               variant="outline"
               className="flex items-center gap-2"
-              onClick={handleInstagramShare}
+              onClick={handlePostImage}
             >
-              <Download className="h-4 w-4" />
-              שמור צילום מסך
+              <Image className="h-4 w-4" />
+              תמונת פוסט
             </Button>
           </div>
         </CardContent>
@@ -136,6 +142,49 @@ export const SharingSection = ({
           onClose={() => setShowInstagramSummary(false)}
           onShare={handleInstagramShare}
         />
+      )}
+
+      {showPostImage && (
+        <Dialog open={showPostImage} onOpenChange={setShowPostImage}>
+          <DialogContent className="max-w-4xl">
+            <div id="instagram-post-image" className="relative aspect-square bg-gradient-to-br from-primary to-secondary p-8 rounded-lg">
+              <div className="absolute inset-0 bg-black/40" />
+              <div className="relative z-10 flex flex-col h-full text-white">
+                <div className="flex-1 space-y-6">
+                  <h2 className="text-3xl font-bold">סיכום משחק</h2>
+                  {opponent && (
+                    <p className="text-xl">נגד {opponent}</p>
+                  )}
+                  <div className="grid grid-cols-2 gap-4">
+                    {actions.slice(0, 4).map((action, index) => {
+                      const actionLogs = actionLogs.filter(log => log.actionId === action.id);
+                      const successCount = actionLogs.filter(log => log.result === "success").length;
+                      return (
+                        <div key={index} className="bg-white/10 p-4 rounded-lg">
+                          <p className="font-medium">{action.name}</p>
+                          <p className="text-sm opacity-80">{successCount} הצלחות</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <p className="text-lg font-medium">תובנות עיקריות:</p>
+                  <p className="opacity-80">{insights.split('\n')[0]}</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-4 mt-4">
+              <Button onClick={() => setShowPostImage(false)} variant="outline">
+                סגור
+              </Button>
+              <Button onClick={handleInstagramShare}>
+                <Download className="h-4 w-4 ml-2" />
+                שמור תמונה
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </>
   );
