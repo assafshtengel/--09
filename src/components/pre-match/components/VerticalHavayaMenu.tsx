@@ -9,7 +9,7 @@ export const VerticalHavayaMenu = ({ havaya }: VerticalHavayaMenuProps) => {
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="absolute right-4 top-24 bg-white/80 backdrop-blur-sm rounded-lg p-3 shadow-lg"
+      className="absolute right-4 top-24 rounded-lg p-3"
     >
       <div className="space-y-2">
         {havaya.map((h, index) => (
@@ -18,7 +18,7 @@ export const VerticalHavayaMenu = ({ havaya }: VerticalHavayaMenuProps) => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium"
+            className="bg-primary/20 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg"
           >
             {h}
           </motion.div>
