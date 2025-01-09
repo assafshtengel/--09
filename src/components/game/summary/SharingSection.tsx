@@ -21,6 +21,7 @@ interface SharingSectionProps {
   matchId: string | undefined;
   opponent: string | null;
   matchDate: string;
+  onCaptionClose: () => void;
 }
 
 export const SharingSection = ({
@@ -33,6 +34,7 @@ export const SharingSection = ({
   matchId,
   opponent,
   matchDate,
+  onCaptionClose,
 }: SharingSectionProps) => {
   const [isSharing, setIsSharing] = useState(false);
   const [showInstagramSummary, setShowInstagramSummary] = useState(false);
@@ -180,7 +182,10 @@ export const SharingSection = ({
           insights={insights}
           matchId={matchId}
           opponent={opponent}
-          onClose={() => setShowInstagramSummary(false)}
+          onClose={() => {
+            setShowInstagramSummary(false);
+            onCaptionClose();
+          }}
           onShare={handleInstagramShare}
         />
       )}

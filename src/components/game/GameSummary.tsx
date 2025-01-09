@@ -23,7 +23,7 @@ interface GameSummaryProps {
   gamePhase: string;
   matchId: string | undefined;
   opponent: string | null;
-  matchDate?: string; // Make it optional to maintain backward compatibility
+  matchDate?: string;
 }
 
 export const GameSummary = ({
@@ -43,6 +43,7 @@ export const GameSummary = ({
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
   const [performanceRatings, setPerformanceRatings] = useState<Record<string, number>>({});
   const [additionalAnswers, setAdditionalAnswers] = useState<Record<string, any>>({});
+  const [showCaptionPopup, setShowCaptionPopup] = useState(false);
 
   useEffect(() => {
     const loadInsights = async () => {
@@ -125,7 +126,50 @@ export const GameSummary = ({
     }
   };
 
-  const sendEmail = async (recipientType: 'user' | 'coach') => {
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl mx-auto h-[90vh]">
+        <ScrollArea className="h-full pr-4">
+          <div id="game-summary-content" className="space-y-6">
+            <SummaryHeader
+              gamePhase={gamePhase as "halftime" | "ended"}
+              matchId={matchId}
+              opponent={opponent}
+            />
+
+            <StatisticsSection
+              actions={actions}
+              actionLogs={actionLogs}
+            />
+
+            <InsightsSection
+              insights={insights}
+              isLoading={isLoadingInsights}
+            />
+
+            <ActionsLogSection
+              actions={actions}
+              actionLogs={actionLogs}
+            />
+
+            <GoalsComparison
+              actions={actions}
+              actionLogs={actionLogs}
+            />
+
+            {gamePhase === "ended" && (
+              <>
+                <PerformanceRatings onRatingsChange={handleRatingsChange} />
+                <QuestionsSection onAnswersChange={handleAnswersChange} />
+              </>
+            )}
+
+            <NotesSection notes={generalNotes} />
+
+            <SharingSection
+              onEmailSend={(recipientType) => {
+                setIsSendingEmail(true);
+                return new Promise((resolve) => {
     try {
       setIsSendingEmail(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -231,52 +275,10 @@ export const GameSummary = ({
         variant: "destructive",
       });
     } finally {
-      setIsSendingEmail(false);
-    }
-  };
-
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl mx-auto h-[90vh]">
-        <ScrollArea className="h-full pr-4">
-          <div id="game-summary-content" className="space-y-6">
-            <SummaryHeader
-              gamePhase={gamePhase as "halftime" | "ended"}
-              matchId={matchId}
-              opponent={opponent}
-            />
-
-            <StatisticsSection
-              actions={actions}
-              actionLogs={actionLogs}
-            />
-
-            <InsightsSection
-              insights={insights}
-              isLoading={isLoadingInsights}
-            />
-
-            <ActionsLogSection
-              actions={actions}
-              actionLogs={actionLogs}
-            />
-
-            <GoalsComparison
-              actions={actions}
-              actionLogs={actionLogs}
-            />
-
-            {gamePhase === "ended" && (
-              <>
-                <PerformanceRatings onRatingsChange={handleRatingsChange} />
-                <QuestionsSection onAnswersChange={handleAnswersChange} />
-              </>
-            )}
-
-            <NotesSection notes={generalNotes} />
-
-            <SharingSection
-              onEmailSend={sendEmail}
+                  setIsSendingEmail(false);
+                  resolve();
+                });
+              }}
               onShareSocial={(platform) => {
                 toast({
                   title: "שיתוף",
@@ -289,7 +291,8 @@ export const GameSummary = ({
               insights={insights}
               matchId={matchId}
               opponent={opponent}
-              matchDate={matchDate || new Date().toISOString()} // Provide a fallback
+              matchDate={matchDate || new Date().toISOString()}
+              onCaptionClose={() => setShowCaptionPopup(false)}
             />
           </div>
         </ScrollArea>
