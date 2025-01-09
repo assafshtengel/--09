@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { History, Eye, RefreshCw } from "lucide-react";
+import { Eye, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,24 +12,30 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Json } from "@/integrations/supabase/types";
 
 interface GameHistoryItem {
   id: string;
   match_date: string;
   opponent: string | null;
   pre_match_report?: {
-    actions: any[];
-    questions_answers: any;
+    actions: Json;
+    questions_answers: Json;
   };
-  match_actions?: any[];
-  match_notes?: any[];
+  match_actions?: {
+    id: string;
+    match_id: string;
+    action_id: string;
+    minute: number;
+    result: string;
+    note: string | null;
+  }[];
 }
 
 const GameHistory = () => {
   const navigate = useNavigate();
   const [games, setGames] = useState<GameHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedGame, setSelectedGame] = useState<GameHistoryItem | null>(null);
 
   useEffect(() => {
     fetchGames();
@@ -53,7 +59,7 @@ const GameHistory = () => {
             actions,
             questions_answers
           ),
-          match_actions:match_actions (*)
+          match_actions (*)
         `)
         .eq("player_id", user.id)
         .eq("status", "ended")
@@ -140,11 +146,12 @@ const GameHistory = () => {
                               <div>
                                 <h4 className="text-sm font-medium">יעדים</h4>
                                 <ul className="list-disc list-inside">
-                                  {game.pre_match_report.actions.map((action: any, index: number) => (
-                                    <li key={index}>
-                                      {action.name} - יעד: {action.goal || "לא הוגדר"}
-                                    </li>
-                                  ))}
+                                  {Array.isArray(game.pre_match_report.actions) &&
+                                    game.pre_match_report.actions.map((action: any, index: number) => (
+                                      <li key={index}>
+                                        {action.name} - יעד: {action.goal || "לא הוגדר"}
+                                      </li>
+                                    ))}
                                 </ul>
                               </div>
                             </div>
@@ -154,7 +161,7 @@ const GameHistory = () => {
                           <h3 className="font-semibold mb-2">נתוני משחק</h3>
                           {game.match_actions && game.match_actions.length > 0 ? (
                             <ul className="space-y-2">
-                              {game.match_actions.map((action: any) => (
+                              {game.match_actions.map((action) => (
                                 <li key={action.id} className="flex justify-between">
                                   <span>{action.result}</span>
                                   <span>דקה {action.minute}</span>
