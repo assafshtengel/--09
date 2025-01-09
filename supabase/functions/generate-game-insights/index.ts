@@ -20,14 +20,18 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Fetch current match data
+    // Fetch current match data with all related information
     const { data: currentMatch, error: matchError } = await supabaseClient
       .from('matches')
       .select(`
         *,
         match_actions (
           action_id,
-          result
+          result,
+          minute
+        ),
+        pre_match_reports (
+          actions
         ),
         match_notes (
           note
@@ -39,61 +43,78 @@ serve(async (req) => {
 
     if (matchError) throw matchError;
 
-    // Fetch previous matches data
-    const { data: previousMatches, error: prevMatchesError } = await supabaseClient
-      .from('matches')
-      .select(`
-        *,
-        match_actions (
-          action_id,
-          result
-        )
-      `)
-      .eq('player_id', currentMatch.player_id)
-      .neq('id', matchId)
-      .order('created_at', { ascending: false })
-      .limit(5);
+    // Calculate match statistics
+    const totalActions = currentMatch.match_actions.length;
+    const successfulActions = currentMatch.match_actions.filter(action => action.result === 'success').length;
+    const successRate = totalActions > 0 ? (successfulActions / totalActions) * 100 : 0;
 
-    if (prevMatchesError) throw prevMatchesError;
+    // Calculate total match minutes
+    const minutes = currentMatch.match_actions.map(action => action.minute);
+    const totalMinutes = minutes.length > 0 ? Math.max(...minutes) : 0;
 
-    // Calculate success rates
-    const currentSuccessRate = calculateSuccessRate(currentMatch.match_actions);
-    const previousSuccessRates = previousMatches.map(match => ({
-      matchId: match.id,
-      rate: calculateSuccessRate(match.match_actions)
-    }));
+    // Group actions by type
+    const actionTypes = new Map();
+    currentMatch.match_actions.forEach(action => {
+      if (!actionTypes.has(action.action_id)) {
+        actionTypes.set(action.action_id, {
+          total: 0,
+          successful: 0
+        });
+      }
+      const stats = actionTypes.get(action.action_id);
+      stats.total++;
+      if (action.result === 'success') {
+        stats.successful++;
+      }
+    });
 
-    const avgPreviousRate = previousSuccessRates.reduce((acc, curr) => acc + curr.rate, 0) / previousSuccessRates.length;
+    // Compare with goals from pre-match report
+    const preMatchActions = currentMatch.pre_match_reports?.actions || [];
+    const goalsComparison = preMatchActions.map(preMatchAction => {
+      const actionStats = actionTypes.get(preMatchAction.id) || { total: 0, successful: 0 };
+      const goalTarget = preMatchAction.goal ? parseInt(preMatchAction.goal) : null;
+      
+      if (!goalTarget) return null;
+
+      const achievementRate = (actionStats.successful / goalTarget) * 100;
+      return {
+        actionName: preMatchAction.name,
+        achieved: actionStats.successful,
+        goal: goalTarget,
+        achievementRate
+      };
+    }).filter(Boolean);
 
     // Generate insights
     const insights = [];
 
-    // Compare with previous matches
-    if (currentSuccessRate > avgPreviousRate) {
-      insights.push(`שיפור משמעותי! אחוז ההצלחה שלך במשחק זה (${currentSuccessRate.toFixed(1)}%) גבוה מהממוצע הקודם שלך (${avgPreviousRate.toFixed(1)}%).`);
-    } else if (currentSuccessRate < avgPreviousRate) {
-      insights.push(`במשחק זה השגת אחוז הצלחה של ${currentSuccessRate.toFixed(1)}%, נמוך מהממוצע הקודם שלך (${avgPreviousRate.toFixed(1)}%). זה יכול להיות הזדמנות טובה ללמידה.`);
-    }
+    // Overall performance insight
+    insights.push(`ביצעת ${totalActions} פעולות במהלך ${totalMinutes} דקות משחק, מתוכן ${successfulActions} פעולות מוצלחות (${successRate.toFixed(1)}% הצלחה).`);
 
-    // Analyze notes patterns
-    const notes = currentMatch.match_notes;
-    if (notes && notes.length > 0) {
-      const notesText = notes.map(n => n.note).join(' ');
-      if (notesText.includes('לחץ') || notesText.includes('מתח')) {
-        insights.push('שים לב שרשמת מספר הערות הקשורות ללחץ ומתח. כדאי לשקול לעבוד על טכניקות רגיעה לפני המשחק הבא.');
+    // Actions breakdown
+    actionTypes.forEach((stats, actionId) => {
+      const action = preMatchActions.find(a => a.id === actionId);
+      if (action) {
+        const successRate = (stats.successful / stats.total) * 100;
+        insights.push(`ב${action.name}: ביצעת ${stats.total} נסיונות, ${stats.successful} מוצלחים (${successRate.toFixed(1)}% הצלחה).`);
       }
-      if (notesText.includes('טוב') || notesText.includes('מצוין')) {
-        insights.push('ניכר מההערות שלך שהיו רגעים טובים במשחק. חשוב לזכור ולשחזר את התחושות האלו במשחקים הבאים.');
-      }
-    }
+    });
 
-    // Add general insights based on performance
-    if (currentSuccessRate >= 75) {
-      insights.push('ביצוע מצוין! שמור על רמת הביצועים הגבוהה הזו.');
-    } else if (currentSuccessRate >= 50) {
-      insights.push('ביצוע טוב, יש מקום לשיפור בדיוק הביצוע.');
-    } else {
-      insights.push('כדאי להתמקד בשיפור הדיוק והביצוע של הפעולות במשחקים הבאים.');
+    // Goals achievement insights
+    goalsComparison.forEach(comparison => {
+      if (comparison.achievementRate >= 100) {
+        insights.push(`כל הכבוד! עמדת ביעד ${comparison.actionName} (${comparison.achieved}/${comparison.goal}).`);
+      } else if (comparison.achievementRate >= 75) {
+        insights.push(`התקרבת מאוד ליעד ${comparison.actionName} (${comparison.achieved}/${comparison.goal}).`);
+      } else {
+        insights.push(`יש מקום לשיפור ב${comparison.actionName} (${comparison.achieved}/${comparison.goal}).`);
+      }
+    });
+
+    // Add intensity insight based on actions per minute
+    const actionsPerMinute = totalMinutes > 0 ? totalActions / totalMinutes : 0;
+    if (actionsPerMinute > 0.5) {
+      insights.push(`שיחקת במשחק אינטנסיבי עם ממוצע של ${actionsPerMinute.toFixed(2)} פעולות לדקה.`);
     }
 
     return new Response(
@@ -114,9 +135,3 @@ serve(async (req) => {
     );
   }
 });
-
-function calculateSuccessRate(actions: any[]) {
-  if (!actions || actions.length === 0) return 0;
-  const successfulActions = actions.filter(a => a.result === 'success').length;
-  return (successfulActions / actions.length) * 100;
-}
