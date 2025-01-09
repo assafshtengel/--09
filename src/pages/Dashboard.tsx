@@ -57,45 +57,45 @@ const Dashboard = () => {
   const quickActions = [
     {
       title: "יעדי טרום משחק",
-      icon: <Trophy className="h-6 w-6 text-primary" />,
+      icon: <Trophy className="h-6 w-6 text-white" />,
       description: "הגדר יעדים ומטרות למשחק הבא",
       onClick: () => navigate("/pre-match-report"),
-      gradient: "from-blue-500 to-blue-600"
+      gradient: "from-blue-600 to-blue-700"
     },
     {
       title: "תכנון לפני משחק",
-      icon: <Calendar className="h-6 w-6 text-primary" />,
+      icon: <Calendar className="h-6 w-6 text-white" />,
       description: "קבל סדר יום מותאם אישית ל-24 שעות לפני המשחק",
       onClick: () => navigate("/pre-game-planner"),
-      gradient: "from-purple-500 to-purple-600"
+      gradient: "from-purple-600 to-purple-700"
     },
     {
       title: "מעקב משחק",
-      icon: <Timer className="h-6 w-6 text-primary" />,
+      icon: <Timer className="h-6 w-6 text-white" />,
       description: "עקוב אחר ביצועים במהלך המשחק",
       onClick: () => navigate("/game-selection"),
-      gradient: "from-green-500 to-green-600"
+      gradient: "from-emerald-600 to-emerald-700"
     },
     {
       title: "סיכום אימון",
-      icon: <FileText className="h-6 w-6 text-primary" />,
+      icon: <FileText className="h-6 w-6 text-white" />,
       description: "תעד ונתח את האימון שלך",
       onClick: () => navigate("/training-summary"),
-      gradient: "from-purple-500 to-purple-600"
+      gradient: "from-amber-600 to-amber-700"
     },
     {
       title: "מערכת שעות",
-      icon: <Calendar className="h-6 w-6 text-primary" />,
+      icon: <Calendar className="h-6 w-6 text-white" />,
       description: "נהל את לוח הזמנים השבועי שלך",
       onClick: () => navigate("/schedule"),
-      gradient: "from-orange-500 to-orange-600"
+      gradient: "from-rose-600 to-rose-700"
     },
     {
       title: "היסטוריית משחקים",
-      icon: <History className="h-6 w-6 text-primary" />,
+      icon: <History className="h-6 w-6 text-white" />,
       description: "צפה בכל המשחקים הקודמים שלך",
       onClick: () => navigate("/game-history"),
-      gradient: "from-pink-500 to-pink-600"
+      gradient: "from-indigo-600 to-indigo-700"
     }
   ];
 
@@ -108,7 +108,7 @@ const Dashboard = () => {
       </div>
 
       {/* Quick Actions Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         {quickActions.map((action, index) => (
           <button
             key={index}
