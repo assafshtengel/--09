@@ -3,10 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { InstagramSummary } from "./InstagramSummary";
-import { Download, Instagram, Mail, Share2, User, Image, Copy } from "lucide-react";
+import { Download, Instagram, Mail, Share2, User, Image, Copy, Upload } from "lucide-react";
 import html2canvas from 'html2canvas';
 import { Action } from "@/components/ActionSelector";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SharingSectionProps {
   onEmailSend: (recipientType: 'user' | 'coach') => Promise<void>;
@@ -32,6 +34,7 @@ export const SharingSection = ({
   const [isSharing, setIsSharing] = useState(false);
   const [showInstagramSummary, setShowInstagramSummary] = useState(false);
   const [showPostImage, setShowPostImage] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleShare = async () => {
@@ -42,12 +45,47 @@ export const SharingSection = ({
     setShowPostImage(true);
   };
 
+  const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${crypto.randomUUID()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('player-media')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('player-media')
+        .getPublicUrl(filePath);
+
+      setBackgroundImage(publicUrl);
+      toast({
+        title: "התמונה הועלתה בהצלחה",
+        description: "התמונה תשמש כרקע לתמונת האינסטגרם",
+      });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "שגיאה בהעלאת התמונה",
+        description: "אנא נסה שנית",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleInstagramShare = async () => {
     setIsSharing(true);
     try {
-      const element = document.getElementById('instagram-summary');
+      const element = document.getElementById('instagram-post-image');
       if (!element) {
-        throw new Error('Instagram summary element not found');
+        throw new Error('Instagram post image element not found');
       }
 
       const canvas = await html2canvas(element, {
@@ -147,7 +185,15 @@ export const SharingSection = ({
       {showPostImage && (
         <Dialog open={showPostImage} onOpenChange={setShowPostImage}>
           <DialogContent className="max-w-4xl">
-            <div id="instagram-post-image" className="relative aspect-square bg-gradient-to-br from-primary to-secondary p-8 rounded-lg">
+            <div 
+              id="instagram-post-image" 
+              className="relative aspect-square bg-gradient-to-br from-primary to-secondary p-8 rounded-lg"
+              style={backgroundImage ? {
+                backgroundImage: `url(${backgroundImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              } : undefined}
+            >
               <div className="absolute inset-0 bg-black/40" />
               <div className="relative z-10 flex flex-col h-full text-white">
                 <div className="flex-1 space-y-6">
@@ -174,14 +220,28 @@ export const SharingSection = ({
                 </div>
               </div>
             </div>
-            <div className="flex justify-end gap-4 mt-4">
-              <Button onClick={() => setShowPostImage(false)} variant="outline">
-                סגור
-              </Button>
-              <Button onClick={handleInstagramShare}>
-                <Download className="h-4 w-4 ml-2" />
-                שמור תמונה
-              </Button>
+            <div className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium">העלה תמונת רקע</label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleBackgroundUpload}
+                    className="text-sm"
+                  />
+                  <Upload className="h-5 w-5 text-gray-400" />
+                </div>
+              </div>
+              <div className="flex justify-end gap-4">
+                <Button onClick={() => setShowPostImage(false)} variant="outline">
+                  סגור
+                </Button>
+                <Button onClick={handleInstagramShare}>
+                  <Download className="h-4 w-4 ml-2" />
+                  שמור תמונה
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
