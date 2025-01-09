@@ -110,6 +110,7 @@ const Auth = () => {
                 input: 'text-right',
               },
             }}
+            providers={[]}
             localization={{
               variables: {
                 sign_in: {
