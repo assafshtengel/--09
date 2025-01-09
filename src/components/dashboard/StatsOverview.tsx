@@ -1,117 +1,159 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from "recharts";
+import { motion } from "framer-motion";
 
 export const StatsOverview = () => {
-  const [stats, setStats] = useState({
-    totalMatches: 0,
-    successRate: 0,
-    totalActions: 0
-  });
-
-  const [actionDistribution, setActionDistribution] = useState<any[]>([]);
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+  const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
-      // Fetch overall stats
-      const { data: matches } = await supabase
-        .from('matches')
-        .select(`
-          id,
-          match_actions (
-            action_id,
-            result
-          )
-        `);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-      if (matches) {
-        const totalMatches = matches.length;
-        let successfulActions = 0;
-        let totalActions = 0;
+      const { data } = await supabase
+        .from("player_stats")
+        .select("*")
+        .eq("player_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
 
-        const actionCounts: Record<string, number> = {};
-
-        matches.forEach(match => {
-          match.match_actions?.forEach((action: any) => {
-            totalActions++;
-            if (action.result === 'success') {
-              successfulActions++;
-            }
-            actionCounts[action.action_id] = (actionCounts[action.action_id] || 0) + 1;
-          });
-        });
-
-        const distribution = Object.entries(actionCounts).map(([name, value]) => ({
-          name,
-          value
-        }));
-
-        setStats({
-          totalMatches,
-          successRate: Math.round((successfulActions / totalActions) * 100) || 0,
-          totalActions
-        });
-
-        setActionDistribution(distribution);
-      }
+      setStats(data);
     };
 
     fetchStats();
   }, []);
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>סטטיסטיקות כלליות</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold">{stats.totalMatches}</div>
-              <div className="text-sm text-muted-foreground">משחקים</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold">{stats.successRate}%</div>
-              <div className="text-sm text-muted-foreground">הצלחה</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold">{stats.totalActions}</div>
-              <div className="text-sm text-muted-foreground">פעולות</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+  const chartData = stats ? [
+    { name: "דקות משחק", value: stats.minutes_played },
+    { name: "שערים", value: stats.goals },
+    { name: "בישולים", value: stats.assists },
+    { name: "בעיטות למסגרת", value: stats.shots_on_target },
+    { name: "פעולות הגנתיות", value: stats.defensive_actions },
+  ] : [];
 
-      <Card>
-        <CardHeader>
-          <CardTitle>התפלגות פעולות</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={actionDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {actionDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+  return (
+    <div className="space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="overflow-hidden bg-gradient-to-br from-background to-background/95 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl">סטטיסטיקות עונה נוכחית</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+              <motion.div 
+                className="text-center p-4 rounded-lg bg-primary/10"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="text-2xl font-bold text-primary">{stats?.minutes_played || 0}</div>
+                <div className="text-sm text-muted-foreground">דקות משחק</div>
+              </motion.div>
+              <motion.div 
+                className="text-center p-4 rounded-lg bg-secondary/10"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="text-2xl font-bold text-secondary">{stats?.goals || 0}</div>
+                <div className="text-sm text-muted-foreground">שערים</div>
+              </motion.div>
+              <motion.div 
+                className="text-center p-4 rounded-lg bg-accent/10"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="text-2xl font-bold text-accent">{stats?.assists || 0}</div>
+                <div className="text-sm text-muted-foreground">בישולים</div>
+              </motion.div>
+            </div>
+
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-50" />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fill: 'currentColor' }}
+                    fontSize={12}
+                  />
+                  <YAxis 
+                    tick={{ fill: 'currentColor' }}
+                    fontSize={12}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+                  <Bar 
+                    dataKey="value" 
+                    fill="currentColor"
+                    className="fill-primary"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <Card className="overflow-hidden bg-gradient-to-br from-background to-background/95 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl">נתונים פיזיולוגיים</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              <motion.div 
+                className="text-center p-4 rounded-lg bg-primary/10"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="text-2xl font-bold text-primary">{stats?.speed_record || "-"}</div>
+                <div className="text-sm text-muted-foreground">מהירות (קמ"ש)</div>
+              </motion.div>
+              <motion.div 
+                className="text-center p-4 rounded-lg bg-secondary/10"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="text-2xl font-bold text-secondary">{stats?.jump_height || "-"}</div>
+                <div className="text-sm text-muted-foreground">גובה קפיצה (ס"מ)</div>
+              </motion.div>
+              <motion.div 
+                className="text-center p-4 rounded-lg bg-accent/10"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="text-2xl font-bold text-accent">{stats?.endurance_score || "-"}</div>
+                <div className="text-sm text-muted-foreground">ציון סיבולת</div>
+              </motion.div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 };
