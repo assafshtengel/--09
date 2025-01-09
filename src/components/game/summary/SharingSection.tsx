@@ -157,8 +157,8 @@ export const SharingSection = ({
                   )}
                   <div className="grid grid-cols-2 gap-4">
                     {actions.slice(0, 4).map((action, index) => {
-                      const actionLogs = actionLogs.filter(log => log.actionId === action.id);
-                      const successCount = actionLogs.filter(log => log.result === "success").length;
+                      const logsForAction = actionLogs.filter(log => log.actionId === action.id);
+                      const successCount = logsForAction.filter(log => log.result === "success").length;
                       return (
                         <div key={index} className="bg-white/10 p-4 rounded-lg">
                           <p className="font-medium">{action.name}</p>
