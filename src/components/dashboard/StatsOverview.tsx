@@ -14,21 +14,36 @@ import { motion } from "framer-motion";
 
 export const StatsOverview = () => {
   const [stats, setStats] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setIsLoading(false);
+          return;
+        }
 
-      const { data } = await supabase
-        .from("player_stats")
-        .select("*")
-        .eq("player_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+        const { data, error } = await supabase
+          .from("player_stats")
+          .select("*")
+          .eq("player_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      setStats(data);
+        if (error) {
+          console.error("Error fetching stats:", error);
+          return;
+        }
+
+        setStats(data);
+      } catch (error) {
+        console.error("Error in fetchStats:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchStats();
@@ -41,6 +56,14 @@ export const StatsOverview = () => {
     { name: "בעיטות למסגרת", value: stats.shots_on_target },
     { name: "פעולות הגנתיות", value: stats.defensive_actions },
   ] : [];
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="h-64 bg-muted rounded-lg"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
