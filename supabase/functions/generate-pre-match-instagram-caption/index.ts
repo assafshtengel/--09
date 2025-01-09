@@ -26,13 +26,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Set a timeout for the database query
-    const timeout = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Database query timeout')), 5000)
-    );
-
     console.log('Fetching report data for ID:', reportId);
-    const reportPromise = supabaseClient
+    const { data: report, error: reportError } = await supabaseClient
       .from('pre_match_reports')
       .select(`
         *,
@@ -41,12 +36,7 @@ serve(async (req) => {
         )
       `)
       .eq('id', reportId)
-      .single();
-
-    const { data: report, error: reportError } = await Promise.race([
-      reportPromise,
-      timeout
-    ]) as any;
+      .single()
 
     if (reportError) {
       console.error('Error fetching report:', reportError);
@@ -89,13 +79,8 @@ serve(async (req) => {
       - Hashtags
     `
 
-    // Set a timeout for the OpenAI API call
-    const openAITimeout = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('OpenAI API timeout')), 8000)
-    );
-
     console.log('Calling OpenAI API...');
-    const openAIPromise = fetch('https://api.openai.com/v1/chat/completions', {
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
@@ -116,12 +101,7 @@ serve(async (req) => {
         temperature: 0.7,
         max_tokens: 500,
       }),
-    });
-
-    const openAIResponse = await Promise.race([
-      openAIPromise,
-      openAITimeout
-    ]) as Response;
+    })
 
     if (!openAIResponse.ok) {
       console.error('OpenAI API error:', await openAIResponse.text());

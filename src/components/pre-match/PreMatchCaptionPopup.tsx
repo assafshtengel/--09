@@ -28,15 +28,6 @@ export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCapt
         setIsLoading(true);
         setError(null);
         console.log('Starting caption generation for report:', reportId);
-        
-        // Set a timeout to show error if it takes too long
-        timeoutId = setTimeout(() => {
-          if (isLoading && isMounted) {
-            console.error('Caption generation timeout');
-            setError("זמן התגובה ארוך מדי, נסה שוב מאוחר יותר");
-            setIsLoading(false);
-          }
-        }, 15000); // 15 seconds timeout
 
         const { data, error } = await supabase.functions.invoke('generate-pre-match-instagram-caption', {
           body: { reportId },
@@ -55,7 +46,6 @@ export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCapt
         }
 
         console.log('Caption generated successfully:', data.caption);
-        clearTimeout(timeoutId);
         setCaption(data.caption);
       } catch (error) {
         console.error('Error generating caption:', error);
@@ -65,7 +55,6 @@ export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCapt
       } finally {
         if (isMounted) {
           setIsLoading(false);
-          clearTimeout(timeoutId);
         }
       }
     };
