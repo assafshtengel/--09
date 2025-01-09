@@ -23,6 +23,7 @@ interface GameSummaryProps {
   gamePhase: string;
   matchId: string | undefined;
   opponent: string | null;
+  matchDate?: string; // Make it optional to maintain backward compatibility
 }
 
 export const GameSummary = ({
@@ -34,6 +35,7 @@ export const GameSummary = ({
   gamePhase,
   matchId,
   opponent,
+  matchDate,
 }: GameSummaryProps) => {
   const { toast } = useToast();
   const [isSendingEmail, setIsSendingEmail] = useState(false);
@@ -287,6 +289,7 @@ export const GameSummary = ({
               insights={insights}
               matchId={matchId}
               opponent={opponent}
+              matchDate={matchDate || new Date().toISOString()} // Provide a fallback
             />
           </div>
         </ScrollArea>

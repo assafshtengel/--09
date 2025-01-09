@@ -202,7 +202,16 @@ export const SharingSection = ({
                 <div className="flex-1 space-y-6">
                   <div className="flex justify-between items-start">
                     <h2 className="text-3xl font-bold">סיכום משחק</h2>
-                    <span className="text-lg">{format(new Date(matchDate), 'dd/MM/yyyy')}</span>
+                    <span className="text-lg">
+                      {(() => {
+                        try {
+                          return format(new Date(matchDate), 'dd/MM/yyyy');
+                        } catch (error) {
+                          console.error('Error formatting date:', error);
+                          return format(new Date(), 'dd/MM/yyyy'); // Fallback to current date
+                        }
+                      })()}
+                    </span>
                   </div>
                   {opponent && (
                     <p className="text-xl">נגד {opponent}</p>
