@@ -27,6 +27,32 @@ const OPEN_ENDED_QUESTIONS = [
   "נא רשום סיכום מלא שלך על המשחק"
 ];
 
+const STRESS_LEVELS = [
+  { value: "1", label: "1 - רגוע מאוד" },
+  { value: "2", label: "2 - רגוע" },
+  { value: "3", label: "3 - רגוע יחסית" },
+  { value: "4", label: "4 - מעט לחץ" },
+  { value: "5", label: "5 - לחץ בינוני" },
+  { value: "6", label: "6 - לחוץ" },
+  { value: "7", label: "7 - לחוץ מאוד" },
+  { value: "8", label: "8 - לחץ גבוה" },
+  { value: "9", label: "9 - לחץ גבוה מאוד" },
+  { value: "10", label: "10 - לחץ מקסימלי" }
+];
+
+const SELF_RATINGS = [
+  { value: "1", label: "1 - חלש מאוד" },
+  { value: "2", label: "2 - חלש" },
+  { value: "3", label: "3 - מתחת לממוצע" },
+  { value: "4", label: "4 - ממוצע" },
+  { value: "5", label: "5 - מעל הממוצע" },
+  { value: "6", label: "6 - טוב" },
+  { value: "7", label: "7 - טוב מאוד" },
+  { value: "8", label: "8 - מצוין" },
+  { value: "9", label: "9 - יוצא מן הכלל" },
+  { value: "10", label: "10 - מושלם" }
+];
+
 export interface QuestionsSectionProps {
   onAnswersChange: (answers: Record<string, any>) => void;
 }
