@@ -19,19 +19,22 @@ serve(async (req) => {
       throw new Error('Match ID is required');
     }
 
+    console.log('Generating caption for match:', matchId);
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Fetch match data and related information
+    // Use maybeSingle() instead of single() to handle cases where no row is found
     const { data: match, error: matchError } = await supabaseClient
       .from('matches')
       .select(`
         *,
-        pre_match_reports (
+        pre_match_reports!matches_pre_match_report_id_fkey (
           questions_answers,
-          havaya
+          havaya,
+          actions
         ),
         post_game_feedback (
           performance_ratings,
@@ -43,9 +46,17 @@ serve(async (req) => {
         )
       `)
       .eq('id', matchId)
-      .single();
+      .maybeSingle();
 
-    if (matchError) throw matchError;
+    if (matchError) {
+      console.error('Error fetching match data:', matchError);
+      throw matchError;
+    }
+
+    if (!match) {
+      console.error('No match found with ID:', matchId);
+      throw new Error('Match not found');
+    }
 
     // Calculate success rates
     const actions = match.match_actions || [];
@@ -61,8 +72,8 @@ serve(async (req) => {
 
     // Find strongest and weakest areas
     const ratings = Object.entries(performanceRatings);
-    const strongestSkill = ratings.reduce((a, b) => (b[1] > a[1] ? b : a), ['', 0])[0];
-    const weakestSkill = ratings.reduce((a, b) => (b[1] < a[1] ? b : a), ['', 5])[0];
+    const strongestSkill = ratings.length > 0 ? ratings.reduce((a, b) => (b[1] > a[1] ? b : a), ['', 0])[0] : '';
+    const weakestSkill = ratings.length > 0 ? ratings.reduce((a, b) => (b[1] < a[1] ? b : a), ['', 5])[0] : '';
 
     // Generate the caption using GPT-4
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -119,8 +130,8 @@ serve(async (req) => {
       }),
     });
 
-    const aiResponse = await response.json();
-    const caption = aiResponse.choices[0].message.content;
+    const data = await response.json();
+    const caption = data.choices[0].message.content;
 
     return new Response(
       JSON.stringify({ caption }),
