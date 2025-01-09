@@ -1,8 +1,8 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Trophy, TrendingUp, Share2, Instagram, Quote, Target, Sparkles } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Trophy, Share2, Instagram, Target, Activity, Brain, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useState, useEffect } from "react";
@@ -30,7 +30,6 @@ export const InstagramSummary = ({
   onShare,
 }: InstagramSummaryProps) => {
   const [playerName, setPlayerName] = useState<string>("");
-  const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [showCaptionPopup, setShowCaptionPopup] = useState(false);
 
   useEffect(() => {
@@ -40,13 +39,12 @@ export const InstagramSummary = ({
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name, profile_picture_url')
+        .select('full_name')
         .eq('id', user.id)
         .maybeSingle();
 
       if (profile) {
         setPlayerName(profile.full_name || "");
-        setProfilePicture(profile.profile_picture_url);
       }
     };
 
@@ -54,7 +52,6 @@ export const InstagramSummary = ({
   }, []);
 
   useEffect(() => {
-    // Show the caption popup automatically when the Instagram summary opens
     setShowCaptionPopup(true);
   }, []);
 
@@ -77,22 +74,6 @@ export const InstagramSummary = ({
     });
   };
 
-  const getKeyInsight = () => {
-    if (!insights) return "Keep pushing forward! 💪";
-    const insightsList = insights.split('\n\n');
-    return insightsList[0] || "Keep pushing forward! 💪";
-  };
-
-  const getMotivationalQuote = () => {
-    const quotes = [
-      "כל משחק הוא הזדמנות להתקדם צעד נוסף קדימה!",
-      "ההצלחה שלך היא תוצאה של העבודה הקשה שלך!",
-      "אתה משתפר בכל משחק, המשך כך!",
-      "תמשיך להאמין בעצמך ובדרך שלך!",
-    ];
-    return quotes[Math.floor(Math.random() * quotes.length)];
-  };
-
   return (
     <>
       <Dialog open onOpenChange={onClose}>
@@ -100,118 +81,61 @@ export const InstagramSummary = ({
           <ScrollArea className="h-[80vh] md:h-[600px]">
             <div 
               id="instagram-summary" 
-              className="bg-gradient-to-br from-primary/10 to-secondary/10 p-6 space-y-6"
+              className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 space-y-6"
             >
-              {/* Logo */}
-              <div className="absolute top-4 right-4 opacity-50">
-                <img src="/logo.png" alt="Logo" className="h-8 w-auto" />
+              {/* Header */}
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold">הטופס חיפה</h2>
+                <span className="text-gray-500">{format(new Date(), 'dd/MM/yyyy')}</span>
               </div>
 
-              {/* Header */}
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-between"
-              >
-                <div className="flex items-center gap-3">
-                  {profilePicture ? (
-                    <img 
-                      src={profilePicture} 
-                      alt={playerName} 
-                      className="h-16 w-16 rounded-full object-cover border-2 border-primary"
-                    />
-                  ) : (
-                    <Trophy className="h-8 w-8 text-yellow-500" />
-                  )}
-                  <div>
-                    <h2 className="text-xl font-bold">{playerName}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {format(new Date(), 'dd/MM/yyyy')} {opponent && `vs ${opponent}`}
-                    </p>
-                  </div>
+              {/* Main Circle with Icons */}
+              <div className="relative w-full aspect-square max-w-sm mx-auto my-8">
+                {/* Center Circle */}
+                <div className="absolute inset-1/4 bg-gray-200 rounded-full flex items-center justify-center">
+                  <Activity className="h-12 w-12 text-gray-600" />
                 </div>
-              </motion.div>
+                
+                {/* Surrounding Icons */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-green-100 p-3 rounded-full">
+                  <Target className="h-6 w-6 text-green-600" />
+                </div>
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-blue-100 p-3 rounded-full">
+                  <Brain className="h-6 w-6 text-blue-600" />
+                </div>
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 bg-yellow-100 p-3 rounded-full">
+                  <Trophy className="h-6 w-6 text-yellow-600" />
+                </div>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-orange-100 p-3 rounded-full">
+                  <Sparkles className="h-6 w-6 text-orange-600" />
+                </div>
+              </div>
 
-              {/* Overall Performance */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <Card className="bg-gradient-to-r from-primary/5 to-secondary/5">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-4">
-                      <TrendingUp className="h-8 w-8 text-primary" />
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold">הצלחה כללית</h3>
-                        <Progress value={calculateOverallSuccess()} className="mt-2" />
-                        <p className="text-2xl font-bold mt-2">
-                          {calculateOverallSuccess().toFixed(1)}%
-                        </p>
+              {/* Performance Chart */}
+              <div className="mt-8">
+                <div className="flex justify-center gap-4">
+                  {getTopActions().map((action, index) => (
+                    <div 
+                      key={index} 
+                      className="flex-1 text-center"
+                      style={{
+                        background: `conic-gradient(${
+                          index === 0 ? 'green' : 
+                          index === 1 ? 'yellow' : 
+                          'red'
+                        } ${action.rate}%, transparent ${action.rate}%, transparent 100%)`
+                      }}
+                    >
+                      <div className="aspect-square rounded-full flex items-center justify-center">
+                        <span className="text-sm font-medium">{action.name}</span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Top Actions */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="space-y-4"
-              >
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  פעולות מובילות
-                </h3>
-                {getTopActions().map((action, index) => (
-                  <Card key={index} className="bg-gradient-to-r from-primary/5 to-secondary/5">
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">
-                          {action.success}/{action.total}
-                        </span>
-                        <span className="font-medium">{action.name}</span>
-                      </div>
-                      <Progress value={action.rate} className="mt-2" />
-                    </CardContent>
-                  </Card>
-                ))}
-              </motion.div>
-
-              {/* Motivational Quote */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="flex items-center gap-2 text-primary"
-              >
-                <Quote className="h-5 w-5" />
-                <p className="text-sm font-medium italic">{getMotivationalQuote()}</p>
-              </motion.div>
-
-              {/* AI Insight */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="bg-primary/10 p-4 rounded-lg"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold">תובנת AI</h3>
+                  ))}
                 </div>
-                <p className="text-sm">{getKeyInsight()}</p>
-              </motion.div>
+              </div>
 
               {/* Share Button */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="flex justify-center pt-4"
-              >
+              <div className="flex justify-center pt-4">
                 <Button
                   onClick={onShare}
                   className="bg-gradient-to-r from-primary to-secondary text-white gap-2 px-6 py-2 rounded-full hover:opacity-90 transition-all"
@@ -219,7 +143,7 @@ export const InstagramSummary = ({
                   <Instagram className="h-5 w-5" />
                   שתף באינסטגרם
                 </Button>
-              </motion.div>
+              </div>
             </div>
           </ScrollArea>
         </DialogContent>
