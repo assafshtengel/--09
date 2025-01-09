@@ -13,19 +13,21 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting caption generation process...');
     const { reportId } = await req.json()
 
     if (!reportId) {
       throw new Error('Report ID is required')
     }
 
+    console.log('Creating Supabase client...');
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Fetch pre-match report data with timeout
-    const fetchPromise = supabaseClient
+    console.log('Fetching report data for ID:', reportId);
+    const { data: report, error: reportError } = await supabaseClient
       .from('pre_match_reports')
       .select(`
         *,
@@ -36,23 +38,22 @@ serve(async (req) => {
       .eq('id', reportId)
       .single()
 
-    // Set a timeout for the database query
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Database query timeout')), 5000)
-    )
+    if (reportError) {
+      console.error('Error fetching report:', reportError);
+      throw reportError;
+    }
 
-    const { data: report, error: reportError } = await Promise.race([
-      fetchPromise,
-      timeoutPromise
-    ]) as any
+    if (!report) {
+      console.error('No report found for ID:', reportId);
+      throw new Error('Report not found');
+    }
 
-    if (reportError) throw reportError
-
+    console.log('Processing report data...');
     const havaya = report.havaya ? report.havaya.split(',') : []
     const actions = report.actions || []
     const answers = report.questions_answers || {}
 
-    // Generate caption using GPT-4
+    console.log('Preparing OpenAI prompt...');
     const prompt = `
       Create an engaging Instagram caption in Hebrew for a pre-match report. Use these details:
       - Opponent: ${report.opponent || 'היריבה'}
@@ -78,8 +79,8 @@ serve(async (req) => {
       - Hashtags
     `
 
-    // Set a timeout for the OpenAI API call
-    const openAIPromise = fetch('https://api.openai.com/v1/chat/completions', {
+    console.log('Calling OpenAI API...');
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
@@ -102,24 +103,21 @@ serve(async (req) => {
       }),
     })
 
-    const openAITimeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('OpenAI API timeout')), 8000)
-    )
-
-    const openAIResponse = await Promise.race([
-      openAIPromise,
-      openAITimeoutPromise
-    ])
+    if (!openAIResponse.ok) {
+      console.error('OpenAI API error:', await openAIResponse.text());
+      throw new Error('OpenAI API error');
+    }
 
     const aiData = await openAIResponse.json()
+    console.log('Received response from OpenAI');
     
     if (!aiData.choices?.[0]?.message?.content) {
+      console.error('Invalid OpenAI response:', aiData);
       throw new Error('Invalid response from OpenAI')
     }
 
     const caption = aiData.choices[0].message.content
-
-    console.log('Successfully generated caption for report:', reportId)
+    console.log('Successfully generated caption');
 
     return new Response(
       JSON.stringify({ caption }),

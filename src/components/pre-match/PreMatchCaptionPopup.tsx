@@ -18,16 +18,19 @@ export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCapt
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
+    let isMounted = true;
     
     const generateCaption = async () => {
       if (!reportId) return;
 
       try {
         setIsLoading(true);
+        console.log('Starting caption generation for report:', reportId);
         
         // Set a timeout to show error if it takes too long
         timeoutId = setTimeout(() => {
-          if (isLoading) {
+          if (isLoading && isMounted) {
+            console.error('Caption generation timeout');
             throw new Error("זמן התגובה ארוך מדי");
           }
         }, 15000); // 15 seconds timeout
@@ -36,25 +39,36 @@ export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCapt
           body: { reportId },
         });
 
-        if (error) throw error;
+        if (!isMounted) return;
+
+        if (error) {
+          console.error('Supabase function error:', error);
+          throw error;
+        }
         
         if (!data?.caption) {
+          console.error('No caption received from server');
           throw new Error("לא התקבל תוכן מהשרת");
         }
 
+        console.log('Caption generated successfully');
         clearTimeout(timeoutId);
         setCaption(data.caption);
       } catch (error) {
         console.error('Error generating caption:', error);
-        toast({
-          title: "שגיאה",
-          description: error instanceof Error ? error.message : "לא ניתן ליצור כיתוב לאינסטגרם",
-          variant: "destructive",
-        });
-        onClose();
+        if (isMounted) {
+          toast({
+            title: "שגיאה",
+            description: error instanceof Error ? error.message : "לא ניתן ליצור כיתוב לאינסטגרם",
+            variant: "destructive",
+          });
+          onClose();
+        }
       } finally {
-        setIsLoading(false);
-        clearTimeout(timeoutId);
+        if (isMounted) {
+          setIsLoading(false);
+          clearTimeout(timeoutId);
+        }
       }
     };
 
@@ -63,6 +77,7 @@ export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCapt
     }
 
     return () => {
+      isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [isOpen, reportId]);
