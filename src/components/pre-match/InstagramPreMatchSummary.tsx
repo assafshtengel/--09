@@ -21,6 +21,7 @@ interface InstagramPreMatchSummaryProps {
   havaya: string[];
   onClose: () => void;
   onShare: () => void;
+  matchId?: string; // Add matchId prop
 }
 
 export const InstagramPreMatchSummary = ({
@@ -29,6 +30,7 @@ export const InstagramPreMatchSummary = ({
   havaya,
   onClose,
   onShare,
+  matchId, // Add matchId to props
 }: InstagramPreMatchSummaryProps) => {
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState<string | null>(null);
@@ -199,7 +201,7 @@ export const InstagramPreMatchSummary = ({
       <AICaptionPopup
         isOpen={showAICaption}
         onClose={() => setShowAICaption(false)}
-        matchId={matchDetails.date}
+        matchId={matchId} // Pass the matchId prop instead of date
       />
     </>
   );

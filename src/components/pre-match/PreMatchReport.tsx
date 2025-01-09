@@ -197,6 +197,7 @@ export const PreMatchReport = () => {
               answers={questionsAnswers}
               havaya={havaya}
               aiInsights={[]}
+              matchId={reportId} // Pass the reportId as matchId
               onFinish={handleFinalSubmit}
             />
           </motion.div>
