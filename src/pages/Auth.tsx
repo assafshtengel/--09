@@ -110,7 +110,6 @@ const Auth = () => {
                 input: 'text-right',
               },
             }}
-            providers={["google"]}
             localization={{
               variables: {
                 sign_in: {
@@ -118,7 +117,6 @@ const Auth = () => {
                   password_label: "סיסמה",
                   button_label: "התחבר",
                   loading_button_label: "מתחבר...",
-                  social_provider_text: "התחבר באמצעות {{provider}}",
                   link_text: "כבר יש לך חשבון? התחבר",
                 },
                 sign_up: {
@@ -126,7 +124,6 @@ const Auth = () => {
                   password_label: "סיסמה",
                   button_label: "הרשם",
                   loading_button_label: "נרשם...",
-                  social_provider_text: "הרשם באמצעות {{provider}}",
                   link_text: "אין לך חשבון? הרשם",
                 },
                 forgotten_password: {
