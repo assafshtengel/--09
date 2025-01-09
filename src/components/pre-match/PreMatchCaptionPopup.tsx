@@ -14,6 +14,7 @@ interface PreMatchCaptionPopupProps {
 export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCaptionPopupProps) => {
   const [caption, setCaption] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -25,13 +26,15 @@ export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCapt
 
       try {
         setIsLoading(true);
+        setError(null);
         console.log('Starting caption generation for report:', reportId);
         
         // Set a timeout to show error if it takes too long
         timeoutId = setTimeout(() => {
           if (isLoading && isMounted) {
             console.error('Caption generation timeout');
-            throw new Error("זמן התגובה ארוך מדי");
+            setError("זמן התגובה ארוך מדי, נסה שוב מאוחר יותר");
+            setIsLoading(false);
           }
         }, 15000); // 15 seconds timeout
 
@@ -51,18 +54,13 @@ export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCapt
           throw new Error("לא התקבל תוכן מהשרת");
         }
 
-        console.log('Caption generated successfully');
+        console.log('Caption generated successfully:', data.caption);
         clearTimeout(timeoutId);
         setCaption(data.caption);
       } catch (error) {
         console.error('Error generating caption:', error);
         if (isMounted) {
-          toast({
-            title: "שגיאה",
-            description: error instanceof Error ? error.message : "לא ניתן ליצור כיתוב לאינסטגרם",
-            variant: "destructive",
-          });
-          onClose();
+          setError(error instanceof Error ? error.message : "לא ניתן ליצור כיתוב לאינסטגרם");
         }
       } finally {
         if (isMounted) {
@@ -116,6 +114,18 @@ export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCapt
             <div className="flex flex-col items-center justify-center h-40 space-y-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">יוצר כיתוב מותאם אישית...</p>
+            </div>
+          ) : error ? (
+            <div className="bg-destructive/10 p-4 rounded-lg text-center space-y-2">
+              <p className="text-destructive font-medium">שגיאה בעת יצירת הכיתוב</p>
+              <p className="text-sm text-muted-foreground">{error}</p>
+              <Button
+                onClick={onClose}
+                variant="outline"
+                className="mt-2"
+              >
+                סגור
+              </Button>
             </div>
           ) : (
             <>
