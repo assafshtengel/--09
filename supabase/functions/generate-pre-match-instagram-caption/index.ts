@@ -24,8 +24,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Fetch pre-match report data
-    const { data: report, error: reportError } = await supabaseClient
+    // Fetch pre-match report data with timeout
+    const fetchPromise = supabaseClient
       .from('pre_match_reports')
       .select(`
         *,
@@ -35,6 +35,16 @@ serve(async (req) => {
       `)
       .eq('id', reportId)
       .single()
+
+    // Set a timeout for the database query
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Database query timeout')), 5000)
+    )
+
+    const { data: report, error: reportError } = await Promise.race([
+      fetchPromise,
+      timeoutPromise
+    ]) as any
 
     if (reportError) throw reportError
 
@@ -68,7 +78,8 @@ serve(async (req) => {
       - Hashtags
     `
 
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Set a timeout for the OpenAI API call
+    const openAIPromise = fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
@@ -87,11 +98,28 @@ serve(async (req) => {
           }
         ],
         temperature: 0.7,
+        max_tokens: 500,
       }),
     })
 
+    const openAITimeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('OpenAI API timeout')), 8000)
+    )
+
+    const openAIResponse = await Promise.race([
+      openAIPromise,
+      openAITimeoutPromise
+    ])
+
     const aiData = await openAIResponse.json()
+    
+    if (!aiData.choices?.[0]?.message?.content) {
+      throw new Error('Invalid response from OpenAI')
+    }
+
     const caption = aiData.choices[0].message.content
+
+    console.log('Successfully generated caption for report:', reportId)
 
     return new Response(
       JSON.stringify({ caption }),

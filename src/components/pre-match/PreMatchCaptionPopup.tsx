@@ -17,32 +17,54 @@ export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCapt
   const { toast } = useToast();
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
     const generateCaption = async () => {
       if (!reportId) return;
 
       try {
         setIsLoading(true);
+        
+        // Set a timeout to show error if it takes too long
+        timeoutId = setTimeout(() => {
+          if (isLoading) {
+            throw new Error("זמן התגובה ארוך מדי");
+          }
+        }, 15000); // 15 seconds timeout
+
         const { data, error } = await supabase.functions.invoke('generate-pre-match-instagram-caption', {
           body: { reportId },
         });
 
         if (error) throw error;
+        
+        if (!data?.caption) {
+          throw new Error("לא התקבל תוכן מהשרת");
+        }
+
+        clearTimeout(timeoutId);
         setCaption(data.caption);
       } catch (error) {
         console.error('Error generating caption:', error);
         toast({
           title: "שגיאה",
-          description: "לא ניתן ליצור כיתוב לאינסטגרם",
+          description: error instanceof Error ? error.message : "לא ניתן ליצור כיתוב לאינסטגרם",
           variant: "destructive",
         });
+        onClose();
       } finally {
         setIsLoading(false);
+        clearTimeout(timeoutId);
       }
     };
 
     if (isOpen && reportId) {
       generateCaption();
     }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [isOpen, reportId]);
 
   const handleCopy = async () => {
@@ -76,8 +98,9 @@ export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCapt
 
         <div className="space-y-4">
           {isLoading ? (
-            <div className="flex items-center justify-center h-40">
+            <div className="flex flex-col items-center justify-center h-40 space-y-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">יוצר כיתוב מותאם אישית...</p>
             </div>
           ) : (
             <>
