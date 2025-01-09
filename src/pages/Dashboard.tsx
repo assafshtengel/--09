@@ -63,6 +63,13 @@ const Dashboard = () => {
       gradient: "from-blue-500 to-blue-600"
     },
     {
+      title: "תכנון לפני משחק",
+      icon: <Calendar className="h-6 w-6 text-primary" />,
+      description: "קבל סדר יום מותאם אישית ל-24 שעות לפני המשחק",
+      onClick: () => navigate("/pre-game-planner"),
+      gradient: "from-purple-500 to-purple-600"
+    },
+    {
       title: "מעקב משחק",
       icon: <Timer className="h-6 w-6 text-primary" />,
       description: "עקוב אחר ביצועים במהלך המשחק",

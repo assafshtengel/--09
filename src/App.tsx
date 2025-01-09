@@ -22,6 +22,7 @@ import { GameTracker } from "@/components/GameTracker";
 import NotificationsManager from "./pages/NotificationsManager";
 import PlayerPortfolio from "./pages/PlayerPortfolio";
 import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryDashboard";
+import PreGamePlanner from "./pages/PreGamePlanner";
 
 const queryClient = new QueryClient();
 
@@ -186,6 +187,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <TrainingSummaryDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/pre-game-planner"
+                element={
+                  <ProtectedRoute>
+                    <PreGamePlanner />
                   </ProtectedRoute>
                 }
               />
