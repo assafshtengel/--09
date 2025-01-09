@@ -194,11 +194,11 @@ export const PreMatchReport = () => {
           <motion.div {...commonProps} key="actions">
             <div className="space-y-8">
               {observerToken && (
-                <div className="flex justify-end">
+                <div className="flex justify-end mb-4">
                   <Button
                     variant="outline"
                     onClick={() => setShowObserverLink(true)}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 hover:bg-gray-100"
                   >
                     <Link className="h-4 w-4" />
                     קישור למשקיף
