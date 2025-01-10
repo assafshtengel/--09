@@ -257,18 +257,19 @@ const GameHistory = () => {
                   >
                     <Mail className="h-4 w-4" />
                   </Button>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      title="שלח למייל המאמן"
-                      onClick={() => handleEmailSend(game.id, 'coach')}
-                      disabled={isSendingEmail}
-                    >
-                      <Mail className="h-4 w-4" />
-                    </Button>
-                    <span className="text-xs font-medium text-muted-foreground">COACH</span>
-                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    title="שלח למייל המאמן"
+                    onClick={() => handleEmailSend(game.id, 'coach')}
+                    disabled={isSendingEmail}
+                    className="relative"
+                  >
+                    <Mail className="h-4 w-4" />
+                    <span className="absolute -top-1 -right-1 text-xs font-bold bg-accent text-accent-foreground rounded-full w-4 h-4 flex items-center justify-center">
+                      C
+                    </span>
+                  </Button>
                   <Button
                     variant="outline"
                     size="icon"
