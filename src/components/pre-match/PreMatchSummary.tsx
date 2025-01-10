@@ -140,6 +140,7 @@ export const PreMatchSummary = ({
   };
 
   const openChatGPT = () => {
+    // Open ChatGPT in a new window
     window.open('https://chatgpt.com/g/g-6780940ac570819189306621c59a067f-tsvr-tqst-lynstgrm/c/678095ed-6474-800a-b201-8110fe2d0612', '_blank');
     
     // Capture and download the current page
