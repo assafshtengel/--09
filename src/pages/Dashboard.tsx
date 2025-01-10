@@ -10,6 +10,21 @@ import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -112,7 +127,7 @@ const Dashboard = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-center py-8 border-b"
       >
-        <h1 className="text-4xl font-bold mb-3">ברוך הבא, {profile.full_name}</h1>
+        <h1 className="text-4xl font-bold mb-3">ברוך הבא, {profile?.full_name}</h1>
         <p className="text-muted-foreground text-lg">בחר באפשרות כדי להתחיל</p>
         
         {isAdmin && (
@@ -135,7 +150,7 @@ const Dashboard = () => {
 
       {/* Quick Actions Grid */}
       <motion.div 
-        variants={container}
+        variants={containerVariants}
         initial="hidden"
         animate="show"
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12"
@@ -143,7 +158,7 @@ const Dashboard = () => {
         {quickActions.map((action, index) => (
           <motion.button
             key={index}
-            variants={item}
+            variants={itemVariants}
             onClick={action.onClick}
             className={`p-6 rounded-xl bg-gradient-to-r ${action.gradient} 
               transform hover:scale-105 transition-all duration-300 
