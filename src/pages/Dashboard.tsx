@@ -3,16 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye } from "lucide-react";
+import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye, Settings } from "lucide-react";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -36,6 +39,7 @@ const Dashboard = () => {
         }
 
         setProfile(profileData);
+        setIsAdmin(profileData.email === 'socr.co.il@gmail.com');
       } catch (error) {
         console.error("Error checking auth:", error);
         navigate("/");
@@ -100,21 +104,6 @@ const Dashboard = () => {
     );
   }
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-  };
-
   return (
     <div className="container mx-auto p-4 space-y-8 min-h-screen bg-gradient-to-b from-background to-background/80">
       {/* Header Section */}
@@ -125,6 +114,23 @@ const Dashboard = () => {
       >
         <h1 className="text-4xl font-bold mb-3">ברוך הבא, {profile.full_name}</h1>
         <p className="text-muted-foreground text-lg">בחר באפשרות כדי להתחיל</p>
+        
+        {isAdmin && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-4"
+          >
+            <Button
+              onClick={() => navigate("/admin")}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-full flex items-center gap-2"
+            >
+              <Settings className="h-5 w-5" />
+              ניהול מערכת
+            </Button>
+          </motion.div>
+        )}
       </motion.div>
 
       {/* Quick Actions Grid */}
