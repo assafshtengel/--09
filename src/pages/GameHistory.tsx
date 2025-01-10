@@ -154,8 +154,8 @@ const GameHistory = () => {
             <div>
               <h3>תשובות לשאלות</h3>
               ${Object.entries(game.pre_match_report.questions_answers).map(([question, answer]) => `
-                <div>
-                  <p><strong>${question}</strong></p>
+                <div style="margin-bottom: 1rem;">
+                  <p style="font-weight: bold;">${question}</p>
                   <p>${answer}</p>
                 </div>
               `).join('')}
@@ -251,6 +251,7 @@ const GameHistory = () => {
                   <Button
                     variant="outline"
                     size="icon"
+                    title="שלח למייל שלי"
                     onClick={() => handleEmailSend(game.id, 'user')}
                     disabled={isSendingEmail}
                   >
@@ -259,6 +260,7 @@ const GameHistory = () => {
                   <Button
                     variant="outline"
                     size="icon"
+                    title="שלח למייל המאמן"
                     onClick={() => handleEmailSend(game.id, 'coach')}
                     disabled={isSendingEmail}
                   >
