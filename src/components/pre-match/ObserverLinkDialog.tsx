@@ -44,27 +44,24 @@ export const ObserverLinkDialog = ({ open, onOpenChange, observerToken }: Observ
         <DialogHeader>
           <DialogTitle>קישור למשקיף</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            שתף את הקישור הזה עם המשקיף כדי שיוכל לעקוב אחר המשחק בזמן אמת. 
-            המשקיף יוכל להזין פעולות ישירות מהטלפון שלו, ללא צורך בהתחברות.
-          </p>
-          <div className="flex items-center space-x-2 rtl:space-x-reverse">
-            <Input
-              readOnly
-              value={observerLink}
-              className="ltr:text-left rtl:text-right"
-            />
-            <Button 
-              type="button" 
-              size="icon" 
-              onClick={handleCopy}
-              variant="outline"
-            >
-              <Copy className="h-4 w-4" />
-            </Button>
-          </div>
+        <div className="flex items-center space-x-2 rtl:space-x-reverse">
+          <Input
+            readOnly
+            value={observerLink}
+            className="ltr:text-left rtl:text-right"
+          />
+          <Button 
+            type="button" 
+            size="icon" 
+            onClick={handleCopy}
+            variant="outline"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
         </div>
+        <p className="text-sm text-muted-foreground text-center">
+          שתף את הקישור הזה עם המשקיף כדי שיוכל לעקוב אחר המשחק בזמן אמת
+        </p>
       </DialogContent>
     </Dialog>
   );
