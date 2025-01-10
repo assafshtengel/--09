@@ -375,6 +375,8 @@ export type Database = {
           created_at: string
           id: string
           message: string
+          message_type: string | null
+          recipient_group: string[] | null
           recipient_id: string | null
           scheduled_for: string | null
           sender_id: string
@@ -386,6 +388,8 @@ export type Database = {
           created_at?: string
           id?: string
           message: string
+          message_type?: string | null
+          recipient_group?: string[] | null
           recipient_id?: string | null
           scheduled_for?: string | null
           sender_id: string
@@ -397,6 +401,8 @@ export type Database = {
           created_at?: string
           id?: string
           message?: string
+          message_type?: string | null
+          recipient_group?: string[] | null
           recipient_id?: string | null
           scheduled_for?: string | null
           sender_id?: string
