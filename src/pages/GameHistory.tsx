@@ -4,11 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Eye, RefreshCw, Target, ChartBar } from "lucide-react";
+import { Eye, RefreshCw, Target, ChartBar, Mail, Printer, Instagram } from "lucide-react";
 import { GameHistoryItem } from "@/components/game/history/types";
 import { GameDetailsDialog } from "@/components/game/history/GameDetailsDialog";
 import { PreMatchGoalsDialog } from "@/components/game/history/PreMatchGoalsDialog";
 import { GameSummaryDialog } from "@/components/game/history/GameSummaryDialog";
+import { format } from "date-fns";
 
 const GameHistory = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const GameHistory = () => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showGoalsDialog, setShowGoalsDialog] = useState(false);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   useEffect(() => {
     fetchGames();
@@ -31,7 +33,8 @@ const GameHistory = () => {
         return;
       }
 
-      const { data, error } = await supabase
+      // Fetch both completed matches and pre-match reports
+      const { data: matchesData, error: matchesError } = await supabase
         .from("matches")
         .select(`
           id,
@@ -45,11 +48,47 @@ const GameHistory = () => {
           match_actions (*)
         `)
         .eq("player_id", user.id)
-        .eq("status", "ended")
-        .order("match_date", { ascending: false });
+        .eq("status", "ended");
 
-      if (error) throw error;
-      setGames(data || []);
+      if (matchesError) throw matchesError;
+
+      const { data: preMatchData, error: preMatchError } = await supabase
+        .from("pre_match_reports")
+        .select(`
+          id,
+          match_date,
+          opponent,
+          actions,
+          questions_answers,
+          havaya
+        `)
+        .eq("player_id", user.id)
+        .eq("status", "completed");
+
+      if (preMatchError) throw preMatchError;
+
+      // Combine both datasets
+      const combinedData = [
+        ...(matchesData || []),
+        ...(preMatchData || []).map(report => ({
+          id: report.id,
+          match_date: report.match_date,
+          opponent: report.opponent,
+          pre_match_report: {
+            actions: report.actions,
+            questions_answers: report.questions_answers,
+            havaya: report.havaya
+          },
+          isPreMatchOnly: true
+        }))
+      ];
+
+      // Sort by date, most recent first
+      combinedData.sort((a, b) => 
+        new Date(b.match_date).getTime() - new Date(a.match_date).getTime()
+      );
+
+      setGames(combinedData);
     } catch (error) {
       console.error("Error fetching games:", error);
       toast.error("שגיאה בטעינת המשחקים");
@@ -58,28 +97,88 @@ const GameHistory = () => {
     }
   };
 
-  const handleResetGame = async (gameId: string) => {
+  const handleEmailSend = async (gameId: string, recipientType: 'user' | 'coach') => {
     try {
-      const { error: deleteError } = await supabase
-        .from("match_actions")
-        .delete()
-        .eq("match_id", gameId);
+      setIsSendingEmail(true);
+      const game = games.find(g => g.id === gameId);
+      if (!game) return;
 
-      if (deleteError) throw deleteError;
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, coach_email')
+        .eq('id', user.id)
+        .single();
 
-      const { error: updateError } = await supabase
-        .from("matches")
-        .update({ status: "preview" })
-        .eq("id", gameId);
+      if (recipientType === 'coach' && !profile?.coach_email) {
+        toast.error("לא נמצא מייל של המאמן בפרופיל");
+        return;
+      }
 
-      if (updateError) throw updateError;
+      const htmlContent = `
+        <div dir="rtl">
+          <h2>דוח טרום משחק - ${profile?.full_name || "שחקן"}</h2>
+          <div>
+            <h3>פרטי המשחק</h3>
+            <p>תאריך: ${format(new Date(game.match_date), 'dd/MM/yyyy')}</p>
+            ${game.opponent ? `<p>נגד: ${game.opponent}</p>` : ''}
+          </div>
+          
+          ${game.pre_match_report?.havaya ? `
+            <div>
+              <h3>הוויות נבחרות</h3>
+              <p>${game.pre_match_report.havaya}</p>
+            </div>
+          ` : ''}
 
-      toast.success("המשחק אופס בהצלחה");
-      navigate(`/match/${gameId}`);
+          ${game.pre_match_report?.actions ? `
+            <div>
+              <h3>יעדים למשחק</h3>
+              <ul>
+                ${game.pre_match_report.actions.map((action: any) => `
+                  <li>
+                    ${action.name}
+                    ${action.goal ? `<br>יעד: ${action.goal}` : ''}
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          ` : ''}
+
+          ${game.pre_match_report?.questions_answers ? `
+            <div>
+              <h3>תשובות לשאלות</h3>
+              ${Object.entries(game.pre_match_report.questions_answers).map(([question, answer]) => `
+                <div>
+                  <p><strong>${question}</strong></p>
+                  <p>${answer}</p>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      const { error } = await supabase.functions.invoke('send-pre-match-report', {
+        body: {
+          to: recipientType === 'coach' ? [profile.coach_email] : [user.email],
+          subject: `דוח טרום משחק - ${profile?.full_name || "שחקן"} - ${format(new Date(game.match_date), 'dd/MM/yyyy')}`,
+          html: htmlContent,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(recipientType === 'coach' ? "הדוח נשלח למאמן" : "הדוח נשלח למייל שלך");
     } catch (error) {
-      console.error("Error resetting game:", error);
-      toast.error("שגיאה באיפוס המשחק");
+      console.error('Error sending email:', error);
+      toast.error("שגיאה בשליחת המייל");
+    } finally {
+      setIsSendingEmail(false);
     }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   if (isLoading) {
@@ -109,16 +208,18 @@ const GameHistory = () => {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      setSelectedGame(game);
-                      setShowDetailsDialog(true);
-                    }}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                  {!game.isPreMatchOnly && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedGame(game);
+                        setShowDetailsDialog(true);
+                      }}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="icon"
@@ -129,22 +230,50 @@ const GameHistory = () => {
                   >
                     <Target className="h-4 w-4" />
                   </Button>
+                  {!game.isPreMatchOnly && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedGame(game);
+                        setShowSummaryDialog(true);
+                      }}
+                    >
+                      <ChartBar className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleEmailSend(game.id, 'user')}
+                    disabled={isSendingEmail}
+                  >
+                    <Mail className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleEmailSend(game.id, 'coach')}
+                    disabled={isSendingEmail}
+                  >
+                    <Mail className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handlePrint}
+                  >
+                    <Printer className="h-4 w-4" />
+                  </Button>
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={() => {
                       setSelectedGame(game);
-                      setShowSummaryDialog(true);
+                      // Handle Instagram share
                     }}
                   >
-                    <ChartBar className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleResetGame(game.id)}
-                  >
-                    <RefreshCw className="h-4 w-4" />
+                    <Instagram className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
