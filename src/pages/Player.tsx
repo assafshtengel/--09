@@ -75,6 +75,11 @@ const Player = () => {
     checkProfile();
   }, []);
 
+  const handleFormSubmit = async () => {
+    console.log("Form submitted, checking profile");
+    await checkProfile();
+  };
+
   if (isLoading) {
     return <div className="flex justify-center items-center min-h-screen">טוען...</div>;
   }
