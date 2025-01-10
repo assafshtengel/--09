@@ -52,6 +52,19 @@ export const GameTracker = () => {
     if (!matchId) return;
 
     try {
+      // Check if there's an observer token in the URL
+      const params = new URLSearchParams(window.location.search);
+      const observerToken = params.get('token');
+
+      // If there's an observer token, set it in the Supabase client
+      if (observerToken) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          // Set the observer token in the client headers
+          supabase.realtime.setAuth(observerToken);
+        }
+      }
+
       const { data: match, error: matchError } = await supabase
         .from("matches")
         .select(`

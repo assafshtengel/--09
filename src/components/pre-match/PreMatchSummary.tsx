@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
-import { Mail, Printer, Instagram } from "lucide-react";
+import { Mail, Printer, Instagram, Link } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import html2canvas from "html2canvas";
@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { useState } from "react";
 import { InstagramPreMatchSummary } from "./InstagramPreMatchSummary";
 import { PreMatchCaptionPopup } from "./PreMatchCaptionPopup";
+import { ObserverLinkDialog } from "./ObserverLinkDialog";
 
 interface PreMatchSummaryProps {
   matchDetails: {
@@ -20,6 +21,7 @@ interface PreMatchSummaryProps {
   havaya: string[];
   aiInsights: string[];
   onFinish: () => void;
+  observerToken?: string;
 }
 
 export const PreMatchSummary = ({
@@ -29,10 +31,12 @@ export const PreMatchSummary = ({
   havaya,
   aiInsights,
   onFinish,
+  observerToken
 }: PreMatchSummaryProps) => {
   const { toast } = useToast();
   const [showInstagramSummary, setShowInstagramSummary] = useState(false);
   const [showCaptionPopup, setShowCaptionPopup] = useState(false);
+  const [showObserverLink, setShowObserverLink] = useState(false);
   const [reportId, setReportId] = useState<string>();
   
   const sendEmail = async (recipientType: 'user' | 'coach') => {
@@ -40,7 +44,6 @@ export const PreMatchSummary = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error("No user email found");
 
-      // Get player's name from profiles
       const { data: profile } = await supabase
         .from('profiles')
         .select('full_name, coach_email')
@@ -59,7 +62,14 @@ export const PreMatchSummary = ({
 
       const playerName = profile?.full_name || "שחקן";
 
-      // Create HTML content with player name at the top
+      // Add observer link to email content if available
+      const observerLinkSection = observerToken ? `
+        <div>
+          <h3>קישור למשקיף</h3>
+          <p>קישור למעקב אחר המשחק בזמן אמת: ${window.location.origin}/observe/${observerToken}</p>
+        </div>
+      ` : '';
+
       const htmlContent = `
         <div dir="rtl">
           <h2>דוח טרום משחק - ${playerName}</h2>
@@ -69,6 +79,8 @@ export const PreMatchSummary = ({
             ${matchDetails.opponent ? `<p>נגד: ${matchDetails.opponent}</p>` : ''}
           </div>
           
+          ${observerLinkSection}
+
           <div>
             <h3>הוויות נבחרות</h3>
             <p>${havaya.join(' • ')}</p>
@@ -141,65 +153,61 @@ export const PreMatchSummary = ({
 
   return (
     <div className="space-y-6">
-      <div id="pre-match-summary">
-        <div className="border-b pb-4">
-          <h2 className="text-2xl font-bold">סיכום דוח טרום משחק</h2>
-          <p className="text-muted-foreground">
-            תאריך: {matchDetails.date}
-            {matchDetails.opponent && ` | נגד: ${matchDetails.opponent}`}
+      {observerToken && (
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold text-blue-700">קישור למשקיף</h3>
+            <Button
+              variant="outline"
+              onClick={() => setShowObserverLink(true)}
+              className="flex items-center gap-2"
+            >
+              <Link className="h-4 w-4" />
+              הצג קישור
+            </Button>
+          </div>
+          <p className="text-sm text-blue-600 mt-2">
+            שתף קישור זה עם המשקיף כדי לאפשר מעקב בזמן אמת אחר המשחק
           </p>
         </div>
+      )}
 
-        {havaya.length > 0 && (
-          <div className="border p-4 rounded-lg">
-            <h3 className="text-lg font-semibold mb-2">הוויות נבחרות</h3>
-            <div className="flex flex-wrap gap-2">
-              {havaya.map((h, index) => (
-                <span key={index} className="bg-primary/10 text-primary px-3 py-1 rounded-full">
-                  {h}
-                </span>
-              ))}
+      <div>
+        <h3 className="text-lg font-semibold mb-2">יעדים למשחק</h3>
+        <ul className="space-y-2">
+          {actions.map((action, index) => (
+            <li key={index} className="border p-2 rounded">
+              {action.name}
+              {action.goal && <div className="text-sm">יעד: {action.goal}</div>}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-semibold mb-2">תשובות לשאלות</h3>
+        <div className="space-y-4">
+          {Object.entries(answers).map(([question, answer], index) => (
+            <div key={index} className="border p-3 rounded">
+              <p className="font-medium">{question}</p>
+              <p className="text-muted-foreground">{answer}</p>
             </div>
-          </div>
-        )}
+          ))}
+        </div>
+      </div>
 
+      {aiInsights.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold mb-2">יעדים למשחק</h3>
+          <h3 className="text-lg font-semibold mb-2">תובנות AI</h3>
           <ul className="space-y-2">
-            {actions.map((action, index) => (
-              <li key={index} className="border p-2 rounded">
-                {action.name}
-                {action.goal && <div className="text-sm">יעד: {action.goal}</div>}
+            {aiInsights.map((insight, index) => (
+              <li key={index} className="text-muted-foreground">
+                {insight}
               </li>
             ))}
           </ul>
         </div>
-
-        <div>
-          <h3 className="text-lg font-semibold mb-2">תשובות לשאלות</h3>
-          <div className="space-y-4">
-            {Object.entries(answers).map(([question, answer], index) => (
-              <div key={index} className="border p-3 rounded">
-                <p className="font-medium">{question}</p>
-                <p className="text-muted-foreground">{answer}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {aiInsights.length > 0 && (
-          <div>
-            <h3 className="text-lg font-semibold mb-2">תובנות AI</h3>
-            <ul className="space-y-2">
-              {aiInsights.map((insight, index) => (
-                <li key={index} className="text-muted-foreground">
-                  {insight}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+      )}
 
       <div className="flex flex-wrap gap-4 justify-end print:hidden">
         <Button onClick={() => sendEmail('coach')} variant="outline" className="flex items-center gap-2">
@@ -214,20 +222,16 @@ export const PreMatchSummary = ({
           <Printer className="h-4 w-4" />
           הדפס
         </Button>
-        <Button 
-          onClick={() => setShowCaptionPopup(true)} 
-          variant="outline"
-          className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100"
-        >
-          <Instagram className="h-4 w-4" />
-          צור טקסט לאינסטגרם
-        </Button>
-        <Button onClick={shareToInstagram} variant="outline" className="flex items-center gap-2">
-          <Instagram className="h-4 w-4" />
-          שתף באינסטגרם
-        </Button>
         <Button onClick={onFinish}>סיים</Button>
       </div>
+
+      {observerToken && (
+        <ObserverLinkDialog
+          open={showObserverLink}
+          onOpenChange={setShowObserverLink}
+          observerToken={observerToken}
+        />
+      )}
 
       {showInstagramSummary && (
         <InstagramPreMatchSummary
