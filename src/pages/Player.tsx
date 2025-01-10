@@ -12,30 +12,37 @@ const Player = () => {
 
   const checkProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // First check if we have an authenticated session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (!user) {
-        console.log("No user found, redirecting to home");
+      if (sessionError) {
+        console.error("Session error:", sessionError);
         navigate("/");
         return;
       }
 
-      console.log("Checking profile for user:", user.id);
+      if (!session) {
+        console.log("No active session, redirecting to home");
+        navigate("/");
+        return;
+      }
 
-      const { data: profile, error } = await supabase
+      console.log("Checking profile for user:", session.user.id);
+
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("id", session.user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching profile:", error);
-        throw error;
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        throw profileError;
       }
 
       console.log("Profile data:", profile);
 
-      // בדיקה אם יש פרופיל מלא
+      // Check if profile is complete
       const hasCompleteProfile = profile && 
         profile.full_name && 
         profile.roles && 
