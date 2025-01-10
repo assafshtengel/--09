@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { AdminDashboard } from "@/components/admin/AdminDashboard";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -43,19 +43,7 @@ const Admin = () => {
     return null;
   }
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">דף ניהול</h1>
-      <Card>
-        <CardHeader>
-          <CardTitle>ניהול מערכת</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>ברוך הבא לדף הניהול. כאן תוכל לנהל את המערכת ולצפות בנתונים.</p>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return <AdminDashboard />;
 };
 
 export default Admin;
