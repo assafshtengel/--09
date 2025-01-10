@@ -4,7 +4,7 @@ import { useState } from "react";
 
 interface MatchDetails {
   date: string;
-  time?: string;
+  time?: string | null;  // Updated type to allow null
   opponent?: string;
   location?: string;
   position?: string;
@@ -23,7 +23,12 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ date, time, opponent, position });
+    onSubmit({ 
+      date, 
+      time: time.trim() || null,  // Convert empty string to null
+      opponent, 
+      position 
+    });
   };
 
   return (
