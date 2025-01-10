@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Eye, RefreshCw, Target, ChartBar, Mail, Printer, Instagram } from "lucide-react";
+import { Eye, Target, ChartBar, Mail, Printer, Instagram } from "lucide-react";
 import { GameHistoryItem } from "@/components/game/history/types";
 import { GameDetailsDialog } from "@/components/game/history/GameDetailsDialog";
 import { PreMatchGoalsDialog } from "@/components/game/history/PreMatchGoalsDialog";
@@ -103,6 +103,12 @@ const GameHistory = () => {
       const game = games.find(g => g.id === gameId);
       if (!game) return;
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("לא נמצא משתמש מחובר");
+        return;
+      }
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('full_name, coach_email')
@@ -130,7 +136,7 @@ const GameHistory = () => {
             </div>
           ` : ''}
 
-          ${game.pre_match_report?.actions ? `
+          ${game.pre_match_report?.actions && Array.isArray(game.pre_match_report.actions) ? `
             <div>
               <h3>יעדים למשחק</h3>
               <ul>
