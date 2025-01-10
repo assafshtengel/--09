@@ -28,20 +28,20 @@ const Player = () => {
 
       console.log("Checking profile for user:", user.id);
 
-      const { data: profile, error } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching profile:", error);
-        throw error;
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        throw profileError;
       }
 
       console.log("Profile data:", profile);
 
-      // בדיקה אם יש פרופיל מלא
+      // Check if profile is complete
       const hasCompleteProfile = profile && 
         profile.full_name && 
         profile.roles && 
@@ -71,14 +71,14 @@ const Player = () => {
     }
   };
 
-  useEffect(() => {
-    checkProfile();
-  }, []);
-
   const handleFormSubmit = async () => {
     console.log("Form submitted, checking profile");
     await checkProfile();
   };
+
+  useEffect(() => {
+    checkProfile();
+  }, []);
 
   if (isLoading) {
     return <div className="flex justify-center items-center min-h-screen">טוען...</div>;
