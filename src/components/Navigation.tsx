@@ -11,20 +11,56 @@ export const Navigation = () => {
 
   useEffect(() => {
     const checkAdminStatus = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      try {
+        // First check if we have an authenticated session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          return;
+        }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", session.user.id)
-        .single();
+        if (!session) {
+          console.log("No active session found");
+          navigate("/auth");
+          return;
+        }
 
-      setIsAdmin(profile?.role === "admin");
+        console.log("Checking admin status for user:", session.user.id);
+
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          return;
+        }
+
+        console.log("Profile data:", profile);
+        setIsAdmin(profile?.role === "admin");
+      } catch (error) {
+        console.error("Error in checkAdminStatus:", error);
+      }
     };
 
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        checkAdminStatus();
+      } else if (event === 'SIGNED_OUT') {
+        setIsAdmin(false);
+      }
+    });
+
+    // Initial check
     checkAdminStatus();
-  }, []);
+
+    // Cleanup subscription
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const handleSignOut = async () => {
     try {
