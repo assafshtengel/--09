@@ -34,7 +34,7 @@ export const PreMatchSummary = ({
   const [showInstagramSummary, setShowInstagramSummary] = useState(false);
   const [showCaptionPopup, setShowCaptionPopup] = useState(false);
   const [reportId, setReportId] = useState<string>();
-  
+
   const sendEmail = async (recipientType: 'user' | 'coach') => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -139,6 +139,37 @@ export const PreMatchSummary = ({
     setShowInstagramSummary(true);
   };
 
+  const openChatGPT = () => {
+    window.open('https://chatgpt.com/g/g-6780940ac570819189306621c59a067f-tsvr-tqst-lynstgrm/c/678095ed-6474-800a-b201-8110fe2d0612', '_blank');
+    
+    // Capture and download the current page
+    const element = document.getElementById('pre-match-summary');
+    if (element) {
+      html2canvas(element).then(canvas => {
+        // Convert the canvas to a data URL
+        const imgData = canvas.toDataURL('image/png');
+        
+        // Create a link element and trigger download
+        const link = document.createElement('a');
+        link.download = `pre-match-report-${format(new Date(), 'yyyy-MM-dd')}.png`;
+        link.href = imgData;
+        link.click();
+        
+        toast({
+          title: "הדוח הורד בהצלחה",
+          description: "תוכל למצוא את הקובץ בתיקיית ההורדות",
+        });
+      }).catch(error => {
+        console.error('Error generating screenshot:', error);
+        toast({
+          title: "שגיאה בהורדת הדוח",
+          description: "אנא נסה שנית",
+          variant: "destructive",
+        });
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div id="pre-match-summary">
@@ -215,7 +246,7 @@ export const PreMatchSummary = ({
           הדפס
         </Button>
         <Button 
-          onClick={() => setShowCaptionPopup(true)} 
+          onClick={openChatGPT}
           variant="outline"
           className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100"
         >
