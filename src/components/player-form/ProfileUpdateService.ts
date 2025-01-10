@@ -4,37 +4,35 @@ import type { PlayerFormData } from "./types";
 export class ProfileUpdateService {
   static async updateProfile(formData: PlayerFormData, profilePictureUrl: string | null) {
     try {
-      // First refresh the session
-      const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
+      const { data: sessionData, error: refreshError } = await supabase.auth.refreshSession();
       
       if (refreshError) {
         console.error('Session refresh error:', refreshError);
         throw new Error('נדרשת התחברות מחדש');
       }
 
-      if (!session) {
+      if (!sessionData.session) {
         console.error('No active session found after refresh');
         throw new Error('נדרשת התחברות מחדש');
       }
 
-      // Now get the user with the fresh session
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
       
       if (userError) {
         console.error('User error:', userError);
         throw new Error('אירעה שגיאה בקבלת פרטי המשתמש');
       }
 
-      if (!user?.id || !user?.email) {
-        console.error('Missing user data:', user);
+      if (!userData.user?.id || !userData.user?.email) {
+        console.error('Missing user data:', userData.user);
         throw new Error('חסרים פרטי משתמש חיוניים');
       }
 
       const { error: updateError } = await supabase
         .from('profiles')
         .upsert({
-          id: user.id,
-          email: user.email,
+          id: userData.user.id,
+          email: userData.user.email,
           full_name: formData.fullName,
           roles: formData.roles,
           phone_number: formData.phoneNumber,
@@ -51,7 +49,7 @@ export class ProfileUpdateService {
         throw updateError;
       }
 
-      return { user };
+      return { user: userData.user };
     } catch (error) {
       console.error('Profile update service error:', error);
       throw error;
