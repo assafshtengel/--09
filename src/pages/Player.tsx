@@ -12,8 +12,14 @@ const Player = () => {
 
   const checkProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       
+      if (userError) {
+        console.error("Error getting user:", userError);
+        navigate("/");
+        return;
+      }
+
       if (!user) {
         console.log("No user found, redirecting to home");
         navigate("/");
@@ -68,11 +74,6 @@ const Player = () => {
   useEffect(() => {
     checkProfile();
   }, []);
-
-  const handleFormSubmit = async () => {
-    console.log("Form submitted, checking profile");
-    await checkProfile();
-  };
 
   if (isLoading) {
     return <div className="flex justify-center items-center min-h-screen">טוען...</div>;
