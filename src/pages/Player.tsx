@@ -12,14 +12,8 @@ const Player = () => {
 
   const checkProfile = async () => {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (userError) {
-        console.error("Error getting user:", userError);
-        navigate("/");
-        return;
-      }
-
       if (!user) {
         console.log("No user found, redirecting to home");
         navigate("/");
@@ -28,20 +22,20 @@ const Player = () => {
 
       console.log("Checking profile for user:", user.id);
 
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .maybeSingle();
 
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        throw profileError;
+      if (error) {
+        console.error("Error fetching profile:", error);
+        throw error;
       }
 
       console.log("Profile data:", profile);
 
-      // Check if profile is complete
+      // בדיקה אם יש פרופיל מלא
       const hasCompleteProfile = profile && 
         profile.full_name && 
         profile.roles && 
@@ -71,14 +65,14 @@ const Player = () => {
     }
   };
 
+  useEffect(() => {
+    checkProfile();
+  }, []);
+
   const handleFormSubmit = async () => {
     console.log("Form submitted, checking profile");
     await checkProfile();
   };
-
-  useEffect(() => {
-    checkProfile();
-  }, []);
 
   if (isLoading) {
     return <div className="flex justify-center items-center min-h-screen">טוען...</div>;

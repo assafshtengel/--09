@@ -4,6 +4,7 @@ import type { PlayerFormData } from "./types";
 export class ProfileUpdateService {
   static async updateProfile(formData: PlayerFormData, profilePictureUrl: string | null) {
     try {
+      // First refresh the session
       const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
       
       if (refreshError) {
@@ -16,6 +17,7 @@ export class ProfileUpdateService {
         throw new Error('נדרשת התחברות מחדש');
       }
 
+      // Now get the user with the fresh session
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError) {
@@ -38,12 +40,10 @@ export class ProfileUpdateService {
           phone_number: formData.phoneNumber,
           profile_picture_url: profilePictureUrl,
           club: formData.club,
-          team_year: formData.teamYear ? parseInt(formData.teamYear) : null,
+          team_year: parseInt(formData.teamYear),
           date_of_birth: formData.dateOfBirth,
           age_category: formData.ageCategory,
           coach_email: formData.coachEmail,
-        }, {
-          onConflict: 'id'
         });
 
       if (updateError) {
@@ -51,7 +51,7 @@ export class ProfileUpdateService {
         throw updateError;
       }
 
-      return { success: true };
+      return { user };
     } catch (error) {
       console.error('Profile update service error:', error);
       throw error;
