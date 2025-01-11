@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 interface Message {
   type: 'system' | 'user';
@@ -787,3 +788,4 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
     </div>
   );
 };
+
