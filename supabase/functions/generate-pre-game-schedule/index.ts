@@ -13,38 +13,31 @@ serve(async (req) => {
 
   try {
     const {
-      currentDateTime,
-      gameDateTime,
-      schoolHours,
-      teamTrainings,
-      personalTrainings,
-      otherCommitments,
-      screenTime,
       sleepHours,
+      screenTime,
+      schoolHours,
+      teamTraining,
     } = await req.json()
 
     const prompt = `
-    אני שחקן כדורגל וצריך לוח זמנים מפורט מ-${currentDateTime} ועד למשחק ב-${gameDateTime}.
+    אני שחקן כדורגל וצריך לוח זמנים יומי מפורט.
 
     מידע חשוב:
-    - שעות בית ספר: ${schoolHours}
-    - אימוני קבוצה: ${teamTrainings}
-    - אימונים אישיים: ${personalTrainings}
-    - מחויבויות נוספות: ${otherCommitments}
-    - זמן מסכים רצוי ביום: ${screenTime} שעות
-    - שעות שינה רצויות: ${sleepHours} שעות
+    - שעות שינה: ${sleepHours} שעות
+    - זמן מסך: ${screenTime} שעות
+    - שעות בית ספר: ${schoolHours ? `${schoolHours.start} עד ${schoolHours.end}` : 'אין בית ספר'}
+    - אימון קבוצתי: ${teamTraining || 'אין אימון'}
 
     אנא צור לי לוח זמנים מפורט שכולל:
-    1. חלוקה לפי ימים ושעות
-    2. שיבוץ כל הפעילויות הקבועות
-    3. הקצאת זמן שינה קבוע
-    4. שיבוץ זמן מסכים באופן מאוזן
-    5. זמני ארוחות
-    6. זמני מנוחה והתאוששות
-    7. הכנה מנטלית למשחק
-    8. טיפים להצלחה
+    1. זמני ארוחות מסודרים
+    2. זמני מנוחה והתאוששות
+    3. זמן למתיחות
+    4. זמן חופשי
+    5. הכנה מנטלית
+    6. זמן מסכים מחולק נכון
+    7. טיפים להצלחה
 
-    חשוב: הצג את התשובה בפורמט מסודר עם תאריכים ושעות מדויקות.
+    חשוב: הצג את התשובה בפורמט מסודר עם שעות מדויקות.
     `
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -58,7 +51,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'אתה מאמן כדורגל מקצועי שעוזר לשחקנים לתכנן את הזמן שלהם לפני משחקים. התשובות שלך תמיד בעברית ומותאמות לשחקן צעיר.'
+            content: 'אתה מאמן כדורגל מקצועי שעוזר לשחקנים לתכנן את הזמן שלהם. התשובות שלך תמיד בעברית ומותאמות לשחקן צעיר.'
           },
           {
             role: 'user',
