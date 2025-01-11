@@ -7,7 +7,6 @@ import Profile from "@/pages/Profile";
 import Index from "@/pages/Index";
 import Admin from "@/pages/Admin";
 import GameHistory from "@/pages/GameHistory";
-import PreGamePlanner from "@/pages/PreGamePlanner";
 import WeeklyPlanner from "@/pages/WeeklyPlanner";
 import PlayerPortfolio from "@/pages/PlayerPortfolio";
 import MentalLearning from "@/pages/MentalLearning";
@@ -16,6 +15,7 @@ import { GameTracker } from "@/components/GameTracker";
 import { TrainingSummaryForm } from "@/components/training/TrainingSummaryForm";
 import { GameSelection } from "@/components/game/GameSelection";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { PreGamePlanner } from "@/components/pre-match/PreGamePlanner";
 
 import "./App.css";
 
