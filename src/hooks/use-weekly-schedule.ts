@@ -35,7 +35,7 @@ export const useWeeklySchedule = () => {
 
       const startDate = startOfWeek(new Date(), { weekStartsOn: 6 }); // Start from Saturday
       
-      // Save the weekly schedule with valid status values
+      // Create weekly schedule with explicit draft status
       const { data: scheduleRecord, error: scheduleError } = await supabase
         .from("weekly_schedules")
         .insert({
@@ -171,7 +171,7 @@ export const useWeeklySchedule = () => {
         throw aiError;
       }
 
-      // Update the schedule with AI-generated content
+      // Update the schedule with AI-generated content and set status to 'generated'
       const { error: updateError } = await supabase
         .from("weekly_schedules")
         .update({
