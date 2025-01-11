@@ -8,12 +8,12 @@ export const WeeklyScheduleDisplay = ({ schedule }: WeeklyScheduleDisplayProps) 
   if (!schedule) {
     return (
       <div className="text-center p-8 text-muted-foreground">
-        Enter your schedule to see it displayed here
+        הזן את המערכת שלך כדי לראות אותה כאן
       </div>
     );
   }
 
-  const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const DAYS = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
   const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
   return (
@@ -84,7 +84,7 @@ export const WeeklyScheduleDisplay = ({ schedule }: WeeklyScheduleDisplayProps) 
 
       {schedule.notes && (
         <Card className="p-4">
-          <h3 className="font-semibold mb-2">Notes</h3>
+          <h3 className="font-semibold mb-2">הערות</h3>
           <p className="text-sm text-muted-foreground">{schedule.notes}</p>
         </Card>
       )}

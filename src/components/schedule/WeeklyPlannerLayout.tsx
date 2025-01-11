@@ -5,6 +5,7 @@ import { WeeklyScheduleDisplay } from "./WeeklyScheduleDisplay";
 import { Button } from "@/components/ui/button";
 import { useWeeklySchedule } from "@/hooks/use-weekly-schedule";
 import { toast } from "sonner";
+import { ChatScheduleForm } from "./ChatScheduleForm";
 
 export const WeeklyPlannerLayout = () => {
   const [schedule, setSchedule] = useState<any>(null);
@@ -12,25 +13,25 @@ export const WeeklyPlannerLayout = () => {
 
   const handleGeneratePlan = async () => {
     if (!schedule) {
-      toast.error("Please fill in your schedule first");
+      toast.error("נא למלא את המערכת תחילה");
       return;
     }
     
     try {
       await saveSchedule(schedule);
-      toast.success("Schedule saved successfully");
+      toast.success("המערכת נשמרה בהצלחה");
     } catch (error) {
-      toast.error("Failed to save schedule");
+      toast.error("שגיאה בשמירת המערכת");
     }
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-8">
-      <h1 className="text-3xl font-bold text-center mb-8">Weekly Planner for Athletes</h1>
+    <div className="container mx-auto p-4 space-y-8 rtl">
+      <h1 className="text-3xl font-bold text-center mb-8">תכנון שבועי לספורטאים</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="p-6">
-          <WeeklyScheduleForm onScheduleChange={setSchedule} />
+          <ChatScheduleForm onScheduleChange={setSchedule} />
         </Card>
         
         <Card className="p-6">
@@ -42,7 +43,7 @@ export const WeeklyPlannerLayout = () => {
               disabled={isLoading || !schedule}
               className="w-full md:w-auto"
             >
-              Generate Weekly Plan
+              צור תכנית שבועית
             </Button>
             
             <Button 
@@ -50,7 +51,7 @@ export const WeeklyPlannerLayout = () => {
               className="w-full md:w-auto"
               onClick={() => {/* TODO: Implement PDF export */}}
             >
-              Export as PDF
+              ייצא ל-PDF
             </Button>
             
             <Button 
@@ -58,7 +59,7 @@ export const WeeklyPlannerLayout = () => {
               className="w-full md:w-auto"
               onClick={() => {/* TODO: Implement email sending */}}
             >
-              Send to Coach
+              שלח למאמן
             </Button>
           </div>
         </Card>
