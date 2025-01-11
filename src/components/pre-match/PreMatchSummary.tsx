@@ -4,7 +4,7 @@ import { Mail, Printer, Instagram, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { InstagramPreMatchSummary } from "./InstagramPreMatchSummary";
 import { PreMatchPreparationDialog } from "./PreMatchPreparationDialog";
 
@@ -33,13 +33,12 @@ export const PreMatchSummary = ({
   const [showInstagramSummary, setShowInstagramSummary] = useState(false);
   const [showPreparationDialog, setShowPreparationDialog] = useState(false);
   const [reportId, setReportId] = useState<string>();
-  
+
   const sendEmail = async (recipientType: 'user' | 'coach') => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error("No user email found");
 
-      // Get player's name from profiles
       const { data: profile } = await supabase
         .from('profiles')
         .select('full_name, coach_email')
@@ -58,7 +57,6 @@ export const PreMatchSummary = ({
 
       const playerName = profile?.full_name || "שחקן";
 
-      // Create HTML content with player name at the top
       const htmlContent = `
         <div dir="rtl">
           <h2>דוח טרום משחק - ${playerName}</h2>
@@ -137,6 +135,37 @@ export const PreMatchSummary = ({
   const shareToInstagram = () => {
     setShowInstagramSummary(true);
   };
+
+  const createMatchRecord = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: match, error } = await supabase
+        .from('matches')
+        .insert([
+          {
+            player_id: user.id,
+            match_date: matchDetails.date,
+            opponent: matchDetails.opponent,
+            status: 'preview'
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (match) setReportId(match.id);
+    } catch (error) {
+      console.error('Error creating match record:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (!reportId) {
+      createMatchRecord();
+    }
+  }, []);
 
   return (
     <div className="space-y-6">

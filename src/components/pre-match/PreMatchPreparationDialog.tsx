@@ -33,16 +33,29 @@ export const PreMatchPreparationDialog = ({
   const { toast } = useToast();
 
   const generatePreparation = async () => {
-    if (!matchId) return;
+    if (!matchId) {
+      toast({
+        title: "שגיאה",
+        description: "לא נמצא מזהה משחק",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
+      console.log('Generating preparation for match:', matchId);
       const { data, error } = await supabase.functions.invoke('generate-pre-match-preparation', {
         body: { matchId },
       });
 
       if (error) throw error;
-      setPreparation(data.preparation);
+      
+      if (data?.preparation) {
+        setPreparation(data.preparation);
+      } else {
+        throw new Error('No preparation text received');
+      }
     } catch (error) {
       console.error('Error generating preparation text:', error);
       toast({
@@ -115,7 +128,7 @@ export const PreMatchPreparationDialog = ({
     if (isOpen && !preparation) {
       generatePreparation();
     }
-  }, [isOpen]);
+  }, [isOpen, matchId]);
 
   return (
     <>
