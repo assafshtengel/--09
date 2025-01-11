@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { WeeklyScheduleViewer } from "./WeeklyScheduleViewer";
 import { useWeeklySchedule } from "@/hooks/use-weekly-schedule";
 import { toast } from "sonner";
-import { Calendar, Clock, Plus, Save, Download } from "lucide-react";
+import { Calendar, Clock, Save, Download, Check } from "lucide-react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -27,6 +27,8 @@ export const WeeklyPlannerForm = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [teamPractice, setTeamPractice] = useState("");
   const [personalTraining, setPersonalTraining] = useState("");
+  const [schoolHours, setSchoolHours] = useState({ start: "08:00", end: "15:00" });
+  const [screenTime, setScreenTime] = useState("");
   const [eventTime, setEventTime] = useState("");
   const [eventTitle, setEventTitle] = useState("");
   const { saveSchedule, isLoading } = useWeeklySchedule();
@@ -49,6 +51,53 @@ export const WeeklyPlannerForm = () => {
       ),
     },
     {
+      title: "שעות בית ספר",
+      description: "באילו ימים יש לך בית ספר?",
+      component: (
+        <div className="space-y-4">
+          <RadioGroup
+            value={selectedDay}
+            onValueChange={setSelectedDay}
+            className="grid grid-cols-7 gap-2"
+          >
+            {days.slice(0, 6).map((day, index) => (
+              <div key={index} className="flex flex-col items-center space-y-2">
+                <RadioGroupItem value={index.toString()} id={`school-day-${index}`} />
+                <Label htmlFor={`school-day-${index}`}>{day}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+          {selectedDay && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>שעת התחלה</Label>
+                <Input
+                  type="time"
+                  value={schoolHours.start}
+                  onChange={(e) => setSchoolHours(prev => ({ ...prev, start: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label>שעת סיום</Label>
+                <Input
+                  type="time"
+                  value={schoolHours.end}
+                  onChange={(e) => setSchoolHours(prev => ({ ...prev, end: e.target.value }))}
+                />
+              </div>
+              <Button
+                className="col-span-2"
+                onClick={() => handleAddActivity("school", parseInt(selectedDay))}
+              >
+                <Check className="h-4 w-4 ml-2" />
+                הוסף שעות בית ספר
+              </Button>
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
       title: "אימוני קבוצה",
       description: "באילו ימים יש לך אימון קבוצתי?",
       component: (
@@ -59,24 +108,28 @@ export const WeeklyPlannerForm = () => {
             className="grid grid-cols-7 gap-2"
           >
             {days.map((day, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <RadioGroupItem value={index.toString()} id={`day-${index}`} />
-                <Label htmlFor={`day-${index}`}>{day}</Label>
+              <div key={index} className="flex flex-col items-center space-y-2">
+                <RadioGroupItem value={index.toString()} id={`team-day-${index}`} />
+                <Label htmlFor={`team-day-${index}`}>{day}</Label>
               </div>
             ))}
           </RadioGroup>
           {selectedDay && (
-            <div className="flex gap-2">
-              <Input
-                type="time"
-                value={teamPractice}
-                onChange={(e) => setTeamPractice(e.target.value)}
-              />
+            <div className="space-y-4">
+              <div>
+                <Label>שעת אימון</Label>
+                <Input
+                  type="time"
+                  value={teamPractice}
+                  onChange={(e) => setTeamPractice(e.target.value)}
+                />
+              </div>
               <Button
-                variant="outline"
+                className="w-full"
                 onClick={() => handleAddActivity("team_training", parseInt(selectedDay))}
               >
-                <Plus className="h-4 w-4" />
+                <Check className="h-4 w-4 ml-2" />
+                הוסף אימון קבוצתי
               </Button>
             </div>
           )}
@@ -94,24 +147,67 @@ export const WeeklyPlannerForm = () => {
             className="grid grid-cols-7 gap-2"
           >
             {days.map((day, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <RadioGroupItem value={index.toString()} id={`day-${index}`} />
-                <Label htmlFor={`day-${index}`}>{day}</Label>
+              <div key={index} className="flex flex-col items-center space-y-2">
+                <RadioGroupItem value={index.toString()} id={`personal-day-${index}`} />
+                <Label htmlFor={`personal-day-${index}`}>{day}</Label>
               </div>
             ))}
           </RadioGroup>
           {selectedDay && (
-            <div className="flex gap-2">
-              <Input
-                type="time"
-                value={personalTraining}
-                onChange={(e) => setPersonalTraining(e.target.value)}
-              />
+            <div className="space-y-4">
+              <div>
+                <Label>שעת אימון</Label>
+                <Input
+                  type="time"
+                  value={personalTraining}
+                  onChange={(e) => setPersonalTraining(e.target.value)}
+                />
+              </div>
               <Button
-                variant="outline"
+                className="w-full"
                 onClick={() => handleAddActivity("personal_training", parseInt(selectedDay))}
               >
-                <Plus className="h-4 w-4" />
+                <Check className="h-4 w-4 ml-2" />
+                הוסף אימון אישי
+              </Button>
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: "זמן מסך",
+      description: "כמה זמן מסך ביום?",
+      component: (
+        <div className="space-y-4">
+          <RadioGroup
+            value={selectedDay}
+            onValueChange={setSelectedDay}
+            className="grid grid-cols-7 gap-2"
+          >
+            {days.map((day, index) => (
+              <div key={index} className="flex flex-col items-center space-y-2">
+                <RadioGroupItem value={index.toString()} id={`screen-day-${index}`} />
+                <Label htmlFor={`screen-day-${index}`}>{day}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+          {selectedDay && (
+            <div className="space-y-4">
+              <div>
+                <Label>זמן מסך</Label>
+                <Input
+                  type="time"
+                  value={screenTime}
+                  onChange={(e) => setScreenTime(e.target.value)}
+                />
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => handleAddActivity("screen_time", parseInt(selectedDay))}
+              >
+                <Check className="h-4 w-4 ml-2" />
+                הוסף זמן מסך
               </Button>
             </div>
           )}
@@ -129,34 +225,35 @@ export const WeeklyPlannerForm = () => {
             className="grid grid-cols-7 gap-2"
           >
             {days.map((day, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <RadioGroupItem value={index.toString()} id={`day-${index}`} />
-                <Label htmlFor={`day-${index}`}>{day}</Label>
+              <div key={index} className="flex flex-col items-center space-y-2">
+                <RadioGroupItem value={index.toString()} id={`event-day-${index}`} />
+                <Label htmlFor={`event-day-${index}`}>{day}</Label>
               </div>
             ))}
           </RadioGroup>
           {selectedDay && (
-            <div className="space-y-2">
+            <div className="space-y-4">
               <Input
                 type="text"
                 placeholder="שם האירוע"
                 value={eventTitle}
                 onChange={(e) => setEventTitle(e.target.value)}
-                className="flex-1"
               />
-              <div className="flex gap-2">
+              <div>
+                <Label>שעת האירוע</Label>
                 <Input
                   type="time"
                   value={eventTime}
                   onChange={(e) => setEventTime(e.target.value)}
                 />
-                <Button
-                  variant="outline"
-                  onClick={() => handleAddActivity("event", parseInt(selectedDay))}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
               </div>
+              <Button
+                className="w-full"
+                onClick={() => handleAddActivity("event", parseInt(selectedDay))}
+              >
+                <Check className="h-4 w-4 ml-2" />
+                הוסף אירוע
+              </Button>
             </div>
           )}
         </div>
@@ -168,6 +265,19 @@ export const WeeklyPlannerForm = () => {
     let newActivity: Activity;
 
     switch (type) {
+      case "school":
+        if (!schoolHours.start || !schoolHours.end) {
+          toast.error("נא להזין שעות בית ספר");
+          return;
+        }
+        newActivity = {
+          day_of_week: dayIndex,
+          start_time: schoolHours.start,
+          end_time: schoolHours.end,
+          activity_type: "school",
+          title: "בית ספר",
+        };
+        break;
       case "team_training":
         if (!teamPractice) {
           toast.error("נא להזין שעת אימון");
@@ -194,6 +304,19 @@ export const WeeklyPlannerForm = () => {
           title: "אימון אישי",
         };
         break;
+      case "screen_time":
+        if (!screenTime) {
+          toast.error("נא להזין זמן מסך");
+          return;
+        }
+        newActivity = {
+          day_of_week: dayIndex,
+          start_time: screenTime,
+          end_time: new Date(new Date(`2024-01-01T${screenTime}`).getTime() + 1 * 60 * 60 * 1000).toTimeString().slice(0, 5),
+          activity_type: "screen_time",
+          title: "זמן מסך",
+        };
+        break;
       case "event":
         if (!eventTime || !eventTitle) {
           toast.error("נא להזין שעת וכותרת האירוע");
@@ -213,6 +336,14 @@ export const WeeklyPlannerForm = () => {
 
     setActivities(prev => [...prev, newActivity]);
     toast.success("הפעילות נוספה בהצלחה");
+    
+    // Reset form fields
+    setEventTitle("");
+    setEventTime("");
+    setTeamPractice("");
+    setPersonalTraining("");
+    setScreenTime("");
+    setSelectedDay("");
   };
 
   const generateMealsAndFreeTime = (currentActivities: Activity[]): Activity[] => {
