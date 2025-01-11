@@ -95,9 +95,9 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   };
 
   return (
-    <div className="h-screen p-4 flex flex-col">
-      <ScrollArea className="flex-grow mb-4">
-        <div className="space-y-4">
+    <div className="h-screen flex flex-col">
+      <ScrollArea className="flex-grow px-4">
+        <div className="space-y-4 py-4">
           {messages.map((message, index) => (
             <div
               key={index}
@@ -121,12 +121,14 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
       </ScrollArea>
 
       {currentStep === 0 && (
-        <Button
-          className="w-full bg-black text-white hover:bg-gray-800"
-          onClick={handleNextQuestion}
-        >
-          בוא נתחיל
-        </Button>
+        <div className="p-4 border-t">
+          <Button
+            className="w-full bg-black text-white hover:bg-gray-800"
+            onClick={handleNextQuestion}
+          >
+            בוא נתחיל
+          </Button>
+        </div>
       )}
     </div>
   );
