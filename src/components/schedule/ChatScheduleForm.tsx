@@ -112,11 +112,18 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   const renderInput = (message: Message) => {
     if (message.inputType === 'multiSelect' && message.options) {
       return (
-        <div className="space-y-2 mt-4">
+        <div className="space-y-3 mt-4">
           {message.options.map((option) => (
             <div 
               key={option} 
-              className="flex items-center space-x-2 space-x-reverse bg-white rounded-lg p-3 shadow-sm hover:bg-gray-50 transition-colors"
+              className={`
+                flex items-center space-x-2 space-x-reverse 
+                ${option === 'אין לימודים השבוע' ? 'mt-4 border-t pt-4' : ''}
+                bg-white rounded-xl p-4 shadow-sm 
+                hover:bg-blue-50 hover:shadow-md
+                transition-all duration-200 ease-in-out
+                border border-gray-100
+              `}
             >
               <Checkbox
                 id={option}
@@ -124,8 +131,12 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
                 onCheckedChange={(checked) => {
                   handleDaySelection(option, checked as boolean);
                 }}
+                className="border-blue-400 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
               />
-              <Label htmlFor={option} className="text-sm font-medium cursor-pointer flex-grow text-gray-900">
+              <Label 
+                htmlFor={option} 
+                className="text-base font-medium cursor-pointer flex-grow text-gray-900 select-none"
+              >
                 {option}
               </Label>
             </div>
@@ -138,27 +149,37 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
       return (
         <div className="space-y-4 mt-4">
           {selectedDays.filter(day => day !== 'אין לימודים השבוע').map((day) => (
-            <div key={day} className="bg-white rounded-lg p-4 shadow-sm">
-              <Label className="text-sm font-medium text-gray-900 mb-2 block">{day}</Label>
+            <div key={day} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+              <Label className="text-lg font-medium text-gray-900 mb-3 block">{day}</Label>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor={`${day}-start`} className="text-xs text-gray-600">שעת התחלה</Label>
+                <div className="space-y-2">
+                  <Label 
+                    htmlFor={`${day}-start`} 
+                    className="text-sm text-gray-700 block"
+                  >
+                    שעת התחלה
+                  </Label>
                   <Input
                     id={`${day}-start`}
                     type="time"
                     value={schedule.schoolHours[day]?.start || ''}
                     onChange={(e) => handleTimeInput(day, 'start', e.target.value)}
-                    className="mt-1"
+                    className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
                   />
                 </div>
-                <div>
-                  <Label htmlFor={`${day}-end`} className="text-xs text-gray-600">שעת סיום</Label>
+                <div className="space-y-2">
+                  <Label 
+                    htmlFor={`${day}-end`} 
+                    className="text-sm text-gray-700 block"
+                  >
+                    שעת סיום
+                  </Label>
                   <Input
                     id={`${day}-end`}
                     type="time"
                     value={schedule.schoolHours[day]?.end || ''}
                     onChange={(e) => handleTimeInput(day, 'end', e.target.value)}
-                    className="mt-1"
+                    className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
                   />
                 </div>
               </div>
@@ -174,7 +195,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   return (
     <div className="flex flex-col h-[calc(100vh-2rem)] bg-gray-50">
       <ScrollArea className="flex-grow px-4">
-        <div className="space-y-4 py-4 max-w-xl mx-auto">
+        <div className="space-y-6 py-6 max-w-2xl mx-auto">
           {messages.map((message, index) => (
             <div
               key={index}
@@ -183,13 +204,17 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
               }`}
             >
               <div
-                className={`rounded-2xl p-4 max-w-[80%] ${
+                className={`rounded-2xl p-5 max-w-[85%] ${
                   message.type === 'system'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white border border-gray-200'
+                    ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg'
+                    : 'bg-white border border-gray-200 shadow-sm'
                 }`}
               >
-                <p className="text-sm">{message.content}</p>
+                <p className={`text-base leading-relaxed ${
+                  message.type === 'system' ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {message.content}
+                </p>
                 {message.inputType && renderInput(message)}
               </div>
             </div>
@@ -198,9 +223,9 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
       </ScrollArea>
 
       {currentStep === 0 && (
-        <div className="p-4 border-t bg-white">
+        <div className="p-4 border-t bg-white shadow-lg">
           <Button
-            className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-xl h-12"
+            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 rounded-xl h-14 text-lg font-medium shadow-md hover:shadow-lg transition-all duration-200"
             onClick={handleNextStep}
           >
             בוא נתחיל
@@ -209,9 +234,9 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
       )}
 
       {currentStep === 1 && selectedDays.length > 0 && (
-        <div className="p-4 border-t bg-white">
+        <div className="p-4 border-t bg-white shadow-lg">
           <Button
-            className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-xl h-12"
+            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 rounded-xl h-14 text-lg font-medium shadow-md hover:shadow-lg transition-all duration-200"
             onClick={handleNextStep}
           >
             המשך להזנת שעות
@@ -220,9 +245,9 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
       )}
 
       {currentStep === 2 && Object.keys(schedule.schoolHours).length > 0 && (
-        <div className="p-4 border-t bg-white">
+        <div className="p-4 border-t bg-white shadow-lg">
           <Button
-            className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-xl h-12"
+            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 rounded-xl h-14 text-lg font-medium shadow-md hover:shadow-lg transition-all duration-200"
             onClick={handleNextStep}
           >
             המשך לאימוני קבוצה
