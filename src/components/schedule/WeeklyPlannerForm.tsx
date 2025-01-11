@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { WeeklyScheduleViewer } from "./WeeklyScheduleViewer";
 import { useWeeklySchedule } from "@/hooks/use-weekly-schedule";
 import { toast } from "sonner";
-import { Download, Calendar, Clock, Mail, Save, Share2 } from "lucide-react";
+import { Download, Calendar, Clock, Mail, Save, Share2, Users, Gift, Trophy } from "lucide-react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,9 @@ export const WeeklyPlannerForm = () => {
   const [teamPractice, setTeamPractice] = useState("");
   const [personalTraining, setPersonalTraining] = useState("");
   const [gameDateTime, setGameDateTime] = useState("");
+  const [familyEvent, setFamilyEvent] = useState("");
+  const [friendsEvent, setFriendsEvent] = useState("");
+  const [favoriteGame, setFavoriteGame] = useState("");
   const [activities, setActivities] = useState<Activity[]>([]);
   const { saveSchedule, isLoading } = useWeeklySchedule();
 
@@ -80,6 +83,33 @@ export const WeeklyPlannerForm = () => {
           title: "משחק",
         };
         break;
+      case "family":
+        newActivity = {
+          day_of_week: dayIndex,
+          start_time: familyEvent.split("T")[1],
+          end_time: new Date(new Date(`2024-01-01T${familyEvent.split("T")[1]}`).getTime() + 2 * 60 * 60 * 1000).toTimeString().slice(0, 5),
+          activity_type: "family",
+          title: "אירוע משפחתי",
+        };
+        break;
+      case "friends":
+        newActivity = {
+          day_of_week: dayIndex,
+          start_time: friendsEvent.split("T")[1],
+          end_time: new Date(new Date(`2024-01-01T${friendsEvent.split("T")[1]}`).getTime() + 2 * 60 * 60 * 1000).toTimeString().slice(0, 5),
+          activity_type: "friends",
+          title: "מפגש חברים",
+        };
+        break;
+      case "favorite_game":
+        newActivity = {
+          day_of_week: dayIndex,
+          start_time: favoriteGame.split("T")[1],
+          end_time: new Date(new Date(`2024-01-01T${favoriteGame.split("T")[1]}`).getTime() + 2 * 60 * 60 * 1000).toTimeString().slice(0, 5),
+          activity_type: "favorite_game",
+          title: "משחק אהוד",
+        };
+        break;
       default:
         return;
     }
@@ -89,12 +119,52 @@ export const WeeklyPlannerForm = () => {
 
   const handleSave = async () => {
     try {
-      await saveSchedule(activities);
+      // Add AI-generated meals and free time
+      const mealsAndFreeTime = generateMealsAndFreeTime(activities);
+      const updatedActivities = [...activities, ...mealsAndFreeTime];
+      
+      await saveSchedule(updatedActivities);
       toast.success("המערכת נשמרה בהצלחה");
     } catch (error) {
       console.error("Error saving schedule:", error);
       toast.error("שגיאה בשמירת המערכת");
     }
+  };
+
+  const generateMealsAndFreeTime = (currentActivities: Activity[]): Activity[] => {
+    const newActivities: Activity[] = [];
+    
+    // Add meals for each day
+    days.forEach((_, dayIndex) => {
+      // Breakfast
+      newActivities.push({
+        day_of_week: dayIndex,
+        start_time: "07:30",
+        end_time: "08:00",
+        activity_type: "meal",
+        title: "ארוחת בוקר",
+      });
+      
+      // Lunch
+      newActivities.push({
+        day_of_week: dayIndex,
+        start_time: "13:00",
+        end_time: "13:30",
+        activity_type: "meal",
+        title: "ארוחת צהריים",
+      });
+      
+      // Dinner
+      newActivities.push({
+        day_of_week: dayIndex,
+        start_time: "19:00",
+        end_time: "19:30",
+        activity_type: "meal",
+        title: "ארוחת ערב",
+      });
+    });
+
+    return newActivities;
   };
 
   const handleDownloadPDF = async () => {
@@ -116,16 +186,6 @@ export const WeeklyPlannerForm = () => {
     }
   };
 
-  const handleShareViaEmail = () => {
-    // Implement email sharing functionality
-    toast.info("בקרוב - שיתוף באמצעות אימייל");
-  };
-
-  const handleShareWithCoach = () => {
-    // Implement coach sharing functionality
-    toast.info("בקרוב - שיתוף עם המאמן");
-  };
-
   return (
     <div className="container mx-auto p-6 space-y-8">
       <div className="text-center space-y-4">
@@ -139,7 +199,27 @@ export const WeeklyPlannerForm = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card className="p-6 space-y-6 bg-gradient-to-br from-blue-50 to-white">
           <div className="space-y-6">
-            {/* Sleep Hours Section */}
+            {/* Day Selection */}
+            <section className="space-y-4">
+              <Label className="text-lg font-semibold text-primary flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                בחר יום
+              </Label>
+              <Select value={selectedDay} onValueChange={setSelectedDay}>
+                <SelectTrigger>
+                  <SelectValue>{selectedDay}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {days.map((day) => (
+                    <SelectItem key={day} value={day}>
+                      {day}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </section>
+
+            {/* Sleep Hours */}
             <section className="space-y-4">
               <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
                 <Clock className="h-5 w-5" />
@@ -174,7 +254,7 @@ export const WeeklyPlannerForm = () => {
               </Button>
             </section>
 
-            {/* Screen Time Section */}
+            {/* Screen Time - Smaller Input */}
             <section className="space-y-4">
               <h3 className="text-xl font-semibold text-primary">זמן מסך יומי</h3>
               <div>
@@ -185,14 +265,17 @@ export const WeeklyPlannerForm = () => {
                   max="24"
                   value={phoneTime}
                   onChange={(e) => setPhoneTime(e.target.value)}
-                  className="mt-1"
+                  className="mt-1 w-24" // Smaller width
                 />
               </div>
             </section>
 
-            {/* Team Training Section */}
+            {/* Team Training */}
             <section className="space-y-4">
-              <h3 className="text-xl font-semibold text-primary">אימון קבוצתי</h3>
+              <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                אימון קבוצתי
+              </h3>
               <div>
                 <Label>בחר יום ושעה</Label>
                 <Input
@@ -211,7 +294,7 @@ export const WeeklyPlannerForm = () => {
               </Button>
             </section>
 
-            {/* Personal Training Section */}
+            {/* Personal Training */}
             <section className="space-y-4">
               <h3 className="text-xl font-semibold text-primary">אימון אישי</h3>
               <div>
@@ -232,24 +315,75 @@ export const WeeklyPlannerForm = () => {
               </Button>
             </section>
 
-            {/* Game Section */}
+            {/* Family Event */}
             <section className="space-y-4">
-              <h3 className="text-xl font-semibold text-primary">משחק</h3>
+              <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
+                <Gift className="h-5 w-5" />
+                אירוע משפחתי
+              </h3>
               <div>
-                <Label>מועד המשחק</Label>
+                <Label>בחר יום ושעה</Label>
                 <Input
                   type="datetime-local"
-                  value={gameDateTime}
-                  onChange={(e) => setGameDateTime(e.target.value)}
+                  value={familyEvent}
+                  onChange={(e) => setFamilyEvent(e.target.value)}
                   className="mt-1"
                 />
               </div>
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => handleAddActivity("game")}
+                onClick={() => handleAddActivity("family")}
               >
-                הוסף משחק
+                הוסף אירוע משפחתי
+              </Button>
+            </section>
+
+            {/* Friends Event */}
+            <section className="space-y-4">
+              <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                מפגש חברים
+              </h3>
+              <div>
+                <Label>בחר יום ושעה</Label>
+                <Input
+                  type="datetime-local"
+                  value={friendsEvent}
+                  onChange={(e) => setFriendsEvent(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => handleAddActivity("friends")}
+              >
+                הוסף מפגש חברים
+              </Button>
+            </section>
+
+            {/* Favorite Game */}
+            <section className="space-y-4">
+              <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
+                <Trophy className="h-5 w-5" />
+                משחק אהוד
+              </h3>
+              <div>
+                <Label>בחר יום ושעה</Label>
+                <Input
+                  type="datetime-local"
+                  value={favoriteGame}
+                  onChange={(e) => setFavoriteGame(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => handleAddActivity("favorite_game")}
+              >
+                הוסף משחק אהוד
               </Button>
             </section>
           </div>
@@ -274,22 +408,6 @@ export const WeeklyPlannerForm = () => {
             >
               <Download className="h-4 w-4" />
               הורד PDF
-            </Button>
-            <Button
-              variant="outline"
-              className="flex items-center gap-2"
-              onClick={handleShareViaEmail}
-            >
-              <Mail className="h-4 w-4" />
-              שלח במייל
-            </Button>
-            <Button
-              variant="outline"
-              className="flex items-center gap-2"
-              onClick={handleShareWithCoach}
-            >
-              <Share2 className="h-4 w-4" />
-              שתף עם המאמן
             </Button>
           </div>
         </Card>
