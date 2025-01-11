@@ -75,9 +75,9 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   const renderInput = (message: Message) => {
     if (message.inputType === 'multiSelect' && message.options) {
       return (
-        <div className="space-y-2">
+        <div className="space-y-2 mt-2">
           {message.options.map((option) => (
-            <div key={option} className="flex items-center space-x-2 space-x-reverse">
+            <div key={option} className="flex items-center space-x-2 space-x-reverse bg-white rounded-lg p-2 shadow-sm">
               <Checkbox
                 id={option}
                 checked={selectedDays.includes(option)}
@@ -85,7 +85,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
                   handleDaySelection(option, checked as boolean);
                 }}
               />
-              <Label htmlFor={option}>{option}</Label>
+              <Label htmlFor={option} className="text-sm">{option}</Label>
             </div>
           ))}
         </div>
@@ -95,9 +95,9 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   };
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="flex flex-col h-[calc(100vh-2rem)] bg-gray-100">
       <ScrollArea className="flex-grow px-4">
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-4 max-w-xl mx-auto">
           {messages.map((message, index) => (
             <div
               key={index}
@@ -106,13 +106,13 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
               }`}
             >
               <div
-                className={`rounded-lg p-3 max-w-[80%] ${
+                className={`rounded-2xl p-4 max-w-[80%] ${
                   message.type === 'system'
-                    ? 'bg-white border border-black text-black'
-                    : 'bg-black text-white'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white border border-gray-200'
                 }`}
               >
-                <p>{message.content}</p>
+                <p className="text-sm">{message.content}</p>
                 {message.inputType && renderInput(message)}
               </div>
             </div>
@@ -121,9 +121,9 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
       </ScrollArea>
 
       {currentStep === 0 && (
-        <div className="p-4 border-t">
+        <div className="p-4 border-t bg-white">
           <Button
-            className="w-full bg-black text-white hover:bg-gray-800"
+            className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-xl h-12"
             onClick={handleNextQuestion}
           >
             בוא נתחיל
