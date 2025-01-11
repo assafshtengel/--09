@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Eye, Target, ChartBar, Mail, Printer, Instagram, X, RefreshCw } from "lucide-react";
+import { Eye, Target, ChartBar, Mail, Printer, Instagram, RefreshCw } from "lucide-react";
 import { GameHistoryItem } from "@/components/game/history/types";
 import { GameDetailsDialog } from "@/components/game/history/GameDetailsDialog";
 import { PreMatchGoalsDialog } from "@/components/game/history/PreMatchGoalsDialog";
