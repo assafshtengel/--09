@@ -75,8 +75,8 @@ const GameHistory = () => {
           match_date: report.match_date,
           opponent: report.opponent,
           pre_match_report: {
-            actions: report.actions || [],
-            questions_answers: report.questions_answers,
+            actions: Array.isArray(report.actions) ? report.actions : [],
+            questions_answers: report.questions_answers || {},
             havaya: report.havaya
           },
           isPreMatchOnly: true
