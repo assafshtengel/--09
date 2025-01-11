@@ -24,7 +24,7 @@ serve(async (req) => {
       throw new Error('Match ID is required');
     }
 
-    // Fetch match data including pre-match report
+    // Fetch match data including pre-match report and post-game feedback
     const { data: match, error: matchError } = await supabaseClient
       .from('matches')
       .select(`
@@ -33,6 +33,10 @@ serve(async (req) => {
           questions_answers,
           havaya,
           actions
+        ),
+        post_game_feedback (
+          questions_answers,
+          performance_ratings
         )
       `)
       .eq('id', matchId)
@@ -46,7 +50,8 @@ serve(async (req) => {
 
     const havaya = match?.pre_match_reports?.havaya?.split(',') || [];
     const actions = match?.pre_match_reports?.actions || [];
-    const answers = match?.pre_match_reports?.questions_answers || {};
+    const preMatchAnswers = match?.pre_match_reports?.questions_answers || {};
+    const postGameAnswers = match?.post_game_feedback?.questions_answers || {};
 
     // Generate the preparation text using OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -60,30 +65,36 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `אתה עוזר לשחקן כדורגל צעיר לכתוב פוסט מעורר השראה על ההכנה שלו למשחק.
-            הפוסט צריך להיות כתוב בעברית, בטון חיובי ומעודד, ולכלול אימוג'ים מתאימים.
-            התייחס לכל המידע שהשחקן סיפק: ההוויות שבחר, היעדים שהציב לעצמו, והתשובות שנתן לשאלות.`
+            content: `אתה עוזר לשחקן כדורגל צעיר לכתוב טקסט מעורר השראה על ההכנה שלו למשחק.
+            הטקסט צריך להיות כתוב בעברית, בטון חיובי ומעודד, ולכלול אימוג'ים מתאימים.
+            התייחס לכל המידע שהשחקן סיפק: ההוויות שבחר, היעדים שהציב לעצמו, התשובות לשאלות הפתוחות, והמשוב שנתן.
+            
+            חשוב להתייחס באופן מעמיק לתשובות השחקן לשאלות הפתוחות ולשלב תובנות אישיות המבוססות על תשובותיו.
+            הוסף כותרות משנה עם אימוג'ים מתאימים לכל נושא.`
           },
           {
             role: 'user',
-            content: `צור פוסט מעורר השראה עבור שחקן שמתכונן למשחק נגד ${match.opponent}.
+            content: `צור טקסט הכנה מעורר השראה עבור שחקן שמתכונן למשחק נגד ${match.opponent}.
+            
             ההוויות שבחר: ${havaya.join(', ')}
             היעדים שהציב: ${JSON.stringify(actions)}
-            תשובות נוספות: ${JSON.stringify(answers)}
+            תשובות לשאלות פתוחות: ${JSON.stringify(preMatchAnswers)}
+            משוב מהמשחק: ${JSON.stringify(postGameAnswers)}
             
-            הפוסט צריך לכלול:
+            הטקסט צריך לכלול:
             1. פתיחה מעוררת מוטיבציה
             2. התייחסות להוויות שנבחרו
             3. פירוט היעדים למשחק
-            4. התייחסות לתשובות הנוספות
-            5. סיום מעורר השראה
-            6. האשטגים רלוונטיים
+            4. התייחסות מעמיקה לתשובות השחקן לשאלות הפתוחות
+            5. תובנות אישיות המבוססות על תשובותיו
+            6. סיום מעורר השראה
+            7. האשטגים רלוונטיים
             
-            השתמש באימוג'ים מתאימים לאורך הטקסט.`
+            השתמש באימוג'ים מתאימים לאורך הטקסט ובכותרות המשנה.`
           }
         ],
         temperature: 0.7,
-        max_tokens: 1000,
+        max_tokens: 1500,
       }),
     });
 
