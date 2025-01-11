@@ -122,10 +122,19 @@ const Dashboard = () => {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center py-8 border-b"
+        className="text-center py-4 border-b"
       >
-        <h1 className="text-4xl font-bold mb-3">ברוך הבא, {profile?.full_name}</h1>
-        <p className="text-muted-foreground text-lg">בחר באפשרות כדי להתחיל</p>
+        <h1 className="text-4xl font-bold mb-2">ברוך הבא, {profile?.full_name}</h1>
+      </motion.div>
+
+      {/* Mental Coaching Chat - Moved to top */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="mb-8"
+      >
+        <MentalCoachingChat />
       </motion.div>
 
       {/* Quick Actions Grid */}
@@ -191,20 +200,6 @@ const Dashboard = () => {
             <GoalsProgress />
           </motion.div>
         </div>
-      </motion.div>
-
-      {/* Mental Coaching Chat Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
-      >
-        <div className="flex justify-between items-center mb-6">
-          <div className="h-0.5 flex-grow bg-gradient-to-r from-transparent to-gray-200"></div>
-          <h2 className="text-2xl font-bold px-4">אימון מנטאלי</h2>
-          <div className="h-0.5 flex-grow bg-gradient-to-l from-transparent to-gray-200"></div>
-        </div>
-        <MentalCoachingChat />
       </motion.div>
 
       {/* Call to Action Buttons */}
