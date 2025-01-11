@@ -32,6 +32,8 @@ export const WeeklyPlannerForm = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const { saveSchedule, isLoading } = useWeeklySchedule();
 
+  const days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+
   const handleAddActivity = (type: string, dayIndex: number) => {
     let newActivity: Activity;
 
