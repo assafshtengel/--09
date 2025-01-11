@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent } from "@/components/ui/card";
 import { Send, Loader2, Brain, Apple, Dumbbell, Target, Crosshair, Weight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -21,13 +20,13 @@ interface Message {
 
 type CoachType = 'mental' | 'nutrition' | 'fitness' | 'tactical' | 'technical' | 'strength';
 
-const coachTypes: Record<CoachType, { title: string; icon: React.ComponentType }> = {
-  mental: { title: "מאמן מנטאלי", icon: Brain },
-  nutrition: { title: "מאמן תזונה", icon: Apple },
-  fitness: { title: "מאמן כושר", icon: Dumbbell },
-  tactical: { title: "מאמן טקטי", icon: Target },
-  technical: { title: "מאמן טכני", icon: Crosshair },
-  strength: { title: "מאמן כוח", icon: Weight }
+const coachTypes: Record<CoachType, { title: string; icon: React.ComponentType; color: string }> = {
+  mental: { title: "מאמן מנטאלי", icon: Brain, color: "#3B82F6" },
+  nutrition: { title: "מאמן תזונה", icon: Apple, color: "#F97316" },
+  fitness: { title: "מאמן כושר", icon: Dumbbell, color: "#10B981" },
+  tactical: { title: "מאמן טקטי", icon: Target, color: "#3B82F6" },
+  technical: { title: "מאמן טכני", icon: Crosshair, color: "#6366F1" },
+  strength: { title: "מאמן כוח", icon: Weight, color: "#EC4899" }
 };
 
 export const MentalCoachingChat = () => {
@@ -105,26 +104,26 @@ export const MentalCoachingChat = () => {
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <div className="bg-white/50 backdrop-blur-sm rounded-lg shadow-sm sticky top-0 z-50">
+      <div className="bg-[#F3F4F6] backdrop-blur-sm rounded-lg shadow-sm sticky top-0 z-50 border border-[#E5E7EB]">
         <div className="p-4">
-          <h2 className="text-xl font-semibold text-center mb-4">התייעצות עם מאמן</h2>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-            {(Object.entries(coachTypes) as [CoachType, { title: string; icon: React.ComponentType }][]).map(([type, { title, icon: Icon }]) => (
+          <h2 className="text-xl font-semibold text-center mb-6 text-[#111827]">התייעצות עם מאמן</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            {(Object.entries(coachTypes) as [CoachType, { title: string; icon: React.ComponentType; color: string }][]).map(([type, { title, icon: Icon, color }]) => (
               <Button
                 key={type}
                 onClick={() => selectCoach(type)}
                 variant="outline"
-                className="relative h-20 flex flex-col items-center justify-center gap-1 bg-white hover:bg-primary hover:text-white transition-all duration-300 shadow-sm hover:shadow-md group"
+                className="relative h-24 flex flex-col items-center justify-center gap-2 bg-[#E0F2FE] hover:bg-[#BEE3F8] active:bg-[#93C5FD] text-[#111827] transition-all duration-300 shadow-sm hover:shadow-md group"
               >
-                <div className="h-6 w-6 group-hover:scale-110 transition-transform duration-300">
-                  <Icon />
+                <div className="h-8 w-8 group-hover:scale-110 transition-transform duration-300">
+                  <Icon style={{ color }} />
                 </div>
-                <span className="text-xs text-center">{title}</span>
+                <span className="text-sm font-medium text-center">{title}</span>
                 <motion.div
-                  className="absolute inset-0 bg-primary/10 rounded-md group-hover:bg-primary/100 transition-all duration-300"
+                  className="absolute inset-0 bg-white/10 rounded-md group-hover:bg-white/20 transition-all duration-300"
                   initial={false}
                   animate={{ scale: 1 }}
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={{ scale: 1.02 }}
                 />
               </Button>
             ))}
