@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { PlayerForm } from "@/components/PlayerForm";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import type { PlayerFormData } from "@/components/player-form/types";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { PlayerForm } from "@/components/PlayerForm";
 
 const Player = () => {
   const navigate = useNavigate();
