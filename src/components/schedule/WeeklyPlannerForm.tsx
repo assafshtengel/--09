@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { WeeklyScheduleViewer } from "./WeeklyScheduleViewer";
 import { useWeeklySchedule } from "@/hooks/use-weekly-schedule";
 import { toast } from "sonner";
-import { Download, Calendar, Clock, Mail, Save, Share2, Users, Gift, Trophy } from "lucide-react";
+import { Calendar, Clock, Plus, Save, Download } from "lucide-react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 
 interface Activity {
@@ -20,15 +21,12 @@ interface Activity {
 }
 
 export const WeeklyPlannerForm = () => {
-  const [sleepStart, setSleepStart] = useState("22:00");
-  const [sleepEnd, setSleepEnd] = useState("07:00");
-  const [phoneTime, setPhoneTime] = useState("2");
+  const [sleepHours, setSleepHours] = useState("8");
+  const [screenTime, setScreenTime] = useState("2");
   const [teamPractice, setTeamPractice] = useState("");
   const [personalTraining, setPersonalTraining] = useState("");
-  const [gameDateTime, setGameDateTime] = useState("");
-  const [familyEvent, setFamilyEvent] = useState("");
-  const [friendsEvent, setFriendsEvent] = useState("");
-  const [favoriteGame, setFavoriteGame] = useState("");
+  const [eventTime, setEventTime] = useState("");
+  const [selectedDay, setSelectedDay] = useState<string>("0");
   const [activities, setActivities] = useState<Activity[]>([]);
   const { saveSchedule, isLoading } = useWeeklySchedule();
 
@@ -41,64 +39,49 @@ export const WeeklyPlannerForm = () => {
       case "sleep":
         newActivity = {
           day_of_week: dayIndex,
-          start_time: sleepStart,
-          end_time: sleepEnd,
+          start_time: "22:00",
+          end_time: "06:00",
           activity_type: "sleep",
           title: "שינה",
         };
         break;
       case "team_training":
+        if (!teamPractice) {
+          toast.error("נא להזין שעת אימון");
+          return;
+        }
         newActivity = {
           day_of_week: dayIndex,
-          start_time: teamPractice.split("T")[1],
-          end_time: new Date(new Date(`2024-01-01T${teamPractice.split("T")[1]}`).getTime() + 2 * 60 * 60 * 1000).toTimeString().slice(0, 5),
+          start_time: teamPractice,
+          end_time: new Date(new Date(`2024-01-01T${teamPractice}`).getTime() + 2 * 60 * 60 * 1000).toTimeString().slice(0, 5),
           activity_type: "team_training",
           title: "אימון קבוצתי",
         };
         break;
       case "personal_training":
+        if (!personalTraining) {
+          toast.error("נא להזין שעת אימון אישי");
+          return;
+        }
         newActivity = {
           day_of_week: dayIndex,
-          start_time: personalTraining.split("T")[1],
-          end_time: new Date(new Date(`2024-01-01T${personalTraining.split("T")[1]}`).getTime() + 1 * 60 * 60 * 1000).toTimeString().slice(0, 5),
+          start_time: personalTraining,
+          end_time: new Date(new Date(`2024-01-01T${personalTraining}`).getTime() + 1 * 60 * 60 * 1000).toTimeString().slice(0, 5),
           activity_type: "personal_training",
           title: "אימון אישי",
         };
         break;
-      case "game":
+      case "event":
+        if (!eventTime) {
+          toast.error("נא להזין שעת אירוע");
+          return;
+        }
         newActivity = {
           day_of_week: dayIndex,
-          start_time: gameDateTime.split("T")[1],
-          end_time: new Date(new Date(`2024-01-01T${gameDateTime.split("T")[1]}`).getTime() + 2 * 60 * 60 * 1000).toTimeString().slice(0, 5),
-          activity_type: "game",
-          title: "משחק",
-        };
-        break;
-      case "family":
-        newActivity = {
-          day_of_week: dayIndex,
-          start_time: familyEvent.split("T")[1],
-          end_time: new Date(new Date(`2024-01-01T${familyEvent.split("T")[1]}`).getTime() + 2 * 60 * 60 * 1000).toTimeString().slice(0, 5),
-          activity_type: "family",
-          title: "אירוע משפחתי",
-        };
-        break;
-      case "friends":
-        newActivity = {
-          day_of_week: dayIndex,
-          start_time: friendsEvent.split("T")[1],
-          end_time: new Date(new Date(`2024-01-01T${friendsEvent.split("T")[1]}`).getTime() + 2 * 60 * 60 * 1000).toTimeString().slice(0, 5),
-          activity_type: "friends",
-          title: "מפגש חברים",
-        };
-        break;
-      case "favorite_game":
-        newActivity = {
-          day_of_week: dayIndex,
-          start_time: favoriteGame.split("T")[1],
-          end_time: new Date(new Date(`2024-01-01T${favoriteGame.split("T")[1]}`).getTime() + 2 * 60 * 60 * 1000).toTimeString().slice(0, 5),
-          activity_type: "favorite_game",
-          title: "משחק אהוד",
+          start_time: eventTime,
+          end_time: new Date(new Date(`2024-01-01T${eventTime}`).getTime() + 2 * 60 * 60 * 1000).toTimeString().slice(0, 5),
+          activity_type: "event",
+          title: "אירוע",
         };
         break;
       default:
@@ -106,12 +89,12 @@ export const WeeklyPlannerForm = () => {
     }
 
     setActivities(prev => [...prev, newActivity]);
+    toast.success("הפעילות נוספה בהצלחה");
   };
 
   const generateMealsAndFreeTime = (currentActivities: Activity[]): Activity[] => {
     const newActivities: Activity[] = [];
     
-    // Add meals for each day
     days.forEach((_, dayIndex) => {
       // Breakfast
       newActivities.push({
@@ -165,7 +148,6 @@ export const WeeklyPlannerForm = () => {
 
   const handleSave = async () => {
     try {
-      // Add AI-generated meals and free time
       const mealsAndFreeTime = generateMealsAndFreeTime(activities);
       const updatedActivities = [...activities, ...mealsAndFreeTime];
       
@@ -194,186 +176,105 @@ export const WeeklyPlannerForm = () => {
             <section className="space-y-4">
               <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                שעות שינה
+                שעות שינה (מומלץ 8-9 שעות)
               </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm">התחלה</Label>
-                  <Input
-                    type="time"
-                    value={sleepStart}
-                    onChange={(e) => setSleepStart(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm">סיום</Label>
-                  <Input
-                    type="time"
-                    value={sleepEnd}
-                    onChange={(e) => setSleepEnd(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              {[0, 1, 2, 3, 4, 5, 6].map((dayIndex) => (
-                <Button 
-                  key={dayIndex}
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => handleAddActivity("sleep", dayIndex)}
-                >
-                  הוסף שעות שינה ליום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][dayIndex]}
-                </Button>
-              ))}
+              <Input
+                type="number"
+                min="4"
+                max="12"
+                value={sleepHours}
+                onChange={(e) => setSleepHours(e.target.value)}
+                className="w-24"
+              />
             </section>
 
             {/* Screen Time - Smaller Input */}
             <section className="space-y-4">
               <h3 className="text-xl font-semibold text-primary">זמן מסך יומי</h3>
-              <div>
-                <Label>שעות שימוש במסך</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="24"
-                  value={phoneTime}
-                  onChange={(e) => setPhoneTime(e.target.value)}
-                  className="mt-1 w-24" // Smaller width
-                />
-              </div>
+              <Input
+                type="number"
+                min="0"
+                max="24"
+                value={screenTime}
+                onChange={(e) => setScreenTime(e.target.value)}
+                className="w-24"
+              />
             </section>
 
-            {/* Team Training */}
+            {/* Day Selection */}
             <section className="space-y-4">
-              <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                אימון קבוצתי
-              </h3>
-              <div>
-                <Label>בחר יום ושעה</Label>
-                <Input
-                  type="datetime-local"
-                  value={teamPractice}
-                  onChange={(e) => setTeamPractice(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              {[0, 1, 2, 3, 4, 5, 6].map((dayIndex) => (
-                <Button 
-                  key={dayIndex}
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => handleAddActivity("team_training", dayIndex)}
-                >
-                  הוסף אימון קבוצתי ליום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][dayIndex]}
-                </Button>
-              ))}
+              <h3 className="text-xl font-semibold text-primary">בחר יום</h3>
+              <RadioGroup
+                value={selectedDay}
+                onValueChange={setSelectedDay}
+                className="grid grid-cols-7 gap-2"
+              >
+                {days.map((day, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <RadioGroupItem value={index.toString()} id={`day-${index}`} />
+                    <Label htmlFor={`day-${index}`}>{day}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
             </section>
 
-            {/* Personal Training */}
+            {/* Activities for Selected Day */}
             <section className="space-y-4">
-              <h3 className="text-xl font-semibold text-primary">אימון אישי</h3>
-              <div>
-                <Label>בחר יום ושעה</Label>
-                <Input
-                  type="datetime-local"
-                  value={personalTraining}
-                  onChange={(e) => setPersonalTraining(e.target.value)}
-                  className="mt-1"
-                />
+              <h3 className="text-xl font-semibold text-primary">פעילויות ליום {days[parseInt(selectedDay)]}</h3>
+              
+              {/* Team Training */}
+              <div className="space-y-2">
+                <Label>אימון קבוצתי</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="time"
+                    value={teamPractice}
+                    onChange={(e) => setTeamPractice(e.target.value)}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => handleAddActivity("team_training", parseInt(selectedDay))}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              {[0, 1, 2, 3, 4, 5, 6].map((dayIndex) => (
-                <Button 
-                  key={dayIndex}
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => handleAddActivity("personal_training", dayIndex)}
-                >
-                  הוסף אימון אישי ליום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][dayIndex]}
-                </Button>
-              ))}
-            </section>
 
-            {/* Family Event */}
-            <section className="space-y-4">
-              <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
-                <Gift className="h-5 w-5" />
-                אירוע משפחתי
-              </h3>
-              <div>
-                <Label>בחר יום ושעה</Label>
-                <Input
-                  type="datetime-local"
-                  value={familyEvent}
-                  onChange={(e) => setFamilyEvent(e.target.value)}
-                  className="mt-1"
-                />
+              {/* Personal Training */}
+              <div className="space-y-2">
+                <Label>אימון אישי</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="time"
+                    value={personalTraining}
+                    onChange={(e) => setPersonalTraining(e.target.value)}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => handleAddActivity("personal_training", parseInt(selectedDay))}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              {[0, 1, 2, 3, 4, 5, 6].map((dayIndex) => (
-                <Button 
-                  key={dayIndex}
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => handleAddActivity("family", dayIndex)}
-                >
-                  הוסף אירוע משפחתי ליום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][dayIndex]}
-                </Button>
-              ))}
-            </section>
 
-            {/* Friends Event */}
-            <section className="space-y-4">
-              <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                מפגש חברים
-              </h3>
-              <div>
-                <Label>בחר יום ושעה</Label>
-                <Input
-                  type="datetime-local"
-                  value={friendsEvent}
-                  onChange={(e) => setFriendsEvent(e.target.value)}
-                  className="mt-1"
-                />
+              {/* Event */}
+              <div className="space-y-2">
+                <Label>אירוע</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="time"
+                    value={eventTime}
+                    onChange={(e) => setEventTime(e.target.value)}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => handleAddActivity("event", parseInt(selectedDay))}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              {[0, 1, 2, 3, 4, 5, 6].map((dayIndex) => (
-                <Button 
-                  key={dayIndex}
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => handleAddActivity("friends", dayIndex)}
-                >
-                  הוסף מפגש חברים ליום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][dayIndex]}
-                </Button>
-              ))}
-            </section>
-
-            {/* Favorite Game */}
-            <section className="space-y-4">
-              <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
-                <Trophy className="h-5 w-5" />
-                משחק אהוד
-              </h3>
-              <div>
-                <Label>בחר יום ושעה</Label>
-                <Input
-                  type="datetime-local"
-                  value={favoriteGame}
-                  onChange={(e) => setFavoriteGame(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              {[0, 1, 2, 3, 4, 5, 6].map((dayIndex) => (
-                <Button 
-                  key={dayIndex}
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => handleAddActivity("favorite_game", dayIndex)}
-                >
-                  הוסף משחק אהוד ליום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][dayIndex]}
-                </Button>
-              ))}
             </section>
           </div>
 
