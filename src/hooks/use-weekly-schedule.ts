@@ -6,6 +6,23 @@ import { toast } from "sonner";
 export const useWeeklySchedule = () => {
   const [isLoading, setIsLoading] = useState(false);
 
+  const mapActivityType = (type: string) => {
+    switch (type) {
+      case 'school':
+        return 'school';
+      case 'team_training':
+        return 'team_training';
+      case 'personal_training':
+        return 'personal_training';
+      case 'special_event':
+        return 'other';
+      case 'game':
+        return 'team_game';
+      default:
+        return 'other';
+    }
+  };
+
   const saveSchedule = async (scheduleData: any) => {
     if (!scheduleData) {
       throw new Error("Schedule data is required");
@@ -43,7 +60,7 @@ export const useWeeklySchedule = () => {
             if (dayIndex !== -1 && scheduleData.schoolHours[day].start && scheduleData.schoolHours[day].end) {
               activities.push({
                 schedule_id: scheduleRecord.id,
-                activity_type: 'school',
+                activity_type: mapActivityType('school'),
                 day_of_week: dayIndex,
                 start_time: scheduleData.schoolHours[day].start,
                 end_time: scheduleData.schoolHours[day].end,
@@ -61,7 +78,7 @@ export const useWeeklySchedule = () => {
           if (dayIndex !== -1) {
             activities.push({
               schedule_id: scheduleRecord.id,
-              activity_type: 'team_training',
+              activity_type: mapActivityType('team_training'),
               day_of_week: dayIndex,
               start_time: training.startTime,
               end_time: training.endTime,
@@ -78,7 +95,7 @@ export const useWeeklySchedule = () => {
           if (dayIndex !== -1) {
             activities.push({
               schedule_id: scheduleRecord.id,
-              activity_type: 'personal_training',
+              activity_type: mapActivityType('personal_training'),
               day_of_week: dayIndex,
               start_time: training.startTime,
               end_time: training.endTime,
@@ -95,7 +112,7 @@ export const useWeeklySchedule = () => {
           if (dayIndex !== -1) {
             activities.push({
               schedule_id: scheduleRecord.id,
-              activity_type: 'special_event',
+              activity_type: mapActivityType('special_event'),
               day_of_week: dayIndex,
               start_time: event.startTime,
               end_time: event.endTime,
@@ -112,7 +129,7 @@ export const useWeeklySchedule = () => {
           if (dayIndex !== -1) {
             activities.push({
               schedule_id: scheduleRecord.id,
-              activity_type: 'game',
+              activity_type: mapActivityType('game'),
               day_of_week: dayIndex,
               start_time: game.startTime,
               end_time: game.startTime, // For games we just use start time
@@ -124,11 +141,15 @@ export const useWeeklySchedule = () => {
 
       // Save all activities if there are any
       if (activities.length > 0) {
+        console.log('Saving activities:', activities);
         const { error: activitiesError } = await supabase
           .from("schedule_activities")
           .insert(activities);
 
-        if (activitiesError) throw activitiesError;
+        if (activitiesError) {
+          console.error('Error saving activities:', activitiesError);
+          throw activitiesError;
+        }
       }
       
       // Generate AI schedule using the edge function
