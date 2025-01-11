@@ -141,13 +141,6 @@ export const PreMatchPreparationDialog = ({
     };
   }, [isOpen, matchId]);
 
-  // Force cleanup when dialog is closed
-  useEffect(() => {
-    if (!isOpen) {
-      cleanupAndClose();
-    }
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   return (
@@ -157,7 +150,7 @@ export const PreMatchPreparationDialog = ({
           <DialogTitle className="text-2xl font-bold text-right">
             ההכנה שלי למשחק
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-right">
             טקסט מותאם אישית להכנה למשחק, מבוסס על התשובות והיעדים שלך
           </DialogDescription>
           <div className="mt-4">
