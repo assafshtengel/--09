@@ -57,6 +57,13 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        activity: {
+          sleep: "#33C3F0",
+          team: "#10B981",
+          personal: "#F97316",
+          game: "#EF4444",
+          free: "#E5E7EB",
+        },
       },
       fontFamily: {
         inter: ["Inter", "sans-serif"],
@@ -71,10 +78,15 @@ export default {
         "card-hover": {
           "0%": { transform: "translateY(0)" },
           "100%": { transform: "translateY(-5px)" }
+        },
+        "fade-in": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" }
         }
       },
       animation: {
-        "card-hover": "card-hover 0.2s ease-out forwards"
+        "card-hover": "card-hover 0.2s ease-out forwards",
+        "fade-in": "fade-in 0.3s ease-out"
       }
     },
   },

@@ -10,13 +10,13 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { WeeklyScheduleViewer } from "./WeeklyScheduleViewer";
 import { useWeeklySchedule } from "@/hooks/use-weekly-schedule";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
+import { Download, Calendar, Clock, Mail, Save, Share2 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
+import { cn } from "@/lib/utils";
 
 interface Activity {
   day_of_week: number;
@@ -116,31 +116,35 @@ export const WeeklyPlannerForm = () => {
     }
   };
 
+  const handleShareViaEmail = () => {
+    // Implement email sharing functionality
+    toast.info("בקרוב - שיתוף באמצעות אימייל");
+  };
+
+  const handleShareWithCoach = () => {
+    // Implement coach sharing functionality
+    toast.info("בקרוב - שיתוף עם המאמן");
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-8">
-      <h1 className="text-3xl font-bold text-center mb-8">מערכת שבועית לספורטאים</h1>
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl font-bold text-gray-900 flex items-center justify-center gap-2">
+          <Calendar className="h-8 w-8 text-primary" />
+          מערכת שבועית לספורטאים
+        </h1>
+        <p className="text-gray-600">תכנן את השבוע שלך בצורה חכמה ויעילה</p>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card className="p-6 space-y-6">
-          <div className="space-y-4">
-            <div>
-              <Label>בחר יום</Label>
-              <Select value={selectedDay} onValueChange={setSelectedDay}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="בחר יום" />
-                </SelectTrigger>
-                <SelectContent>
-                  {days.map((day) => (
-                    <SelectItem key={day} value={day}>
-                      {day}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>שעות שינה</Label>
+        <Card className="p-6 space-y-6 bg-gradient-to-br from-blue-50 to-white">
+          <div className="space-y-6">
+            {/* Sleep Hours Section */}
+            <section className="space-y-4">
+              <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                שעות שינה
+              </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm">התחלה</Label>
@@ -148,6 +152,7 @@ export const WeeklyPlannerForm = () => {
                     type="time"
                     value={sleepStart}
                     onChange={(e) => setSleepStart(e.target.value)}
+                    className="mt-1"
                   />
                 </div>
                 <div>
@@ -156,36 +161,47 @@ export const WeeklyPlannerForm = () => {
                     type="time"
                     value={sleepEnd}
                     onChange={(e) => setSleepEnd(e.target.value)}
+                    className="mt-1"
                   />
                 </div>
               </div>
               <Button 
                 variant="outline" 
-                className="w-full mt-2"
+                className="w-full"
                 onClick={() => handleAddActivity("sleep")}
               >
                 הוסף שעות שינה
               </Button>
-            </div>
+            </section>
 
-            <div className="space-y-2">
-              <Label>זמן מסך יומי (שעות)</Label>
-              <Input
-                type="number"
-                min="0"
-                max="24"
-                value={phoneTime}
-                onChange={(e) => setPhoneTime(e.target.value)}
-              />
-            </div>
+            {/* Screen Time Section */}
+            <section className="space-y-4">
+              <h3 className="text-xl font-semibold text-primary">זמן מסך יומי</h3>
+              <div>
+                <Label>שעות שימוש במסך</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="24"
+                  value={phoneTime}
+                  onChange={(e) => setPhoneTime(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </section>
 
-            <div className="space-y-2">
-              <Label>אימון קבוצתי</Label>
-              <Input
-                type="datetime-local"
-                value={teamPractice}
-                onChange={(e) => setTeamPractice(e.target.value)}
-              />
+            {/* Team Training Section */}
+            <section className="space-y-4">
+              <h3 className="text-xl font-semibold text-primary">אימון קבוצתי</h3>
+              <div>
+                <Label>בחר יום ושעה</Label>
+                <Input
+                  type="datetime-local"
+                  value={teamPractice}
+                  onChange={(e) => setTeamPractice(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
               <Button 
                 variant="outline" 
                 className="w-full"
@@ -193,15 +209,20 @@ export const WeeklyPlannerForm = () => {
               >
                 הוסף אימון קבוצתי
               </Button>
-            </div>
+            </section>
 
-            <div className="space-y-2">
-              <Label>אימון אישי</Label>
-              <Input
-                type="datetime-local"
-                value={personalTraining}
-                onChange={(e) => setPersonalTraining(e.target.value)}
-              />
+            {/* Personal Training Section */}
+            <section className="space-y-4">
+              <h3 className="text-xl font-semibold text-primary">אימון אישי</h3>
+              <div>
+                <Label>בחר יום ושעה</Label>
+                <Input
+                  type="datetime-local"
+                  value={personalTraining}
+                  onChange={(e) => setPersonalTraining(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
               <Button 
                 variant="outline" 
                 className="w-full"
@@ -209,15 +230,20 @@ export const WeeklyPlannerForm = () => {
               >
                 הוסף אימון אישי
               </Button>
-            </div>
+            </section>
 
-            <div className="space-y-2">
-              <Label>משחק</Label>
-              <Input
-                type="datetime-local"
-                value={gameDateTime}
-                onChange={(e) => setGameDateTime(e.target.value)}
-              />
+            {/* Game Section */}
+            <section className="space-y-4">
+              <h3 className="text-xl font-semibold text-primary">משחק</h3>
+              <div>
+                <Label>מועד המשחק</Label>
+                <Input
+                  type="datetime-local"
+                  value={gameDateTime}
+                  onChange={(e) => setGameDateTime(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
               <Button 
                 variant="outline" 
                 className="w-full"
@@ -225,24 +251,45 @@ export const WeeklyPlannerForm = () => {
               >
                 הוסף משחק
               </Button>
-            </div>
+            </section>
           </div>
 
-          <div className="flex gap-4 mt-6">
+          {/* Action Buttons */}
+          <div className="grid grid-cols-2 gap-4 mt-8">
             <Button 
-              className="flex-1" 
+              className={cn(
+                "flex items-center gap-2",
+                isLoading && "opacity-50 cursor-not-allowed"
+              )}
               onClick={handleSave}
               disabled={isLoading}
             >
+              <Save className="h-4 w-4" />
               {isLoading ? "שומר..." : "שמור מערכת"}
             </Button>
             <Button 
-              variant="outline" 
-              className="flex-1"
+              variant="outline"
+              className="flex items-center gap-2"
               onClick={handleDownloadPDF}
             >
-              <Download className="ml-2 h-4 w-4" />
+              <Download className="h-4 w-4" />
               הורד PDF
+            </Button>
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={handleShareViaEmail}
+            >
+              <Mail className="h-4 w-4" />
+              שלח במייל
+            </Button>
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={handleShareWithCoach}
+            >
+              <Share2 className="h-4 w-4" />
+              שתף עם המאמן
             </Button>
           </div>
         </Card>
