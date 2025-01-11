@@ -15,6 +15,9 @@ import NotificationsManager from "@/pages/NotificationsManager";
 import MentalLearning from "@/pages/MentalLearning";
 import Player from "@/pages/Player";
 import PreGamePlannerPage from "@/pages/PreGamePlanner";
+import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryDashboard";
+import { GameSelection } from "@/components/game/GameSelection";
+import { PreMatchReport } from "@/components/pre-match/PreMatchReport";
 
 const queryClient = new QueryClient();
 
@@ -99,6 +102,30 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <PreGamePlannerPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/training-summary"
+                    element={
+                      <ProtectedRoute>
+                        <TrainingSummaryDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/game-selection"
+                    element={
+                      <ProtectedRoute>
+                        <GameSelection />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/pre-match-report"
+                    element={
+                      <ProtectedRoute>
+                        <PreMatchReport />
                       </ProtectedRoute>
                     }
                   />
