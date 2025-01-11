@@ -21,6 +21,7 @@ interface Activity {
 }
 
 export const WeeklyPlannerForm = () => {
+  const [currentStep, setCurrentStep] = useState(0);
   const [sleepHours, setSleepHours] = useState("8");
   const [selectedDay, setSelectedDay] = useState<string>("0");
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -32,19 +33,141 @@ export const WeeklyPlannerForm = () => {
 
   const days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
+  const steps = [
+    {
+      title: "שעות שינה",
+      description: "כמה שעות שינה אתה צריך? (מומלץ: 8-9 שעות)",
+      component: (
+        <Input
+          type="number"
+          min="4"
+          max="12"
+          value={sleepHours}
+          onChange={(e) => setSleepHours(e.target.value)}
+          className="w-24"
+        />
+      ),
+    },
+    {
+      title: "אימוני קבוצה",
+      description: "באילו ימים יש לך אימון קבוצתי?",
+      component: (
+        <div className="space-y-4">
+          <RadioGroup
+            value={selectedDay}
+            onValueChange={setSelectedDay}
+            className="grid grid-cols-7 gap-2"
+          >
+            {days.map((day, index) => (
+              <div key={index} className="flex items-center space-x-2">
+                <RadioGroupItem value={index.toString()} id={`day-${index}`} />
+                <Label htmlFor={`day-${index}`}>{day}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+          {selectedDay && (
+            <div className="flex gap-2">
+              <Input
+                type="time"
+                value={teamPractice}
+                onChange={(e) => setTeamPractice(e.target.value)}
+              />
+              <Button
+                variant="outline"
+                onClick={() => handleAddActivity("team_training", parseInt(selectedDay))}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: "אימונים אישיים",
+      description: "באילו ימים יש לך אימון אישי?",
+      component: (
+        <div className="space-y-4">
+          <RadioGroup
+            value={selectedDay}
+            onValueChange={setSelectedDay}
+            className="grid grid-cols-7 gap-2"
+          >
+            {days.map((day, index) => (
+              <div key={index} className="flex items-center space-x-2">
+                <RadioGroupItem value={index.toString()} id={`day-${index}`} />
+                <Label htmlFor={`day-${index}`}>{day}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+          {selectedDay && (
+            <div className="flex gap-2">
+              <Input
+                type="time"
+                value={personalTraining}
+                onChange={(e) => setPersonalTraining(e.target.value)}
+              />
+              <Button
+                variant="outline"
+                onClick={() => handleAddActivity("personal_training", parseInt(selectedDay))}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: "אירועים מיוחדים",
+      description: "האם יש לך אירועים מיוחדים השבוע?",
+      component: (
+        <div className="space-y-4">
+          <RadioGroup
+            value={selectedDay}
+            onValueChange={setSelectedDay}
+            className="grid grid-cols-7 gap-2"
+          >
+            {days.map((day, index) => (
+              <div key={index} className="flex items-center space-x-2">
+                <RadioGroupItem value={index.toString()} id={`day-${index}`} />
+                <Label htmlFor={`day-${index}`}>{day}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+          {selectedDay && (
+            <div className="space-y-2">
+              <Input
+                type="text"
+                placeholder="שם האירוע"
+                value={eventTitle}
+                onChange={(e) => setEventTitle(e.target.value)}
+                className="flex-1"
+              />
+              <div className="flex gap-2">
+                <Input
+                  type="time"
+                  value={eventTime}
+                  onChange={(e) => setEventTime(e.target.value)}
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => handleAddActivity("event", parseInt(selectedDay))}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      ),
+    },
+  ];
+
   const handleAddActivity = (type: string, dayIndex: number) => {
     let newActivity: Activity;
 
     switch (type) {
-      case "sleep":
-        newActivity = {
-          day_of_week: dayIndex,
-          start_time: "22:00",
-          end_time: "06:00",
-          activity_type: "sleep",
-          title: "שינה",
-        };
-        break;
       case "team_training":
         if (!teamPractice) {
           toast.error("נא להזין שעת אימון");
@@ -181,107 +304,31 @@ export const WeeklyPlannerForm = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card className="p-6 space-y-6 bg-gradient-to-br from-blue-50 to-white">
           <div className="space-y-6">
-            {/* Sleep Hours */}
-            <section className="space-y-4">
-              <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                שעות שינה (מומלץ 8-9 שעות)
-              </h3>
-              <Input
-                type="number"
-                min="4"
-                max="12"
-                value={sleepHours}
-                onChange={(e) => setSleepHours(e.target.value)}
-                className="w-24"
-              />
-            </section>
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold text-primary">
+                {steps[currentStep].title}
+              </h2>
+              <p className="text-gray-600">{steps[currentStep].description}</p>
+              {steps[currentStep].component}
+            </div>
 
-            {/* Day Selection */}
-            <section className="space-y-4">
-              <h3 className="text-xl font-semibold text-primary">בחר יום</h3>
-              <RadioGroup
-                value={selectedDay}
-                onValueChange={setSelectedDay}
-                className="grid grid-cols-7 gap-2"
+            <div className="flex justify-between mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentStep(prev => Math.max(0, prev - 1))}
+                disabled={currentStep === 0}
               >
-                {days.map((day, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <RadioGroupItem value={index.toString()} id={`day-${index}`} />
-                    <Label htmlFor={`day-${index}`}>{day}</Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </section>
-
-            {/* Activities for Selected Day */}
-            <section className="space-y-4">
-              <h3 className="text-xl font-semibold text-primary">פעילויות ליום {days[parseInt(selectedDay)]}</h3>
-              
-              {/* Team Training */}
-              <div className="space-y-2">
-                <Label>אימון קבוצתי</Label>
-                <div className="flex gap-2">
-                  <Input
-                    type="time"
-                    value={teamPractice}
-                    onChange={(e) => setTeamPractice(e.target.value)}
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => handleAddActivity("team_training", parseInt(selectedDay))}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Personal Training */}
-              <div className="space-y-2">
-                <Label>אימון אישי</Label>
-                <div className="flex gap-2">
-                  <Input
-                    type="time"
-                    value={personalTraining}
-                    onChange={(e) => setPersonalTraining(e.target.value)}
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => handleAddActivity("personal_training", parseInt(selectedDay))}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Special Event */}
-              <div className="space-y-2">
-                <Label>אירוע מיוחד</Label>
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    placeholder="שם האירוע"
-                    value={eventTitle}
-                    onChange={(e) => setEventTitle(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Input
-                    type="time"
-                    value={eventTime}
-                    onChange={(e) => setEventTime(e.target.value)}
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => handleAddActivity("event", parseInt(selectedDay))}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </section>
+                הקודם
+              </Button>
+              <Button
+                onClick={() => setCurrentStep(prev => Math.min(steps.length - 1, prev + 1))}
+                disabled={currentStep === steps.length - 1}
+              >
+                הבא
+              </Button>
+            </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-4 mt-8">
             <Button 
               className={cn(
