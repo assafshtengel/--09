@@ -111,14 +111,6 @@ export const PreMatchPreparationDialog = ({
     onClose();
   };
 
-  const handleClose = () => {
-    if (preparation) {
-      setShowSocialShareDialog(true);
-    } else {
-      cleanupAndClose();
-    }
-  };
-
   const handleSocialShareResponse = async (share: boolean) => {
     if (share) {
       await handleCopy();
@@ -131,14 +123,27 @@ export const PreMatchPreparationDialog = ({
     if (isOpen && !preparation) {
       generatePreparation();
     }
+
+    // Cleanup function
+    return () => {
+      if (!isOpen) {
+        setPreparation("");
+        setIsLoading(false);
+        setShowSocialShareDialog(false);
+      }
+    };
   }, [isOpen, matchId]);
 
   if (!isOpen) return null;
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={cleanupAndClose}>
-        <DialogContent className="max-w-2xl">
+      <Dialog open={isOpen} onOpenChange={(open) => {
+        if (!open) {
+          cleanupAndClose();
+        }
+      }}>
+        <DialogContent className="max-w-2xl" onInteractOutside={cleanupAndClose} onEscapeKeyDown={cleanupAndClose}>
           <DialogTitle className="text-2xl font-bold text-right">
             ההכנה שלי למשחק
           </DialogTitle>
