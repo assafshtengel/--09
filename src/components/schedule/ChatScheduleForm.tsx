@@ -27,7 +27,7 @@ interface ChatScheduleFormProps {
 export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) => {
   const [messages, setMessages] = useState<Message[]>([{
     type: 'system',
-    content: 'ברוך הבא לתכנון השבועי שלך! בוא נתחיל עם כמה שאלות כדי ליצור עבורך לוח זמנים מותאם אישית.',
+    content: 'ברוך הבא! בוא ניצור יחד את לוח הזמנים השבועי שלך. אשאל אותך כמה שאלות קצרות, וניצור את התוכנית המושלמת בשבילך.',
   }]);
   const [currentStep, setCurrentStep] = useState(0);
   const [schedule, setSchedule] = useState<any>({
@@ -126,7 +126,6 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
       
       const updatedSchedule = { ...schedule };
       // Update schedule based on the current step and response
-      
       setSchedule(updatedSchedule);
       onScheduleChange(updatedSchedule);
       
