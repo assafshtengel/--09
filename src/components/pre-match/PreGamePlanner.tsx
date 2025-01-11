@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Printer, Send, Check, Clock, Calendar, Bed, Phone, School, Users } from "lucide-react";
+import { Copy, Printer, Send, Check, Clock, Calendar, Bed, Phone, School, Users, Coffee, Apple, Dumbbell } from "lucide-react";
 import { format, addMinutes, subMinutes } from "date-fns";
 
 interface ScheduleBlock {
@@ -22,13 +22,16 @@ export const PreGamePlanner = () => {
   const [formData, setFormData] = useState({
     matchDate: new Date().toISOString().split('T')[0],
     matchTime: "19:00",
-    schoolDay: "1", // 1-7 for days of week
+    schoolDay: "1",
     schoolStartTime: "08:00",
     schoolEndTime: "15:00",
     hasTeamTraining: false,
     teamTrainingTime: "",
     sleepHours: 8,
     screenTime: 2,
+    breakfastTime: "07:00",
+    lunchTime: "13:00",
+    stretchingTime: "17:00",
     departureTime: "",
   });
 
@@ -38,11 +41,9 @@ export const PreGamePlanner = () => {
   const generateSchedule = async () => {
     setIsLoading(true);
     try {
-      // Calculate arrival time (90 minutes before match)
       const matchDateTime = new Date(`${formData.matchDate}T${formData.matchTime}`);
       const arrivalTime = subMinutes(matchDateTime, 90);
       
-      // Generate schedule blocks
       const newSchedule: ScheduleBlock[] = [];
       
       // Add sleep block
@@ -53,8 +54,16 @@ export const PreGamePlanner = () => {
         color: "bg-blue-100"
       });
 
+      // Add breakfast
+      newSchedule.push({
+        startTime: formData.breakfastTime,
+        endTime: addMinutes(new Date(`2024-01-01T${formData.breakfastTime}`), 30).toTimeString().slice(0, 5),
+        activity: "ארוחת בוקר",
+        color: "bg-orange-100"
+      });
+
       // Add school block if it's a school day
-      if (formData.schoolDay !== "7") { // Not Saturday
+      if (formData.schoolDay !== "7") {
         newSchedule.push({
           startTime: formData.schoolStartTime,
           endTime: formData.schoolEndTime,
@@ -62,6 +71,14 @@ export const PreGamePlanner = () => {
           color: "bg-yellow-100"
         });
       }
+
+      // Add lunch
+      newSchedule.push({
+        startTime: formData.lunchTime,
+        endTime: addMinutes(new Date(`2024-01-01T${formData.lunchTime}`), 45).toTimeString().slice(0, 5),
+        activity: "ארוחת צהריים",
+        color: "bg-orange-100"
+      });
 
       // Add team training if exists
       if (formData.hasTeamTraining && formData.teamTrainingTime) {
@@ -74,6 +91,14 @@ export const PreGamePlanner = () => {
           color: "bg-green-100"
         });
       }
+
+      // Add stretching session
+      newSchedule.push({
+        startTime: formData.stretchingTime,
+        endTime: addMinutes(new Date(`2024-01-01T${formData.stretchingTime}`), 30).toTimeString().slice(0, 5),
+        activity: "אימון מתיחות",
+        color: "bg-purple-100"
+      });
 
       // Add match preparation block
       newSchedule.push({
@@ -169,6 +194,33 @@ export const PreGamePlanner = () => {
 
           <div className="space-y-4">
             <div className="flex items-center gap-2">
+              <Coffee className="h-5 w-5 text-primary" />
+              <Label>זמני ארוחות</Label>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm">ארוחת בוקר</Label>
+                <Input
+                  type="time"
+                  value={formData.breakfastTime}
+                  onChange={(e) => setFormData(prev => ({ ...prev, breakfastTime: e.target.value }))}
+                  className="text-right"
+                />
+              </div>
+              <div>
+                <Label className="text-sm">ארוחת צהריים</Label>
+                <Input
+                  type="time"
+                  value={formData.lunchTime}
+                  onChange={(e) => setFormData(prev => ({ ...prev, lunchTime: e.target.value }))}
+                  className="text-right"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
               <School className="h-5 w-5 text-primary" />
               <Label>שעות בית ספר</Label>
             </div>
@@ -210,7 +262,7 @@ export const PreGamePlanner = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
-              <Label>אימון קבוצתי</Label>
+              <Label>אימונים</Label>
             </div>
             <div className="flex items-center gap-4">
               <input
@@ -230,6 +282,15 @@ export const PreGamePlanner = () => {
                 placeholder="שעת האימון"
               />
             )}
+            <div>
+              <Label className="text-sm">זמן מתיחות</Label>
+              <Input
+                type="time"
+                value={formData.stretchingTime}
+                onChange={(e) => setFormData(prev => ({ ...prev, stretchingTime: e.target.value }))}
+                className="text-right"
+              />
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -292,12 +353,21 @@ export const PreGamePlanner = () => {
                 ))}
               </div>
 
-              <div className="bg-yellow-50 p-4 rounded-lg">
+              <div className="bg-yellow-50 p-4 rounded-lg space-y-4">
+                <h3 className="font-medium mb-2">הנחיות תזונה חשובות:</h3>
+                <ul className="text-sm space-y-2 list-disc list-inside">
+                  <li>אכול ארוחה עשירה בפחמימות מורכבות כ-3-4 שעות לפני המשחק</li>
+                  <li>שתה מים באופן קבוע לאורך היום</li>
+                  <li>הימנע ממאכלים שומניים או קשים לעיכול</li>
+                  <li>אכול חטיף קל כשעה לפני המשחק (למשל, פרי או חטיף אנרגיה)</li>
+                </ul>
+
                 <h3 className="font-medium mb-2">תזכורות חשובות:</h3>
                 <ul className="text-sm space-y-2 list-disc list-inside">
                   <li>הגע למגרש לפחות שעה וחצי לפני תחילת המשחק</li>
                   <li>הקפד על שינה טובה בלילה שלפני המשחק</li>
                   <li>הפחת את זמן המסך ביום המשחק</li>
+                  <li>בצע תרגילי הרפיה או מדיטציה לשליטה במתח</li>
                   <li>הכן את הציוד שלך מראש</li>
                 </ul>
               </div>
