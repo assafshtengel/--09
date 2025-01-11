@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Eye, Target, ChartBar, Mail, Printer, Instagram } from "lucide-react";
+import { Eye, Target, ChartBar, Mail, Printer, Instagram, X, RefreshCw } from "lucide-react";
 import { GameHistoryItem } from "@/components/game/history/types";
 import { GameDetailsDialog } from "@/components/game/history/GameDetailsDialog";
 import { PreMatchGoalsDialog } from "@/components/game/history/PreMatchGoalsDialog";
@@ -75,7 +75,7 @@ const GameHistory = () => {
           match_date: report.match_date,
           opponent: report.opponent,
           pre_match_report: {
-            actions: report.actions,
+            actions: report.actions || [],
             questions_answers: report.questions_answers,
             havaya: report.havaya
           },
@@ -234,9 +234,15 @@ const GameHistory = () => {
       printWindow.document.write(printContent.innerHTML);
       printWindow.document.close();
       printWindow.focus();
-      printWindow.print();
-      printWindow.close();
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 250);
     }
+  };
+
+  const handleGameRestart = (gameId: string) => {
+    navigate(`/game/${gameId}?mode=review`);
   };
 
   if (isLoading) {
@@ -267,16 +273,27 @@ const GameHistory = () => {
                 </div>
                 <div className="flex gap-2">
                   {!game.isPreMatchOnly && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        setSelectedGame(game);
-                        setShowDetailsDialog(true);
-                      }}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedGame(game);
+                          setShowDetailsDialog(true);
+                        }}
+                        title="צפה בפרטי המשחק"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleGameRestart(game.id)}
+                        title="עדכן משחק מחדש"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    </>
                   )}
                   <Button
                     variant="outline"
@@ -285,6 +302,7 @@ const GameHistory = () => {
                       setSelectedGame(game);
                       setShowGoalsDialog(true);
                     }}
+                    title="צפה ביעדים"
                   >
                     <Target className="h-4 w-4" />
                   </Button>
@@ -296,6 +314,7 @@ const GameHistory = () => {
                         setSelectedGame(game);
                         setShowSummaryDialog(true);
                       }}
+                      title="צפה בסיכום המשחק"
                     >
                       <ChartBar className="h-4 w-4" />
                     </Button>
@@ -326,6 +345,7 @@ const GameHistory = () => {
                     variant="outline"
                     size="icon"
                     onClick={() => handlePrint(game)}
+                    title="הדפס דוח"
                   >
                     <Printer className="h-4 w-4" />
                   </Button>
@@ -336,6 +356,7 @@ const GameHistory = () => {
                       setSelectedGame(game);
                       setShowInstagramSummary(true);
                     }}
+                    title="שתף באינסטגרם"
                   >
                     <Instagram className="h-4 w-4" />
                   </Button>
@@ -386,16 +407,14 @@ const GameHistory = () => {
               }}
               actions={selectedGame.pre_match_report?.actions || []}
               havaya={selectedGame.pre_match_report?.havaya?.split(',') || []}
+              matchId={selectedGame.id}
               onClose={() => {
                 setShowInstagramSummary(false);
                 setSelectedGame(null);
               }}
               onShare={() => {
                 setShowInstagramSummary(false);
-                toast({
-                  title: "התמונה הורדה בהצלחה",
-                  description: "כעת תוכל להעלות אותה לאינסטגרם",
-                });
+                toast.success("התמונה הורדה בהצלחה");
               }}
             />
           )}
