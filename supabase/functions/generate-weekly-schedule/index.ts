@@ -7,6 +7,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -28,7 +29,7 @@ serve(async (req) => {
     - שעות בית ספר: ${JSON.stringify(schedule.schoolHours)}
     - אימוני קבוצה: ${JSON.stringify(schedule.teamTraining)}
     - אימונים אישיים: ${JSON.stringify(schedule.personalTraining)}
-    - שעות שינה רצויות: ${schedule.sleepSchedule.desiredHours} שעות ו-${schedule.sleepSchedule.desiredMinutes} דקות
+    - שעות שינה רצויות: ${schedule.sleepSchedule?.desiredHours} שעות ו-${schedule.sleepSchedule?.desiredMinutes} דקות
     - זמן מסכים רצוי ביום: ${schedule.screenTime} שעות
     - אירועים מיוחדים: ${JSON.stringify(schedule.specialEvents)}
     - משחקים: ${JSON.stringify(schedule.games)}
@@ -59,7 +60,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
