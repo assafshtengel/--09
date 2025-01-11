@@ -95,6 +95,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/player"
+              element={
+                <ProtectedRoute>
+                  <Player />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </main>
         <Toaster />
