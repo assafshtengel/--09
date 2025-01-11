@@ -131,21 +131,13 @@ export const PreMatchPreparationDialog = ({
     if (isOpen && !preparation) {
       generatePreparation();
     }
-
-    return () => {
-      if (!isOpen) {
-        setPreparation("");
-        setIsLoading(false);
-        setShowSocialShareDialog(false);
-      }
-    };
   }, [isOpen, matchId]);
 
   if (!isOpen) return null;
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={handleClose}>
+      <Dialog open={isOpen} onOpenChange={cleanupAndClose}>
         <DialogContent className="max-w-2xl">
           <DialogTitle className="text-2xl font-bold text-right">
             ההכנה שלי למשחק
