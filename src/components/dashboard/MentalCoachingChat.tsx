@@ -2,11 +2,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Send, Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Send, Loader2, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -29,6 +35,7 @@ export const MentalCoachingChat = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState<CoachType | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading || !selectedCoach) return;
@@ -37,7 +44,6 @@ export const MentalCoachingChat = () => {
     setInput('');
     setIsLoading(true);
 
-    // Add user message immediately
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
 
     try {
@@ -50,7 +56,6 @@ export const MentalCoachingChat = () => {
 
       if (error) throw error;
 
-      // Add AI response
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -71,6 +76,7 @@ export const MentalCoachingChat = () => {
     setSelectedCoach(type);
     setMessages([]);
     setIsLoading(true);
+    setIsDialogOpen(true);
 
     try {
       const { data, error } = await supabase.functions.invoke('mental-coaching-chat', {
@@ -82,7 +88,6 @@ export const MentalCoachingChat = () => {
 
       if (error) throw error;
 
-      // Add initial coach message
       setMessages([{ role: 'assistant', content: data.reply }]);
     } catch (error) {
       console.error('Error starting chat:', error);
@@ -92,42 +97,49 @@ export const MentalCoachingChat = () => {
     }
   };
 
-  return (
-    <Card className="w-full bg-gradient-to-br from-background to-background/95 shadow-lg">
-      <CardHeader>
-        <CardTitle className="text-2xl">התייעצות עם מאמן</CardTitle>
-        {!selectedCoach && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {(Object.entries(coachTypes) as [CoachType, string][]).map(([type, title]) => (
-              <Button
-                key={type}
-                onClick={() => selectCoach(type)}
-                variant="outline"
-                className="flex-1"
-              >
-                {title}
-              </Button>
-            ))}
-          </div>
-        )}
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {selectedCoach && (
-          <>
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-lg font-semibold">{coachTypes[selectedCoach]}</span>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setSelectedCoach(null);
-                  setMessages([]);
-                }}
-              >
-                החלף מאמן
-              </Button>
-            </div>
+  const closeChat = () => {
+    setIsDialogOpen(false);
+    setSelectedCoach(null);
+    setMessages([]);
+  };
 
-            <ScrollArea className="h-[400px] rounded-md border p-4">
+  return (
+    <div className="w-full max-w-4xl mx-auto">
+      <div className="bg-white/50 backdrop-blur-sm p-6 rounded-lg shadow-sm">
+        <h2 className="text-2xl font-semibold text-center mb-6">התייעצות עם מאמן</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {(Object.entries(coachTypes) as [CoachType, string][]).map(([type, title]) => (
+            <Button
+              key={type}
+              onClick={() => selectCoach(type)}
+              variant="outline"
+              className="h-16 relative overflow-hidden group bg-white hover:bg-primary hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
+            >
+              <span className="relative z-10">{title}</span>
+              <motion.div
+                className="absolute inset-0 bg-primary/10 group-hover:bg-primary/100 transition-all duration-300"
+                initial={false}
+                animate={{ scale: 1 }}
+                whileHover={{ scale: 1.1 }}
+              />
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>{selectedCoach && coachTypes[selectedCoach]}</span>
+              <Button variant="ghost" size="sm" onClick={closeChat}>
+                סגור
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-grow overflow-hidden">
+            <ScrollArea className="h-full p-4">
               <AnimatePresence initial={false}>
                 {messages.map((message, index) => (
                   <motion.div
@@ -162,13 +174,15 @@ export const MentalCoachingChat = () => {
                 </motion.div>
               )}
             </ScrollArea>
+          </div>
 
+          <div className="p-4 border-t">
             <div className="flex gap-2">
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder={`שאל את ${coachTypes[selectedCoach]}...`}
+                placeholder={`שאל את ${selectedCoach ? coachTypes[selectedCoach] : 'המאמן'}...`}
                 className="min-h-[80px]"
               />
               <Button
@@ -183,9 +197,9 @@ export const MentalCoachingChat = () => {
                 )}
               </Button>
             </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
