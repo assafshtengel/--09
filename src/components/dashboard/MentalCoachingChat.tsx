@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
-import { Send, Loader2, MessageSquare } from "lucide-react";
+import { Send, Loader2, Brain, Apple, Dumbbell, Target, Crosshair, Weight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,13 +21,13 @@ interface Message {
 
 type CoachType = 'mental' | 'nutrition' | 'fitness' | 'tactical' | 'technical' | 'strength';
 
-const coachTypes: Record<CoachType, string> = {
-  mental: "מאמן מנטאלי",
-  nutrition: "מאמן תזונה",
-  fitness: "מאמן כושר",
-  tactical: "מאמן טקטי",
-  technical: "מאמן טכני",
-  strength: "מאמן כוח"
+const coachTypes: Record<CoachType, { title: string; icon: React.ComponentType }> = {
+  mental: { title: "מאמן מנטאלי", icon: Brain },
+  nutrition: { title: "מאמן תזונה", icon: Apple },
+  fitness: { title: "מאמן כושר", icon: Dumbbell },
+  tactical: { title: "מאמן טקטי", icon: Target },
+  technical: { title: "מאמן טכני", icon: Crosshair },
+  strength: { title: "מאמן כוח", icon: Weight }
 };
 
 export const MentalCoachingChat = () => {
@@ -105,25 +105,28 @@ export const MentalCoachingChat = () => {
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <div className="bg-white/50 backdrop-blur-sm p-6 rounded-lg shadow-sm">
-        <h2 className="text-2xl font-semibold text-center mb-6">התייעצות עם מאמן</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {(Object.entries(coachTypes) as [CoachType, string][]).map(([type, title]) => (
-            <Button
-              key={type}
-              onClick={() => selectCoach(type)}
-              variant="outline"
-              className="h-16 relative overflow-hidden group bg-white hover:bg-primary hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
-            >
-              <span className="relative z-10">{title}</span>
-              <motion.div
-                className="absolute inset-0 bg-primary/10 group-hover:bg-primary/100 transition-all duration-300"
-                initial={false}
-                animate={{ scale: 1 }}
-                whileHover={{ scale: 1.1 }}
-              />
-            </Button>
-          ))}
+      <div className="bg-white/50 backdrop-blur-sm rounded-lg shadow-sm sticky top-0 z-50">
+        <div className="p-4">
+          <h2 className="text-xl font-semibold text-center mb-4">התייעצות עם מאמן</h2>
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+            {(Object.entries(coachTypes) as [CoachType, { title: string; icon: React.ComponentType }][]).map(([type, { title, icon: Icon }]) => (
+              <Button
+                key={type}
+                onClick={() => selectCoach(type)}
+                variant="outline"
+                className="relative h-20 flex flex-col items-center justify-center gap-1 bg-white hover:bg-primary hover:text-white transition-all duration-300 shadow-sm hover:shadow-md group"
+              >
+                <Icon className="h-6 w-6 group-hover:scale-110 transition-transform duration-300" />
+                <span className="text-xs text-center">{title}</span>
+                <motion.div
+                  className="absolute inset-0 bg-primary/10 rounded-md group-hover:bg-primary/100 transition-all duration-300"
+                  initial={false}
+                  animate={{ scale: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                />
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -131,7 +134,7 @@ export const MentalCoachingChat = () => {
         <DialogContent className="max-w-2xl h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
-              <span>{selectedCoach && coachTypes[selectedCoach]}</span>
+              <span>{selectedCoach && coachTypes[selectedCoach].title}</span>
               <Button variant="ghost" size="sm" onClick={closeChat}>
                 סגור
               </Button>
@@ -182,7 +185,7 @@ export const MentalCoachingChat = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder={`שאל את ${selectedCoach ? coachTypes[selectedCoach] : 'המאמן'}...`}
+                placeholder={`שאל את ${selectedCoach ? coachTypes[selectedCoach].title : 'המאמן'}...`}
                 className="min-h-[80px]"
               />
               <Button
