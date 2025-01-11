@@ -104,25 +104,30 @@ export const MentalCoachingChat = () => {
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <div className="bg-[#F3F4F6] backdrop-blur-sm rounded-lg shadow-sm border border-[#E5E7EB] overflow-hidden">
-        <div className="p-4">
-          <h2 className="text-xl font-semibold text-center mb-4 text-[#111827]">התייעצות עם מאמן</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="bg-white rounded-xl shadow-md border border-[#E5E7EB] overflow-hidden">
+        <div className="p-6">
+          <h2 className="text-xl font-semibold text-center mb-6 text-[#111827]">התייעצות עם מאמנים</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             {(Object.entries(coachTypes) as [CoachType, { title: string; icon: React.ComponentType; color: string }][]).map(([type, { title, icon: Icon, color }]) => (
               <Button
                 key={type}
                 onClick={() => selectCoach(type)}
                 variant="outline"
-                className="relative h-20 flex flex-col items-center justify-center gap-2 bg-[#E0F2FE] hover:bg-[#BEE3F8] active:bg-[#93C5FD] text-[#111827] transition-all duration-300 shadow-sm hover:shadow-md group"
+                className="relative h-24 flex flex-col items-center justify-center gap-3 bg-white hover:bg-gray-50 
+                  text-gray-800 transition-all duration-300 border border-gray-200 rounded-xl
+                  hover:shadow-md group"
               >
-                <div className="flex flex-col items-center gap-1">
-                  <div style={{ color }} className="h-6 w-6 group-hover:scale-110 transition-transform duration-300">
+                <div className="flex flex-col items-center gap-2">
+                  <div 
+                    style={{ color }} 
+                    className="h-6 w-6 group-hover:scale-110 transition-transform duration-300"
+                  >
                     <Icon />
                   </div>
                   <span className="text-sm font-medium text-center line-clamp-2">{title}</span>
                 </div>
                 <motion.div
-                  className="absolute inset-0 bg-white/10 rounded-md group-hover:bg-white/20 transition-all duration-300"
+                  className="absolute inset-0 bg-white/5 rounded-xl group-hover:bg-gray-50/50 transition-all duration-300"
                   initial={false}
                   animate={{ scale: 1 }}
                   whileHover={{ scale: 1.02 }}
