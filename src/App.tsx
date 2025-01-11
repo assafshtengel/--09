@@ -1,21 +1,21 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Navigation } from "@/components/Navigation";
-import { Auth } from "@/pages/Auth";
-import { Dashboard } from "@/pages/Dashboard";
-import { Profile } from "@/pages/Profile";
-import { Index } from "@/pages/Index";
-import { Admin } from "@/pages/Admin";
-import { GameHistory } from "@/pages/GameHistory";
-import { PreGamePlanner } from "@/pages/PreGamePlanner";
-import { WeeklyPlanner } from "@/pages/WeeklyPlanner";
-import { PlayerPortfolio } from "@/pages/PlayerPortfolio";
-import { MentalLearning } from "@/pages/MentalLearning";
-import { NotificationsManager } from "@/pages/NotificationsManager";
+import Auth from "@/pages/Auth";
+import Dashboard from "@/pages/Dashboard";
+import Profile from "@/pages/Profile";
+import Index from "@/pages/Index";
+import Admin from "@/pages/Admin";
+import GameHistory from "@/pages/GameHistory";
+import PreGamePlanner from "@/pages/PreGamePlanner";
+import WeeklyPlanner from "@/pages/WeeklyPlanner";
+import PlayerPortfolio from "@/pages/PlayerPortfolio";
+import MentalLearning from "@/pages/MentalLearning";
+import NotificationsManager from "@/pages/NotificationsManager";
 import { GameTracker } from "@/components/GameTracker";
 import { TrainingSummaryForm } from "@/components/training/TrainingSummaryForm";
 import { GameSelection } from "@/components/game/GameSelection";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import "./App.css";
 
@@ -98,7 +98,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* Restored Routes */}
         <Route
           path="/game-selection"
           element={
