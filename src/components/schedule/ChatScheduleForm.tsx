@@ -186,6 +186,59 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
     handleNextStep();
   };
 
+  const handleSpecialEventInput = () => {
+    if (!tempInput.day || !tempInput.startTime || !tempInput.endTime || !tempInput.description) {
+      toast.error("נא למלא את כל פרטי האירוע");
+      return;
+    }
+
+    const newEvent = {
+      day: tempInput.day,
+      startTime: tempInput.startTime,
+      endTime: tempInput.endTime,
+      description: tempInput.description
+    };
+
+    const updatedSchedule = {
+      ...schedule,
+      specialEvents: [...schedule.specialEvents, newEvent]
+    };
+
+    setSchedule(updatedSchedule);
+    onScheduleChange(updatedSchedule);
+    setTempInput({ day: '', startTime: '', endTime: '', description: '' });
+
+    if (schedule.specialEvents.length === 0) {
+      handleNextStep();
+    }
+  };
+
+  const handleGameInput = () => {
+    if (!tempInput.day || !tempInput.startTime || !tempInput.description) {
+      toast.error("נא למלא את כל פרטי המשחק");
+      return;
+    }
+
+    const newGame = {
+      day: tempInput.day,
+      startTime: tempInput.startTime,
+      description: tempInput.description
+    };
+
+    const updatedSchedule = {
+      ...schedule,
+      games: [...schedule.games, newGame]
+    };
+
+    setSchedule(updatedSchedule);
+    onScheduleChange(updatedSchedule);
+    setTempInput({ day: '', startTime: '', description: '' });
+
+    if (schedule.games.length === 0) {
+      handleNextStep();
+    }
+  };
+
   const generateAISchedule = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('generate-weekly-schedule', {
