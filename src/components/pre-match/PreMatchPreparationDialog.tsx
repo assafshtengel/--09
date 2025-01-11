@@ -120,7 +120,16 @@ export const PreMatchPreparationDialog = ({
       await handleCopy();
       window.open('https://www.instagram.com/', '_blank');
     }
-    onClose();
+    setPreparation(""); // Reset the preparation text
+    onClose(); // Call the parent's onClose function
+  };
+
+  const handleDialogClose = () => {
+    if (preparation) {
+      handleClose();
+    } else {
+      onClose();
+    }
   };
 
   // Generate preparation text when dialog opens
@@ -132,7 +141,7 @@ export const PreMatchPreparationDialog = ({
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={handleDialogClose}>
         <DialogContent className="max-w-2xl">
           <DialogTitle className="text-2xl font-bold text-right">ההכנה שלי למשחק</DialogTitle>
           
