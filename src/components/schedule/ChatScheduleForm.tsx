@@ -263,7 +263,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
         type: 'system'
       },
       {
-        content: 'מהן שעות השינה שלך לכל יום? ציין את שעת ההליכה לישון ושעת ההתעוררות.',
+        content: 'כמה שעות שינה אתה מעוניין לישון בכל לילה? (ההמלצה בגילך היא לישון בין 8-9 שעות)',
         inputType: 'sleepSchedule',
         type: 'system'
       },
