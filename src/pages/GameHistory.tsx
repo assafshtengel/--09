@@ -154,8 +154,8 @@ const GameHistory = () => {
             <div>
               <h3>תשובות לשאלות</h3>
               ${Object.entries(game.pre_match_report.questions_answers).map(([question, answer]) => `
-                <div style="margin-bottom: 1rem;">
-                  <p style="font-weight: bold;">${question}</p>
+                <div>
+                  <p><strong>${question}</strong></p>
                   <p>${answer}</p>
                 </div>
               `).join('')}
@@ -183,8 +183,63 @@ const GameHistory = () => {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = (game: GameHistoryItem) => {
+    // Create a temporary div for printing
+    const printContent = document.createElement('div');
+    printContent.innerHTML = `
+      <div dir="rtl" style="padding: 20px; font-family: Arial, sans-serif;">
+        <h1 style="text-align: right;">דוח טרום משחק</h1>
+        <div style="margin: 20px 0;">
+          <p>תאריך: ${format(new Date(game.match_date), 'dd/MM/yyyy')}</p>
+          ${game.opponent ? `<p>נגד: ${game.opponent}</p>` : ''}
+        </div>
+        
+        ${game.pre_match_report?.havaya ? `
+          <div style="margin: 20px 0;">
+            <h3>הוויות נבחרות</h3>
+            <p>${game.pre_match_report.havaya}</p>
+          </div>
+        ` : ''}
+
+        ${game.pre_match_report?.actions ? `
+          <div style="margin: 20px 0;">
+            <h3>יעדים למשחק</h3>
+            <ul>
+              ${Array.isArray(game.pre_match_report.actions) ? 
+                game.pre_match_report.actions.map((action: any) => `
+                  <li style="margin: 10px 0;">
+                    ${action.name}
+                    ${action.goal ? `<br>יעד: ${action.goal}` : ''}
+                  </li>
+                `).join('') : ''
+              }
+            </ul>
+          </div>
+        ` : ''}
+
+        ${game.pre_match_report?.questions_answers ? `
+          <div style="margin: 20px 0;">
+            <h3>שאלות ותשובות</h3>
+            ${Object.entries(game.pre_match_report.questions_answers).map(([question, answer]) => `
+              <div style="margin: 15px 0; padding: 10px; border: 1px solid #eee;">
+                <p style="font-weight: bold;">${question}</p>
+                <p>${answer}</p>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent.innerHTML);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    }
   };
 
   if (isLoading) {
@@ -273,7 +328,7 @@ const GameHistory = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={handlePrint}
+                    onClick={() => handlePrint(game)}
                   >
                     <Printer className="h-4 w-4" />
                   </Button>
@@ -282,7 +337,8 @@ const GameHistory = () => {
                     size="icon"
                     onClick={() => {
                       setSelectedGame(game);
-                      // Handle Instagram share
+                      // Handle Instagram share - will be implemented in InstagramSummary
+                      setShowInstagramSummary(true);
                     }}
                   >
                     <Instagram className="h-4 w-4" />
