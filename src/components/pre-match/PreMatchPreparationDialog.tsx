@@ -141,6 +141,13 @@ export const PreMatchPreparationDialog = ({
     };
   }, [isOpen, matchId]);
 
+  // Force cleanup when dialog is closed
+  useEffect(() => {
+    if (!isOpen) {
+      cleanupAndClose();
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
