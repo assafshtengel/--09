@@ -111,7 +111,11 @@ export const PreMatchPreparationDialog = ({
   };
 
   const handleClose = () => {
-    setShowSocialShareDialog(true);
+    if (preparation) {
+      setShowSocialShareDialog(true);
+    } else {
+      cleanupAndClose();
+    }
   };
 
   const handleSocialShareResponse = async (share: boolean) => {
@@ -120,16 +124,14 @@ export const PreMatchPreparationDialog = ({
       await handleCopy();
       window.open('https://www.instagram.com/', '_blank');
     }
-    setPreparation(""); // Reset the preparation text
-    onClose(); // Call the parent's onClose function
+    cleanupAndClose();
   };
 
-  const handleDialogClose = () => {
-    if (preparation) {
-      handleClose();
-    } else {
-      onClose();
-    }
+  const cleanupAndClose = () => {
+    setPreparation("");
+    setIsLoading(false);
+    setShowSocialShareDialog(false);
+    onClose();
   };
 
   // Generate preparation text when dialog opens
@@ -137,11 +139,19 @@ export const PreMatchPreparationDialog = ({
     if (isOpen && !preparation) {
       generatePreparation();
     }
+    // Cleanup when dialog closes
+    return () => {
+      if (!isOpen) {
+        setPreparation("");
+        setIsLoading(false);
+        setShowSocialShareDialog(false);
+      }
+    };
   }, [isOpen, matchId]);
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={handleDialogClose}>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="max-w-2xl">
           <DialogTitle className="text-2xl font-bold text-right">ההכנה שלי למשחק</DialogTitle>
           
