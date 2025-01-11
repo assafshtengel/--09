@@ -38,13 +38,54 @@ export const PreGamePlanner = () => {
   const [schedule, setSchedule] = useState<ScheduleBlock[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const validateSchedule = (schedule: ScheduleBlock[]) => {
+    const schoolEndTime = formData.schoolDay !== "7" ? formData.schoolEndTime : null;
+    const lunchTime = formData.lunchTime;
+
+    // Check if lunch time conflicts with school hours
+    if (schoolEndTime) {
+      const schoolEnd = new Date(`2024-01-01T${schoolEndTime}`);
+      const lunch = new Date(`2024-01-01T${lunchTime}`);
+      
+      if (lunch < schoolEnd) {
+        // Adjust lunch time to 30 minutes after school ends
+        const adjustedLunch = addMinutes(schoolEnd, 30);
+        setFormData(prev => ({
+          ...prev,
+          lunchTime: format(adjustedLunch, "HH:mm")
+        }));
+        toast.info("זמן ארוחת הצהריים הותאם לאחר שעות בית הספר");
+      }
+    }
+
+    // Validate and adjust other activities based on match time
+    const matchDateTime = new Date(`${formData.matchDate}T${formData.matchTime}`);
+    const matchDay = matchDateTime.getDay() + 1; // 1-7 format
+
+    // If match is on a school day, ensure proper timing
+    if (matchDay.toString() === formData.schoolDay) {
+      // Ensure enough rest time after school
+      if (schoolEndTime) {
+        const minRestHours = 2;
+        const schoolEnd = new Date(`2024-01-01T${schoolEndTime}`);
+        const matchTime = new Date(`2024-01-01T${formData.matchTime}`);
+        
+        if ((matchTime.getTime() - schoolEnd.getTime()) / (1000 * 60 * 60) < minRestHours) {
+          toast.warning("מומלץ לתכנן לפחות שעתיים מנוחה בין סיום הלימודים למשחק");
+        }
+      }
+    }
+
+    return schedule;
+  };
+
   const generateSchedule = async () => {
     setIsLoading(true);
     try {
       const matchDateTime = new Date(`${formData.matchDate}T${formData.matchTime}`);
       const arrivalTime = subMinutes(matchDateTime, 90);
       
-      const newSchedule: ScheduleBlock[] = [];
+      let newSchedule: ScheduleBlock[] = [];
       
       // Add sleep block
       newSchedule.push({
@@ -54,7 +95,7 @@ export const PreGamePlanner = () => {
         color: "bg-blue-100"
       });
 
-      // Add breakfast
+      // Add breakfast with proper timing
       newSchedule.push({
         startTime: formData.breakfastTime,
         endTime: addMinutes(new Date(`2024-01-01T${formData.breakfastTime}`), 30).toTimeString().slice(0, 5),
@@ -72,18 +113,40 @@ export const PreGamePlanner = () => {
         });
       }
 
-      // Add lunch
-      newSchedule.push({
+      // Add lunch with smart timing
+      const lunchBlock = {
         startTime: formData.lunchTime,
         endTime: addMinutes(new Date(`2024-01-01T${formData.lunchTime}`), 45).toTimeString().slice(0, 5),
         activity: "ארוחת צהריים",
         color: "bg-orange-100"
-      });
+      };
+
+      // Validate lunch timing
+      if (formData.schoolDay !== "7") {
+        const schoolEnd = new Date(`2024-01-01T${formData.schoolEndTime}`);
+        const lunch = new Date(`2024-01-01T${formData.lunchTime}`);
+        
+        if (lunch < schoolEnd) {
+          lunchBlock.startTime = addMinutes(schoolEnd, 30).toTimeString().slice(0, 5);
+          lunchBlock.endTime = addMinutes(schoolEnd, 75).toTimeString().slice(0, 5);
+        }
+      }
+      
+      newSchedule.push(lunchBlock);
 
       // Add team training if exists
       if (formData.hasTeamTraining && formData.teamTrainingTime) {
         const trainingStart = formData.teamTrainingTime;
         const trainingEnd = addMinutes(new Date(`2024-01-01T${trainingStart}`), 90).toTimeString().slice(0, 5);
+        
+        // Validate training timing
+        const trainingStartTime = new Date(`2024-01-01T${trainingStart}`);
+        const matchTime = new Date(`2024-01-01T${formData.matchTime}`);
+        
+        if ((matchTime.getTime() - trainingStartTime.getTime()) / (1000 * 60 * 60) < 3) {
+          toast.warning("אימון קבוצתי קרוב מדי למשחק. מומלץ לפחות 3 שעות הפרש");
+        }
+        
         newSchedule.push({
           startTime: trainingStart,
           endTime: trainingEnd,
@@ -92,7 +155,21 @@ export const PreGamePlanner = () => {
         });
       }
 
-      // Add stretching session
+      // Add stretching session with smart timing
+      const stretchingTime = formData.stretchingTime;
+      const matchTime = new Date(`2024-01-01T${formData.matchTime}`);
+      const stretchingDateTime = new Date(`2024-01-01T${stretchingTime}`);
+      
+      if ((matchTime.getTime() - stretchingDateTime.getTime()) / (1000 * 60 * 60) < 1) {
+        // Adjust stretching time if too close to match
+        const adjustedStretchingTime = subMinutes(matchTime, 90);
+        setFormData(prev => ({
+          ...prev,
+          stretchingTime: format(adjustedStretchingTime, "HH:mm")
+        }));
+        toast.info("זמן המתיחות הותאם כדי לאפשר הכנה מספקת למשחק");
+      }
+
       newSchedule.push({
         startTime: formData.stretchingTime,
         endTime: addMinutes(new Date(`2024-01-01T${formData.stretchingTime}`), 30).toTimeString().slice(0, 5),
@@ -108,6 +185,16 @@ export const PreGamePlanner = () => {
         color: "bg-purple-100"
       });
 
+      // Sort schedule by time
+      newSchedule.sort((a, b) => {
+        const timeA = new Date(`2024-01-01T${a.startTime}`);
+        const timeB = new Date(`2024-01-01T${b.startTime}`);
+        return timeA.getTime() - timeB.getTime();
+      });
+
+      // Validate the entire schedule
+      newSchedule = validateSchedule(newSchedule);
+      
       setSchedule(newSchedule);
       toast.success("לוח הזמנים נוצר בהצלחה!");
     } catch (error) {
