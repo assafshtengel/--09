@@ -22,12 +22,12 @@ interface Activity {
 
 export const WeeklyPlannerForm = () => {
   const [sleepHours, setSleepHours] = useState("8");
-  const [screenTime, setScreenTime] = useState("2");
+  const [selectedDay, setSelectedDay] = useState<string>("0");
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [teamPractice, setTeamPractice] = useState("");
   const [personalTraining, setPersonalTraining] = useState("");
   const [eventTime, setEventTime] = useState("");
-  const [selectedDay, setSelectedDay] = useState<string>("0");
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const [eventTitle, setEventTitle] = useState("");
   const { saveSchedule, isLoading } = useWeeklySchedule();
 
   const days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
@@ -72,8 +72,8 @@ export const WeeklyPlannerForm = () => {
         };
         break;
       case "event":
-        if (!eventTime) {
-          toast.error("נא להזין שעת אירוע");
+        if (!eventTime || !eventTitle) {
+          toast.error("נא להזין שעת וכותרת האירוע");
           return;
         }
         newActivity = {
@@ -81,7 +81,7 @@ export const WeeklyPlannerForm = () => {
           start_time: eventTime,
           end_time: new Date(new Date(`2024-01-01T${eventTime}`).getTime() + 2 * 60 * 60 * 1000).toTimeString().slice(0, 5),
           activity_type: "event",
-          title: "אירוע",
+          title: eventTitle,
         };
         break;
       default:
@@ -96,6 +96,15 @@ export const WeeklyPlannerForm = () => {
     const newActivities: Activity[] = [];
     
     days.forEach((_, dayIndex) => {
+      // Add sleep schedule based on user input
+      newActivities.push({
+        day_of_week: dayIndex,
+        start_time: "22:00",
+        end_time: `0${parseInt(sleepHours)}:00`,
+        activity_type: "sleep",
+        title: "שינה",
+      });
+
       // Breakfast
       newActivities.push({
         day_of_week: dayIndex,
@@ -188,19 +197,6 @@ export const WeeklyPlannerForm = () => {
               />
             </section>
 
-            {/* Screen Time - Smaller Input */}
-            <section className="space-y-4">
-              <h3 className="text-xl font-semibold text-primary">זמן מסך יומי</h3>
-              <Input
-                type="number"
-                min="0"
-                max="24"
-                value={screenTime}
-                onChange={(e) => setScreenTime(e.target.value)}
-                className="w-24"
-              />
-            </section>
-
             {/* Day Selection */}
             <section className="space-y-4">
               <h3 className="text-xl font-semibold text-primary">בחר יום</h3>
@@ -258,10 +254,17 @@ export const WeeklyPlannerForm = () => {
                 </div>
               </div>
 
-              {/* Event */}
+              {/* Special Event */}
               <div className="space-y-2">
-                <Label>אירוע</Label>
+                <Label>אירוע מיוחד</Label>
                 <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="שם האירוע"
+                    value={eventTitle}
+                    onChange={(e) => setEventTitle(e.target.value)}
+                    className="flex-1"
+                  />
                   <Input
                     type="time"
                     value={eventTime}
