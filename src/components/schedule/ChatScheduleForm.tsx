@@ -3,13 +3,15 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 interface Message {
   type: 'system' | 'user';
   content: string;
   options?: string[];
-  inputType?: 'multiSelect';
+  inputType?: 'multiSelect' | 'timeInputs' | 'teamTraining' | 'personalTraining' | 'sleepSchedule' | 'screenTime' | 'specialEvents' | 'games' | 'notes';
 }
 
 interface ChatScheduleFormProps {
@@ -24,8 +26,17 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   const [currentStep, setCurrentStep] = useState(0);
   const [schedule, setSchedule] = useState<any>({
     schoolDays: [],
+    schoolHours: {},
+    teamTraining: [],
+    personalTraining: [],
+    sleepSchedule: {},
+    screenTime: {},
+    specialEvents: [],
+    games: [],
+    notes: '',
   });
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [tempInput, setTempInput] = useState<any>({});
 
   const days = [
     'ראשון',
@@ -62,26 +73,40 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
     onScheduleChange(updatedSchedule);
   };
 
-  const handleNextQuestion = () => {
-    setMessages(prev => [...prev, {
-      type: 'system',
-      content: 'באילו ימים יש לך בית ספר השבוע?',
-      inputType: 'multiSelect',
-      options: days,
-    }]);
-    setCurrentStep(prev => prev + 1);
+  const handleTimeInput = (day: string, type: 'start' | 'end', value: string) => {
+    const updatedHours = { ...schedule.schoolHours };
+    if (!updatedHours[day]) {
+      updatedHours[day] = {};
+    }
+    updatedHours[day][type] = value;
+    
+    const updatedSchedule = { ...schedule, schoolHours: updatedHours };
+    setSchedule(updatedSchedule);
+    onScheduleChange(updatedSchedule);
   };
 
-  const handleContinueToHours = () => {
-    if (selectedDays.length === 0) {
-      return;
+  const handleNextStep = () => {
+    if (currentStep === 0) {
+      setMessages(prev => [...prev, {
+        type: 'system',
+        content: 'באילו ימים יש לך בית ספר השבוע?',
+        inputType: 'multiSelect',
+        options: days,
+      }]);
+    } else if (currentStep === 1 && selectedDays.length > 0) {
+      setMessages(prev => [...prev, {
+        type: 'system',
+        content: 'מה שעות ההתחלה והסיום לכל יום שבחרת?',
+        inputType: 'timeInputs',
+      }]);
+    } else if (currentStep === 2) {
+      setMessages(prev => [...prev, {
+        type: 'system',
+        content: 'מתי יש לך אימוני קבוצה השבוע? ציין את הימים והשעות.',
+        inputType: 'teamTraining',
+      }]);
     }
-    
-    setMessages(prev => [...prev, {
-      type: 'system',
-      content: 'מעולה! עכשיו בוא נזין את השעות עבור כל יום.',
-    }]);
-    setCurrentStep(prev => prev + 2);
+    setCurrentStep(prev => prev + 1);
   };
 
   const renderInput = (message: Message) => {
@@ -108,6 +133,41 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
         </div>
       );
     }
+
+    if (message.inputType === 'timeInputs') {
+      return (
+        <div className="space-y-4 mt-4">
+          {selectedDays.filter(day => day !== 'אין לימודים השבוע').map((day) => (
+            <div key={day} className="bg-white rounded-lg p-4 shadow-sm">
+              <Label className="text-sm font-medium text-gray-900 mb-2 block">{day}</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor={`${day}-start`} className="text-xs text-gray-600">שעת התחלה</Label>
+                  <Input
+                    id={`${day}-start`}
+                    type="time"
+                    value={schedule.schoolHours[day]?.start || ''}
+                    onChange={(e) => handleTimeInput(day, 'start', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`${day}-end`} className="text-xs text-gray-600">שעת סיום</Label>
+                  <Input
+                    id={`${day}-end`}
+                    type="time"
+                    value={schedule.schoolHours[day]?.end || ''}
+                    onChange={(e) => handleTimeInput(day, 'end', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
     return null;
   };
 
@@ -141,7 +201,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
         <div className="p-4 border-t bg-white">
           <Button
             className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-xl h-12"
-            onClick={handleNextQuestion}
+            onClick={handleNextStep}
           >
             בוא נתחיל
           </Button>
@@ -152,9 +212,20 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
         <div className="p-4 border-t bg-white">
           <Button
             className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-xl h-12"
-            onClick={handleContinueToHours}
+            onClick={handleNextStep}
           >
             המשך להזנת שעות
+          </Button>
+        </div>
+      )}
+
+      {currentStep === 2 && Object.keys(schedule.schoolHours).length > 0 && (
+        <div className="p-4 border-t bg-white">
+          <Button
+            className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-xl h-12"
+            onClick={handleNextStep}
+          >
+            המשך לאימוני קבוצה
           </Button>
         </div>
       )}
