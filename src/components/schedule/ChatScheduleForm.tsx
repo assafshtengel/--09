@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   type: 'system' | 'user';
@@ -30,7 +32,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
     teamTraining: [],
     personalTraining: [],
     sleepSchedule: {},
-    screenTime: {},
+    screenTime: 0,
     specialEvents: [],
     games: [],
     notes: '',
@@ -52,6 +54,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
     'רביעי',
     'חמישי',
     'שישי',
+    'שבת',
     'אין לימודים השבוע',
   ];
 
@@ -167,71 +170,43 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   };
 
   const handleScreenTimeInput = () => {
-    if (!tempInput.day || !tempInput.hours) {
-      toast.error("נא למלא את שעות המסך");
+    if (!tempInput.hours || tempInput.hours < 0) {
+      toast.error("נא להזין מספר שעות תקין");
       return;
     }
 
     const updatedSchedule = {
       ...schedule,
-      screenTime: {
-        ...schedule.screenTime,
-        [tempInput.day]: tempInput.hours
-      }
+      screenTime: tempInput.hours
     };
 
     setSchedule(updatedSchedule);
     onScheduleChange(updatedSchedule);
-    setTempInput({ day: '', hours: 0 });
-
-    if (Object.keys(schedule.screenTime).length === 6) {
-      handleNextStep();
-    }
+    setTempInput({ hours: 0 });
+    handleNextStep();
   };
 
-  const handleSpecialEventInput = () => {
-    if (!tempInput.day || !tempInput.startTime || !tempInput.endTime || !tempInput.description) {
-      toast.error("נא למלא את כל פרטי האירוע");
-      return;
+  const generateAISchedule = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-weekly-schedule', {
+        body: { schedule }
+      });
+
+      if (error) throw error;
+
+      const updatedSchedule = {
+        ...schedule,
+        aiGeneratedSchedule: data.schedule,
+        weeklyTable: data.weeklyTable
+      };
+
+      setSchedule(updatedSchedule);
+      onScheduleChange(updatedSchedule);
+      toast.success("הלוז נוצר בהצלחה!");
+    } catch (error) {
+      console.error("Error generating schedule:", error);
+      toast.error("שגיאה ביצירת הלוז");
     }
-
-    const newEvent = {
-      day: tempInput.day,
-      startTime: tempInput.startTime,
-      endTime: tempInput.endTime,
-      description: tempInput.description
-    };
-
-    const updatedSchedule = {
-      ...schedule,
-      specialEvents: [...schedule.specialEvents, newEvent]
-    };
-
-    setSchedule(updatedSchedule);
-    onScheduleChange(updatedSchedule);
-    setTempInput({ day: '', startTime: '', endTime: '', description: '' });
-  };
-
-  const handleGameInput = () => {
-    if (!tempInput.day || !tempInput.startTime || !tempInput.description) {
-      toast.error("נא למלא את כל פרטי המשחק");
-      return;
-    }
-
-    const newGame = {
-      day: tempInput.day,
-      startTime: tempInput.startTime,
-      description: tempInput.description
-    };
-
-    const updatedSchedule = {
-      ...schedule,
-      games: [...schedule.games, newGame]
-    };
-
-    setSchedule(updatedSchedule);
-    onScheduleChange(updatedSchedule);
-    setTempInput({ day: '', startTime: '', description: '' });
   };
 
   const handleNextStep = () => {
@@ -263,7 +238,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
         type: 'system'
       },
       {
-        content: 'כמה זמן ביום אתה במסכים (פלאפון, סוני וכו׳)?',
+        content: 'כמה זמן ביום אתה מעוניין להיות במסכים (פלאפון, סוני וכו׳)?',
         inputType: 'screenTime',
         type: 'system'
       },
@@ -281,7 +256,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
         content: 'יש עוד משהו שחשוב לדעת כדי לבנות את הלוז שלך?',
         inputType: 'notes',
         type: 'system'
-      },
+      }
     ];
 
     if (currentStep < steps.length) {
@@ -493,19 +468,6 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
         return (
           <div className="space-y-4 mt-4 bg-white rounded-xl p-5 shadow-sm border border-gray-100">
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-700 block">יום</Label>
-                <select
-                  value={tempInput.day}
-                  onChange={(e) => setTempInput({ ...tempInput, day: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 p-2.5 text-gray-900 bg-white focus:border-blue-500 focus:ring-blue-500"
-                >
-                  <option value="">בחר יום</option>
-                  {days.filter(day => day !== 'אין לימודים השבוע').map((day) => (
-                    <option key={day} value={day}>{day}</option>
-                  ))}
-                </select>
-              </div>
               <div className="space-y-2">
                 <Label className="text-sm text-gray-700 block">מספר שעות</Label>
                 <Input
@@ -735,6 +697,17 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
             onClick={handleNextStep}
           >
             המשך לשאלה הבאה
+          </Button>
+        </div>
+      )}
+
+      {currentStep === 9 && (
+        <div className="p-4 border-t bg-white shadow-lg">
+          <Button
+            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 rounded-xl h-14 text-lg font-medium shadow-md hover:shadow-lg transition-all duration-200"
+            onClick={generateAISchedule}
+          >
+            בנה את הלוז השבועי עבורי
           </Button>
         </div>
       )}
