@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   type: 'system' | 'user';
@@ -70,54 +71,69 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
     },
   ];
 
-  const handleDaySelection = (dayId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedDays(prev => [...prev, dayId]);
-      // Ask for time immediately after day selection
-      setMessages(prev => [...prev, {
-        type: 'system',
-        content: `מה השעות שלך ביום ${days.find(d => d.id === dayId)?.label}?`,
-        inputType: 'time',
-        dayId: dayId,
-      }]);
-    } else {
-      setSelectedDays(prev => prev.filter(d => d !== dayId));
+  const handleDaySelection = async (dayId: string, checked: boolean) => {
+    try {
+      if (checked) {
+        setSelectedDays(prev => [...prev, dayId]);
+        setMessages(prev => [...prev, {
+          type: 'system',
+          content: `מה השעות שלך ביום ${days.find(d => d.id === dayId)?.label}?`,
+          inputType: 'time',
+          dayId: dayId,
+        }]);
+      } else {
+        setSelectedDays(prev => prev.filter(d => d !== dayId));
+      }
+    } catch (error) {
+      console.error('Error handling day selection:', error);
     }
   };
 
-  const handleTimeInput = (dayId: string, time: string) => {
-    const updatedSchedule = { ...schedule };
-    updatedSchedule.schoolDays[dayId] = time;
-    setSchedule(updatedSchedule);
-    onScheduleChange(updatedSchedule);
-  };
-
-  const handleNextQuestion = () => {
-    if (currentStep < questions.length) {
-      const nextQuestion = questions[currentStep];
-      setMessages(prev => [...prev, {
-        type: 'system',
-        content: nextQuestion.content,
-        inputType: nextQuestion.inputType,
-        options: nextQuestion.options,
-      }]);
-      setCurrentStep(prev => prev + 1);
+  const handleTimeInput = async (dayId: string, time: string) => {
+    try {
+      const updatedSchedule = { ...schedule };
+      updatedSchedule.schoolDays[dayId] = time;
+      setSchedule(updatedSchedule);
+      onScheduleChange(updatedSchedule);
+    } catch (error) {
+      console.error('Error handling time input:', error);
     }
   };
 
-  const handleUserResponse = (response: any) => {
-    setMessages(prev => [...prev, {
-      type: 'user',
-      content: typeof response === 'string' ? response : JSON.stringify(response),
-    }]);
-    
-    const updatedSchedule = { ...schedule };
-    // Update schedule based on the current step and response
-    
-    setSchedule(updatedSchedule);
-    onScheduleChange(updatedSchedule);
-    
-    handleNextQuestion();
+  const handleNextQuestion = async () => {
+    try {
+      if (currentStep < questions.length) {
+        const nextQuestion = questions[currentStep];
+        setMessages(prev => [...prev, {
+          type: 'system',
+          content: nextQuestion.content,
+          inputType: nextQuestion.inputType,
+          options: nextQuestion.options,
+        }]);
+        setCurrentStep(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error('Error handling next question:', error);
+    }
+  };
+
+  const handleUserResponse = async (response: any) => {
+    try {
+      setMessages(prev => [...prev, {
+        type: 'user',
+        content: typeof response === 'string' ? response : JSON.stringify(response),
+      }]);
+      
+      const updatedSchedule = { ...schedule };
+      // Update schedule based on the current step and response
+      
+      setSchedule(updatedSchedule);
+      onScheduleChange(updatedSchedule);
+      
+      handleNextQuestion();
+    } catch (error) {
+      console.error('Error handling user response:', error);
+    }
   };
 
   const renderInput = (message: Message) => {
