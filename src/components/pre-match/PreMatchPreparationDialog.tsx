@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Copy, Printer } from "lucide-react";
@@ -121,9 +121,9 @@ export const PreMatchPreparationDialog = ({
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl">
+          <DialogTitle className="text-2xl font-bold text-right">ההכנה שלי למשחק</DialogTitle>
+          
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-right">ההכנה שלי למשחק</h2>
-            
             {isLoading && (
               <div className="text-center py-8 text-gray-500">
                 מכין את הטקסט...
