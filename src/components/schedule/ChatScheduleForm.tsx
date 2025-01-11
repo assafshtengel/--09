@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -10,14 +9,7 @@ interface Message {
   type: 'system' | 'user';
   content: string;
   options?: string[];
-  inputType?: 'time' | 'text' | 'multiSelect' | 'number';
-  dayId?: string;
-}
-
-interface Question {
-  content: string;
-  inputType: 'time' | 'text' | 'multiSelect' | 'number';
-  options?: string[];
+  inputType?: 'multiSelect';
 }
 
 interface ChatScheduleFormProps {
@@ -31,171 +23,80 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   }]);
   const [currentStep, setCurrentStep] = useState(0);
   const [schedule, setSchedule] = useState<any>({
-    schoolDays: {},
-    sleep: {},
-    phoneTime: {},
-    teamPractices: [],
-    personalTraining: [],
-    games: [],
-    notes: '',
+    schoolDays: [],
   });
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
 
   const days = [
-    { id: 'sunday', label: 'ראשון' },
-    { id: 'monday', label: 'שני' },
-    { id: 'tuesday', label: 'שלישי' },
-    { id: 'wednesday', label: 'רביעי' },
-    { id: 'thursday', label: 'חמישי' },
-    { id: 'friday', label: 'שישי' },
-    { id: 'saturday', label: 'שבת' },
+    'אין לימודים השבוע',
+    'ראשון',
+    'שני',
+    'שלישי',
+    'רביעי',
+    'חמישי',
+    'שישי',
   ];
 
-  const questions: Question[] = [
-    {
-      content: 'באילו ימים אתה בבית ספר?',
-      inputType: 'multiSelect',
-      options: days.map(day => day.label),
-    },
-    {
-      content: 'מה שעות השינה שלך?',
-      inputType: 'time',
-    },
-    {
-      content: 'כמה זמן אתה בטלפון ביום?',
-      inputType: 'number',
-    },
-    {
-      content: 'מתי יש לך אימוני קבוצה?',
-      inputType: 'text',
-    },
-  ];
-
-  const handleDaySelection = async (dayId: string, checked: boolean) => {
-    try {
+  const handleDaySelection = (day: string, checked: boolean) => {
+    if (day === 'אין לימודים השבוע') {
       if (checked) {
-        setSelectedDays(prev => [...prev, dayId]);
-        setMessages(prev => [...prev, {
-          type: 'system',
-          content: `מה השעות שלך ביום ${days.find(d => d.id === dayId)?.label}?`,
-          inputType: 'time',
-          dayId: dayId,
-        }]);
+        setSelectedDays(['אין לימודים השבוע']);
       } else {
-        setSelectedDays(prev => prev.filter(d => d !== dayId));
+        setSelectedDays([]);
       }
-    } catch (error) {
-      console.error('Error handling day selection:', error);
-    }
-  };
-
-  const handleTimeInput = async (dayId: string, time: string) => {
-    try {
-      const updatedSchedule = { ...schedule };
-      updatedSchedule.schoolDays[dayId] = time;
-      setSchedule(updatedSchedule);
-      onScheduleChange(updatedSchedule);
-    } catch (error) {
-      console.error('Error handling time input:', error);
-    }
-  };
-
-  const handleNextQuestion = async () => {
-    try {
-      if (currentStep < questions.length) {
-        const nextQuestion = questions[currentStep];
-        setMessages(prev => [...prev, {
-          type: 'system',
-          content: nextQuestion.content,
-          inputType: nextQuestion.inputType,
-          options: nextQuestion.options,
-        }]);
-        setCurrentStep(prev => prev + 1);
+    } else {
+      if (checked) {
+        setSelectedDays(prev => 
+          prev.includes('אין לימודים השבוע') 
+            ? [day]
+            : [...prev, day]
+        );
+      } else {
+        setSelectedDays(prev => prev.filter(d => d !== day));
       }
-    } catch (error) {
-      console.error('Error handling next question:', error);
     }
+
+    const updatedSchedule = { ...schedule };
+    updatedSchedule.schoolDays = selectedDays;
+    setSchedule(updatedSchedule);
+    onScheduleChange(updatedSchedule);
   };
 
-  const handleUserResponse = async (response: any) => {
-    try {
-      setMessages(prev => [...prev, {
-        type: 'user',
-        content: typeof response === 'string' ? response : JSON.stringify(response),
-      }]);
-      
-      const updatedSchedule = { ...schedule };
-      setSchedule(updatedSchedule);
-      onScheduleChange(updatedSchedule);
-      
-      handleNextQuestion();
-    } catch (error) {
-      console.error('Error handling user response:', error);
-    }
+  const handleNextQuestion = () => {
+    setMessages(prev => [...prev, {
+      type: 'system',
+      content: 'באילו ימים יש לך בית ספר השבוע?',
+      inputType: 'multiSelect',
+      options: days,
+    }]);
+    setCurrentStep(prev => prev + 1);
   };
 
   const renderInput = (message: Message) => {
-    switch (message.inputType) {
-      case 'multiSelect':
-        return (
-          <div className="space-y-2">
-            {message.options?.map((option, index) => (
-              <div key={option} className="flex items-center space-x-2 space-x-reverse">
-                <Checkbox
-                  id={days[index].id}
-                  onCheckedChange={(checked) => {
-                    handleDaySelection(days[index].id, checked as boolean);
-                  }}
-                />
-                <Label htmlFor={days[index].id}>{option}</Label>
-              </div>
-            ))}
-          </div>
-        );
-      
-      case 'time':
-        return (
-          <div className="space-y-2">
-            <Input
-              type="time"
-              className="w-full bg-white border-black"
-              onChange={(e) => {
-                if (message.dayId) {
-                  handleTimeInput(message.dayId, e.target.value);
-                } else {
-                  handleUserResponse(e.target.value);
-                }
-              }}
-            />
-          </div>
-        );
-      
-      case 'number':
-        return (
-          <div className="space-y-2">
-            <Input
-              type="number"
-              className="w-full bg-white border-black"
-              onChange={(e) => handleUserResponse(e.target.value)}
-            />
-          </div>
-        );
-      
-      default:
-        return (
-          <div className="space-y-2">
-            <Input
-              className="w-full bg-white border-black"
-              onChange={(e) => handleUserResponse(e.target.value)}
-            />
-          </div>
-        );
+    if (message.inputType === 'multiSelect' && message.options) {
+      return (
+        <div className="space-y-2">
+          {message.options.map((option) => (
+            <div key={option} className="flex items-center space-x-2 space-x-reverse">
+              <Checkbox
+                id={option}
+                checked={selectedDays.includes(option)}
+                onCheckedChange={(checked) => {
+                  handleDaySelection(option, checked as boolean);
+                }}
+              />
+              <Label htmlFor={option}>{option}</Label>
+            </div>
+          ))}
+        </div>
+      );
     }
+    return null;
   };
 
   return (
-    <div className="space-y-4">
-      <ScrollArea className="h-[400px] pr-4">
+    <div className="h-screen p-4 flex flex-col">
+      <ScrollArea className="flex-grow mb-4">
         <div className="space-y-4">
           {messages.map((message, index) => (
             <div
