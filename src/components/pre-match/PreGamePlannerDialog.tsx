@@ -9,6 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Calendar, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface PreGamePlannerDialogProps {
   open: boolean;
@@ -23,6 +24,13 @@ export const PreGamePlannerDialog = ({
   onConfirm,
   onCancel,
 }: PreGamePlannerDialogProps) => {
+  const navigate = useNavigate();
+
+  const handleConfirm = () => {
+    onConfirm();
+    navigate("/pre-game-planner");
+  };
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="max-w-xl">
@@ -53,7 +61,7 @@ export const PreGamePlannerDialog = ({
         </AlertDialogHeader>
         <AlertDialogFooter className="sm:space-x-4">
           <AlertDialogAction
-            onClick={onConfirm}
+            onClick={handleConfirm}
             className="bg-primary hover:bg-primary/90"
           >
             כן, אשמח לקבל לוז
