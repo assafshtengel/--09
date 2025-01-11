@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { useWeeklySchedule } from "@/hooks/use-weekly-schedule";
 import { toast } from "sonner";
 import { ChatScheduleForm } from "./ChatScheduleForm";
+import { Loader2 } from "lucide-react";
 
 export const WeeklyPlannerLayout = () => {
   const [schedule, setSchedule] = useState<any>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const { saveSchedule, isLoading } = useWeeklySchedule();
 
   const handleGeneratePlan = async () => {
@@ -18,10 +20,14 @@ export const WeeklyPlannerLayout = () => {
     }
     
     try {
+      setIsGenerating(true);
       await saveSchedule(schedule);
       toast.success("המערכת נשמרה בהצלחה");
     } catch (error) {
+      console.error("Error saving schedule:", error);
       toast.error("שגיאה בשמירת המערכת");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -40,10 +46,17 @@ export const WeeklyPlannerLayout = () => {
           <div className="mt-6 flex flex-wrap gap-4">
             <Button 
               onClick={handleGeneratePlan}
-              disabled={isLoading || !schedule}
-              className="w-full md:w-auto"
+              disabled={isLoading || !schedule || isGenerating}
+              className="w-full md:w-auto relative"
             >
-              צור תכנית שבועית
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  מייצר לוז שבועי...
+                </>
+              ) : (
+                'צור תכנית שבועית'
+              )}
             </Button>
             
             <Button 
