@@ -36,30 +36,30 @@ export const WeeklyScheduleDisplay = ({ schedule }: WeeklyScheduleDisplayProps) 
                 {DAYS.map((day) => {
                   const activities = [];
                   
-                  // Check sleep schedule
-                  if (schedule.sleep[day]) {
-                    const sleepStart = parseInt(schedule.sleep[day].start?.split(":")[0]);
-                    const sleepEnd = parseInt(schedule.sleep[day].end?.split(":")[0]);
+                  // Check sleep schedule - with safe access
+                  if (schedule.sleep?.[day]) {
+                    const sleepStart = parseInt(schedule.sleep[day].start?.split(":")[0] || "0");
+                    const sleepEnd = parseInt(schedule.sleep[day].end?.split(":")[0] || "0");
                     if (hour >= sleepStart || hour < sleepEnd) {
                       activities.push("sleep");
                     }
                   }
                   
-                  // Check team practices
-                  const practice = schedule.teamPractices.find((p: any) => 
-                    p.day === day && parseInt(p.time?.split(":")[0]) === hour
+                  // Check team practices - with safe access
+                  const practice = (schedule.teamPractices || []).find((p: any) => 
+                    p?.day === day && parseInt(p?.time?.split(":")[0] || "0") === hour
                   );
                   if (practice) activities.push("practice");
                   
-                  // Check personal training
-                  const training = schedule.personalTraining.find((t: any) => 
-                    t.day === day && parseInt(t.time?.split(":")[0]) === hour
+                  // Check personal training - with safe access
+                  const training = (schedule.personalTraining || []).find((t: any) => 
+                    t?.day === day && parseInt(t?.time?.split(":")[0] || "0") === hour
                   );
                   if (training) activities.push("training");
                   
-                  // Check games
-                  const game = schedule.games.find((g: any) => 
-                    g.day === day && parseInt(g.time?.split(":")[0]) === hour
+                  // Check games - with safe access
+                  const game = (schedule.games || []).find((g: any) => 
+                    g?.day === day && parseInt(g?.time?.split(":")[0] || "0") === hour
                   );
                   if (game) activities.push("game");
                   
