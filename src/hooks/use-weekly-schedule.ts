@@ -35,19 +35,25 @@ export const useWeeklySchedule = () => {
 
       const startDate = startOfWeek(new Date(), { weekStartsOn: 6 }); // Start from Saturday
       
-      // Save the weekly schedule
+      // Save the weekly schedule with valid status values
       const { data: scheduleRecord, error: scheduleError } = await supabase
         .from("weekly_schedules")
         .insert({
           player_id: user.id,
           start_date: startDate.toISOString(),
           notes: scheduleData.notes || '',
-          status: 'draft'
+          status: 'draft', // Explicitly set status to 'draft'
+          is_active: true
         })
         .select()
         .single();
 
-      if (scheduleError) throw scheduleError;
+      if (scheduleError) {
+        console.error("Error creating weekly schedule:", scheduleError);
+        throw scheduleError;
+      }
+
+      console.log("Created weekly schedule:", scheduleRecord);
 
       // Convert schedule data to activities
       const activities = [];
@@ -160,18 +166,24 @@ export const useWeeklySchedule = () => {
         }
       );
 
-      if (aiError) throw aiError;
+      if (aiError) {
+        console.error('Error generating AI schedule:', aiError);
+        throw aiError;
+      }
 
       // Update the schedule with AI-generated content
       const { error: updateError } = await supabase
         .from("weekly_schedules")
         .update({
           notes: aiSchedule.schedule,
-          status: 'generated'
+          status: 'generated' // Update status to 'generated' after AI processing
         })
         .eq('id', scheduleRecord.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating schedule with AI content:', updateError);
+        throw updateError;
+      }
       
     } catch (error) {
       console.error("Error saving schedule:", error);
