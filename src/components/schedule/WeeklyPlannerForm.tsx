@@ -350,12 +350,12 @@ export const WeeklyPlannerForm = () => {
     const newActivities: Activity[] = [];
     
     days.forEach((_, dayIndex) => {
-      // Add sleep schedule based on user input
+      // Add sleep schedule based on user input, using "other" type
       newActivities.push({
         day_of_week: dayIndex,
         start_time: "22:00",
         end_time: `0${parseInt(sleepHours)}:00`,
-        activity_type: "sleep",
+        activity_type: "other", // Changed from "sleep" to "other"
         title: "שינה",
       });
 
@@ -364,7 +364,7 @@ export const WeeklyPlannerForm = () => {
         day_of_week: dayIndex,
         start_time: "07:30",
         end_time: "08:00",
-        activity_type: "meal",
+        activity_type: "lunch", // Using "lunch" type for meals
         title: "ארוחת בוקר",
       });
       
@@ -373,7 +373,7 @@ export const WeeklyPlannerForm = () => {
         day_of_week: dayIndex,
         start_time: "13:00",
         end_time: "13:30",
-        activity_type: "meal",
+        activity_type: "lunch",
         title: "ארוחת צהריים",
       });
       
@@ -382,7 +382,7 @@ export const WeeklyPlannerForm = () => {
         day_of_week: dayIndex,
         start_time: "19:00",
         end_time: "19:30",
-        activity_type: "meal",
+        activity_type: "lunch",
         title: "ארוחת ערב",
       });
     });
@@ -490,3 +490,4 @@ export const WeeklyPlannerForm = () => {
     </div>
   );
 };
+
