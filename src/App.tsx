@@ -1,18 +1,18 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Navigation } from "@/components/Navigation";
-import { Index } from "@/pages/Index";
-import { Auth } from "@/pages/Auth";
-import { Dashboard } from "@/pages/Dashboard";
-import { Profile } from "@/pages/Profile";
-import { Admin } from "@/pages/Admin";
-import { PlayerPortfolio } from "@/pages/PlayerPortfolio";
-import { MentalLearning } from "@/pages/MentalLearning";
-import { NotificationsManager } from "@/pages/NotificationsManager";
-import { PreGamePlanner } from "@/pages/PreGamePlanner";
-import { GameHistory } from "@/pages/GameHistory";
+import Index from "@/pages/Index";
+import Auth from "@/pages/Auth";
+import Dashboard from "@/pages/Dashboard";
+import Profile from "@/pages/Profile";
+import Admin from "@/pages/Admin";
+import PlayerPortfolio from "@/pages/PlayerPortfolio";
+import MentalLearning from "@/pages/MentalLearning";
+import NotificationsManager from "@/pages/NotificationsManager";
+import PreGamePlanner from "@/pages/PreGamePlanner";
+import GameHistory from "@/pages/GameHistory";
 import { GameTracker } from "@/components/GameTracker";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 function App() {
   return (
