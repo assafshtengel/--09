@@ -133,10 +133,10 @@ const Dashboard = () => {
               color: "bg-[#D1FAE5] hover:bg-[#A7F3D0]"
             },
             {
-              title: "מעקב טרום משחק",
+              title: "תכנון וניהול לוח זמנים שבועי",
               icon: <Activity className="h-5 w-5" />,
-              description: "הגדר יעדים ומטרות למשחק הבא",
-              path: "/pre-match-tracking",
+              description: "תכנון וניהול לוח זמנים שבועי",
+              path: "/weekly-planner",
               color: "bg-[#DBEAFE] hover:bg-[#BFDBFE]"
             },
           ].map((item, index) => (
