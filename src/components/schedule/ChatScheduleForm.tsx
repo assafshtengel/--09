@@ -12,6 +12,12 @@ interface Message {
   inputType?: 'time' | 'text' | 'multiSelect' | 'number';
 }
 
+interface Question {
+  content: string;
+  inputType: 'time' | 'text' | 'multiSelect' | 'number';
+  options?: string[];
+}
+
 interface ChatScheduleFormProps {
   onScheduleChange: (schedule: any) => void;
 }
@@ -41,7 +47,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
     { id: 'saturday', label: 'שבת' },
   ];
 
-  const questions = [
+  const questions: Question[] = [
     {
       content: 'באילו ימים אתה בבית ספר?',
       inputType: 'multiSelect',
@@ -59,16 +65,16 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
       content: 'מתי יש לך אימוני קבוצה?',
       inputType: 'text',
     },
-    // ... Add more questions as needed
   ];
 
   const handleNextQuestion = () => {
     if (currentStep < questions.length) {
+      const nextQuestion = questions[currentStep];
       setMessages(prev => [...prev, {
         type: 'system',
-        content: questions[currentStep].content,
-        inputType: questions[currentStep].inputType,
-        options: questions[currentStep].options,
+        content: nextQuestion.content,
+        inputType: nextQuestion.inputType,
+        options: nextQuestion.options,
       }]);
       setCurrentStep(prev => prev + 1);
     }
