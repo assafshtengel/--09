@@ -67,6 +67,14 @@ function App() {
           }
         />
         <Route
+          path="/pre-match-report"
+          element={
+            <ProtectedRoute>
+              <PreGamePlanner />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/weekly-planner"
           element={
             <ProtectedRoute>
