@@ -2,108 +2,110 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Printer, Send, Check } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Copy, Printer, Send, Check, Clock, Calendar, Bed, Phone, School, Users } from "lucide-react";
+import { format, addMinutes, subMinutes } from "date-fns";
 
-interface ScheduleFormData {
-  currentDateTime: string;
-  gameDateTime: string;
-  schoolHours: string;
-  teamTrainings: string;
-  personalTrainings: string;
-  otherCommitments: string;
-  screenTime: number;
-  sleepHours: number;
+interface ScheduleBlock {
+  startTime: string;
+  endTime: string;
+  activity: string;
+  color: string;
 }
 
 export const PreGamePlanner = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<ScheduleFormData>({
-    currentDateTime: new Date().toISOString().slice(0, 16),
-    gameDateTime: "",
-    schoolHours: "",
-    teamTrainings: "",
-    personalTrainings: "",
-    otherCommitments: "",
-    screenTime: 2,
+  const [formData, setFormData] = useState({
+    matchDate: new Date().toISOString().split('T')[0],
+    matchTime: "19:00",
+    schoolDay: "1", // 1-7 for days of week
+    schoolStartTime: "08:00",
+    schoolEndTime: "15:00",
+    hasTeamTraining: false,
+    teamTrainingTime: "",
     sleepHours: 8,
+    screenTime: 2,
+    departureTime: "",
   });
-  const [schedule, setSchedule] = useState<string | null>(null);
+
+  const [schedule, setSchedule] = useState<ScheduleBlock[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [showHelpDialog, setShowHelpDialog] = useState(false);
 
   const generateSchedule = async () => {
-    if (!formData.gameDateTime) {
-      toast.error("נא למלא את תאריך ושעת המשחק");
-      return;
-    }
-
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('generate-pre-game-schedule', {
-        body: {
-          ...formData
-        }
+      // Calculate arrival time (90 minutes before match)
+      const matchDateTime = new Date(`${formData.matchDate}T${formData.matchTime}`);
+      const arrivalTime = subMinutes(matchDateTime, 90);
+      
+      // Generate schedule blocks
+      const newSchedule: ScheduleBlock[] = [];
+      
+      // Add sleep block
+      newSchedule.push({
+        startTime: "22:00",
+        endTime: "06:00",
+        activity: "שינה",
+        color: "bg-blue-100"
       });
 
-      if (error) throw error;
-      setSchedule(data.schedule);
-      toast.success("סדר היום נוצר בהצלחה!");
+      // Add school block if it's a school day
+      if (formData.schoolDay !== "7") { // Not Saturday
+        newSchedule.push({
+          startTime: formData.schoolStartTime,
+          endTime: formData.schoolEndTime,
+          activity: "בית ספר",
+          color: "bg-yellow-100"
+        });
+      }
+
+      // Add team training if exists
+      if (formData.hasTeamTraining && formData.teamTrainingTime) {
+        const trainingStart = formData.teamTrainingTime;
+        const trainingEnd = addMinutes(new Date(`2024-01-01T${trainingStart}`), 90).toTimeString().slice(0, 5);
+        newSchedule.push({
+          startTime: trainingStart,
+          endTime: trainingEnd,
+          activity: "אימון קבוצה",
+          color: "bg-green-100"
+        });
+      }
+
+      // Add match preparation block
+      newSchedule.push({
+        startTime: format(arrivalTime, "HH:mm"),
+        endTime: formData.matchTime,
+        activity: "הכנה למשחק",
+        color: "bg-purple-100"
+      });
+
+      setSchedule(newSchedule);
+      toast.success("לוח הזמנים נוצר בהצלחה!");
     } catch (error) {
       console.error("Error generating schedule:", error);
-      toast.error("שגיאה ביצירת סדר היום");
+      toast.error("שגיאה ביצירת לוח הזמנים");
     } finally {
       setIsLoading(false);
     }
   };
 
   const copySchedule = () => {
-    if (schedule) {
-      navigator.clipboard.writeText(schedule);
-      toast.success("הטקסט הועתק!");
-    }
+    const scheduleText = schedule
+      .map(block => `${block.activity}: ${block.startTime} - ${block.endTime}`)
+      .join('\n');
+    navigator.clipboard.writeText(scheduleText);
+    toast.success("הטקסט הועתק!");
   };
 
   const printSchedule = () => {
-    if (schedule) {
-      const printWindow = window.open('', '', 'width=800,height=600');
-      if (printWindow) {
-        printWindow.document.write(`
-          <html dir="rtl">
-            <head>
-              <title>לוח זמנים למשחק</title>
-              <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
-                pre { white-space: pre-wrap; }
-              </style>
-            </head>
-            <body>
-              <h1>לוח זמנים למשחק</h1>
-              <pre>${schedule}</pre>
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
-        printWindow.print();
-      }
-    }
+    window.print();
   };
 
   const sendToCoach = async () => {
-    if (!schedule) return;
-    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No authenticated user");
@@ -119,10 +121,14 @@ export const PreGamePlanner = () => {
         return;
       }
 
+      const scheduleText = schedule
+        .map(block => `${block.activity}: ${block.startTime} - ${block.endTime}`)
+        .join('\n');
+
       const { error } = await supabase.functions.invoke('send-whatsapp', {
         body: {
           to: profile.coach_phone_number,
-          message: schedule
+          message: scheduleText
         }
       });
 
@@ -134,99 +140,119 @@ export const PreGamePlanner = () => {
     }
   };
 
-  const handleFinish = () => {
-    setShowHelpDialog(true);
-  };
-
-  const handleHelpResponse = (needsHelp: boolean) => {
-    setShowHelpDialog(false);
-    if (needsHelp) {
-      navigate("/dashboard", { state: { openMentalChat: true } });
-    } else {
-      navigate("/dashboard");
-    }
-  };
-
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-right text-primary">תכנון לוח זמנים לפני משחק</h1>
+    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold text-right text-primary">תכנון לוח זמנים למשחק</h1>
       
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="currentDateTime">מתי עכשיו?</Label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="p-6 space-y-4">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              <Label>מתי המשחק?</Label>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                type="date"
+                value={formData.matchDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, matchDate: e.target.value }))}
+                className="text-right"
+              />
+              <Input
+                type="time"
+                value={formData.matchTime}
+                onChange={(e) => setFormData(prev => ({ ...prev, matchTime: e.target.value }))}
+                className="text-right"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <School className="h-5 w-5 text-primary" />
+              <Label>שעות בית ספר</Label>
+            </div>
+            <Select
+              value={formData.schoolDay}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, schoolDay: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="בחר יום" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">ראשון</SelectItem>
+                <SelectItem value="2">שני</SelectItem>
+                <SelectItem value="3">שלישי</SelectItem>
+                <SelectItem value="4">רביעי</SelectItem>
+                <SelectItem value="5">חמישי</SelectItem>
+                <SelectItem value="6">שישי</SelectItem>
+                <SelectItem value="7">שבת</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                type="time"
+                value={formData.schoolStartTime}
+                onChange={(e) => setFormData(prev => ({ ...prev, schoolStartTime: e.target.value }))}
+                className="text-right"
+                placeholder="שעת התחלה"
+              />
+              <Input
+                type="time"
+                value={formData.schoolEndTime}
+                onChange={(e) => setFormData(prev => ({ ...prev, schoolEndTime: e.target.value }))}
+                className="text-right"
+                placeholder="שעת סיום"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              <Label>אימון קבוצתי</Label>
+            </div>
+            <div className="flex items-center gap-4">
+              <input
+                type="checkbox"
+                checked={formData.hasTeamTraining}
+                onChange={(e) => setFormData(prev => ({ ...prev, hasTeamTraining: e.target.checked }))}
+                className="w-4 h-4"
+              />
+              <span>יש אימון קבוצתי</span>
+            </div>
+            {formData.hasTeamTraining && (
+              <Input
+                type="time"
+                value={formData.teamTrainingTime}
+                onChange={(e) => setFormData(prev => ({ ...prev, teamTrainingTime: e.target.value }))}
+                className="text-right"
+                placeholder="שעת האימון"
+              />
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Bed className="h-5 w-5 text-primary" />
+              <Label>שעות שינה</Label>
+            </div>
             <Input
-              id="currentDateTime"
-              type="datetime-local"
-              value={formData.currentDateTime}
-              onChange={(e) => setFormData(prev => ({ ...prev, currentDateTime: e.target.value }))}
+              type="number"
+              min="4"
+              max="12"
+              value={formData.sleepHours}
+              onChange={(e) => setFormData(prev => ({ ...prev, sleepHours: Number(e.target.value) }))}
               className="text-right"
-              dir="ltr"
             />
           </div>
 
-          <div>
-            <Label htmlFor="gameDateTime">מתי המשחק?</Label>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Phone className="h-5 w-5 text-primary" />
+              <Label>זמן מסך ביום המשחק (שעות)</Label>
+            </div>
             <Input
-              id="gameDateTime"
-              type="datetime-local"
-              value={formData.gameDateTime}
-              onChange={(e) => setFormData(prev => ({ ...prev, gameDateTime: e.target.value }))}
-              className="text-right"
-              dir="ltr"
-            />
-          </div>
-        </div>
-
-        <div>
-          <Label htmlFor="schoolHours">זמני בית ספר</Label>
-          <Textarea
-            id="schoolHours"
-            value={formData.schoolHours}
-            onChange={(e) => setFormData(prev => ({ ...prev, schoolHours: e.target.value }))}
-            placeholder="פרט את שעות בית הספר שלך"
-            className="text-right"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="teamTrainings">אימוני קבוצה</Label>
-          <Textarea
-            id="teamTrainings"
-            value={formData.teamTrainings}
-            onChange={(e) => setFormData(prev => ({ ...prev, teamTrainings: e.target.value }))}
-            placeholder="פרט את זמני אימוני הקבוצה"
-            className="text-right"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="personalTrainings">אימונים אישיים</Label>
-          <Textarea
-            id="personalTrainings"
-            value={formData.personalTrainings}
-            onChange={(e) => setFormData(prev => ({ ...prev, personalTrainings: e.target.value }))}
-            placeholder="פרט את זמני האימונים האישיים"
-            className="text-right"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="otherCommitments">מחויבויות נוספות</Label>
-          <Textarea
-            id="otherCommitments"
-            value={formData.otherCommitments}
-            onChange={(e) => setFormData(prev => ({ ...prev, otherCommitments: e.target.value }))}
-            placeholder="פרט מחויבויות נוספות (חברים, משפחה וכו')"
-            className="text-right"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="screenTime">שעות מסך ביום</Label>
-            <Input
-              id="screenTime"
               type="number"
               min="0"
               max="24"
@@ -236,89 +262,76 @@ export const PreGamePlanner = () => {
             />
           </div>
 
-          <div>
-            <Label htmlFor="sleepHours">שעות שינה רצויות</Label>
-            <Input
-              id="sleepHours"
-              type="number"
-              min="4"
-              max="12"
-              value={formData.sleepHours}
-              onChange={(e) => setFormData(prev => ({ ...prev, sleepHours: Number(e.target.value) }))}
-              className="text-right"
-            />
-          </div>
-        </div>
+          <Button 
+            onClick={generateSchedule} 
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? "מייצר לוח זמנים..." : "צור לוח זמנים"}
+          </Button>
+        </Card>
 
-        <Button 
-          onClick={generateSchedule} 
-          className="w-full"
-          disabled={isLoading}
-        >
-          {isLoading ? "מייצר סדר יום..." : "צור לוח זמנים"}
-        </Button>
+        {schedule.length > 0 && (
+          <Card className="p-6">
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-right">לוח זמנים למשחק</h2>
+              
+              <div className="space-y-4">
+                {schedule.map((block, index) => (
+                  <div
+                    key={index}
+                    className={`p-4 rounded-lg ${block.color} transition-all hover:scale-[1.02]`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">{block.activity}</span>
+                      <span className="text-sm text-gray-600">
+                        {block.startTime} - {block.endTime}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-        {schedule && (
-          <Card className="p-4 mt-4 relative">
-            <pre className="whitespace-pre-wrap text-right text-lg leading-relaxed text-primary" dir="rtl">
-              {schedule}
-            </pre>
-            <div className="flex gap-2 mt-4">
-              <Button
-                onClick={copySchedule}
-                variant="outline"
-                className="gap-2"
-              >
-                <Copy className="h-4 w-4" />
-                העתק
-              </Button>
-              <Button
-                onClick={printSchedule}
-                variant="outline"
-                className="gap-2"
-              >
-                <Printer className="h-4 w-4" />
-                הדפס
-              </Button>
-              <Button
-                onClick={sendToCoach}
-                variant="outline"
-                className="gap-2"
-              >
-                <Send className="h-4 w-4" />
-                שלח למאמן
-              </Button>
-              <Button
-                onClick={handleFinish}
-                className="gap-2"
-              >
-                <Check className="h-4 w-4" />
-                סיים
-              </Button>
+              <div className="bg-yellow-50 p-4 rounded-lg">
+                <h3 className="font-medium mb-2">תזכורות חשובות:</h3>
+                <ul className="text-sm space-y-2 list-disc list-inside">
+                  <li>הגע למגרש לפחות שעה וחצי לפני תחילת המשחק</li>
+                  <li>הקפד על שינה טובה בלילה שלפני המשחק</li>
+                  <li>הפחת את זמן המסך ביום המשחק</li>
+                  <li>הכן את הציוד שלך מראש</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-2 mt-4">
+                <Button
+                  onClick={copySchedule}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  העתק
+                </Button>
+                <Button
+                  onClick={printSchedule}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <Printer className="h-4 w-4" />
+                  הדפס
+                </Button>
+                <Button
+                  onClick={sendToCoach}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <Send className="h-4 w-4" />
+                  שלח למאמן
+                </Button>
+              </div>
             </div>
           </Card>
         )}
       </div>
-
-      <Dialog open={showHelpDialog} onOpenChange={setShowHelpDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>האם אתה צריך עזרה מקצועית?</DialogTitle>
-            <DialogDescription>
-              אנחנו יכולים לחבר אותך למאמן מנטאלי, מאמן תזונה, מאמן כושר או מאמן טקטיקה.
-              זה יכול לעזור לך להתכונן טוב יותר למשחק!
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={() => handleHelpResponse(false)}>
-              לא, תודה
-            </Button>
-            <Button onClick={() => handleHelpResponse(true)}>
-              כן, אשמח לעזרה
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
