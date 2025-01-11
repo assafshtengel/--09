@@ -13,6 +13,7 @@ import PreGamePlanner from "@/pages/PreGamePlanner";
 import GameHistory from "@/pages/GameHistory";
 import { GameTracker } from "@/components/GameTracker";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import Player from "@/pages/Player";
 
 function App() {
   return (
