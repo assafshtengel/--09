@@ -10,6 +10,7 @@ import { GameDetailsDialog } from "@/components/game/history/GameDetailsDialog";
 import { PreMatchGoalsDialog } from "@/components/game/history/PreMatchGoalsDialog";
 import { GameSummaryDialog } from "@/components/game/history/GameSummaryDialog";
 import { format } from "date-fns";
+import { InstagramPreMatchSummary } from "@/components/pre-match/InstagramPreMatchSummary";
 
 const GameHistory = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const GameHistory = () => {
   const [showGoalsDialog, setShowGoalsDialog] = useState(false);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [showInstagramSummary, setShowInstagramSummary] = useState(false);
 
   useEffect(() => {
     fetchGames();
@@ -33,7 +35,6 @@ const GameHistory = () => {
         return;
       }
 
-      // Fetch both completed matches and pre-match reports
       const { data: matchesData, error: matchesError } = await supabase
         .from("matches")
         .select(`
@@ -67,7 +68,6 @@ const GameHistory = () => {
 
       if (preMatchError) throw preMatchError;
 
-      // Combine both datasets
       const combinedData = [
         ...(matchesData || []),
         ...(preMatchData || []).map(report => ({
@@ -83,7 +83,6 @@ const GameHistory = () => {
         }))
       ];
 
-      // Sort by date, most recent first
       combinedData.sort((a, b) => 
         new Date(b.match_date).getTime() - new Date(a.match_date).getTime()
       );
@@ -184,7 +183,6 @@ const GameHistory = () => {
   };
 
   const handlePrint = (game: GameHistoryItem) => {
-    // Create a temporary div for printing
     const printContent = document.createElement('div');
     printContent.innerHTML = `
       <div dir="rtl" style="padding: 20px; font-family: Arial, sans-serif;">
@@ -231,7 +229,6 @@ const GameHistory = () => {
       </div>
     `;
 
-    // Create a new window for printing
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(printContent.innerHTML);
@@ -337,7 +334,6 @@ const GameHistory = () => {
                     size="icon"
                     onClick={() => {
                       setSelectedGame(game);
-                      // Handle Instagram share - will be implemented in InstagramSummary
                       setShowInstagramSummary(true);
                     }}
                   >
@@ -382,6 +378,27 @@ const GameHistory = () => {
             }}
             game={selectedGame}
           />
+          {showInstagramSummary && (
+            <InstagramPreMatchSummary
+              matchDetails={{
+                date: selectedGame.match_date,
+                opponent: selectedGame.opponent || undefined
+              }}
+              actions={selectedGame.pre_match_report?.actions || []}
+              havaya={selectedGame.pre_match_report?.havaya?.split(',') || []}
+              onClose={() => {
+                setShowInstagramSummary(false);
+                setSelectedGame(null);
+              }}
+              onShare={() => {
+                setShowInstagramSummary(false);
+                toast({
+                  title: "התמונה הורדה בהצלחה",
+                  description: "כעת תוכל להעלות אותה לאינסטגרם",
+                });
+              }}
+            />
+          )}
         </>
       )}
     </div>
