@@ -37,10 +37,11 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   });
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [tempInput, setTempInput] = useState<any>({
-    trainingDay: '',
+    day: '',
     startTime: '',
     endTime: '',
-    description: ''
+    description: '',
+    hours: 0
   });
 
   const days = [
@@ -91,13 +92,13 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   };
 
   const handleTeamTrainingInput = () => {
-    if (!tempInput.trainingDay || !tempInput.startTime || !tempInput.endTime) {
+    if (!tempInput.day || !tempInput.startTime || !tempInput.endTime) {
       toast.error("נא למלא את כל פרטי האימון");
       return;
     }
 
     const newTraining = {
-      day: tempInput.trainingDay,
+      day: tempInput.day,
       startTime: tempInput.startTime,
       endTime: tempInput.endTime,
       description: tempInput.description || "אימון קבוצה"
@@ -110,139 +111,527 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
 
     setSchedule(updatedSchedule);
     onScheduleChange(updatedSchedule);
-    setTempInput({ trainingDay: '', startTime: '', endTime: '', description: '' });
+    setTempInput({ day: '', startTime: '', endTime: '', description: '' });
+    
+    if (schedule.teamTraining.length === 0) {
+      handleNextStep();
+    }
+  };
 
-    // Add confirmation message
-    setMessages(prev => [...prev, {
-      type: 'system',
-      content: `נוסף אימון קבוצה ביום ${newTraining.day} בין השעות ${newTraining.startTime}-${newTraining.endTime}`,
-    }]);
+  const handlePersonalTrainingInput = () => {
+    if (!tempInput.day || !tempInput.startTime || !tempInput.endTime) {
+      toast.error("נא למלא את כל פרטי האימון האישי");
+      return;
+    }
+
+    const newTraining = {
+      day: tempInput.day,
+      startTime: tempInput.startTime,
+      endTime: tempInput.endTime,
+      description: tempInput.description || "אימון אישי"
+    };
+
+    const updatedSchedule = {
+      ...schedule,
+      personalTraining: [...schedule.personalTraining, newTraining]
+    };
+
+    setSchedule(updatedSchedule);
+    onScheduleChange(updatedSchedule);
+    setTempInput({ day: '', startTime: '', endTime: '', description: '' });
+
+    if (schedule.personalTraining.length === 0) {
+      handleNextStep();
+    }
+  };
+
+  const handleSleepScheduleInput = () => {
+    if (!tempInput.day || !tempInput.startTime || !tempInput.endTime) {
+      toast.error("נא למלא את שעות השינה");
+      return;
+    }
+
+    const updatedSchedule = {
+      ...schedule,
+      sleepSchedule: {
+        ...schedule.sleepSchedule,
+        [tempInput.day]: {
+          bedtime: tempInput.startTime,
+          wakeup: tempInput.endTime
+        }
+      }
+    };
+
+    setSchedule(updatedSchedule);
+    onScheduleChange(updatedSchedule);
+    setTempInput({ day: '', startTime: '', endTime: '' });
+
+    if (Object.keys(schedule.sleepSchedule).length === 6) {
+      handleNextStep();
+    }
+  };
+
+  const handleScreenTimeInput = () => {
+    if (!tempInput.day || !tempInput.hours) {
+      toast.error("נא למלא את שעות המסך");
+      return;
+    }
+
+    const updatedSchedule = {
+      ...schedule,
+      screenTime: {
+        ...schedule.screenTime,
+        [tempInput.day]: tempInput.hours
+      }
+    };
+
+    setSchedule(updatedSchedule);
+    onScheduleChange(updatedSchedule);
+    setTempInput({ day: '', hours: 0 });
+
+    if (Object.keys(schedule.screenTime).length === 6) {
+      handleNextStep();
+    }
+  };
+
+  const handleSpecialEventInput = () => {
+    if (!tempInput.day || !tempInput.startTime || !tempInput.endTime || !tempInput.description) {
+      toast.error("נא למלא את כל פרטי האירוע");
+      return;
+    }
+
+    const newEvent = {
+      day: tempInput.day,
+      startTime: tempInput.startTime,
+      endTime: tempInput.endTime,
+      description: tempInput.description
+    };
+
+    const updatedSchedule = {
+      ...schedule,
+      specialEvents: [...schedule.specialEvents, newEvent]
+    };
+
+    setSchedule(updatedSchedule);
+    onScheduleChange(updatedSchedule);
+    setTempInput({ day: '', startTime: '', endTime: '', description: '' });
+  };
+
+  const handleGameInput = () => {
+    if (!tempInput.day || !tempInput.startTime || !tempInput.description) {
+      toast.error("נא למלא את כל פרטי המשחק");
+      return;
+    }
+
+    const newGame = {
+      day: tempInput.day,
+      startTime: tempInput.startTime,
+      description: tempInput.description
+    };
+
+    const updatedSchedule = {
+      ...schedule,
+      games: [...schedule.games, newGame]
+    };
+
+    setSchedule(updatedSchedule);
+    onScheduleChange(updatedSchedule);
+    setTempInput({ day: '', startTime: '', description: '' });
   };
 
   const handleNextStep = () => {
-    if (currentStep === 0) {
-      setMessages(prev => [...prev, {
-        type: 'system',
+    const steps = [
+      {
         content: 'באילו ימים יש לך בית ספר השבוע?',
         inputType: 'multiSelect',
         options: days,
-      }]);
-    } else if (currentStep === 1 && selectedDays.length > 0) {
-      setMessages(prev => [...prev, {
-        type: 'system',
+      },
+      {
         content: 'מה שעות ההתחלה והסיום לכל יום שבחרת?',
         inputType: 'timeInputs',
-      }]);
-    } else if (currentStep === 2) {
-      setMessages(prev => [...prev, {
-        type: 'system',
+      },
+      {
         content: 'מתי יש לך אימוני קבוצה השבוע? ציין את הימים והשעות.',
         inputType: 'teamTraining',
+      },
+      {
+        content: 'האם יש לך אימונים אישיים? אם כן, ציין ימים ושעות.',
+        inputType: 'personalTraining',
+      },
+      {
+        content: 'מהן שעות השינה שלך לכל יום? ציין את שעת ההליכה לישון ושעת ההתעוררות.',
+        inputType: 'sleepSchedule',
+      },
+      {
+        content: 'כמה זמן ביום אתה במסכים (פלאפון, סוני וכו׳)?',
+        inputType: 'screenTime',
+      },
+      {
+        content: 'יש לך אירועים מיוחדים השבוע? ציין ימים ושעות (כמו מפגשים עם חברים או אירועים משפחתיים).',
+        inputType: 'specialEvents',
+      },
+      {
+        content: 'האם יש לך משחקים השבוע? אם כן, ציין ימים ושעות.',
+        inputType: 'games',
+      },
+      {
+        content: 'יש עוד משהו שחשוב לדעת כדי לבנות את הלוז שלך?',
+        inputType: 'notes',
+      },
+    ];
+
+    if (currentStep < steps.length) {
+      setMessages(prev => [...prev, {
+        type: 'system',
+        ...steps[currentStep]
       }]);
     }
     setCurrentStep(prev => prev + 1);
   };
 
   const renderInput = (message: Message) => {
-    if (message.inputType === 'multiSelect' && message.options) {
-      return (
-        <div className="space-y-3 mt-4">
-          {message.options.map((option) => (
-            <div 
-              key={option} 
-              className={`
-                flex items-center space-x-2 space-x-reverse 
-                ${option === 'אין לימודים השבוע' ? 'mt-4 border-t pt-4' : ''}
-                bg-white rounded-xl p-4 shadow-sm 
-                hover:bg-blue-50 hover:shadow-md
-                transition-all duration-200 ease-in-out
-                border border-gray-100
-              `}
-            >
-              <Checkbox
-                id={option}
-                checked={selectedDays.includes(option)}
-                onCheckedChange={(checked) => {
-                  handleDaySelection(option, checked as boolean);
-                }}
-                className="border-blue-400 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
-              />
-              <Label 
-                htmlFor={option} 
-                className="text-base font-medium cursor-pointer flex-grow text-gray-900 select-none"
+    switch (message.inputType) {
+      case 'multiSelect':
+        return (
+          <div className="space-y-3 mt-4">
+            {message.options?.map((option) => (
+              <div 
+                key={option} 
+                className={`
+                  flex items-center space-x-2 space-x-reverse 
+                  ${option === 'אין לימודים השבוע' ? 'mt-4 border-t pt-4' : ''}
+                  bg-white rounded-xl p-4 shadow-sm 
+                  hover:bg-blue-50 hover:shadow-md
+                  transition-all duration-200 ease-in-out
+                  border border-gray-100
+                `}
               >
-                {option}
-              </Label>
-            </div>
-          ))}
-        </div>
-      );
-    }
+                <Checkbox
+                  id={option}
+                  checked={selectedDays.includes(option)}
+                  onCheckedChange={(checked) => {
+                    handleDaySelection(option, checked as boolean);
+                  }}
+                  className="border-blue-400 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                />
+                <Label 
+                  htmlFor={option} 
+                  className="text-base font-medium cursor-pointer flex-grow text-gray-900 select-none"
+                >
+                  {option}
+                </Label>
+              </div>
+            ))}
+          </div>
+        );
 
-    if (message.inputType === 'timeInputs') {
-      return (
-        <div className="space-y-4 mt-4">
-          {selectedDays.filter(day => day !== 'אין לימודים השבוע').map((day) => (
-            <div key={day} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-              <Label className="text-lg font-medium text-gray-900 mb-3 block">{day}</Label>
+      case 'timeInputs':
+        return (
+          <div className="space-y-4 mt-4">
+            {selectedDays.filter(day => day !== 'אין לימודים השבוע').map((day) => (
+              <div key={day} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                <Label className="text-lg font-medium text-gray-900 mb-3 block">{day}</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label 
+                      htmlFor={`${day}-start`} 
+                      className="text-sm text-gray-700 block"
+                    >
+                      שעת התחלה
+                    </Label>
+                    <Input
+                      id={`${day}-start`}
+                      type="time"
+                      value={schedule.schoolHours[day]?.start || ''}
+                      onChange={(e) => handleTimeInput(day, 'start', e.target.value)}
+                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label 
+                      htmlFor={`${day}-end`} 
+                      className="text-sm text-gray-700 block"
+                    >
+                      שעת סיום
+                    </Label>
+                    <Input
+                      id={`${day}-end`}
+                      type="time"
+                      value={schedule.schoolHours[day]?.end || ''}
+                      onChange={(e) => handleTimeInput(day, 'end', e.target.value)}
+                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'teamTraining':
+      case 'personalTraining':
+        return (
+          <div className="space-y-4 mt-4 bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-sm text-gray-700 block">יום</Label>
+                <select
+                  value={tempInput.day}
+                  onChange={(e) => setTempInput({ ...tempInput, day: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 p-2.5 text-gray-900 bg-white focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">בחר יום</option>
+                  {days.filter(day => day !== 'אין לימודים השבוע').map((day) => (
+                    <option key={day} value={day}>{day}</option>
+                  ))}
+                </select>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label 
-                    htmlFor={`${day}-start`} 
-                    className="text-sm text-gray-700 block"
-                  >
-                    שעת התחלה
-                  </Label>
+                  <Label className="text-sm text-gray-700 block">שעת התחלה</Label>
                   <Input
-                    id={`${day}-start`}
                     type="time"
-                    value={schedule.schoolHours[day]?.start || ''}
-                    onChange={(e) => handleTimeInput(day, 'start', e.target.value)}
+                    value={tempInput.startTime}
+                    onChange={(e) => setTempInput({ ...tempInput, startTime: e.target.value })}
                     className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label 
-                    htmlFor={`${day}-end`} 
-                    className="text-sm text-gray-700 block"
-                  >
-                    שעת סיום
-                  </Label>
+                  <Label className="text-sm text-gray-700 block">שעת סיום</Label>
                   <Input
-                    id={`${day}-end`}
                     type="time"
-                    value={schedule.schoolHours[day]?.end || ''}
-                    onChange={(e) => handleTimeInput(day, 'end', e.target.value)}
+                    value={tempInput.endTime}
+                    onChange={(e) => setTempInput({ ...tempInput, endTime: e.target.value })}
                     className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    if (message.inputType === 'teamTraining') {
-      return (
-        <div className="space-y-4 mt-4 bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-sm text-gray-700 block">יום</Label>
-              <select
-                value={tempInput.trainingDay}
-                onChange={(e) => setTempInput({ ...tempInput, trainingDay: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 p-2.5 text-gray-900 bg-white focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="">בחר יום</option>
-                {days.filter(day => day !== 'אין לימודים השבוע').map((day) => (
-                  <option key={day} value={day}>{day}</option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-sm text-gray-700 block">שעת התחלה</Label>
+                <Label className="text-sm text-gray-700 block">תיאור {message.inputType === 'teamTraining' ? 'האימון' : 'האימון האישי'} (אופציונלי)</Label>
+                <Input
+                  type="text"
+                  value={tempInput.description}
+                  onChange={(e) => setTempInput({ ...tempInput, description: e.target.value })}
+                  placeholder={message.inputType === 'teamTraining' ? "למשל: אימון טכני, אימון כושר..." : "למשל: אימון כוח, ריצה..."}
+                  className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <Button
+                onClick={message.inputType === 'teamTraining' ? handleTeamTrainingInput : handlePersonalTrainingInput}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
+              >
+                הוסף אימון
+              </Button>
+            </div>
+            
+            {(message.inputType === 'teamTraining' ? schedule.teamTraining : schedule.personalTraining).length > 0 && (
+              <div className="mt-6 space-y-3">
+                <Label className="text-base font-medium text-gray-900 block">אימונים שנקבעו:</Label>
+                {(message.inputType === 'teamTraining' ? schedule.teamTraining : schedule.personalTraining).map((training: any, index: number) => (
+                  <div key={index} className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700">
+                    {training.day} | {training.startTime}-{training.endTime}
+                    {training.description && ` | ${training.description}`}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'sleepSchedule':
+        return (
+          <div className="space-y-4 mt-4 bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-sm text-gray-700 block">יום</Label>
+                <select
+                  value={tempInput.day}
+                  onChange={(e) => setTempInput({ ...tempInput, day: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 p-2.5 text-gray-900 bg-white focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">בחר יום</option>
+                  {days.filter(day => day !== 'אין לימודים השבוע').map((day) => (
+                    <option key={day} value={day}>{day}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-700 block">שעת הליכה לישון</Label>
+                  <Input
+                    type="time"
+                    value={tempInput.startTime}
+                    onChange={(e) => setTempInput({ ...tempInput, startTime: e.target.value })}
+                    className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-700 block">שעת קימה</Label>
+                  <Input
+                    type="time"
+                    value={tempInput.endTime}
+                    onChange={(e) => setTempInput({ ...tempInput, endTime: e.target.value })}
+                    className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <Button
+                onClick={handleSleepScheduleInput}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
+              >
+                הוסף שעות שינה
+              </Button>
+            </div>
+            
+            {Object.keys(schedule.sleepSchedule).length > 0 && (
+              <div className="mt-6 space-y-3">
+                <Label className="text-base font-medium text-gray-900 block">שעות שינה שנקבעו:</Label>
+                {Object.entries(schedule.sleepSchedule).map(([day, times]: [string, any]) => (
+                  <div key={day} className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700">
+                    {day} | {times.bedtime}-{times.wakeup}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'screenTime':
+        return (
+          <div className="space-y-4 mt-4 bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-sm text-gray-700 block">יום</Label>
+                <select
+                  value={tempInput.day}
+                  onChange={(e) => setTempInput({ ...tempInput, day: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 p-2.5 text-gray-900 bg-white focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">בחר יום</option>
+                  {days.filter(day => day !== 'אין לימודים השבוע').map((day) => (
+                    <option key={day} value={day}>{day}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm text-gray-700 block">מספר שעות</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="24"
+                  value={tempInput.hours}
+                  onChange={(e) => setTempInput({ ...tempInput, hours: parseInt(e.target.value) })}
+                  className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <Button
+                onClick={handleScreenTimeInput}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
+              >
+                הוסף זמן מסך
+              </Button>
+            </div>
+            
+            {Object.keys(schedule.screenTime).length > 0 && (
+              <div className="mt-6 space-y-3">
+                <Label className="text-base font-medium text-gray-900 block">זמני מסך שנקבעו:</Label>
+                {Object.entries(schedule.screenTime).map(([day, hours]: [string, any]) => (
+                  <div key={day} className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700">
+                    {day} | {hours} שעות
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'specialEvents':
+        return (
+          <div className="space-y-4 mt-4 bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-sm text-gray-700 block">יום</Label>
+                <select
+                  value={tempInput.day}
+                  onChange={(e) => setTempInput({ ...tempInput, day: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 p-2.5 text-gray-900 bg-white focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">בחר יום</option>
+                  {days.filter(day => day !== 'אין לימודים השבוע').map((day) => (
+                    <option key={day} value={day}>{day}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-700 block">שעת התחלה</Label>
+                  <Input
+                    type="time"
+                    value={tempInput.startTime}
+                    onChange={(e) => setTempInput({ ...tempInput, startTime: e.target.value })}
+                    className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-700 block">שעת סיום</Label>
+                  <Input
+                    type="time"
+                    value={tempInput.endTime}
+                    onChange={(e) => setTempInput({ ...tempInput, endTime: e.target.value })}
+                    className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm text-gray-700 block">תיאור האירוע</Label>
+                <Input
+                  type="text"
+                  value={tempInput.description}
+                  onChange={(e) => setTempInput({ ...tempInput, description: e.target.value })}
+                  placeholder="למשל: מפגש חברים, אירוע משפחתי..."
+                  className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <Button
+                onClick={handleSpecialEventInput}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
+              >
+                הוסף אירוע
+              </Button>
+            </div>
+            
+            {schedule.specialEvents.length > 0 && (
+              <div className="mt-6 space-y-3">
+                <Label className="text-base font-medium text-gray-900 block">אירועים שנקבעו:</Label>
+                {schedule.specialEvents.map((event: any, index: number) => (
+                  <div key={index} className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700">
+                    {event.day} | {event.startTime}-{event.endTime} | {event.description}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'games':
+        return (
+          <div className="space-y-4 mt-4 bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-sm text-gray-700 block">יום</Label>
+                <select
+                  value={tempInput.day}
+                  onChange={(e) => setTempInput({ ...tempInput, day: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 p-2.5 text-gray-900 bg-white focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">בחר יום</option>
+                  {days.filter(day => day !== 'אין לימודים השבוע').map((day) => (
+                    <option key={day} value={day}>{day}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm text-gray-700 block">שעת המשחק</Label>
                 <Input
                   type="time"
                   value={tempInput.startTime}
@@ -251,49 +640,58 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-sm text-gray-700 block">שעת סיום</Label>
+                <Label className="text-sm text-gray-700 block">פרטי המשחק</Label>
                 <Input
-                  type="time"
-                  value={tempInput.endTime}
-                  onChange={(e) => setTempInput({ ...tempInput, endTime: e.target.value })}
+                  type="text"
+                  value={tempInput.description}
+                  onChange={(e) => setTempInput({ ...tempInput, description: e.target.value })}
+                  placeholder="למשל: נגד קבוצת X, משחק בית/חוץ..."
                   className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
+              <Button
+                onClick={handleGameInput}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
+              >
+                הוסף משחק
+              </Button>
             </div>
+            
+            {schedule.games.length > 0 && (
+              <div className="mt-6 space-y-3">
+                <Label className="text-base font-medium text-gray-900 block">משחקים שנקבעו:</Label>
+                {schedule.games.map((game: any, index: number) => (
+                  <div key={index} className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700">
+                    {game.day} | {game.startTime} | {game.description}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'notes':
+        return (
+          <div className="space-y-4 mt-4 bg-white rounded-xl p-5 shadow-sm border border-gray-100">
             <div className="space-y-2">
-              <Label className="text-sm text-gray-700 block">תיאור האימון (אופציונלי)</Label>
-              <Input
-                type="text"
-                value={tempInput.description}
-                onChange={(e) => setTempInput({ ...tempInput, description: e.target.value })}
-                placeholder="למשל: אימון טכני, אימון כושר..."
-                className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+              <Label className="text-sm text-gray-700 block">הערות נוספות</Label>
+              <Textarea
+                value={schedule.notes}
+                onChange={(e) => {
+                  const updatedSchedule = { ...schedule, notes: e.target.value };
+                  setSchedule(updatedSchedule);
+                  onScheduleChange(updatedSchedule);
+                }}
+                placeholder="הוסף כל מידע נוסף שיעזור לנו לבנות את הלוז המושלם בשבילך..."
+                className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500 h-32"
               />
             </div>
-            <Button
-              onClick={handleTeamTrainingInput}
-              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
-            >
-              הוסף אימון
-            </Button>
           </div>
-          
-          {schedule.teamTraining.length > 0 && (
-            <div className="mt-6 space-y-3">
-              <Label className="text-base font-medium text-gray-900 block">אימונים שנקבעו:</Label>
-              {schedule.teamTraining.map((training: any, index: number) => (
-                <div key={index} className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700">
-                  {training.day} | {training.startTime}-{training.endTime}
-                  {training.description && ` | ${training.description}`}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      );
-    }
+        );
 
-    return null;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -337,24 +735,13 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
         </div>
       )}
 
-      {currentStep === 1 && selectedDays.length > 0 && (
+      {currentStep > 0 && currentStep < 9 && (
         <div className="p-4 border-t bg-white shadow-lg">
           <Button
             className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 rounded-xl h-14 text-lg font-medium shadow-md hover:shadow-lg transition-all duration-200"
             onClick={handleNextStep}
           >
-            המשך להזנת שעות
-          </Button>
-        </div>
-      )}
-
-      {currentStep === 2 && Object.keys(schedule.schoolHours).length > 0 && (
-        <div className="p-4 border-t bg-white shadow-lg">
-          <Button
-            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 rounded-xl h-14 text-lg font-medium shadow-md hover:shadow-lg transition-all duration-200"
-            onClick={handleNextStep}
-          >
-            המשך לאימוני קבוצה
+            המשך לשאלה הבאה
           </Button>
         </div>
       )}
