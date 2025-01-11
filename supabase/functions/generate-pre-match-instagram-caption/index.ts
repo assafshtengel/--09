@@ -51,7 +51,7 @@ serve(async (req) => {
 
     console.log('Processing match data...');
     const havaya = match.pre_match_report?.havaya ? match.pre_match_report.havaya.split(',') : [];
-    const actions = match.pre_match_report?.actions || [];
+    const actions = Array.isArray(match.pre_match_report?.actions) ? match.pre_match_report.actions : [];
     const answers = match.pre_match_report?.questions_answers || {};
 
     console.log('Preparing OpenAI prompt...');
@@ -59,7 +59,7 @@ serve(async (req) => {
       Create an engaging Instagram caption in Hebrew for a pre-match report with these details:
       - Opponent: ${match.opponent || 'היריבה'}
       - Selected feelings: ${havaya.join(', ')}
-      - Game goals: ${Array.isArray(actions) ? actions.map((a: any) => a.name + (a.goal ? ` (${a.goal})` : '')).join(', ') : ''}
+      - Game goals: ${actions.map((a: any) => a.name + (a.goal ? ` (${a.goal})` : '')).join(', ')}
       - Player's answers: ${Object.entries(answers).map(([q, a]) => `${q}: ${a}`).join('\n')}
 
       The caption should:

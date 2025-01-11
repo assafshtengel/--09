@@ -405,7 +405,7 @@ const GameHistory = () => {
                 date: selectedGame.match_date,
                 opponent: selectedGame.opponent || undefined
               }}
-              actions={selectedGame.pre_match_report?.actions || []}
+              actions={Array.isArray(selectedGame.pre_match_report?.actions) ? selectedGame.pre_match_report.actions : []}
               havaya={selectedGame.pre_match_report?.havaya?.split(',') || []}
               matchId={selectedGame.id}
               onClose={() => {
