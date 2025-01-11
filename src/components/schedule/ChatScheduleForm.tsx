@@ -240,51 +240,57 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   };
 
   const handleNextStep = () => {
-    const steps = [
+    const steps: Message[] = [
       {
         content: 'באילו ימים יש לך בית ספר השבוע?',
         inputType: 'multiSelect',
         options: days,
+        type: 'system'
       },
       {
         content: 'מה שעות ההתחלה והסיום לכל יום שבחרת?',
         inputType: 'timeInputs',
+        type: 'system'
       },
       {
         content: 'מתי יש לך אימוני קבוצה השבוע? ציין את הימים והשעות.',
         inputType: 'teamTraining',
+        type: 'system'
       },
       {
         content: 'האם יש לך אימונים אישיים? אם כן, ציין ימים ושעות.',
         inputType: 'personalTraining',
+        type: 'system'
       },
       {
         content: 'מהן שעות השינה שלך לכל יום? ציין את שעת ההליכה לישון ושעת ההתעוררות.',
         inputType: 'sleepSchedule',
+        type: 'system'
       },
       {
         content: 'כמה זמן ביום אתה במסכים (פלאפון, סוני וכו׳)?',
         inputType: 'screenTime',
+        type: 'system'
       },
       {
         content: 'יש לך אירועים מיוחדים השבוע? ציין ימים ושעות (כמו מפגשים עם חברים או אירועים משפחתיים).',
         inputType: 'specialEvents',
+        type: 'system'
       },
       {
         content: 'האם יש לך משחקים השבוע? אם כן, ציין ימים ושעות.',
         inputType: 'games',
+        type: 'system'
       },
       {
         content: 'יש עוד משהו שחשוב לדעת כדי לבנות את הלוז שלך?',
         inputType: 'notes',
+        type: 'system'
       },
     ];
 
     if (currentStep < steps.length) {
-      setMessages(prev => [...prev, {
-        type: 'system',
-        ...steps[currentStep]
-      }]);
+      setMessages(prev => [...prev, steps[currentStep]]);
     }
     setCurrentStep(prev => prev + 1);
   };
