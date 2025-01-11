@@ -10,6 +10,7 @@ interface Message {
   content: string;
   options?: string[];
   inputType?: 'time' | 'text' | 'multiSelect' | 'number';
+  dayId?: string;
 }
 
 interface Question {
@@ -29,6 +30,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   }]);
   const [currentStep, setCurrentStep] = useState(0);
   const [schedule, setSchedule] = useState<any>({
+    schoolDays: {},
     sleep: {},
     phoneTime: {},
     teamPractices: [],
@@ -36,6 +38,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
     games: [],
     notes: '',
   });
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
 
   const days = [
     { id: 'sunday', label: 'ראשון' },
@@ -67,6 +70,28 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
     },
   ];
 
+  const handleDaySelection = (dayId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedDays(prev => [...prev, dayId]);
+      // Ask for time immediately after day selection
+      setMessages(prev => [...prev, {
+        type: 'system',
+        content: `מה השעות שלך ביום ${days.find(d => d.id === dayId)?.label}?`,
+        inputType: 'time',
+        dayId: dayId,
+      }]);
+    } else {
+      setSelectedDays(prev => prev.filter(d => d !== dayId));
+    }
+  };
+
+  const handleTimeInput = (dayId: string, time: string) => {
+    const updatedSchedule = { ...schedule };
+    updatedSchedule.schoolDays[dayId] = time;
+    setSchedule(updatedSchedule);
+    onScheduleChange(updatedSchedule);
+  };
+
   const handleNextQuestion = () => {
     if (currentStep < questions.length) {
       const nextQuestion = questions[currentStep];
@@ -85,10 +110,9 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
       type: 'user',
       content: typeof response === 'string' ? response : JSON.stringify(response),
     }]);
-
-    // Update schedule based on the current step and response
+    
     const updatedSchedule = { ...schedule };
-    // Add logic to update the schedule based on the current step
+    // Update schedule based on the current step and response
     
     setSchedule(updatedSchedule);
     onScheduleChange(updatedSchedule);
@@ -101,17 +125,15 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
       case 'multiSelect':
         return (
           <div className="space-y-2">
-            {message.options?.map((option) => (
+            {message.options?.map((option, index) => (
               <div key={option} className="flex items-center space-x-2 space-x-reverse">
                 <Checkbox
-                  id={option}
+                  id={days[index].id}
                   onCheckedChange={(checked) => {
-                    if (checked) {
-                      handleUserResponse([option]);
-                    }
+                    handleDaySelection(days[index].id, checked as boolean);
                   }}
                 />
-                <Label htmlFor={option}>{option}</Label>
+                <Label htmlFor={days[index].id}>{option}</Label>
               </div>
             ))}
           </div>
@@ -122,8 +144,14 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
           <div className="space-y-2">
             <Input
               type="time"
-              className="w-full"
-              onChange={(e) => handleUserResponse(e.target.value)}
+              className="w-full bg-white border-black"
+              onChange={(e) => {
+                if (message.dayId) {
+                  handleTimeInput(message.dayId, e.target.value);
+                } else {
+                  handleUserResponse(e.target.value);
+                }
+              }}
             />
           </div>
         );
@@ -133,7 +161,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
           <div className="space-y-2">
             <Input
               type="number"
-              className="w-full"
+              className="w-full bg-white border-black"
               onChange={(e) => handleUserResponse(e.target.value)}
             />
           </div>
@@ -143,7 +171,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
         return (
           <div className="space-y-2">
             <Input
-              className="w-full"
+              className="w-full bg-white border-black"
               onChange={(e) => handleUserResponse(e.target.value)}
             />
           </div>
@@ -165,8 +193,8 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
               <div
                 className={`rounded-lg p-3 max-w-[80%] ${
                   message.type === 'system'
-                    ? 'bg-secondary'
-                    : 'bg-primary text-primary-foreground'
+                    ? 'bg-white border border-black text-black'
+                    : 'bg-black text-white'
                 }`}
               >
                 <p>{message.content}</p>
@@ -179,7 +207,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
 
       {currentStep === 0 && (
         <Button
-          className="w-full"
+          className="w-full bg-black text-white hover:bg-gray-800"
           onClick={handleNextQuestion}
         >
           בוא נתחיל
