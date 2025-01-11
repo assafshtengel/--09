@@ -36,7 +36,12 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
     notes: '',
   });
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [tempInput, setTempInput] = useState<any>({});
+  const [tempInput, setTempInput] = useState<any>({
+    trainingDay: '',
+    startTime: '',
+    endTime: '',
+    description: ''
+  });
 
   const days = [
     'ראשון',
@@ -83,6 +88,35 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
     const updatedSchedule = { ...schedule, schoolHours: updatedHours };
     setSchedule(updatedSchedule);
     onScheduleChange(updatedSchedule);
+  };
+
+  const handleTeamTrainingInput = () => {
+    if (!tempInput.trainingDay || !tempInput.startTime || !tempInput.endTime) {
+      toast.error("נא למלא את כל פרטי האימון");
+      return;
+    }
+
+    const newTraining = {
+      day: tempInput.trainingDay,
+      startTime: tempInput.startTime,
+      endTime: tempInput.endTime,
+      description: tempInput.description || "אימון קבוצה"
+    };
+
+    const updatedSchedule = {
+      ...schedule,
+      teamTraining: [...schedule.teamTraining, newTraining]
+    };
+
+    setSchedule(updatedSchedule);
+    onScheduleChange(updatedSchedule);
+    setTempInput({ trainingDay: '', startTime: '', endTime: '', description: '' });
+
+    // Add confirmation message
+    setMessages(prev => [...prev, {
+      type: 'system',
+      content: `נוסף אימון קבוצה ביום ${newTraining.day} בין השעות ${newTraining.startTime}-${newTraining.endTime}`,
+    }]);
   };
 
   const handleNextStep = () => {
@@ -185,6 +219,76 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
               </div>
             </div>
           ))}
+        </div>
+      );
+    }
+
+    if (message.inputType === 'teamTraining') {
+      return (
+        <div className="space-y-4 mt-4 bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm text-gray-700 block">יום</Label>
+              <select
+                value={tempInput.trainingDay}
+                onChange={(e) => setTempInput({ ...tempInput, trainingDay: e.target.value })}
+                className="w-full rounded-lg border border-gray-200 p-2.5 text-gray-900 focus:border-blue-400 focus:ring-blue-400"
+              >
+                <option value="">בחר יום</option>
+                {days.filter(day => day !== 'אין לימודים השבוע').map((day) => (
+                  <option key={day} value={day}>{day}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm text-gray-700 block">שעת התחלה</Label>
+                <Input
+                  type="time"
+                  value={tempInput.startTime}
+                  onChange={(e) => setTempInput({ ...tempInput, startTime: e.target.value })}
+                  className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm text-gray-700 block">שעת סיום</Label>
+                <Input
+                  type="time"
+                  value={tempInput.endTime}
+                  onChange={(e) => setTempInput({ ...tempInput, endTime: e.target.value })}
+                  className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm text-gray-700 block">תיאור האימון (אופציונלי)</Label>
+              <Input
+                type="text"
+                value={tempInput.description}
+                onChange={(e) => setTempInput({ ...tempInput, description: e.target.value })}
+                placeholder="למשל: אימון טכני, אימון כושר..."
+                className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+              />
+            </div>
+            <Button
+              onClick={handleTeamTrainingInput}
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
+            >
+              הוסף אימון
+            </Button>
+          </div>
+          
+          {schedule.teamTraining.length > 0 && (
+            <div className="mt-6 space-y-3">
+              <Label className="text-base font-medium text-gray-900 block">אימונים שנקבעו:</Label>
+              {schedule.teamTraining.map((training: any, index: number) => (
+                <div key={index} className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700">
+                  {training.day} | {training.startTime}-{training.endTime}
+                  {training.description && ` | ${training.description}`}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       );
     }
