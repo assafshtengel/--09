@@ -3,8 +3,6 @@ import { Action } from "@/components/ActionSelector";
 import { Mail, Printer, Instagram, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import html2canvas from "html2canvas";
-import { format } from "date-fns";
 import { useState } from "react";
 import { InstagramPreMatchSummary } from "./InstagramPreMatchSummary";
 import { PreMatchPreparationDialog } from "./PreMatchPreparationDialog";

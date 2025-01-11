@@ -110,6 +110,13 @@ export const PreMatchPreparationDialog = ({
     onClose();
   };
 
+  // Generate preparation text when dialog opens
+  useEffect(() => {
+    if (isOpen && !preparation) {
+      generatePreparation();
+    }
+  }, [isOpen]);
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -117,15 +124,6 @@ export const PreMatchPreparationDialog = ({
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-right">ההכנה שלי למשחק</h2>
             
-            {!preparation && !isLoading && (
-              <Button 
-                onClick={generatePreparation}
-                className="w-full"
-              >
-                צור טקסט הכנה למשחק
-              </Button>
-            )}
-
             {isLoading && (
               <div className="text-center py-8 text-gray-500">
                 מכין את הטקסט...
