@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.receive-whatsapp]
 verify_jwt = false
+
+[functions.generate-pre-match-preparation]
+verify_jwt = true

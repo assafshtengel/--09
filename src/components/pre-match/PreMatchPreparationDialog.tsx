@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Copy, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PreMatchPreparationDialogProps {
   isOpen: boolean;
@@ -34,24 +35,15 @@ export const PreMatchPreparationDialog = ({
 
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-pre-match-preparation`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({ matchId }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('generate-pre-match-preparation', {
+        body: { matchId }
+      });
 
-      if (!response.ok) {
-        throw new Error("Failed to generate preparation text");
+      if (error) {
+        throw error;
       }
 
-      const data = await response.json();
-      if (data.preparation) {
+      if (data?.preparation) {
         setPreparation(data.preparation);
       } else {
         throw new Error("No preparation text received");
