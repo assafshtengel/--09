@@ -1,20 +1,9 @@
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Copy, Printer } from "lucide-react";
-import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 interface PreMatchPreparationDialogProps {
   isOpen: boolean;
@@ -27,16 +16,17 @@ export const PreMatchPreparationDialog = ({
   onClose,
   matchId,
 }: PreMatchPreparationDialogProps) => {
-  const [preparation, setPreparation] = useState<string>("");
+  const [preparation, setPreparation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showSocialShareDialog, setShowSocialShareDialog] = useState(false);
   const { toast } = useToast();
 
   const generatePreparation = async () => {
     if (!matchId) {
+      console.error("No match ID provided");
       toast({
         title: "שגיאה",
-        description: "לא נמצא מזהה משחק",
+        description: "לא ניתן ליצור טקסט הכנה כרגע",
         variant: "destructive",
       });
       return;
@@ -44,23 +34,33 @@ export const PreMatchPreparationDialog = ({
 
     setIsLoading(true);
     try {
-      console.log('Generating preparation for match:', matchId);
-      const { data, error } = await supabase.functions.invoke('generate-pre-match-preparation', {
-        body: { matchId },
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-pre-match-preparation`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ matchId }),
+        }
+      );
 
-      if (error) throw error;
-      
-      if (data?.preparation) {
+      if (!response.ok) {
+        throw new Error("Failed to generate preparation text");
+      }
+
+      const data = await response.json();
+      if (data.preparation) {
         setPreparation(data.preparation);
       } else {
-        throw new Error('No preparation text received');
+        throw new Error("No preparation text received");
       }
     } catch (error) {
-      console.error('Error generating preparation text:', error);
+      console.error("Error generating preparation:", error);
       toast({
         title: "שגיאה",
-        description: "לא ניתן ליצור את טקסט ההכנה",
+        description: "אירעה שגיאה ביצירת טקסט ההכנה",
         variant: "destructive",
       });
     } finally {
@@ -72,20 +72,21 @@ export const PreMatchPreparationDialog = ({
     try {
       await navigator.clipboard.writeText(preparation);
       toast({
-        title: "הטקסט הועתק",
+        title: "הועתק!",
         description: "הטקסט הועתק ללוח",
       });
     } catch (error) {
+      console.error("Failed to copy text:", error);
       toast({
         title: "שגיאה",
-        description: "לא ניתן להעתיק את הטקסט",
+        description: "לא הצלחנו להעתיק את הטקסט",
         variant: "destructive",
       });
     }
   };
 
   const handlePrint = () => {
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     if (printWindow) {
       printWindow.document.write(`
         <html dir="rtl">
@@ -101,13 +102,21 @@ export const PreMatchPreparationDialog = ({
             </style>
           </head>
           <body>
-            <div>${preparation}</div>
+            <h1>ההכנה שלי למשחק</h1>
+            <div>${preparation.replace(/\n/g, "<br>")}</div>
           </body>
         </html>
       `);
       printWindow.document.close();
       printWindow.print();
     }
+  };
+
+  const cleanupAndClose = () => {
+    setPreparation("");
+    setIsLoading(false);
+    setShowSocialShareDialog(false);
+    onClose();
   };
 
   const handleClose = () => {
@@ -119,27 +128,18 @@ export const PreMatchPreparationDialog = ({
   };
 
   const handleSocialShareResponse = async (share: boolean) => {
-    setShowSocialShareDialog(false);
     if (share) {
       await handleCopy();
-      window.open('https://www.instagram.com/', '_blank');
+      window.open("https://www.instagram.com/", "_blank");
     }
     cleanupAndClose();
   };
 
-  const cleanupAndClose = () => {
-    setPreparation("");
-    setIsLoading(false);
-    setShowSocialShareDialog(false);
-    onClose();
-  };
-
-  // Generate preparation text when dialog opens
   useEffect(() => {
     if (isOpen && !preparation) {
       generatePreparation();
     }
-    // Cleanup when dialog closes
+
     return () => {
       if (!isOpen) {
         setPreparation("");
@@ -149,68 +149,58 @@ export const PreMatchPreparationDialog = ({
     };
   }, [isOpen, matchId]);
 
+  if (!isOpen) return null;
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="max-w-2xl">
-          <DialogTitle className="text-2xl font-bold text-right">ההכנה שלי למשחק</DialogTitle>
-          
-          <div className="space-y-4">
-            {isLoading && (
-              <div className="text-center py-8 text-gray-500">
-                מכין את הטקסט...
+          <DialogTitle className="text-2xl font-bold text-right">
+            ההכנה שלי למשחק
+          </DialogTitle>
+          <div className="mt-4">
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-pulse">טוען את טקסט ההכנה...</div>
               </div>
-            )}
-
-            {preparation && (
-              <div className="space-y-4">
-                <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                  <div className="whitespace-pre-line text-right">
-                    {preparation}
-                  </div>
-                </ScrollArea>
-
-                <div className="flex gap-2 justify-end">
-                  <Button
-                    onClick={handleCopy}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    <Copy className="h-4 w-4" />
-                    העתק טקסט
-                  </Button>
-                  <Button
-                    onClick={handlePrint}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    <Printer className="h-4 w-4" />
-                    הדפס
-                  </Button>
-                  <Button
-                    onClick={handleClose}
-                    variant="default"
-                  >
-                    סגור
-                  </Button>
-                </div>
+            ) : (
+              <div className="whitespace-pre-wrap text-right">
+                {preparation}
               </div>
             )}
           </div>
+          {preparation && !isLoading && (
+            <div className="flex justify-end gap-4 mt-4">
+              <Button onClick={handleCopy} variant="outline" className="gap-2">
+                <Copy className="h-4 w-4" />
+                העתק
+              </Button>
+              <Button onClick={handlePrint} variant="outline" className="gap-2">
+                <Printer className="h-4 w-4" />
+                הדפס
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={showSocialShareDialog} onOpenChange={setShowSocialShareDialog}>
+      <AlertDialog open={showSocialShareDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>שיתוף ברשתות חברתיות</AlertDialogTitle>
-            <AlertDialogDescription>
-              האם תרצה לשתף את הטקסט ברשתות החברתיות?
+            <AlertDialogTitle className="text-right">
+              שיתוף ברשתות חברתיות
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-right">
+              האם תרצה לשתף את טקסט ההכנה באינסטגרם?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => handleSocialShareResponse(false)}>לא</AlertDialogCancel>
-            <AlertDialogAction onClick={() => handleSocialShareResponse(true)}>כן</AlertDialogAction>
+          <AlertDialogFooter className="flex-row-reverse justify-start gap-2">
+            <AlertDialogAction onClick={() => handleSocialShareResponse(true)}>
+              כן, שתף באינסטגרם
+            </AlertDialogAction>
+            <AlertDialogCancel onClick={() => handleSocialShareResponse(false)}>
+              לא, סגור
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
