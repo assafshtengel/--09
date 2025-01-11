@@ -58,8 +58,8 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#F5F7FA] font-inter">
-      {/* Hero Section with Gradient Background */}
-      <div className="relative bg-gradient-to-r from-[#2563EB] to-[#7C3AED] py-16 mb-12">
+      {/* Hero Section with Enhanced Gradient Background */}
+      <div className="relative bg-gradient-to-r from-primary via-accent to-secondary py-16 mb-12">
         <div className="container mx-auto px-4">
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
@@ -70,8 +70,8 @@ const Dashboard = () => {
             <p className="text-xl opacity-90 mb-8">בוא נתחיל לעבוד על השיפור שלך</p>
             <Button 
               onClick={() => navigate("/game-selection")}
-              className="bg-white text-[#2563EB] hover:bg-opacity-90 text-lg px-8 py-3 rounded-xl
-                transform transition-all duration-300 hover:scale-105"
+              className="bg-white text-primary hover:bg-opacity-90 text-lg px-8 py-3 rounded-xl
+                transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
             >
               התחל עכשיו
             </Button>
@@ -80,45 +80,6 @@ const Dashboard = () => {
       </div>
 
       <div className="container mx-auto px-4 space-y-12">
-        {/* Quick Actions */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
-        >
-          {[
-            {
-              title: "סיכום אימון",
-              icon: <Activity className="h-6 w-6" />,
-              path: "/training-summary",
-              color: "bg-[#2563EB] hover:bg-[#1D4ED8]"
-            },
-            {
-              title: "תכנון משחק",
-              icon: <PlayCircle className="h-6 w-6" />,
-              path: "/game-selection",
-              color: "bg-[#10B981] hover:bg-[#059669]"
-            },
-            {
-              title: "צפייה בהיסטוריה",
-              icon: <Eye className="h-6 w-6" />,
-              path: "/game-history",
-              color: "bg-[#7C3AED] hover:bg-[#6D28D9]"
-            }
-          ].map((action, index) => (
-            <Button
-              key={index}
-              onClick={() => navigate(action.path)}
-              className={`${action.color} text-white h-16 text-lg font-medium rounded-xl
-                transform transition-all duration-300 hover:scale-105 hover:shadow-lg
-                flex items-center justify-center gap-3`}
-            >
-              {action.icon}
-              {action.title}
-            </Button>
-          ))}
-        </motion.div>
-
         {/* Mental Coaching Chat */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -128,50 +89,55 @@ const Dashboard = () => {
           <MentalCoachingChat />
         </motion.div>
 
+        {/* Section Title */}
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-8">תכנים מרכזיים</h2>
+        </div>
+
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[
             {
               title: "יעדים לפני משחק",
-              icon: <Trophy />,
+              icon: <Trophy className="h-5 w-5" />,
               description: "הגדר יעדים ומטרות למשחק הבא",
               path: "/pre-match-report",
-              color: "from-[#2563EB] to-[#1D4ED8]"
+              color: "bg-[#D1FAE5] hover:bg-[#A7F3D0]"
             },
             {
               title: "תכנון לפני משחק",
-              icon: <Calendar />,
+              icon: <Calendar className="h-5 w-5" />,
               description: "קבל סדר יום מותאם אישית",
               path: "/pre-game-planner",
-              color: "from-[#10B981] to-[#059669]"
+              color: "bg-[#DBEAFE] hover:bg-[#BFDBFE]"
             },
             {
               title: "מעקב משחק",
-              icon: <Timer />,
+              icon: <Timer className="h-5 w-5" />,
               description: "עקוב אחר ביצועים במהלך המשחק",
               path: "/game-selection",
-              color: "from-[#7C3AED] to-[#6D28D9]"
+              color: "bg-[#FEE2E2] hover:bg-[#FECACA]"
             },
             {
               title: "סיכום אימון",
-              icon: <FileText />,
+              icon: <FileText className="h-5 w-5" />,
               description: "תעד ונתח את האימון שלך",
               path: "/training-summary",
-              color: "from-[#F97316] to-[#EA580C]"
+              color: "bg-[#EDE9FE] hover:bg-[#DDD6FE]"
             },
             {
               title: "היסטוריית משחקים",
-              icon: <History />,
+              icon: <History className="h-5 w-5" />,
               description: "צפה בכל המשחקים הקודמים שלך",
               path: "/game-history",
-              color: "from-[#7C3AED] to-[#6D28D9]"
+              color: "bg-[#D1FAE5] hover:bg-[#A7F3D0]"
             },
             {
               title: "מעקב טרום משחק",
-              icon: <Activity />,
+              icon: <Activity className="h-5 w-5" />,
               description: "הגדר יעדים ומטרות למשחק הבא",
               path: "/pre-match-tracking",
-              color: "from-[#2563EB] to-[#1D4ED8]"
+              color: "bg-[#DBEAFE] hover:bg-[#BFDBFE]"
             },
           ].map((item, index) => (
             <motion.div
@@ -179,11 +145,12 @@ const Dashboard = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
+              whileHover={{ y: -5, transition: { duration: 0.2 } }}
             >
               <Card
                 onClick={() => navigate(item.path)}
-                className={`cursor-pointer bg-gradient-to-br ${item.color} text-white
-                  transform transition-all duration-300 hover:scale-105
+                className={`cursor-pointer ${item.color} border border-white/20
+                  transform transition-all duration-300
                   hover:shadow-xl rounded-xl overflow-hidden`}
               >
                 <CardHeader className="pb-2">
@@ -191,11 +158,11 @@ const Dashboard = () => {
                     <div className="p-2 bg-white/10 rounded-full">
                       {item.icon}
                     </div>
-                    <CardTitle className="text-xl">{item.title}</CardTitle>
+                    <CardTitle className="text-lg font-bold text-gray-800">{item.title}</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-white/90">{item.description}</p>
+                  <p className="text-gray-600 text-sm">{item.description}</p>
                 </CardContent>
               </Card>
             </motion.div>
@@ -209,8 +176,8 @@ const Dashboard = () => {
           className="bg-white rounded-xl shadow-lg p-8 space-y-8"
         >
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-[#111827] mb-2">סטטיסטיקות וביצועים</h2>
-            <div className="h-1 w-24 bg-[#2563EB] mx-auto rounded-full"></div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">סטטיסטיקות וביצועים</h2>
+            <div className="h-1 w-24 bg-primary mx-auto rounded-full"></div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
