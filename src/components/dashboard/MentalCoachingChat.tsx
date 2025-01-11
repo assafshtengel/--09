@@ -116,7 +116,9 @@ export const MentalCoachingChat = () => {
                 variant="outline"
                 className="relative h-20 flex flex-col items-center justify-center gap-1 bg-white hover:bg-primary hover:text-white transition-all duration-300 shadow-sm hover:shadow-md group"
               >
-                <Icon className="h-6 w-6 group-hover:scale-110 transition-transform duration-300" />
+                <div className="h-6 w-6 group-hover:scale-110 transition-transform duration-300">
+                  <Icon />
+                </div>
                 <span className="text-xs text-center">{title}</span>
                 <motion.div
                   className="absolute inset-0 bg-primary/10 rounded-md group-hover:bg-primary/100 transition-all duration-300"
