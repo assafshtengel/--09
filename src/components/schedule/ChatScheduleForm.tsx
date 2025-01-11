@@ -28,13 +28,13 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
 
   const days = [
-    'אין לימודים השבוע',
     'ראשון',
     'שני',
     'שלישי',
     'רביעי',
     'חמישי',
     'שישי',
+    'אין לימודים השבוע',
   ];
 
   const handleDaySelection = (day: string, checked: boolean) => {
@@ -72,12 +72,27 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
     setCurrentStep(prev => prev + 1);
   };
 
+  const handleContinueToHours = () => {
+    if (selectedDays.length === 0) {
+      return;
+    }
+    
+    setMessages(prev => [...prev, {
+      type: 'system',
+      content: 'מעולה! עכשיו בוא נזין את השעות עבור כל יום.',
+    }]);
+    setCurrentStep(prev => prev + 2);
+  };
+
   const renderInput = (message: Message) => {
     if (message.inputType === 'multiSelect' && message.options) {
       return (
-        <div className="space-y-2 mt-2">
+        <div className="space-y-2 mt-4">
           {message.options.map((option) => (
-            <div key={option} className="flex items-center space-x-2 space-x-reverse bg-white rounded-lg p-2 shadow-sm">
+            <div 
+              key={option} 
+              className="flex items-center space-x-2 space-x-reverse bg-white rounded-lg p-3 shadow-sm hover:bg-gray-50 transition-colors"
+            >
               <Checkbox
                 id={option}
                 checked={selectedDays.includes(option)}
@@ -85,7 +100,9 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
                   handleDaySelection(option, checked as boolean);
                 }}
               />
-              <Label htmlFor={option} className="text-sm">{option}</Label>
+              <Label htmlFor={option} className="text-sm font-medium cursor-pointer flex-grow">
+                {option}
+              </Label>
             </div>
           ))}
         </div>
@@ -95,7 +112,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] bg-gray-100">
+    <div className="flex flex-col h-[calc(100vh-2rem)] bg-gray-50">
       <ScrollArea className="flex-grow px-4">
         <div className="space-y-4 py-4 max-w-xl mx-auto">
           {messages.map((message, index) => (
@@ -127,6 +144,17 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
             onClick={handleNextQuestion}
           >
             בוא נתחיל
+          </Button>
+        </div>
+      )}
+
+      {currentStep === 1 && selectedDays.length > 0 && (
+        <div className="p-4 border-t bg-white">
+          <Button
+            className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-xl h-12"
+            onClick={handleContinueToHours}
+          >
+            המשך להזנת שעות
           </Button>
         </div>
       )}
