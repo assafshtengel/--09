@@ -41,7 +41,8 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
     startTime: '',
     endTime: '',
     description: '',
-    hours: 0
+    hours: 0,
+    minutes: 0
   });
 
   const days = [
@@ -146,29 +147,23 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   };
 
   const handleSleepScheduleInput = () => {
-    if (!tempInput.day || !tempInput.startTime || !tempInput.endTime) {
-      toast.error("נא למלא את שעות השינה");
+    if (!tempInput.hours || tempInput.hours < 0) {
+      toast.error("נא להזין מספר שעות תקין");
       return;
     }
 
     const updatedSchedule = {
       ...schedule,
       sleepSchedule: {
-        ...schedule.sleepSchedule,
-        [tempInput.day]: {
-          bedtime: tempInput.startTime,
-          wakeup: tempInput.endTime
-        }
+        desiredHours: tempInput.hours,
+        desiredMinutes: tempInput.minutes || 0
       }
     };
 
     setSchedule(updatedSchedule);
     onScheduleChange(updatedSchedule);
-    setTempInput({ day: '', startTime: '', endTime: '' });
-
-    if (Object.keys(schedule.sleepSchedule).length === 6) {
-      handleNextStep();
-    }
+    setTempInput({ hours: '', minutes: '' });
+    handleNextStep();
   };
 
   const handleScreenTimeInput = () => {
@@ -448,36 +443,29 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
         return (
           <div className="space-y-4 mt-4 bg-white rounded-xl p-5 shadow-sm border border-gray-100">
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-700 block">יום</Label>
-                <select
-                  value={tempInput.day}
-                  onChange={(e) => setTempInput({ ...tempInput, day: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 p-2.5 text-gray-900 bg-white focus:border-blue-500 focus:ring-blue-500"
-                >
-                  <option value="">בחר יום</option>
-                  {days.filter(day => day !== 'אין לימודים השבוע').map((day) => (
-                    <option key={day} value={day}>{day}</option>
-                  ))}
-                </select>
-              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-sm text-gray-700 block">שעת הליכה לישון</Label>
+                  <Label className="text-sm text-gray-700 block">שעות</Label>
                   <Input
-                    type="time"
-                    value={tempInput.startTime}
-                    onChange={(e) => setTempInput({ ...tempInput, startTime: e.target.value })}
+                    type="number"
+                    min="0"
+                    max="12"
+                    value={tempInput.hours}
+                    onChange={(e) => setTempInput({ ...tempInput, hours: e.target.value })}
                     className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="8"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm text-gray-700 block">שעת קימה</Label>
+                  <Label className="text-sm text-gray-700 block">דקות</Label>
                   <Input
-                    type="time"
-                    value={tempInput.endTime}
-                    onChange={(e) => setTempInput({ ...tempInput, endTime: e.target.value })}
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={tempInput.minutes}
+                    onChange={(e) => setTempInput({ ...tempInput, minutes: e.target.value })}
                     className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="0"
                   />
                 </div>
               </div>
@@ -489,14 +477,13 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
               </Button>
             </div>
             
-            {Object.keys(schedule.sleepSchedule).length > 0 && (
+            {schedule.sleepSchedule && (
               <div className="mt-6 space-y-3">
-                <Label className="text-base font-medium text-gray-900 block">שעות שינה שנקבעו:</Label>
-                {Object.entries(schedule.sleepSchedule).map(([day, times]: [string, any]) => (
-                  <div key={day} className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700">
-                    {day} | {times.bedtime}-{times.wakeup}
-                  </div>
-                ))}
+                <Label className="text-base font-medium text-gray-900 block">שעות שינה רצויות:</Label>
+                <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700">
+                  {schedule.sleepSchedule.desiredHours} שעות
+                  {schedule.sleepSchedule.desiredMinutes > 0 && ` ו-${schedule.sleepSchedule.desiredMinutes} דקות`}
+                </div>
               </div>
             )}
           </div>
