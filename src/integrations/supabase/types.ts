@@ -839,6 +839,7 @@ export type Database = {
           id: string
           notes: string | null
           priority: number | null
+          recurring_days: number[] | null
           schedule_id: string
           start_time: string
           title: string | null
@@ -851,6 +852,7 @@ export type Database = {
           id?: string
           notes?: string | null
           priority?: number | null
+          recurring_days?: number[] | null
           schedule_id: string
           start_time: string
           title?: string | null
@@ -863,6 +865,7 @@ export type Database = {
           id?: string
           notes?: string | null
           priority?: number | null
+          recurring_days?: number[] | null
           schedule_id?: string
           start_time?: string
           title?: string | null
@@ -926,22 +929,31 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          notes: string | null
           player_id: string
+          shared_with: string[] | null
           start_date: string
+          status: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           is_active?: boolean
+          notes?: string | null
           player_id: string
+          shared_with?: string[] | null
           start_date: string
+          status?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           is_active?: boolean
+          notes?: string | null
           player_id?: string
+          shared_with?: string[] | null
           start_date?: string
+          status?: string | null
         }
         Relationships: [
           {
