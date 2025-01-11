@@ -1,85 +1,108 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const VALID_ACTIVITY_TYPES = [
+  'school',
+  'team_training',
+  'personal_training',
+  'mental_training',
+  'other',
+  'free_time',
+  'lunch',
+  'wake_up',
+  'departure',
+  'team_game'
+];
+
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const {
-      sleepHours,
-      screenTime,
-      schoolHours,
-      teamTraining,
-    } = await req.json()
+    const { sleepHours, screenTime, schoolHours, teamTraining } = await req.json()
+    console.log('Received input:', { sleepHours, screenTime, schoolHours, teamTraining })
 
-    const prompt = `
-    אני שחקן כדורגל וצריך לוח זמנים יומי מפורט.
+    // Validate inputs
+    if (!sleepHours || !screenTime) {
+      throw new Error('Missing required fields')
+    }
 
-    מידע חשוב:
-    - שעות שינה: ${sleepHours} שעות
-    - זמן מסך: ${screenTime} שעות
-    - שעות בית ספר: ${schoolHours ? `${schoolHours.start} עד ${schoolHours.end}` : 'אין בית ספר'}
-    - אימון קבוצתי: ${teamTraining || 'אין אימון'}
+    // Generate schedule with valid activity types
+    const schedule = []
 
-    אנא צור לי לוח זמנים מפורט שכולל:
-    1. זמני ארוחות מסודרים
-    2. זמני מנוחה והתאוששות
-    3. זמן למתיחות
-    4. זמן חופשי
-    5. הכנה מנטלית
-    6. זמן מסכים מחולק נכון
-    7. טיפים להצלחה
+    // Add school hours if provided
+    if (schoolHours) {
+      schedule.push({
+        activity_type: 'school',
+        start_time: schoolHours.start,
+        end_time: schoolHours.end,
+        title: 'בית ספר'
+      })
+    }
 
-    חשוב: הצג את התשובה בפורמט מסודר עם שעות מדויקות.
-    `
+    // Add team training if provided
+    if (teamTraining) {
+      schedule.push({
+        activity_type: 'team_training',
+        start_time: teamTraining,
+        end_time: addMinutes(teamTraining, 90),
+        title: 'אימון קבוצתי'
+      })
+    }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: 'אתה מאמן כדורגל מקצועי שעוזר לשחקנים לתכנן את הזמן שלהם. התשובות שלך תמיד בעברית ומותאמות לשחקן צעיר.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-      }),
+    // Add meals (using valid 'lunch' type)
+    const meals = [
+      { time: '07:30', title: 'ארוחת בוקר' },
+      { time: '13:00', title: 'ארוחת צהריים' },
+      { time: '19:00', title: 'ארוחת ערב' }
+    ]
+
+    meals.forEach(meal => {
+      schedule.push({
+        activity_type: 'lunch',
+        start_time: meal.time,
+        end_time: addMinutes(meal.time, 30),
+        title: meal.title
+      })
     })
 
-    const data = await response.json()
-    const schedule = data.choices[0].message.content
+    // Add sleep (using valid 'other' type)
+    schedule.push({
+      activity_type: 'other',
+      start_time: '22:00',
+      end_time: `0${sleepHours}:00`,
+      title: 'שינה'
+    })
 
     return new Response(
       JSON.stringify({ schedule }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in generate-pre-game-schedule:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      },
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
     )
   }
 })
+
+// Helper function to add minutes to time string
+function addMinutes(timeStr: string, minutes: number): string {
+  const [hours, mins] = timeStr.split(':').map(Number)
+  const date = new Date()
+  date.setHours(hours, mins)
+  date.setMinutes(date.getMinutes() + minutes)
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
