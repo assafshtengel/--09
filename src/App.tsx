@@ -1,19 +1,23 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Navigation } from "@/components/Navigation";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import Index from "@/pages/Index";
-import Auth from "@/pages/Auth";
-import Player from "@/pages/Player";
-import Dashboard from "@/pages/Dashboard";
-import Profile from "@/pages/Profile";
-import Admin from "@/pages/Admin";
-import GameHistory from "@/pages/GameHistory";
-import PreGamePlanner from "@/pages/PreGamePlanner";
-import WeeklyPlanner from "@/pages/WeeklyPlanner";
-import NotificationsManager from "@/pages/NotificationsManager";
-import MentalLearning from "@/pages/MentalLearning";
-import PlayerPortfolio from "@/pages/PlayerPortfolio";
+import { Auth } from "@/pages/Auth";
+import { Dashboard } from "@/pages/Dashboard";
+import { Profile } from "@/pages/Profile";
+import { Index } from "@/pages/Index";
+import { Admin } from "@/pages/Admin";
+import { GameHistory } from "@/pages/GameHistory";
+import { PreGamePlanner } from "@/pages/PreGamePlanner";
+import { WeeklyPlanner } from "@/pages/WeeklyPlanner";
+import { PlayerPortfolio } from "@/pages/PlayerPortfolio";
+import { MentalLearning } from "@/pages/MentalLearning";
+import { NotificationsManager } from "@/pages/NotificationsManager";
+import { GameTracker } from "@/components/GameTracker";
+import { TrainingSummaryForm } from "@/components/training/TrainingSummaryForm";
+import { GameSelection } from "@/components/game/GameSelection";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+
+import "./App.css";
 
 function App() {
   return (
@@ -22,7 +26,6 @@ function App() {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
-        <Route path="/player" element={<Player />} />
         <Route
           path="/dashboard"
           element={
@@ -72,10 +75,10 @@ function App() {
           }
         />
         <Route
-          path="/notifications"
+          path="/portfolio"
           element={
             <ProtectedRoute>
-              <NotificationsManager />
+              <PlayerPortfolio />
             </ProtectedRoute>
           }
         />
@@ -88,10 +91,35 @@ function App() {
           }
         />
         <Route
-          path="/portfolio"
+          path="/notifications"
           element={
             <ProtectedRoute>
-              <PlayerPortfolio />
+              <NotificationsManager />
+            </ProtectedRoute>
+          }
+        />
+        {/* Restored Routes */}
+        <Route
+          path="/game-selection"
+          element={
+            <ProtectedRoute>
+              <GameSelection />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/game/:id"
+          element={
+            <ProtectedRoute>
+              <GameTracker />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/training-summary"
+          element={
+            <ProtectedRoute>
+              <TrainingSummaryForm />
             </ProtectedRoute>
           }
         />
