@@ -60,7 +60,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -73,20 +73,20 @@ serve(async (req) => {
         ],
         temperature: 0.7,
       }),
-    })
+    });
 
     if (!response.ok) {
-      const error = await response.json()
-      console.error("OpenAI API error:", error)
-      throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`)
+      const error = await response.json();
+      console.error("OpenAI API error:", error);
+      throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
     }
 
-    const data = await response.json()
-    console.log("Received response from OpenAI")
-    const generatedText = data.choices[0].message.content
+    const data = await response.json();
+    console.log("Received response from OpenAI");
+    const generatedText = data.choices[0].message.content;
 
     // Split the response into schedule and table sections
-    const [schedule_text, weeklyTable] = generatedText.split('טבלה שבועית:')
+    const [schedule_text, weeklyTable] = generatedText.split('טבלה שבועית:');
 
     return new Response(
       JSON.stringify({ 
@@ -97,9 +97,9 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       },
-    )
+    );
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
@@ -109,6 +109,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       },
-    )
+    );
   }
-})
+});

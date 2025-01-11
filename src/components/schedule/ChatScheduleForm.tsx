@@ -46,6 +46,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
     hours: 0,
     minutes: 0
   });
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const days = [
     'ראשון',
@@ -241,11 +242,18 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
 
   const generateAISchedule = async () => {
     try {
+      setIsGenerating(true);
+      toast.loading("מייצר לוז שבועי...");
+
       const { data, error } = await supabase.functions.invoke('generate-weekly-schedule', {
         body: { schedule }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error generating schedule:", error);
+        toast.error("שגיאה ביצירת הלוז");
+        throw error;
+      }
 
       const updatedSchedule = {
         ...schedule,
@@ -259,6 +267,8 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
     } catch (error) {
       console.error("Error generating schedule:", error);
       toast.error("שגיאה ביצירת הלוז");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -540,14 +550,12 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
               </Button>
             </div>
             
-            {Object.keys(schedule.screenTime).length > 0 && (
+            {schedule.screenTime > 0 && (
               <div className="mt-6 space-y-3">
-                <Label className="text-base font-medium text-gray-900 block">זמני מסך שנקבעו:</Label>
-                {Object.entries(schedule.screenTime).map(([day, hours]: [string, any]) => (
-                  <div key={day} className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700">
-                    {day} | {hours} שעות
-                  </div>
-                ))}
+                <Label className="text-base font-medium text-gray-900 block">זמן מסך יומי:</Label>
+                <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700">
+                  {schedule.screenTime} שעות
+                </div>
               </div>
             )}
           </div>
