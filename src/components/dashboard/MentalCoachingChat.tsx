@@ -106,7 +106,6 @@ export const MentalCoachingChat = () => {
     <div className="w-full max-w-4xl mx-auto">
       <div className="bg-[#F3F4F6] backdrop-blur-sm rounded-lg shadow-sm sticky top-0 z-50 border border-[#E5E7EB]">
         <div className="p-4">
-          <h2 className="text-xl font-semibold text-center mb-6 text-[#111827]">התייעצות עם מאמן</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
             {(Object.entries(coachTypes) as [CoachType, { title: string; icon: React.ComponentType; color: string }][]).map(([type, { title, icon: Icon, color }]) => (
               <Button
