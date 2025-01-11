@@ -13,6 +13,12 @@ serve(async (req) => {
 
   try {
     const { schedule } = await req.json()
+    
+    if (!Deno.env.get('OPENAI_API_KEY')) {
+      throw new Error('OPENAI_API_KEY is not set')
+    }
+
+    console.log("Received schedule data:", schedule)
 
     const prompt = `
     אני שחקן כדורגל וצריך לוח זמנים שבועי מפורט.
@@ -45,6 +51,7 @@ serve(async (req) => {
     2. טבלה שבועית מפורטת
     `
 
+    console.log("Sending request to OpenAI")
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -52,7 +59,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4',  // Fixed model name from gpt-4o to gpt-4
         messages: [
           {
             role: 'system',
@@ -67,14 +74,24 @@ serve(async (req) => {
       }),
     })
 
+    if (!response.ok) {
+      const error = await response.json()
+      console.error("OpenAI API error:", error)
+      throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`)
+    }
+
     const data = await response.json()
+    console.log("Received response from OpenAI")
     const generatedText = data.choices[0].message.content
 
     // Split the response into schedule and table sections
-    const [schedule, weeklyTable] = generatedText.split('טבלה שבועית:')
+    const [schedule_text, weeklyTable] = generatedText.split('טבלה שבועית:')
 
     return new Response(
-      JSON.stringify({ schedule: schedule.trim(), weeklyTable: weeklyTable.trim() }),
+      JSON.stringify({ 
+        schedule: schedule_text.trim(), 
+        weeklyTable: weeklyTable ? weeklyTable.trim() : '' 
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -83,7 +100,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
