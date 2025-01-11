@@ -11,7 +11,7 @@ import {
   ResponsiveContainer
 } from "recharts";
 import { motion } from "framer-motion";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export const StatsOverview = () => {
   const [stats, setStats] = useState<any>(null);
