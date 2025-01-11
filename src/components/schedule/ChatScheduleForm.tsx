@@ -125,7 +125,6 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
       }]);
       
       const updatedSchedule = { ...schedule };
-      // Update schedule based on the current step and response
       setSchedule(updatedSchedule);
       onScheduleChange(updatedSchedule);
       
