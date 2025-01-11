@@ -1,10 +1,20 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Copy } from "lucide-react";
+import { Copy, Printer } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface PreMatchPreparationDialogProps {
   isOpen: boolean;
@@ -19,6 +29,7 @@ export const PreMatchPreparationDialog = ({
 }: PreMatchPreparationDialogProps) => {
   const [preparation, setPreparation] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showSocialShareDialog, setShowSocialShareDialog] = useState(false);
   const { toast } = useToast();
 
   const generatePreparation = async () => {
@@ -60,47 +71,119 @@ export const PreMatchPreparationDialog = ({
     }
   };
 
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html dir="rtl">
+          <head>
+            <title>הכנה למשחק</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                padding: 20px;
+                direction: rtl;
+              }
+            </style>
+          </head>
+          <body>
+            <div>${preparation}</div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
+  const handleClose = () => {
+    setShowSocialShareDialog(true);
+  };
+
+  const handleSocialShareResponse = async (share: boolean) => {
+    setShowSocialShareDialog(false);
+    if (share) {
+      await handleCopy();
+      window.open('https://www.instagram.com/', '_blank');
+    }
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-right">ההכנה שלי למשחק</h2>
-          
-          {!preparation && !isLoading && (
-            <Button 
-              onClick={generatePreparation}
-              className="w-full"
-            >
-              צור טקסט הכנה למשחק
-            </Button>
-          )}
-
-          {isLoading && (
-            <div className="text-center py-8 text-gray-500">
-              מכין את הטקסט...
-            </div>
-          )}
-
-          {preparation && (
-            <div className="space-y-4">
-              <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                <div className="whitespace-pre-line text-right">
-                  {preparation}
-                </div>
-              </ScrollArea>
-
-              <Button
-                onClick={handleCopy}
-                variant="outline"
-                className="w-full flex items-center gap-2"
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-right">ההכנה שלי למשחק</h2>
+            
+            {!preparation && !isLoading && (
+              <Button 
+                onClick={generatePreparation}
+                className="w-full"
               >
-                <Copy className="h-4 w-4" />
-                העתק טקסט
+                צור טקסט הכנה למשחק
               </Button>
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+            )}
+
+            {isLoading && (
+              <div className="text-center py-8 text-gray-500">
+                מכין את הטקסט...
+              </div>
+            )}
+
+            {preparation && (
+              <div className="space-y-4">
+                <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                  <div className="whitespace-pre-line text-right">
+                    {preparation}
+                  </div>
+                </ScrollArea>
+
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    onClick={handleCopy}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <Copy className="h-4 w-4" />
+                    העתק טקסט
+                  </Button>
+                  <Button
+                    onClick={handlePrint}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <Printer className="h-4 w-4" />
+                    הדפס
+                  </Button>
+                  <Button
+                    onClick={handleClose}
+                    variant="default"
+                  >
+                    סגור
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showSocialShareDialog} onOpenChange={setShowSocialShareDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>שיתוף ברשתות חברתיות</AlertDialogTitle>
+            <AlertDialogDescription>
+              האם תרצה לשתף את הטקסט ברשתות החברתיות?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => handleSocialShareResponse(false)}>לא</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleSocialShareResponse(true)}>כן</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
