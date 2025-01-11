@@ -12,7 +12,6 @@ export const Navigation = () => {
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        // First check if we have an authenticated session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -46,20 +45,7 @@ export const Navigation = () => {
       }
     };
 
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        checkAdminStatus();
-      } else if (event === 'SIGNED_OUT') {
-        setIsAdmin(false);
-      }
-    });
-
-    // Initial check
     checkAdminStatus();
-
-    // Cleanup subscription
-    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleSignOut = async () => {
@@ -83,25 +69,35 @@ export const Navigation = () => {
     }
   };
 
+  const navigationItems = [
+    { title: "בית", path: "/" },
+    { title: "פרופיל", path: "/profile" },
+    { title: "תיק שחקן", path: "/portfolio" },
+    { title: "לוח בקרה", path: "/dashboard" },
+    { title: "תכנון משחק", path: "/pre-game-planner" },
+    { title: "מעקב משחק", path: "/match/new" },
+    { title: "היסטוריית משחקים", path: "/game-history" },
+    { title: "אימון מנטלי", path: "/mental-learning" },
+    { title: "התראות", path: "/notifications" },
+  ];
+
   return (
-    <nav className="bg-white shadow-sm p-4 mb-6">
-      <div className="max-w-md mx-auto flex justify-between items-center">
+    <nav className="bg-white shadow-sm p-4 mb-6 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
         <Button variant="ghost" onClick={handleSignOut}>
           התנתק
         </Button>
-        <div className="flex gap-4">
-          <Button variant="ghost" onClick={() => navigate("/")}>
-            בית
-          </Button>
-          <Button variant="ghost" onClick={() => navigate("/profile")}>
-            פרופיל
-          </Button>
-          <Button variant="ghost" onClick={() => navigate("/portfolio")}>
-            תיק שחקן
-          </Button>
-          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
-            לוח בקרה
-          </Button>
+        <div className="flex flex-wrap gap-2">
+          {navigationItems.map((item, index) => (
+            <Button
+              key={index}
+              variant="ghost"
+              onClick={() => navigate(item.path)}
+              className="whitespace-nowrap"
+            >
+              {item.title}
+            </Button>
+          ))}
           {isAdmin && (
             <Button variant="ghost" onClick={() => navigate("/admin")}>
               ניהול

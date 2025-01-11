@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { StatsOverview } from "@/components/dashboard/StatsOverview";
+import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
+import { motion } from "framer-motion";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -19,72 +23,68 @@ const Dashboard = () => {
         return;
       }
 
-      const { data: profileData } = await supabase
+      const { data: profileData, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching profile:", error);
+        return;
+      }
 
       setProfile(profileData);
     } catch (error) {
-      console.error("Error fetching profile:", error);
+      console.error("Error in fetchProfile:", error);
     }
   };
 
+  const navigationItems = [
+    { title: "תכנון משחק", path: "/pre-game-planner", color: "bg-primary/10" },
+    { title: "מעקב משחק", path: "/match/new", color: "bg-secondary/10" },
+    { title: "סיכום אימון", path: "/training-summary", color: "bg-accent/10" },
+    { title: "היסטוריית משחקים", path: "/game-history", color: "bg-primary/10" },
+    { title: "אימון מנטלי", path: "/mental-learning", color: "bg-secondary/10" },
+    { title: "התראות", path: "/notifications", color: "bg-accent/10" },
+  ];
+
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-right">לוח בקרה</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+    <div className="container mx-auto p-4 space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="bg-gradient-to-br from-background to-background/95">
           <CardHeader>
-            <CardTitle className="text-right">ברוך הבא {profile?.full_name}</CardTitle>
+            <CardTitle className="text-2xl">ברוך הבא {profile?.full_name}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="text-right">
-                <p>קבוצה: {profile?.club || "לא צוין"}</p>
-                <p>תפקיד: {profile?.roles?.join(", ") || "לא צוין"}</p>
-                <p>שנתון: {profile?.team_year || "לא צוין"}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  onClick={() => navigate("/portfolio")}
-                  className="p-4 bg-blue-50 rounded-lg text-blue-600 hover:bg-blue-100 transition-colors text-right"
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {navigationItems.map((item, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300 }}
                 >
-                  תיק שחקן
-                </button>
-                <button
-                  onClick={() => navigate("/pre-game-planner")}
-                  className="p-4 bg-green-50 rounded-lg text-green-600 hover:bg-green-100 transition-colors text-right"
-                >
-                  תכנון משחק
-                </button>
-                <button
-                  onClick={() => navigate("/mental-learning")}
-                  className="p-4 bg-purple-50 rounded-lg text-purple-600 hover:bg-purple-100 transition-colors text-right"
-                >
-                  אימון מנטלי
-                </button>
-                <button
-                  onClick={() => navigate("/game-history")}
-                  className="p-4 bg-orange-50 rounded-lg text-orange-600 hover:bg-orange-100 transition-colors text-right"
-                >
-                  היסטוריית משחקים
-                </button>
-              </div>
+                  <Button
+                    variant="ghost"
+                    className={`w-full h-24 ${item.color} hover:bg-opacity-80 transition-all`}
+                    onClick={() => navigate(item.path)}
+                  >
+                    {item.title}
+                  </Button>
+                </motion.div>
+              ))}
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-right">התראות אחרונות</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-right text-gray-500">
-              אין התראות חדשות
-            </div>
-          </CardContent>
-        </Card>
+      </motion.div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <StatsOverview />
+        <PerformanceChart />
       </div>
     </div>
   );
