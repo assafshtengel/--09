@@ -65,7 +65,6 @@ export const PreMatchReport = () => {
 
       if (error) throw error;
       
-      // Create match record with observer token
       const { data: match, error: matchError } = await supabase
         .from("matches")
         .insert({
