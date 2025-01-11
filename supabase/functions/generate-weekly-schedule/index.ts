@@ -52,7 +52,8 @@ serve(async (req) => {
     2. טבלה שבועית מפורטת
     `
 
-    console.log("Sending request to OpenAI")
+    console.log("Sending request to OpenAI with prompt:", prompt)
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -82,7 +83,12 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log("Received response from OpenAI");
+    console.log("Received response from OpenAI:", data);
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('Invalid response format from OpenAI');
+    }
+    
     const generatedText = data.choices[0].message.content;
 
     // Split the response into schedule and table sections

@@ -243,7 +243,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
   const generateAISchedule = async () => {
     try {
       setIsGenerating(true);
-      toast.loading("מייצר לוז שבועי...");
+      toast.loading("מייצר לוז שבועי...", { id: 'generating-schedule' });
 
       const { data, error } = await supabase.functions.invoke('generate-weekly-schedule', {
         body: { schedule }
@@ -251,8 +251,12 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
 
       if (error) {
         console.error("Error generating schedule:", error);
-        toast.error("שגיאה ביצירת הלוז");
+        toast.error("שגיאה ביצירת הלוז", { id: 'generating-schedule' });
         throw error;
+      }
+
+      if (!data || (!data.schedule && !data.weeklyTable)) {
+        throw new Error('No schedule data received');
       }
 
       const updatedSchedule = {
@@ -263,10 +267,10 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
 
       setSchedule(updatedSchedule);
       onScheduleChange(updatedSchedule);
-      toast.success("הלוז נוצר בהצלחה!");
+      toast.success("הלוז נוצר בהצלחה!", { id: 'generating-schedule' });
     } catch (error) {
       console.error("Error generating schedule:", error);
-      toast.error("שגיאה ביצירת הלוז");
+      toast.error("שגיאה ביצירת הלוז", { id: 'generating-schedule' });
     } finally {
       setIsGenerating(false);
     }
@@ -767,8 +771,16 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
           <Button
             className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 rounded-xl h-14 text-lg font-medium shadow-md hover:shadow-lg transition-all duration-200"
             onClick={generateAISchedule}
+            disabled={isGenerating}
           >
-            בנה את הלוז השבועי עבורי
+            {isGenerating ? (
+              <div className="flex items-center justify-center">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                מייצר לוז שבועי...
+              </div>
+            ) : (
+              'בנה את הלוז השבועי עבורי'
+            )}
           </Button>
         </div>
       )}
