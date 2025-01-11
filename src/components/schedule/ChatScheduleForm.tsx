@@ -100,7 +100,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
                   handleDaySelection(option, checked as boolean);
                 }}
               />
-              <Label htmlFor={option} className="text-sm font-medium cursor-pointer flex-grow">
+              <Label htmlFor={option} className="text-sm font-medium cursor-pointer flex-grow text-gray-900">
                 {option}
               </Label>
             </div>
