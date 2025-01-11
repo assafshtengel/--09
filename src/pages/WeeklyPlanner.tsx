@@ -1,12 +1,7 @@
-import { WeeklyPlannerLayout } from "@/components/schedule/WeeklyPlannerLayout";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { WeeklyPlannerForm } from "@/components/schedule/WeeklyPlannerForm";
 
 const WeeklyPlanner = () => {
-  return (
-    <ProtectedRoute>
-      <WeeklyPlannerLayout />
-    </ProtectedRoute>
-  );
+  return <WeeklyPlannerForm />;
 };
 
 export default WeeklyPlanner;

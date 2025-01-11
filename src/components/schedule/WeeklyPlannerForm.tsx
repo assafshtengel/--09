@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { WeeklyScheduleViewer } from "./WeeklyScheduleViewer";
 import { useWeeklySchedule } from "@/hooks/use-weekly-schedule";
 import { toast } from "sonner";
@@ -48,7 +49,7 @@ export const WeeklyPlannerForm = () => {
           day_of_week: dayIndex,
           start_time: sleepStart,
           end_time: sleepEnd,
-          activity_type: "wake_up", // Changed from "sleep" to "wake_up"
+          activity_type: "sleep",
           title: "שינה",
         };
         break;
@@ -75,7 +76,7 @@ export const WeeklyPlannerForm = () => {
           day_of_week: dayIndex,
           start_time: gameDateTime.split("T")[1],
           end_time: new Date(new Date(`2024-01-01T${gameDateTime.split("T")[1]}`).getTime() + 2 * 60 * 60 * 1000).toTimeString().slice(0, 5),
-          activity_type: "team_game", // Changed from "game" to "team_game"
+          activity_type: "game",
           title: "משחק",
         };
         break;

@@ -1,8 +1,5 @@
 project_id = "mmopqtoxstnbabavsics"
 
-[functions.generate-weekly-schedule]
-verify_jwt = true
-
 [functions.send-whatsapp]
 verify_jwt = true
 
