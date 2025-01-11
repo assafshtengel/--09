@@ -1,13 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WeeklyScheduleViewer } from "./WeeklyScheduleViewer";
@@ -26,10 +19,7 @@ interface Activity {
   title?: string;
 }
 
-const days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
-
 export const WeeklyPlannerForm = () => {
-  const [selectedDay, setSelectedDay] = useState<string>(days[0]);
   const [sleepStart, setSleepStart] = useState("22:00");
   const [sleepEnd, setSleepEnd] = useState("07:00");
   const [phoneTime, setPhoneTime] = useState("2");
@@ -42,8 +32,7 @@ export const WeeklyPlannerForm = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const { saveSchedule, isLoading } = useWeeklySchedule();
 
-  const handleAddActivity = (type: string) => {
-    const dayIndex = days.indexOf(selectedDay);
+  const handleAddActivity = (type: string, dayIndex: number) => {
     let newActivity: Activity;
 
     switch (type) {
@@ -117,20 +106,6 @@ export const WeeklyPlannerForm = () => {
     setActivities(prev => [...prev, newActivity]);
   };
 
-  const handleSave = async () => {
-    try {
-      // Add AI-generated meals and free time
-      const mealsAndFreeTime = generateMealsAndFreeTime(activities);
-      const updatedActivities = [...activities, ...mealsAndFreeTime];
-      
-      await saveSchedule(updatedActivities);
-      toast.success("המערכת נשמרה בהצלחה");
-    } catch (error) {
-      console.error("Error saving schedule:", error);
-      toast.error("שגיאה בשמירת המערכת");
-    }
-  };
-
   const generateMealsAndFreeTime = (currentActivities: Activity[]): Activity[] => {
     const newActivities: Activity[] = [];
     
@@ -186,6 +161,20 @@ export const WeeklyPlannerForm = () => {
     }
   };
 
+  const handleSave = async () => {
+    try {
+      // Add AI-generated meals and free time
+      const mealsAndFreeTime = generateMealsAndFreeTime(activities);
+      const updatedActivities = [...activities, ...mealsAndFreeTime];
+      
+      await saveSchedule(updatedActivities);
+      toast.success("המערכת נשמרה בהצלחה");
+    } catch (error) {
+      console.error("Error saving schedule:", error);
+      toast.error("שגיאה בשמירת המערכת");
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-8">
       <div className="text-center space-y-4">
@@ -199,26 +188,6 @@ export const WeeklyPlannerForm = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card className="p-6 space-y-6 bg-gradient-to-br from-blue-50 to-white">
           <div className="space-y-6">
-            {/* Day Selection */}
-            <section className="space-y-4">
-              <Label className="text-lg font-semibold text-primary flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                בחר יום
-              </Label>
-              <Select value={selectedDay} onValueChange={setSelectedDay}>
-                <SelectTrigger>
-                  <SelectValue>{selectedDay}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {days.map((day) => (
-                    <SelectItem key={day} value={day}>
-                      {day}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </section>
-
             {/* Sleep Hours */}
             <section className="space-y-4">
               <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
@@ -245,13 +214,16 @@ export const WeeklyPlannerForm = () => {
                   />
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => handleAddActivity("sleep")}
-              >
-                הוסף שעות שינה
-              </Button>
+              {[0, 1, 2, 3, 4, 5, 6].map((dayIndex) => (
+                <Button 
+                  key={dayIndex}
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => handleAddActivity("sleep", dayIndex)}
+                >
+                  הוסף שעות שינה ליום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][dayIndex]}
+                </Button>
+              ))}
             </section>
 
             {/* Screen Time - Smaller Input */}
@@ -285,13 +257,16 @@ export const WeeklyPlannerForm = () => {
                   className="mt-1"
                 />
               </div>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => handleAddActivity("team_training")}
-              >
-                הוסף אימון קבוצתי
-              </Button>
+              {[0, 1, 2, 3, 4, 5, 6].map((dayIndex) => (
+                <Button 
+                  key={dayIndex}
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => handleAddActivity("team_training", dayIndex)}
+                >
+                  הוסף אימון קבוצתי ליום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][dayIndex]}
+                </Button>
+              ))}
             </section>
 
             {/* Personal Training */}
@@ -306,13 +281,16 @@ export const WeeklyPlannerForm = () => {
                   className="mt-1"
                 />
               </div>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => handleAddActivity("personal_training")}
-              >
-                הוסף אימון אישי
-              </Button>
+              {[0, 1, 2, 3, 4, 5, 6].map((dayIndex) => (
+                <Button 
+                  key={dayIndex}
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => handleAddActivity("personal_training", dayIndex)}
+                >
+                  הוסף אימון אישי ליום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][dayIndex]}
+                </Button>
+              ))}
             </section>
 
             {/* Family Event */}
@@ -330,13 +308,16 @@ export const WeeklyPlannerForm = () => {
                   className="mt-1"
                 />
               </div>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => handleAddActivity("family")}
-              >
-                הוסף אירוע משפחתי
-              </Button>
+              {[0, 1, 2, 3, 4, 5, 6].map((dayIndex) => (
+                <Button 
+                  key={dayIndex}
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => handleAddActivity("family", dayIndex)}
+                >
+                  הוסף אירוע משפחתי ליום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][dayIndex]}
+                </Button>
+              ))}
             </section>
 
             {/* Friends Event */}
@@ -354,13 +335,16 @@ export const WeeklyPlannerForm = () => {
                   className="mt-1"
                 />
               </div>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => handleAddActivity("friends")}
-              >
-                הוסף מפגש חברים
-              </Button>
+              {[0, 1, 2, 3, 4, 5, 6].map((dayIndex) => (
+                <Button 
+                  key={dayIndex}
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => handleAddActivity("friends", dayIndex)}
+                >
+                  הוסף מפגש חברים ליום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][dayIndex]}
+                </Button>
+              ))}
             </section>
 
             {/* Favorite Game */}
@@ -378,13 +362,16 @@ export const WeeklyPlannerForm = () => {
                   className="mt-1"
                 />
               </div>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => handleAddActivity("favorite_game")}
-              >
-                הוסף משחק אהוד
-              </Button>
+              {[0, 1, 2, 3, 4, 5, 6].map((dayIndex) => (
+                <Button 
+                  key={dayIndex}
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => handleAddActivity("favorite_game", dayIndex)}
+                >
+                  הוסף משחק אהוד ליום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][dayIndex]}
+                </Button>
+              ))}
             </section>
           </div>
 
