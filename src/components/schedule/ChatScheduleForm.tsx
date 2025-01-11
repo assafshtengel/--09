@@ -198,7 +198,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
                     type="time"
                     value={schedule.schoolHours[day]?.start || ''}
                     onChange={(e) => handleTimeInput(day, 'start', e.target.value)}
-                    className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                    className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
                 <div className="space-y-2">
@@ -213,7 +213,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
                     type="time"
                     value={schedule.schoolHours[day]?.end || ''}
                     onChange={(e) => handleTimeInput(day, 'end', e.target.value)}
-                    className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                    className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -232,7 +232,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
               <select
                 value={tempInput.trainingDay}
                 onChange={(e) => setTempInput({ ...tempInput, trainingDay: e.target.value })}
-                className="w-full rounded-lg border border-gray-200 p-2.5 text-gray-900 focus:border-blue-400 focus:ring-blue-400"
+                className="w-full rounded-lg border border-gray-300 p-2.5 text-gray-900 bg-white focus:border-blue-500 focus:ring-blue-500"
               >
                 <option value="">בחר יום</option>
                 {days.filter(day => day !== 'אין לימודים השבוע').map((day) => (
@@ -247,7 +247,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
                   type="time"
                   value={tempInput.startTime}
                   onChange={(e) => setTempInput({ ...tempInput, startTime: e.target.value })}
-                  className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                  className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
               <div className="space-y-2">
@@ -256,7 +256,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
                   type="time"
                   value={tempInput.endTime}
                   onChange={(e) => setTempInput({ ...tempInput, endTime: e.target.value })}
-                  className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                  className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -267,7 +267,7 @@ export const ChatScheduleForm = ({ onScheduleChange }: ChatScheduleFormProps) =>
                 value={tempInput.description}
                 onChange={(e) => setTempInput({ ...tempInput, description: e.target.value })}
                 placeholder="למשל: אימון טכני, אימון כושר..."
-                className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
             <Button
