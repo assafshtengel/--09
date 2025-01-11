@@ -6,7 +6,7 @@ import { toast } from "sonner";
 export const useWeeklySchedule = () => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const saveSchedule = async (activities: any[]) => {
+  const saveSchedule = async (scheduleData: any) => {
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -14,56 +14,70 @@ export const useWeeklySchedule = () => {
 
       const startDate = startOfWeek(new Date(), { weekStartsOn: 6 }); // Start from Saturday
       
-      const { data: scheduleData, error: scheduleError } = await supabase
+      // Save the weekly schedule
+      const { data: scheduleRecord, error: scheduleError } = await supabase
         .from("weekly_schedules")
         .insert({
           player_id: user.id,
           start_date: startDate.toISOString(),
+          notes: scheduleData.notes,
+          status: 'draft'
         })
         .select()
         .single();
 
       if (scheduleError) throw scheduleError;
 
+      // Convert schedule data to activities
+      const activities = [
+        // Sleep activities
+        ...Object.entries(scheduleData.sleep).map(([day, times]: [string, any]) => ({
+          schedule_id: scheduleRecord.id,
+          activity_type: 'wake_up',
+          day_of_week: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].indexOf(day),
+          start_time: times.start,
+          end_time: times.end,
+        })),
+        
+        // Team practices
+        ...scheduleData.teamPractices.map((practice: any) => ({
+          schedule_id: scheduleRecord.id,
+          activity_type: 'team_training',
+          day_of_week: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].indexOf(practice.day),
+          start_time: practice.time,
+          end_time: practice.time, // TODO: Add duration
+        })),
+        
+        // Personal training
+        ...scheduleData.personalTraining.map((training: any) => ({
+          schedule_id: scheduleRecord.id,
+          activity_type: 'personal_training',
+          day_of_week: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].indexOf(training.day),
+          start_time: training.time,
+          end_time: training.time, // TODO: Add duration
+        })),
+        
+        // Games
+        ...scheduleData.games.map((game: any) => ({
+          schedule_id: scheduleRecord.id,
+          activity_type: 'team_game',
+          day_of_week: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].indexOf(game.day),
+          start_time: game.time,
+          end_time: game.time, // TODO: Add duration
+        })),
+      ];
+
+      // Save all activities
       const { error: activitiesError } = await supabase
         .from("schedule_activities")
-        .insert(
-          activities.map(activity => ({
-            schedule_id: scheduleData.id,
-            ...activity
-          }))
-        );
+        .insert(activities);
 
       if (activitiesError) throw activitiesError;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateSchedule = async (scheduleId: string, activities: any[]) => {
-    setIsLoading(true);
-    try {
-      const { error: deleteError } = await supabase
-        .from("schedule_activities")
-        .delete()
-        .eq("schedule_id", scheduleId);
-
-      if (deleteError) throw deleteError;
-
-      const { error: insertError } = await supabase
-        .from("schedule_activities")
-        .insert(
-          activities.map(activity => ({
-            schedule_id: scheduleId,
-            ...activity
-          }))
-        );
-
-      if (insertError) throw insertError;
-
-      toast.success("המערכת עודכנה בהצלחה");
+      
+      toast.success("Schedule saved successfully");
     } catch (error) {
-      toast.error("שגיאה בעדכון המערכת");
+      console.error("Error saving schedule:", error);
+      toast.error("Failed to save schedule");
       throw error;
     } finally {
       setIsLoading(false);
@@ -72,7 +86,6 @@ export const useWeeklySchedule = () => {
 
   return {
     saveSchedule,
-    updateSchedule,
     isLoading,
   };
 };
