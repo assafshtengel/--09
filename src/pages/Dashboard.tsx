@@ -93,27 +93,6 @@ const Dashboard = () => {
     }
   ];
 
-  const additionalActions = [
-    {
-      title: "מעקב טרום משחק",
-      icon: <Activity className="h-5 w-5" />,
-      onClick: () => navigate("/pre-match-tracking"),
-      color: "bg-blue-500 hover:bg-blue-600"
-    },
-    {
-      title: "מעקב משחק",
-      icon: <Timer className="h-5 w-5" />,
-      onClick: () => navigate("/game-tracking"),
-      color: "bg-emerald-500 hover:bg-emerald-600"
-    },
-    {
-      title: "סיכום אימון",
-      icon: <FileText className="h-5 w-5" />,
-      onClick: () => navigate("/training-summary"),
-      color: "bg-amber-500 hover:bg-amber-600"
-    }
-  ];
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -156,25 +135,6 @@ const Dashboard = () => {
         className="mb-8"
       >
         <MentalCoachingChat />
-      </motion.div>
-
-      {/* Additional Actions Bar */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="flex flex-wrap justify-center gap-4 mb-8"
-      >
-        {additionalActions.map((action, index) => (
-          <Button
-            key={index}
-            onClick={action.onClick}
-            className={`${action.color} text-white px-6 py-2 rounded-full flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 min-w-[180px] justify-center`}
-          >
-            {action.icon}
-            {action.title}
-          </Button>
-        ))}
       </motion.div>
 
       {/* Quick Actions Grid */}
