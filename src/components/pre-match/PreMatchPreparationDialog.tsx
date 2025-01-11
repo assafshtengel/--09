@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Copy, Printer } from "lucide-react";
@@ -150,6 +150,9 @@ export const PreMatchPreparationDialog = ({
           <DialogTitle className="text-2xl font-bold text-right">
             ההכנה שלי למשחק
           </DialogTitle>
+          <DialogDescription>
+            טקסט מותאם אישית להכנה למשחק, מבוסס על התשובות והיעדים שלך
+          </DialogDescription>
           <div className="mt-4">
             {isLoading ? (
               <div className="text-center py-8">
@@ -176,7 +179,7 @@ export const PreMatchPreparationDialog = ({
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={showSocialShareDialog}>
+      <AlertDialog open={showSocialShareDialog} onOpenChange={setShowSocialShareDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-right">
