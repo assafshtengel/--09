@@ -22,44 +22,50 @@ export const WeeklyScheduleWizard = () => {
       title: "שעות בית ספר",
       component: <SchoolHoursStep onAddActivity={useCallback((activity) => {
         console.log("Adding school activity:", activity);
-        setActivities(prev => [...prev, {
+        const newActivity = {
           ...activity,
           activity_type: "school",
           title: "בית ספר"
-        }]);
+        };
+        setActivities(prev => [...prev.filter(a => 
+          !(a.day_of_week === activity.day_of_week && a.activity_type === "school")
+        ), newActivity]);
       }, [])} />,
     },
     {
       title: "אימוני קבוצה",
       component: <TeamTrainingStep onAddActivity={useCallback((activity) => {
         console.log("Adding team training:", activity);
-        setActivities(prev => [...prev, {
+        const newActivity = {
           ...activity,
-          activity_type: "team_training",
+          activity_type: activity.type || "team_training",
           title: activity.title || "אימון קבוצה"
-        }]);
+        };
+        setActivities(prev => [...prev, newActivity]);
       }, [])} />,
     },
     {
       title: "אימונים אישיים ומנטליים",
       component: <PersonalTrainingStep onAddActivity={useCallback((activity) => {
         console.log("Adding personal training:", activity);
-        setActivities(prev => [...prev, {
+        const newActivity = {
           ...activity,
           activity_type: activity.type || "personal_training",
           title: activity.title || "אימון אישי"
-        }]);
+        };
+        setActivities(prev => [...prev, newActivity]);
       }, [])} />,
     },
     {
       title: "שגרה יומית",
       component: <DailyRoutineStep onAddActivity={useCallback((activity) => {
         console.log("Adding daily routine:", activity);
-        setActivities(prev => [...prev, {
+        const newActivity = {
           ...activity,
           activity_type: activity.type || "other",
           title: activity.title || "פעילות יומית"
-        }]);
+        };
+        setActivities(prev => [...prev, newActivity]);
       }, [])} />,
     },
   ];
@@ -87,7 +93,7 @@ export const WeeklyScheduleWizard = () => {
 
   const handleNext = () => {
     // Save current step's activities before moving to next step
-    console.log("Current activities before next:", activities);
+    console.log("Current activities:", activities);
     
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
