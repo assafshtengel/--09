@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Lightbulb, Target, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -30,23 +31,27 @@ export const InsightsSection = ({ insights, isLoading }: InsightsSectionProps) =
           תובנות AI
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {insightsList.map((insight, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg"
-          >
-            {index % 2 === 0 ? (
-              <Target className="h-5 w-5 text-primary shrink-0 mt-1" />
-            ) : (
-              <TrendingUp className="h-5 w-5 text-primary shrink-0 mt-1" />
-            )}
-            <p className="text-right">{insight}</p>
-          </motion.div>
-        ))}
+      <CardContent>
+        <ScrollArea className="h-[400px] pr-4">
+          <div className="space-y-4">
+            {insightsList.map((insight, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg"
+              >
+                {index % 2 === 0 ? (
+                  <Target className="h-5 w-5 text-primary shrink-0 mt-1" />
+                ) : (
+                  <TrendingUp className="h-5 w-5 text-primary shrink-0 mt-1" />
+                )}
+                <p className="text-right">{insight}</p>
+              </motion.div>
+            ))}
+          </div>
+        </ScrollArea>
       </CardContent>
     </Card>
   );
