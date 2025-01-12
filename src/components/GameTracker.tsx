@@ -40,11 +40,13 @@ interface Match {
   };
 }
 
-interface PreMatchReportActions {
-  id: string;
-  name: string;
-  goal?: string;
-  isSelected: boolean;
+type GamePhase = "preview" | "playing" | "halftime" | "secondHalf" | "ended";
+
+interface ActionLog {
+  action: Action;
+  result: "success" | "failure";
+  minute: number;
+  note?: string;
 }
 
 interface SubstitutionLog {
@@ -53,16 +55,15 @@ interface SubstitutionLog {
   minute: number;
 }
 
-type GamePhase = "preview" | "playing" | "halftime" | "secondHalf" | "ended";
-
 export const GameTracker = () => {
   const { id } = useParams<{ id: string }>();
   const [isLoading, setIsLoading] = useState(true);
   const [actions, setActions] = useState<Action[]>([]);
-  const [actionLogs, setActionLogs] = useState<Array<{ action: Action; result: string; minute: number }>>([]);
+  const [actionLogs, setActionLogs] = useState<ActionLog[]>([]);
   const [generalNotes, setGeneralNotes] = useState<Array<{ text: string; minute: number }>>([]);
   const [substitutions, setSubstitutions] = useState<SubstitutionLog[]>([]);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [minute, setMinute] = useState(0);
   const [havaya, setHavaya] = useState<string[]>([]);
   const [matchDetails, setMatchDetails] = useState<Match>({
     id: "",
@@ -158,8 +159,9 @@ export const GameTracker = () => {
             name: "Unknown Action",
             isSelected: true
           },
-          result: log.result,
-          minute: log.minute
+          result: log.result as "success" | "failure",
+          minute: log.minute,
+          note: log.note
         }));
         setActionLogs(formattedLogs);
       }
@@ -325,17 +327,13 @@ export const GameTracker = () => {
   }
 
   return (
-    <GameLayout
-      phase={gamePhase}
-      timer={
-        <GameTimer
-          isRunning={isTimerRunning}
-          onHalftime={handleHalftime}
-          onEndMatch={endMatch}
-        />
-      }
-      onEndMatch={endMatch}
-    >
+    <div className="space-y-6">
+      <GameTimer 
+        isRunning={isTimerRunning}
+        minute={minute}
+        onMinuteChange={setMinute}
+      />
+
       {gamePhase === "preview" && (
         <div className="space-y-6">
           {havaya.length > 0 && (
@@ -363,15 +361,13 @@ export const GameTracker = () => {
         <div className="space-y-6">
           <GameActionsList
             actions={actions}
-            actionLogs={actionLogs}
-            onActionAdd={handleAddAction}
+            onLog={handleAddAction}
           />
           <GameNotes
             notes={generalNotes}
             onAddNote={handleAddNote}
           />
           <PlayerSubstitution
-            substitutions={substitutions}
             onAddSubstitution={handleAddSubstitution}
           />
         </div>
@@ -379,23 +375,29 @@ export const GameTracker = () => {
 
       {gamePhase === "ended" && (
         <GameSummary
-          matchDetails={matchDetails}
           actions={actions}
           actionLogs={actionLogs}
-          notes={generalNotes}
+          generalNotes={generalNotes}
           substitutions={substitutions}
+          onClose={() => {}}
+          gamePhase={gamePhase}
+          matchId={id}
+          opponent={matchDetails.opponent || null}
+          matchDate={matchDetails.match_date}
         />
       )}
 
       <Dialog open={showHalftimeDialog} onOpenChange={setShowHalftimeDialog}>
         <DialogContent>
           <HalftimeSummary
-            notes={halftimeNotes}
-            onNotesChange={setHalftimeNotes}
+            isOpen={showHalftimeDialog}
+            onClose={() => setShowHalftimeDialog(false)}
             onStartSecondHalf={startSecondHalf}
+            actions={actions}
+            actionLogs={actionLogs}
           />
         </DialogContent>
       </Dialog>
-    </GameLayout>
+    </div>
   );
 };
