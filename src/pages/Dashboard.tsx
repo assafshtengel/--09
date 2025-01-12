@@ -101,7 +101,7 @@ const Dashboard = () => {
               title: "יעדים לפני משחק",
               icon: <Trophy className="h-5 w-5" />,
               description: "הגדר יעדים ומטרות למשחק הבא",
-              path: "/pre-match-report",
+              path: "/pre-game-planner",
               color: "bg-[#D1FAE5] hover:bg-[#A7F3D0]"
             },
             {
