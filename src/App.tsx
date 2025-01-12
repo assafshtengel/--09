@@ -1,136 +1,44 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Toaster } from "sonner";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import Index from "@/pages/Index";
-import Auth from "@/pages/Auth";
+import { Toaster } from "@/components/ui/toaster";
+import { Navigation } from "@/components/Navigation";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "@/pages/Dashboard";
-import PreGamePlannerPage from "@/pages/PreGamePlanner";
+import Auth from "@/pages/Auth";
+import Profile from "@/pages/Profile";
+import Settings from "@/pages/Settings";
+import NotificationsManager from "@/pages/NotificationsManager";
+import PreGamePlanner from "@/pages/PreGamePlanner";
 import WeeklyPlanner from "@/pages/WeeklyPlanner";
-import MatchPage from "@/pages/Match";
-import MatchesPage from "@/pages/Matches";
-import ProfilePage from "@/pages/Profile";
-import SettingsPage from "@/pages/Settings";
-import NotFoundPage from "@/pages/404";
-import GameSelectionPage from "@/pages/GameSelection";
-import TrainingSummaryPage from "@/pages/TrainingSummary";
-import GameHistoryPage from "@/pages/GameHistory";
-import PortfolioPage from "@/pages/Portfolio";
-import MentalLearningPage from "@/pages/MentalLearning";
-import NotificationsManagerPage from "@/pages/NotificationsManager";
+import TrainingSummary from "@/pages/TrainingSummary";
+import GameHistory from "@/pages/GameHistory";
+import Portfolio from "@/pages/Portfolio";
+import MentalLearning from "@/pages/MentalLearning";
+import Admin from "@/pages/Admin";
+import { GameTracker } from "@/components/GameTracker";
+import { GameSelection } from "@/components/game/GameSelection";
+import "./App.css";
 
 function App() {
   return (
     <BrowserRouter>
-      <Toaster position="top-center" expand={true} richColors />
+      <Navigation />
       <Routes>
-        <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/game-selection"
-          element={
-            <ProtectedRoute>
-              <GameSelectionPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/training-summary"
-          element={
-            <ProtectedRoute>
-              <TrainingSummaryPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/game-history"
-          element={
-            <ProtectedRoute>
-              <GameHistoryPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/portfolio"
-          element={
-            <ProtectedRoute>
-              <PortfolioPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/mental-learning"
-          element={
-            <ProtectedRoute>
-              <MentalLearningPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/notifications"
-          element={
-            <ProtectedRoute>
-              <NotificationsManagerPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/pre-game-planner"
-          element={
-            <ProtectedRoute>
-              <PreGamePlannerPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/weekly-planner"
-          element={
-            <ProtectedRoute>
-              <WeeklyPlanner />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/matches"
-          element={
-            <ProtectedRoute>
-              <MatchesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/matches/:id"
-          element={
-            <ProtectedRoute>
-              <MatchPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <SettingsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<NotFoundPage />} />
+        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><NotificationsManager /></ProtectedRoute>} />
+        <Route path="/pre-game-planner" element={<ProtectedRoute><PreGamePlanner /></ProtectedRoute>} />
+        <Route path="/weekly-planner" element={<ProtectedRoute><WeeklyPlanner /></ProtectedRoute>} />
+        <Route path="/training-summary" element={<ProtectedRoute><TrainingSummary /></ProtectedRoute>} />
+        <Route path="/game-history" element={<ProtectedRoute><GameHistory /></ProtectedRoute>} />
+        <Route path="/portfolio" element={<ProtectedRoute><Portfolio /></ProtectedRoute>} />
+        <Route path="/mental-learning" element={<ProtectedRoute><MentalLearning /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+        <Route path="/game-selection" element={<ProtectedRoute><GameSelection /></ProtectedRoute>} />
+        <Route path="/game/:id" element={<ProtectedRoute><GameTracker /></ProtectedRoute>} />
       </Routes>
+      <Toaster />
     </BrowserRouter>
   );
 }
