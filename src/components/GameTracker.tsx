@@ -30,7 +30,12 @@ interface Match {
   team_name?: string;
   player_role?: string;
   pre_match_reports?: {
-    actions: PreMatchReportActions[];
+    actions: Array<{
+      id: string;
+      name: string;
+      goal?: string;
+      isSelected: boolean;
+    }>;
     havaya?: string;
   };
 }
@@ -100,8 +105,7 @@ export const GameTracker = () => {
         throw new Error("Match not found");
       }
 
-      const typedMatch = match as Match;
-      setMatchDetails(typedMatch);
+      setMatchDetails(match);
 
       if (match?.pre_match_reports) {
         // Set havaya from pre-match report
@@ -111,25 +115,27 @@ export const GameTracker = () => {
 
         // Set actions from pre-match report
         if (match.pre_match_reports.actions) {
-          const rawActions = match.pre_match_reports.actions as PreMatchReportActions[];
+          const rawActions = match.pre_match_reports.actions;
           
-          const validActions = rawActions
-            .filter(action => 
-              typeof action === 'object' && 
-              action !== null && 
-              'id' in action && 
-              'name' in action && 
-              'isSelected' in action
-            )
-            .map(action => ({
-              id: action.id,
-              name: action.name,
-              goal: action.goal,
-              isSelected: action.isSelected
-            }));
-            
-          console.log("Parsed actions:", validActions);
-          setActions(validActions);
+          if (Array.isArray(rawActions)) {
+            const validActions = rawActions
+              .filter(action => 
+                typeof action === 'object' && 
+                action !== null && 
+                'id' in action && 
+                'name' in action && 
+                'isSelected' in action
+              )
+              .map(action => ({
+                id: action.id,
+                name: action.name,
+                goal: action.goal,
+                isSelected: action.isSelected
+              }));
+              
+            console.log("Parsed actions:", validActions);
+            setActions(validActions);
+          }
         }
       }
 
