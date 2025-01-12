@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { Action } from "@/components/ActionSelector";
 import { GamePreview } from "./game/GamePreview";
@@ -26,6 +27,7 @@ export const GameTracker = () => {
   const [generalNotes, setGeneralNotes] = useState<Array<{ text: string; minute: number }>>([]);
   const [substitutions, setSubstitutions] = useState<SubstitutionLog[]>([]);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [havaya, setHavaya] = useState<string[]>([]);
   const [matchDetails, setMatchDetails] = useState<Match>({
     id: "",
     player_id: "",
@@ -69,26 +71,34 @@ export const GameTracker = () => {
       const typedMatch = match as unknown as Match;
       setMatchDetails(typedMatch);
 
-      if (match?.pre_match_reports?.actions) {
-        const rawActions = match.pre_match_reports.actions as unknown as PreMatchReportActions[];
-        
-        const validActions = rawActions
-          .filter(action => 
-            typeof action === 'object' && 
-            action !== null && 
-            'id' in action && 
-            'name' in action && 
-            'isSelected' in action
-          )
-          .map(action => ({
-            id: action.id,
-            name: action.name,
-            goal: action.goal,
-            isSelected: action.isSelected
-          }));
+      if (match?.pre_match_reports) {
+        // Set havaya from pre-match report
+        if (match.pre_match_reports.havaya) {
+          setHavaya(match.pre_match_reports.havaya.split(','));
+        }
+
+        // Set actions from pre-match report
+        if (match.pre_match_reports.actions) {
+          const rawActions = match.pre_match_reports.actions as unknown as PreMatchReportActions[];
           
-        console.log("Parsed actions:", validActions);
-        setActions(validActions);
+          const validActions = rawActions
+            .filter(action => 
+              typeof action === 'object' && 
+              action !== null && 
+              'id' in action && 
+              'name' in action && 
+              'isSelected' in action
+            )
+            .map(action => ({
+              id: action.id,
+              name: action.name,
+              goal: action.goal,
+              isSelected: action.isSelected
+            }));
+            
+          console.log("Parsed actions:", validActions);
+          setActions(validActions);
+        }
       }
 
       // Load existing action logs
@@ -363,11 +373,26 @@ export const GameTracker = () => {
       onEndMatch={endMatch}
     >
       {gamePhase === "preview" && (
-        <GamePreview
-          actions={actions}
-          onActionAdd={handleAddAction}
-          onStartMatch={startMatch}
-        />
+        <div className="space-y-6">
+          {havaya.length > 0 && (
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <h3 className="text-lg font-semibold text-right mb-4">הוויות נבחרות</h3>
+              <div className="flex flex-wrap gap-2 justify-end">
+                {havaya.map((h, index) => (
+                  <Badge key={index} variant="secondary" className="text-lg py-2 px-4">
+                    {h}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          <GamePreview
+            actions={actions}
+            onActionAdd={handleAddAction}
+            onStartMatch={startMatch}
+          />
+        </div>
       )}
 
       {(gamePhase === "playing" || gamePhase === "secondHalf") && (
