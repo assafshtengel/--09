@@ -1,8 +1,11 @@
+import { Navigation } from "@/components/Navigation";
+import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryDashboard";
+
 const TrainingSummaryPage = () => {
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">סיכום אימון</h1>
-      {/* Training summary content will be implemented later */}
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <TrainingSummaryDashboard />
     </div>
   );
 };

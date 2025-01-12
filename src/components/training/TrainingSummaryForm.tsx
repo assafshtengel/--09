@@ -18,10 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { QuestionSelector } from "./QuestionSelector";
 import { RatingFields } from "./RatingFields";
 import { AIInsights } from "./AIInsights";
-import type { Database } from "@/integrations/supabase/types";
 import type { TrainingSummaryFormData } from "./types";
-
-type TrainingSummary = Database['public']['Tables']['training_summaries']['Insert'];
 
 export const TrainingSummaryForm = () => {
   const { toast } = useToast();
@@ -42,17 +39,11 @@ export const TrainingSummaryForm = () => {
 
   const generateAiInsights = async (data: TrainingSummaryFormData) => {
     try {
-      console.log('Generating AI insights for training data:', data);
       const { data: insights, error } = await supabase.functions.invoke('generate-training-insights', {
         body: { trainingData: data }
       });
 
-      if (error) {
-        console.error('Error from Edge Function:', error);
-        throw error;
-      }
-
-      console.log('Received AI insights:', insights);
+      if (error) throw error;
       return insights.insights;
     } catch (error) {
       console.error("Error generating AI insights:", error);
@@ -69,7 +60,7 @@ export const TrainingSummaryForm = () => {
         throw new Error("לא נמצא משתמש מחובר");
       }
 
-      const summary: TrainingSummary = {
+      const summary = {
         player_id: user.id,
         training_date: format(data.trainingDate, "yyyy-MM-dd"),
         training_time: data.trainingTime,
@@ -85,7 +76,6 @@ export const TrainingSummaryForm = () => {
 
       if (saveError) throw saveError;
 
-      // Generate AI insights after successful submission
       const insights = await generateAiInsights(data);
       setAiInsights(insights);
 
