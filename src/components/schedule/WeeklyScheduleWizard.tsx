@@ -86,6 +86,9 @@ export const WeeklyScheduleWizard = () => {
   };
 
   const handleNext = () => {
+    // Save current step's activities before moving to next step
+    console.log("Current activities before next:", activities);
+    
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
