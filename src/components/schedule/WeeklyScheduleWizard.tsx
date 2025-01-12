@@ -20,29 +20,45 @@ export const WeeklyScheduleWizard = () => {
     {
       title: "שעות בית ספר",
       component: <SchoolHoursStep onAddActivity={(activity) => {
-        console.log("Adding activity:", activity);
-        setActivities(prev => [...prev, activity]);
+        console.log("Adding school activity:", activity);
+        setActivities(prev => [...prev, {
+          ...activity,
+          activity_type: "school",
+          title: "בית ספר"
+        }]);
       }} />,
     },
     {
       title: "אימוני קבוצה",
       component: <TeamTrainingStep onAddActivity={(activity) => {
-        console.log("Adding activity:", activity);
-        setActivities(prev => [...prev, activity]);
+        console.log("Adding team training:", activity);
+        setActivities(prev => [...prev, {
+          ...activity,
+          activity_type: "team_training",
+          title: activity.title || "אימון קבוצה"
+        }]);
       }} />,
     },
     {
       title: "אימונים אישיים ומנטליים",
       component: <PersonalTrainingStep onAddActivity={(activity) => {
-        console.log("Adding activity:", activity);
-        setActivities(prev => [...prev, activity]);
+        console.log("Adding personal training:", activity);
+        setActivities(prev => [...prev, {
+          ...activity,
+          activity_type: activity.type || "personal_training",
+          title: activity.title || "אימון אישי"
+        }]);
       }} />,
     },
     {
       title: "שגרה יומית",
       component: <DailyRoutineStep onAddActivity={(activity) => {
-        console.log("Adding activity:", activity);
-        setActivities(prev => [...prev, activity]);
+        console.log("Adding daily routine:", activity);
+        setActivities(prev => [...prev, {
+          ...activity,
+          activity_type: activity.type || "other",
+          title: activity.title || "פעילות יומית"
+        }]);
       }} />,
     },
   ];
@@ -82,6 +98,7 @@ export const WeeklyScheduleWizard = () => {
 
   const handleSave = async () => {
     try {
+      console.log("Saving activities:", activities);
       const scheduleId = await saveSchedule(activities);
       await optimizeSchedule(scheduleId);
       toast.success("המערכת השבועית נשמרה בהצלחה");
