@@ -833,10 +833,13 @@ export type Database = {
       schedule_activities: {
         Row: {
           activity_type: Database["public"]["Enums"]["activity_type"]
+          ai_priority: number | null
           created_at: string
           day_of_week: number
           end_time: string
           id: string
+          is_ai_generated: boolean | null
+          meal_type: string | null
           notes: string | null
           priority: number | null
           recurring_days: number[] | null
@@ -846,10 +849,13 @@ export type Database = {
         }
         Insert: {
           activity_type: Database["public"]["Enums"]["activity_type"]
+          ai_priority?: number | null
           created_at?: string
           day_of_week: number
           end_time: string
           id?: string
+          is_ai_generated?: boolean | null
+          meal_type?: string | null
           notes?: string | null
           priority?: number | null
           recurring_days?: number[] | null
@@ -859,10 +865,13 @@ export type Database = {
         }
         Update: {
           activity_type?: Database["public"]["Enums"]["activity_type"]
+          ai_priority?: number | null
           created_at?: string
           day_of_week?: number
           end_time?: string
           id?: string
+          is_ai_generated?: boolean | null
+          meal_type?: string | null
           notes?: string | null
           priority?: number | null
           recurring_days?: number[] | null
@@ -1031,34 +1040,49 @@ export type Database = {
       }
       weekly_schedules: {
         Row: {
+          ai_optimizations: Json | null
+          chat_progress: Json | null
           created_at: string
+          exams: Json | null
           id: string
           is_active: boolean
           notes: string | null
           player_id: string
           shared_with: string[] | null
+          social_events: Json | null
           start_date: string
           status: string | null
+          team_games: Json | null
         }
         Insert: {
+          ai_optimizations?: Json | null
+          chat_progress?: Json | null
           created_at?: string
+          exams?: Json | null
           id?: string
           is_active?: boolean
           notes?: string | null
           player_id: string
           shared_with?: string[] | null
+          social_events?: Json | null
           start_date: string
           status?: string | null
+          team_games?: Json | null
         }
         Update: {
+          ai_optimizations?: Json | null
+          chat_progress?: Json | null
           created_at?: string
+          exams?: Json | null
           id?: string
           is_active?: boolean
           notes?: string | null
           player_id?: string
           shared_with?: string[] | null
+          social_events?: Json | null
           start_date?: string
           status?: string | null
+          team_games?: Json | null
         }
         Relationships: [
           {
@@ -1104,6 +1128,10 @@ export type Database = {
         | "wake_up"
         | "departure"
         | "team_game"
+        | "exam_prep"
+        | "social_event"
+        | "meal"
+        | "travel"
       activity_type_enum:
         | "sleep"
         | "screen_time"

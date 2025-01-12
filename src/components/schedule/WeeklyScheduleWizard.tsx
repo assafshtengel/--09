@@ -9,6 +9,7 @@ import { WeeklyScheduleViewer } from "./WeeklyScheduleViewer";
 import { ArrowRight, ArrowLeft, Save } from "lucide-react";
 import { useWeeklySchedule } from "@/hooks/use-weekly-schedule";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const WeeklyScheduleWizard = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -46,6 +47,27 @@ export const WeeklyScheduleWizard = () => {
     },
   ];
 
+  const optimizeSchedule = async (scheduleId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-schedule-optimizations', {
+        body: {
+          activities,
+          scheduleId
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.optimizedSchedule) {
+        setActivities(prev => [...prev, ...data.optimizedSchedule]);
+        toast.success('המערכת עודכנה עם ארוחות ואופטימיזציות');
+      }
+    } catch (error) {
+      console.error('Error optimizing schedule:', error);
+      toast.error('שגיאה באופטימיזציית המערכת');
+    }
+  };
+
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -60,7 +82,8 @@ export const WeeklyScheduleWizard = () => {
 
   const handleSave = async () => {
     try {
-      await saveSchedule(activities);
+      const scheduleId = await saveSchedule(activities);
+      await optimizeSchedule(scheduleId);
       toast.success("המערכת השבועית נשמרה בהצלחה");
     } catch (error) {
       console.error("Error saving schedule:", error);

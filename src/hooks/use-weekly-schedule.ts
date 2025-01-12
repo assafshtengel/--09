@@ -35,6 +35,8 @@ export const useWeeklySchedule = () => {
         );
 
       if (activitiesError) throw activitiesError;
+      
+      return scheduleData.id;
     } finally {
       setIsLoading(false);
     }
