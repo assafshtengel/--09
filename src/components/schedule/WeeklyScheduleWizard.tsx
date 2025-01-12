@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SchoolHoursStep } from "./steps/SchoolHoursStep";
@@ -16,50 +16,51 @@ export const WeeklyScheduleWizard = () => {
   const { saveSchedule, isLoading } = useWeeklySchedule();
   const [activities, setActivities] = useState<any[]>([]);
 
+  // Memoize step components to prevent unnecessary re-renders
   const steps = [
     {
       title: "שעות בית ספר",
-      component: <SchoolHoursStep onAddActivity={(activity) => {
+      component: <SchoolHoursStep onAddActivity={useCallback((activity) => {
         console.log("Adding school activity:", activity);
         setActivities(prev => [...prev, {
           ...activity,
           activity_type: "school",
           title: "בית ספר"
         }]);
-      }} />,
+      }, [])} />,
     },
     {
       title: "אימוני קבוצה",
-      component: <TeamTrainingStep onAddActivity={(activity) => {
+      component: <TeamTrainingStep onAddActivity={useCallback((activity) => {
         console.log("Adding team training:", activity);
         setActivities(prev => [...prev, {
           ...activity,
           activity_type: "team_training",
           title: activity.title || "אימון קבוצה"
         }]);
-      }} />,
+      }, [])} />,
     },
     {
       title: "אימונים אישיים ומנטליים",
-      component: <PersonalTrainingStep onAddActivity={(activity) => {
+      component: <PersonalTrainingStep onAddActivity={useCallback((activity) => {
         console.log("Adding personal training:", activity);
         setActivities(prev => [...prev, {
           ...activity,
           activity_type: activity.type || "personal_training",
           title: activity.title || "אימון אישי"
         }]);
-      }} />,
+      }, [])} />,
     },
     {
       title: "שגרה יומית",
-      component: <DailyRoutineStep onAddActivity={(activity) => {
+      component: <DailyRoutineStep onAddActivity={useCallback((activity) => {
         console.log("Adding daily routine:", activity);
         setActivities(prev => [...prev, {
           ...activity,
           activity_type: activity.type || "other",
           title: activity.title || "פעילות יומית"
         }]);
-      }} />,
+      }, [])} />,
     },
   ];
 
