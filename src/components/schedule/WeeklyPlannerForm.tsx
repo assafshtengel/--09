@@ -30,10 +30,18 @@ export const WeeklyPlannerForm = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleStepComplete = (stepId: string, value: any) => {
-    setScheduleData(prev => ({
-      ...prev,
-      [stepId]: value
-    }));
+    if (stepId === 'hasSchool') {
+      setScheduleData(prev => ({
+        ...prev,
+        hasSchool: value.hasSchool,
+        schoolDays: value.schoolDays
+      }));
+    } else {
+      setScheduleData(prev => ({
+        ...prev,
+        [stepId]: value
+      }));
+    }
   };
 
   const generateSchedule = async () => {

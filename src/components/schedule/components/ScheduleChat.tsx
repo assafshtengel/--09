@@ -3,17 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Calendar, School, Users, Trophy, Book, PersonStanding, PartyPopper } from "lucide-react";
+import { Clock, Calendar, School, Users, Trophy, Book, PersonStanding, PartyPopper, ArrowLeft } from "lucide-react";
 
 interface ChatStep {
   id: string;
   question: string;
-  type: 'number' | 'time' | 'checkbox' | 'multi-time' | 'text' | 'days-selection' | 'multi-input';
+  type: 'number' | 'time' | 'radio' | 'multi-time' | 'text' | 'days-selection' | 'multi-input';
   icon: React.ReactNode;
   validation?: (value: any) => boolean;
   errorMessage?: string;
@@ -34,6 +34,7 @@ export const ScheduleChat = ({ onStepComplete, onComplete }: ScheduleChatProps) 
   const [currentValue, setCurrentValue] = useState<any>(null);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [multiInputs, setMultiInputs] = useState<any[]>([]);
+  const [schoolDays, setSchoolDays] = useState<{[key: number]: {startTime: string; endTime: string}}>({});
 
   const chatSteps: ChatStep[] = [
     {
@@ -55,7 +56,7 @@ export const ScheduleChat = ({ onStepComplete, onComplete }: ScheduleChatProps) 
     {
       id: 'hasSchool',
       question: 'האם יש לך בית ספר השבוע?',
-      type: 'checkbox',
+      type: 'radio',
       icon: <School className="h-6 w-6 text-green-500" />
     },
     {
@@ -132,7 +133,20 @@ export const ScheduleChat = ({ onStepComplete, onComplete }: ScheduleChatProps) 
       return;
     }
 
-    onStepComplete(currentStep.id, currentValue);
+    if (currentStep.id === 'hasSchool' && currentValue === 'yes' && Object.keys(schoolDays).length === 0) {
+      toast.error('אנא בחר לפחות יום אחד ושעות לימודים');
+      return;
+    }
+
+    let valueToSave = currentValue;
+    if (currentStep.id === 'hasSchool') {
+      valueToSave = {
+        hasSchool: currentValue === 'yes',
+        schoolDays: currentValue === 'yes' ? schoolDays : undefined
+      };
+    }
+
+    onStepComplete(currentStep.id, valueToSave);
     
     if (currentStepIndex < chatSteps.length - 1) {
       setCurrentStepIndex(currentStepIndex + 1);
@@ -144,14 +158,23 @@ export const ScheduleChat = ({ onStepComplete, onComplete }: ScheduleChatProps) 
     }
   };
 
-  const handleAddMultiInput = () => {
-    setMultiInputs([...multiInputs, {}]);
+  const handleBack = () => {
+    if (currentStepIndex > 0) {
+      setCurrentStepIndex(currentStepIndex - 1);
+      setCurrentValue(null);
+      setSelectedDays([]);
+      setMultiInputs([]);
+    }
   };
 
-  const handleMultiInputChange = (index: number, key: string, value: any) => {
-    const newInputs = [...multiInputs];
-    newInputs[index] = { ...newInputs[index], [key]: value };
-    setMultiInputs(newInputs);
+  const handleSchoolDayChange = (dayId: number, field: 'startTime' | 'endTime', value: string) => {
+    setSchoolDays(prev => ({
+      ...prev,
+      [dayId]: {
+        ...prev[dayId],
+        [field]: value
+      }
+    }));
   };
 
   const renderInput = () => {
@@ -169,14 +192,51 @@ export const ScheduleChat = ({ onStepComplete, onComplete }: ScheduleChatProps) 
           />
         );
       
-      case 'checkbox':
+      case 'radio':
         return (
-          <div className="flex items-center gap-2">
-            <Checkbox
-              checked={currentValue || false}
-              onCheckedChange={(checked) => setCurrentValue(checked)}
-            />
-            <span>כן</span>
+          <div className="space-y-4">
+            <RadioGroup
+              value={currentValue}
+              onValueChange={setCurrentValue}
+              className="flex flex-col gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="yes" id="yes" />
+                <Label htmlFor="yes">כן</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="no" id="no" />
+                <Label htmlFor="no">לא</Label>
+              </div>
+            </RadioGroup>
+
+            {currentValue === 'yes' && (
+              <div className="mt-4 space-y-4">
+                {days.slice(0, 6).map((day) => (
+                  <div key={day.id} className="p-4 bg-gray-50 rounded-lg space-y-2">
+                    <Label>{day.label}</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>שעת התחלה</Label>
+                        <Input
+                          type="time"
+                          value={schoolDays[day.id]?.startTime || ''}
+                          onChange={(e) => handleSchoolDayChange(day.id, 'startTime', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label>שעת סיום</Label>
+                        <Input
+                          type="time"
+                          value={schoolDays[day.id]?.endTime || ''}
+                          onChange={(e) => handleSchoolDayChange(day.id, 'endTime', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       
@@ -222,9 +282,6 @@ export const ScheduleChat = ({ onStepComplete, onComplete }: ScheduleChatProps) 
             </Button>
           </div>
         );
-      
-      default:
-        return null;
     }
   };
 
@@ -250,7 +307,17 @@ export const ScheduleChat = ({ onStepComplete, onComplete }: ScheduleChatProps) 
             {renderInput()}
           </div>
 
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-between pt-4">
+            <Button 
+              onClick={handleBack}
+              variant="outline"
+              className="min-w-[120px]"
+              disabled={currentStepIndex === 0}
+            >
+              <ArrowLeft className="h-4 w-4 ml-2" />
+              חזור
+            </Button>
+
             <Button 
               onClick={handleNext}
               className={cn(
