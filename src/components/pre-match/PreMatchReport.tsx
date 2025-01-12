@@ -95,7 +95,6 @@ export const PreMatchReport = () => {
     if (!reportId) return;
 
     try {
-      // Convert Action[] to a JSON-compatible format
       const jsonActions = actions.map(action => ({
         id: action.id,
         name: action.name,
@@ -107,7 +106,6 @@ export const PreMatchReport = () => {
         .from("pre_match_reports")
         .update({
           actions: jsonActions,
-          // Join array elements with a comma to store as a single string
           havaya: havaya.join(',')
         })
         .eq("id", reportId);
@@ -163,16 +161,6 @@ export const PreMatchReport = () => {
       console.error("Error completing report:", error);
       toast.error("שגיאה בשמירת הדוח");
     }
-  };
-
-  const handlePlannerConfirm = () => {
-    setShowPlannerDialog(false);
-    navigate("/pre-game-planner");
-  };
-
-  const handlePlannerCancel = () => {
-    setShowPlannerDialog(false);
-    navigate("/dashboard");
   };
 
   const renderStep = () => {
