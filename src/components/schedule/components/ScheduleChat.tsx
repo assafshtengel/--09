@@ -177,6 +177,22 @@ export const ScheduleChat = ({ onStepComplete, onComplete }: ScheduleChatProps) 
     }));
   };
 
+  const handleMultiInputChange = (index: number, field: string, value: string) => {
+    setMultiInputs(prev => {
+      const newInputs = [...prev];
+      if (!newInputs[index]) {
+        newInputs[index] = {};
+      }
+      newInputs[index][field] = value;
+      return newInputs;
+    });
+    setCurrentValue(multiInputs);
+  };
+
+  const handleAddMultiInput = () => {
+    setMultiInputs(prev => [...prev, {}]);
+  };
+
   const renderInput = () => {
     const currentStep = chatSteps[currentStepIndex];
 
