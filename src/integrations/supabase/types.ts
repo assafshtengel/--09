@@ -880,6 +880,111 @@ export type Database = {
           },
         ]
       }
+      schedule_exams: {
+        Row: {
+          created_at: string
+          exam_date: string
+          id: string
+          schedule_id: string | null
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          exam_date: string
+          id?: string
+          schedule_id?: string | null
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          exam_date?: string
+          id?: string
+          schedule_id?: string | null
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_exams_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_matches: {
+        Row: {
+          created_at: string
+          id: string
+          match_date: string
+          match_time: string
+          opponent: string
+          schedule_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_date: string
+          match_time: string
+          opponent: string
+          schedule_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_date?: string
+          match_time?: string
+          opponent?: string
+          schedule_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_matches_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_social_events: {
+        Row: {
+          created_at: string
+          description: string
+          end_time: string
+          event_date: string
+          id: string
+          schedule_id: string | null
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          end_time: string
+          event_date: string
+          id?: string
+          schedule_id?: string | null
+          start_time: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          end_time?: string
+          event_date?: string
+          id?: string
+          schedule_id?: string | null
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_social_events_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_summaries: {
         Row: {
           challenge_handling_rating: number
@@ -999,6 +1104,19 @@ export type Database = {
         | "wake_up"
         | "departure"
         | "team_game"
+      activity_type_enum:
+        | "sleep"
+        | "screen_time"
+        | "school"
+        | "team_training"
+        | "personal_training"
+        | "match"
+        | "exam"
+        | "social_event"
+        | "meal"
+        | "free_time"
+        | "study_time"
+        | "travel"
       message_type: "incoming" | "outgoing"
       notification_type: "pre_match" | "weekly" | "mental_tip" | "custom"
       report_status: "draft" | "completed"
