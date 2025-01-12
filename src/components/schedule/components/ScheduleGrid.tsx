@@ -59,6 +59,11 @@ const getActivityProps = (activity: Activity) => {
         colorClass: 'bg-gray-100',
         icon: '😴'
       };
+    case 'meal':
+      return {
+        colorClass: 'bg-orange-100',
+        icon: '🍽️'
+      };
     default:
       return {
         colorClass: 'bg-yellow-100',
@@ -105,13 +110,14 @@ export const ScheduleGrid = ({
           <div className="h-12 border-b px-2 font-medium text-center">{day}</div>
           <div className="relative">
             {hours.map((hour, hourIndex) => (
-              <div key={hour} className="h-16 border-b border-r" />
+              <div key={`${day}-${hour}`} className="h-16 border-b border-r" />
             ))}
-            {dayActivities.map((activity) => {
+            {dayActivities.map((activity, index) => {
               const { colorClass, icon } = getActivityProps(activity);
+              const activityKey = activity.id || `${activity.day_of_week}-${activity.start_time}-${index}`;
               return (
                 <ActivityBlock
-                  key={activity.id}
+                  key={activityKey}
                   activity={activity}
                   style={getActivityStyle(activity)}
                   colorClass={colorClass}
@@ -141,13 +147,14 @@ export const ScheduleGrid = ({
             </div>
             <div className="relative">
               {hours.map((hour) => (
-                <div key={hour} className="h-16 border-b border-r" />
+                <div key={`mobile-${hour}`} className="h-16 border-b border-r" />
               ))}
-              {dayActivities.map((activity) => {
+              {dayActivities.map((activity, index) => {
                 const { colorClass, icon } = getActivityProps(activity);
+                const activityKey = activity.id || `${activity.day_of_week}-${activity.start_time}-${index}`;
                 return (
                   <ActivityBlock
-                    key={activity.id}
+                    key={activityKey}
                     activity={activity}
                     style={getActivityStyle(activity)}
                     colorClass={colorClass}
