@@ -22,15 +22,19 @@ export const WeeklyScheduleWizard = () => {
       title: "שעות בית ספר",
       component: <SchoolHoursStep onAddActivity={useCallback((activity) => {
         console.log("Adding school activity:", activity);
+        // Remove existing school activities for this day before adding new ones
+        const filteredActivities = activities.filter(a => 
+          !(a.day_of_week === activity.day_of_week && a.activity_type === "school")
+        );
         const newActivity = {
           ...activity,
           activity_type: "school",
           title: "בית ספר"
         };
-        setActivities(prev => [...prev.filter(a => 
-          !(a.day_of_week === activity.day_of_week && a.activity_type === "school")
-        ), newActivity]);
-      }, [])} />,
+        const updatedActivities = [...filteredActivities, newActivity];
+        console.log("Updated activities after school:", updatedActivities);
+        setActivities(updatedActivities);
+      }, [activities])} />,
     },
     {
       title: "אימוני קבוצה",
@@ -41,8 +45,10 @@ export const WeeklyScheduleWizard = () => {
           activity_type: activity.type || "team_training",
           title: activity.title || "אימון קבוצה"
         };
-        setActivities(prev => [...prev, newActivity]);
-      }, [])} />,
+        const updatedActivities = [...activities, newActivity];
+        console.log("Updated activities after team training:", updatedActivities);
+        setActivities(updatedActivities);
+      }, [activities])} />,
     },
     {
       title: "אימונים אישיים ומנטליים",
@@ -53,8 +59,10 @@ export const WeeklyScheduleWizard = () => {
           activity_type: activity.type || "personal_training",
           title: activity.title || "אימון אישי"
         };
-        setActivities(prev => [...prev, newActivity]);
-      }, [])} />,
+        const updatedActivities = [...activities, newActivity];
+        console.log("Updated activities after personal training:", updatedActivities);
+        setActivities(updatedActivities);
+      }, [activities])} />,
     },
     {
       title: "שגרה יומית",
@@ -65,8 +73,10 @@ export const WeeklyScheduleWizard = () => {
           activity_type: activity.type || "other",
           title: activity.title || "פעילות יומית"
         };
-        setActivities(prev => [...prev, newActivity]);
-      }, [])} />,
+        const updatedActivities = [...activities, newActivity];
+        console.log("Updated activities after daily routine:", updatedActivities);
+        setActivities(updatedActivities);
+      }, [activities])} />,
     },
   ];
 
@@ -92,15 +102,14 @@ export const WeeklyScheduleWizard = () => {
   };
 
   const handleNext = () => {
-    // Save current step's activities before moving to next step
-    console.log("Current activities:", activities);
-    
+    console.log("Moving to next step. Current activities:", activities);
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
   };
 
   const handleBack = () => {
+    console.log("Moving to previous step. Current activities:", activities);
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
