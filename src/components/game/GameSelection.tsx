@@ -64,7 +64,7 @@ export const GameSelection = () => {
       if (!user) throw new Error("No authenticated user");
 
       if (game.status === "completed" && game.match_id) {
-        navigate(`/match/${game.match_id}`);
+        navigate(`/matches/${game.match_id}`);
         return;
       }
 
@@ -82,7 +82,7 @@ export const GameSelection = () => {
 
       if (createError) throw createError;
       if (newMatch) {
-        navigate(`/match/${newMatch.id}`);
+        navigate(`/matches/${newMatch.id}`);
       }
     } catch (error) {
       console.error("Error handling game selection:", error);
@@ -163,7 +163,7 @@ export const GameSelection = () => {
   };
 
   const handleNewGame = () => {
-    navigate("/pre-match-report");
+    navigate("/pre-game-planner");
   };
 
   if (isLoading) {
