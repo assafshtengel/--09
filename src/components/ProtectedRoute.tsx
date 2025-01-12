@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
   adminOnly?: boolean;
 }
 
-const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
@@ -71,5 +71,3 @@ const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) =>
 
   return <>{children}</>;
 };
-
-export default ProtectedRoute;
