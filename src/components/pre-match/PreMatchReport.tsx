@@ -163,6 +163,16 @@ export const PreMatchReport = () => {
     }
   };
 
+  const handlePlannerConfirm = () => {
+    setShowPlannerDialog(false);
+    navigate("/pre-game-planner");
+  };
+
+  const handlePlannerCancel = () => {
+    setShowPlannerDialog(false);
+    navigate("/dashboard");
+  };
+
   const renderStep = () => {
     const commonProps = {
       className: "w-full max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg space-y-6",
