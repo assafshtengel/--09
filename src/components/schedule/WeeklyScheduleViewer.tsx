@@ -29,14 +29,14 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
   const days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
   const hours = Array.from({ length: 18 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
 
-  // Update visible activities when the selected day changes
+  // Update visible activities when the selected day changes or activities prop changes
   useEffect(() => {
-    console.log("All activities:", activities); // Debug log
     if (isMobile) {
       const filteredActivities = activities.filter(a => a.day_of_week === selectedDay);
-      console.log("Filtered activities for day", selectedDay, ":", filteredActivities); // Debug log
+      console.log("Mobile activities for day", selectedDay, ":", filteredActivities);
       setVisibleActivities(filteredActivities);
     } else {
+      console.log("Setting all activities:", activities);
       setVisibleActivities(activities);
     }
   }, [activities, selectedDay, isMobile]);
