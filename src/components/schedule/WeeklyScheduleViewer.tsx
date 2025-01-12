@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ScheduleHeader } from "./components/ScheduleHeader";
 import { ScheduleGrid } from "./components/ScheduleGrid";
-import { useVirtualizer } from '@tanstack/react-virtual';
 
 interface Activity {
   id?: string;
@@ -32,8 +31,11 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
 
   // Update visible activities when the selected day changes
   useEffect(() => {
+    console.log("All activities:", activities); // Debug log
     if (isMobile) {
-      setVisibleActivities(activities.filter(a => a.day_of_week === selectedDay));
+      const filteredActivities = activities.filter(a => a.day_of_week === selectedDay);
+      console.log("Filtered activities for day", selectedDay, ":", filteredActivities); // Debug log
+      setVisibleActivities(filteredActivities);
     } else {
       setVisibleActivities(activities);
     }

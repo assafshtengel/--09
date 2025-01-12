@@ -38,6 +38,7 @@ const getActivityStyle = (activity: Activity) => {
 };
 
 const getActivityProps = (activity: Activity) => {
+  console.log("Activity type:", activity.activity_type); // Debug log
   switch (activity.activity_type) {
     case 'school':
       return {
@@ -50,19 +51,29 @@ const getActivityProps = (activity: Activity) => {
         icon: '⚽'
       };
     case 'personal_training':
+    case 'mental_training':
       return {
         colorClass: 'bg-purple-100',
         icon: '🏃'
       };
     case 'sleep':
+    case 'wake_up':
       return {
         colorClass: 'bg-gray-100',
         icon: '😴'
       };
     case 'meal':
+    case 'lunch':
+    case 'breakfast':
+    case 'dinner':
       return {
         colorClass: 'bg-orange-100',
         icon: '🍽️'
+      };
+    case 'free_time':
+      return {
+        colorClass: 'bg-yellow-100',
+        icon: '🎮'
       };
     default:
       return {
@@ -105,6 +116,8 @@ export const ScheduleGrid = ({
         (activity) => activity.day_of_week === actualDayIndex
       );
 
+      console.log(`Activities for day ${actualDayIndex}:`, dayActivities); // Debug log
+
       return (
         <div key={day} className="flex-1 min-w-[200px]">
           <div className="h-12 border-b px-2 font-medium text-center">{day}</div>
@@ -136,6 +149,8 @@ export const ScheduleGrid = ({
     const dayActivities = activities.filter(
       (activity) => activity.day_of_week === selectedDay
     );
+
+    console.log(`Mobile activities for day ${selectedDay}:`, dayActivities); // Debug log
 
     return (
       <div className="border rounded-lg overflow-hidden">
