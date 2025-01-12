@@ -11,6 +11,12 @@ import MatchesPage from "@/pages/Matches";
 import ProfilePage from "@/pages/Profile";
 import SettingsPage from "@/pages/Settings";
 import NotFoundPage from "@/pages/404";
+import GameSelectionPage from "@/pages/GameSelection";
+import TrainingSummaryPage from "@/pages/TrainingSummary";
+import GameHistoryPage from "@/pages/GameHistory";
+import PortfolioPage from "@/pages/Portfolio";
+import MentalLearningPage from "@/pages/MentalLearning";
+import NotificationsManagerPage from "@/pages/NotificationsManager";
 
 function App() {
   return (
@@ -24,6 +30,54 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/game-selection"
+          element={
+            <ProtectedRoute>
+              <GameSelectionPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/training-summary"
+          element={
+            <ProtectedRoute>
+              <TrainingSummaryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/game-history"
+          element={
+            <ProtectedRoute>
+              <GameHistoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/portfolio"
+          element={
+            <ProtectedRoute>
+              <PortfolioPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mental-learning"
+          element={
+            <ProtectedRoute>
+              <MentalLearningPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsManagerPage />
             </ProtectedRoute>
           }
         />
