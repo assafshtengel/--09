@@ -15,6 +15,26 @@ import { GameSummary } from "./game/GameSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
+interface Match {
+  id: string;
+  player_id: string;
+  match_date: string;
+  status: string;
+  opponent?: string;
+  location?: string;
+  pre_match_report_id?: string;
+  match_type?: string;
+  final_score?: string;
+  player_position?: string;
+  team?: string;
+  team_name?: string;
+  player_role?: string;
+  pre_match_reports?: {
+    actions: PreMatchReportActions[];
+    havaya?: string;
+  };
+}
+
 interface PreMatchReportActions {
   id: string;
   name: string;
@@ -72,6 +92,7 @@ export const GameTracker = () => {
         .single();
 
       if (matchError) {
+        console.error("Error loading match data:", matchError);
         throw matchError;
       }
 
@@ -79,7 +100,7 @@ export const GameTracker = () => {
         throw new Error("Match not found");
       }
 
-      const typedMatch = match as unknown as Match;
+      const typedMatch = match as Match;
       setMatchDetails(typedMatch);
 
       if (match?.pre_match_reports) {
@@ -90,7 +111,7 @@ export const GameTracker = () => {
 
         // Set actions from pre-match report
         if (match.pre_match_reports.actions) {
-          const rawActions = match.pre_match_reports.actions as unknown as PreMatchReportActions[];
+          const rawActions = match.pre_match_reports.actions as PreMatchReportActions[];
           
           const validActions = rawActions
             .filter(action => 
@@ -120,6 +141,7 @@ export const GameTracker = () => {
         .order("minute", { ascending: true });
 
       if (logsError) {
+        console.error("Error loading action logs:", logsError);
         throw logsError;
       }
 
@@ -144,6 +166,7 @@ export const GameTracker = () => {
         .order("minute", { ascending: true });
 
       if (notesError) {
+        console.error("Error loading notes:", notesError);
         throw notesError;
       }
 
@@ -163,6 +186,7 @@ export const GameTracker = () => {
         .order("minute", { ascending: true });
 
       if (subsError) {
+        console.error("Error loading substitutions:", subsError);
         throw subsError;
       }
 
