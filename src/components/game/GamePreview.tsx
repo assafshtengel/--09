@@ -147,8 +147,8 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
       {insights && (
         <div className="bg-white rounded-lg shadow-md p-4">
           <h2 className="text-xl font-bold text-right mb-4">רגע לפני...</h2>
-          <ScrollArea className="h-[400px] w-full">
-            <div className="text-right space-y-4 px-4">
+          <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+            <div className="text-right space-y-4">
               {insights.split('\n\n').map((insight, index) => (
                 <p key={index} className="text-lg leading-relaxed">
                   {insight}
