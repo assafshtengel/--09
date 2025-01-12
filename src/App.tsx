@@ -1,28 +1,21 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Toaster } from "@/components/ui/toaster";
-import { Navigation } from "@/components/Navigation";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "sonner";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
-import Profile from "@/pages/Profile";
-import Index from "@/pages/Index";
-import Admin from "@/pages/Admin";
-import GameHistory from "@/pages/GameHistory";
+import PreGamePlannerPage from "@/pages/PreGamePlanner";
 import WeeklyPlanner from "@/pages/WeeklyPlanner";
-import PlayerPortfolio from "@/pages/PlayerPortfolio";
-import MentalLearning from "@/pages/MentalLearning";
-import NotificationsManager from "@/pages/NotificationsManager";
-import { GameTracker } from "@/components/GameTracker";
-import { TrainingSummaryForm } from "@/components/training/TrainingSummaryForm";
-import { GameSelection } from "@/components/game/GameSelection";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import { PreGamePlanner } from "@/components/pre-match/PreGamePlanner";
-
-import "./App.css";
+import MatchPage from "@/pages/Match";
+import MatchesPage from "@/pages/Matches";
+import ProfilePage from "@/pages/Profile";
+import SettingsPage from "@/pages/Settings";
+import NotFoundPage from "@/pages/404";
 
 function App() {
   return (
-    <Router>
-      <Navigation />
+    <BrowserRouter>
+      <Toaster position="top-center" expand={true} richColors />
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
@@ -35,42 +28,10 @@ function App() {
           }
         />
         <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute>
-              <Admin />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/game-history"
-          element={
-            <ProtectedRoute>
-              <GameHistory />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/pre-game-planner"
           element={
             <ProtectedRoute>
-              <PreGamePlanner />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/pre-match-report"
-          element={
-            <ProtectedRoute>
-              <PreGamePlanner />
+              <PreGamePlannerPage />
             </ProtectedRoute>
           }
         />
@@ -83,56 +44,40 @@ function App() {
           }
         />
         <Route
-          path="/portfolio"
+          path="/matches"
           element={
             <ProtectedRoute>
-              <PlayerPortfolio />
+              <MatchesPage />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/mental-learning"
+          path="/matches/:id"
           element={
             <ProtectedRoute>
-              <MentalLearning />
+              <MatchPage />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/notifications"
+          path="/profile"
           element={
             <ProtectedRoute>
-              <NotificationsManager />
+              <ProfilePage />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/game-selection"
+          path="/settings"
           element={
             <ProtectedRoute>
-              <GameSelection />
+              <SettingsPage />
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/game/:id"
-          element={
-            <ProtectedRoute>
-              <GameTracker />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/training-summary"
-          element={
-            <ProtectedRoute>
-              <TrainingSummaryForm />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
-      <Toaster />
-    </Router>
+    </BrowserRouter>
   );
 }
 
