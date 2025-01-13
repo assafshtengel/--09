@@ -54,17 +54,24 @@ export const AdminDashboard = () => {
     queryKey: ['userActions', selectedUser?.id],
     enabled: !!selectedUser,
     queryFn: async () => {
-      const { data: matches } = await supabase
-        .from('matches')
+      // First get all pre-match reports for this user
+      const { data: preMatchReports } = await supabase
+        .from('pre_match_reports')
         .select(`
           id,
           match_date,
           opponent,
-          match_actions (*)
+          actions,
+          questions_answers,
+          matches (
+            id,
+            match_actions (*)
+          )
         `)
         .eq('player_id', selectedUser.id)
         .order('match_date', { ascending: false });
-      return matches;
+
+      return preMatchReports;
     }
   });
 
@@ -218,16 +225,16 @@ export const AdminDashboard = () => {
             <DialogTitle>פעולות המשתמש - {selectedUser?.full_name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {userActions?.map((match) => (
-              <Card key={match.id}>
+            {userActions?.map((report) => (
+              <Card key={report.id}>
                 <CardHeader>
                   <CardTitle className="text-lg">
-                    משחק נגד {match.opponent || 'לא צוין'} - {new Date(match.match_date).toLocaleDateString()}
+                    משחק נגד {report.opponent || 'לא צוין'} - {new Date(report.match_date).toLocaleDateString()}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {match.match_actions?.map((action: any) => (
+                    {report.matches?.[0]?.match_actions?.map((action: any) => (
                       <div key={action.id} className="p-2 bg-gray-50 rounded">
                         <p>פעולה: {action.action_id}</p>
                         <p>דקה: {action.minute}</p>
@@ -235,7 +242,7 @@ export const AdminDashboard = () => {
                         {action.note && <p>הערה: {action.note}</p>}
                       </div>
                     ))}
-                    {!match.match_actions?.length && (
+                    {!report.matches?.[0]?.match_actions?.length && (
                       <p className="text-gray-500">לא נמצאו פעולות במשחק זה</p>
                     )}
                   </div>
