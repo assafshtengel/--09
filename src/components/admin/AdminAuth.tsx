@@ -16,13 +16,13 @@ interface AdminCredentials {
   phone_number: string;
 }
 
-interface VerifyPasswordResponse {
-  verified: boolean;
-}
-
 type VerifyPasswordParams = {
   input_email: string;
   input_password: string;
+}
+
+interface VerifyPasswordResponse {
+  verified: boolean;
 }
 
 export const AdminAuth = () => {
@@ -55,6 +55,7 @@ export const AdminAuth = () => {
           description: "אנא נסה שנית",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
 
@@ -72,6 +73,7 @@ export const AdminAuth = () => {
           description: "אנא נסה שנית",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
 
