@@ -22,12 +22,12 @@ export const PreGamePlanner = () => {
 
       // Call the edge function to generate schedule
       const { data, error } = await supabase.functions.invoke('generate-pre-game-schedule', {
-        body: {
+        body: JSON.stringify({
           matchTime,
           departureTime,
           commitments,
           userId: user.id
-        }
+        })
       });
 
       if (error) throw error;
