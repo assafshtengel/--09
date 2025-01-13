@@ -152,7 +152,7 @@ const Dashboard = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap justify-center gap-3"
+          className="grid grid-cols-2 sm:grid-cols-3 gap-3 justify-items-center"
         >
           {chatOptions.map((option, index) => (
             <Sheet key={index}>
@@ -162,7 +162,7 @@ const Dashboard = () => {
                   className="flex items-center gap-2 px-4 py-2 bg-[#E0F7FA] hover:bg-[#B2EBF2] 
                     transition-colors duration-200 rounded-md text-[#111827]
                     shadow-sm hover:shadow focus:outline-none focus:ring-2 
-                    focus:ring-blue-300 focus:ring-opacity-50"
+                    focus:ring-blue-300 focus:ring-opacity-50 w-full justify-center"
                 >
                   <span className="flex items-center gap-1.5">
                     {option.icon}
@@ -187,6 +187,32 @@ const Dashboard = () => {
       >
         <h1 className="text-4xl font-bold mb-3">ברוך הבא, {profile?.full_name}</h1>
         <p className="text-muted-foreground text-lg">בחר באפשרות כדי להתחיל</p>
+      </motion.div>
+
+      {/* Quick Actions Grid */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+      >
+        {quickActions.map((action, index) => (
+          <Card 
+            key={index}
+            className={`bg-gradient-to-br ${action.gradient} text-white cursor-pointer 
+              transform transition-all duration-200 hover:scale-105 hover:shadow-lg`}
+            onClick={action.onClick}
+          >
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                {action.icon}
+                {action.title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm opacity-90">{action.description}</p>
+            </CardContent>
+          </Card>
+        ))}
       </motion.div>
 
       {/* Statistics Section */}
