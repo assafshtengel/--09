@@ -58,9 +58,11 @@ export const AdminAuth = () => {
       }
 
       // Set admin session
-      await supabase.auth.updateUser({
+      const { error: updateError } = await supabase.auth.updateUser({
         data: { is_admin: true }
       });
+
+      if (updateError) throw updateError;
 
       toast({
         title: "התחברת בהצלחה",
@@ -82,10 +84,12 @@ export const AdminAuth = () => {
 
   const handleForgotPassword = async () => {
     try {
-      await supabase.functions.invoke("send-admin-credentials", {
+      const { error } = await supabase.functions.invoke("send-admin-credentials", {
         body: { email: "socr.co.il@gmail.com" }
       });
       
+      if (error) throw error;
+
       toast({
         title: "פרטי התחברות נשלחו",
         description: "בדוק את תיבת הדואר שלך",
