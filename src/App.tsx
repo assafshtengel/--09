@@ -23,6 +23,8 @@ import NotificationsManager from "./pages/NotificationsManager";
 import PlayerPortfolio from "./pages/PlayerPortfolio";
 import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryDashboard";
 import PreGamePlanner from "./pages/PreGamePlanner";
+import { AdminAuth } from "@/components/admin/AdminAuth"; // New import
+import { AdminDashboard } from "@/components/admin/AdminDashboard"; // New import
 
 const queryClient = new QueryClient();
 
@@ -102,6 +104,18 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Index />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/auth"
+                element={<AdminAuth />}
+              />
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
                   </ProtectedRoute>
                 }
               />

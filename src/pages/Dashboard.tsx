@@ -10,12 +10,14 @@ import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { MentalCoachingChat } from "@/components/dashboard/MentalCoachingChat";
 import { motion } from "framer-motion";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Shield } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [selectedChatType, setSelectedChatType] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -49,6 +51,23 @@ const Dashboard = () => {
 
     checkAuth();
   }, [navigate]);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data } = await supabase
+        .from("admin_credentials")
+        .select("*")
+        .eq("email", session.user.email)
+        .single();
+
+      setIsAdmin(!!data);
+    };
+
+    checkAdminStatus();
+  }, []);
 
   const chatOptions = [
     {
@@ -144,6 +163,21 @@ const Dashboard = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-8 min-h-screen bg-gradient-to-b from-background to-background/80">
+      {/* Add Admin Link if user is admin */}
+      {isAdmin && (
+        <Card className="bg-gradient-to-br from-purple-600 to-purple-700 text-white cursor-pointer transform transition-all duration-200 hover:scale-105 hover:shadow-lg" onClick={() => navigate("/admin/auth")}>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Shield className="h-6 w-6 text-white" />
+              דף ניהול
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm opacity-90">גישה לניהול המערכת</p>
+          </CardContent>
+        </Card>
+      )}
+      
       {/* Chat Options Section */}
       <div className="bg-[#F7FBFF] rounded-lg p-6 shadow-sm">
         <h2 className="text-center text-lg font-medium text-gray-700 mb-4">
