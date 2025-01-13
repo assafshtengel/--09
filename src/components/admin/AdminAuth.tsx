@@ -16,6 +16,10 @@ interface AdminCredentials {
   phone_number: string;
 }
 
+interface VerifyPasswordResponse {
+  verified: boolean;
+}
+
 export const AdminAuth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -50,7 +54,10 @@ export const AdminAuth = () => {
       }
 
       // Verify password using Supabase's built-in crypto functions
-      const { data: verifyData, error: verifyError } = await supabase.rpc<boolean, { input_email: string; input_password: string }>(
+      const { data: verifyData, error: verifyError } = await supabase.rpc<VerifyPasswordResponse, { 
+        input_email: string; 
+        input_password: string;
+      }>(
         "verify_admin_password",
         {
           input_email: formData.email,
@@ -58,7 +65,7 @@ export const AdminAuth = () => {
         }
       );
 
-      if (verifyError || !verifyData) {
+      if (verifyError || !verifyData?.verified) {
         toast({
           title: "גישה נדחתה",
           description: "אנא נסה שנית",
