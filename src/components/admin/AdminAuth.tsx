@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
+interface AdminUserMetadata {
+  isAdmin: boolean;
+}
+
 export const AdminAuth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -58,8 +62,9 @@ export const AdminAuth = () => {
       }
 
       // Set admin session with proper typing
+      const metadata: AdminUserMetadata = { isAdmin: true };
       const { error: updateError } = await supabase.auth.updateUser({
-        data: { isAdmin: true } as { isAdmin: boolean }
+        data: metadata
       });
 
       if (updateError) throw updateError;
