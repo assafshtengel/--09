@@ -4,22 +4,35 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 interface EmailRequest {
-  to: string[];
-  subject: string;
-  html: string;
+  email: string;
+  imageData: string;
+  matchDetails: {
+    date: string;
+    time?: string;
+    opponent?: string;
+    match_type?: string;
+  };
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const emailRequest: EmailRequest = await req.json();
+    const { email, imageData, matchDetails }: EmailRequest = await req.json();
+
+    // Ensure email is properly formatted as an array
+    const to = Array.isArray(email) ? email : [email];
+
+    console.log("Sending email to:", to);
+
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -28,14 +41,25 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "Pre Match Report <onboarding@resend.dev>",
-        to: ["socr.co.il@gmail.com", ...emailRequest.to],
-        subject: emailRequest.subject,
-        html: emailRequest.html,
+        to,
+        subject: `Pre Match Report - ${matchDetails.date}`,
+        html: `
+          <div>
+            <h1>Pre Match Report</h1>
+            <p>Date: ${matchDetails.date}</p>
+            ${matchDetails.time ? `<p>Time: ${matchDetails.time}</p>` : ''}
+            ${matchDetails.opponent ? `<p>Opponent: ${matchDetails.opponent}</p>` : ''}
+            ${matchDetails.match_type ? `<p>Match Type: ${matchDetails.match_type}</p>` : ''}
+            <img src="${imageData}" alt="Pre Match Report" style="max-width: 100%;" />
+          </div>
+        `,
       }),
     });
 
     if (!res.ok) {
-      throw new Error(await res.text());
+      const error = await res.text();
+      console.error("Error from Resend:", error);
+      throw new Error(error);
     }
 
     const data = await res.json();
@@ -43,10 +67,14 @@ const handler = async (req: Request): Promise<Response> => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error("Error in send-pre-match-report function:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 };
 
