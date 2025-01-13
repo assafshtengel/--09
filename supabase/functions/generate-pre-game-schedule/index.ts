@@ -7,12 +7,15 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
     const { currentDate, currentTime, gameDate, gameTime, commitments, timeRemaining } = await req.json()
+
+    console.log('Received request with params:', { currentDate, currentTime, gameDate, gameTime, commitments, timeRemaining })
 
     const prompt = `
     אני שחקן כדורגל וצריך סדר יום מפורט מהתאריך ${currentDate} בשעה ${currentTime} ועד למשחק שמתחיל בתאריך ${gameDate} בשעה ${gameTime}.
@@ -31,6 +34,8 @@ serve(async (req) => {
     אנא הצג את התשובה בפורמט מסודר עם שעות מדויקות בתחילת כל שורה.
     `
 
+    console.log('Sending request to OpenAI with prompt:', prompt)
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -38,7 +43,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -53,7 +58,15 @@ serve(async (req) => {
       }),
     })
 
+    if (!response.ok) {
+      const errorData = await response.text()
+      console.error('OpenAI API error:', errorData)
+      throw new Error(`OpenAI API error: ${response.status} ${errorData}`)
+    }
+
     const data = await response.json()
+    console.log('Received response from OpenAI:', data)
+
     const schedule = data.choices[0].message.content
 
     return new Response(
@@ -64,9 +77,12 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in generate-pre-game-schedule function:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
