@@ -14,48 +14,7 @@ import { HalftimeSummary } from "./game/HalftimeSummary";
 import { GameSummary } from "./game/GameSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-
-interface PreMatchReportAction {
-  id: string;
-  name: string;
-  goal?: string;
-  isSelected: boolean;
-}
-
-interface Match {
-  id: string;
-  player_id: string;
-  match_date: string;
-  status: string;
-  opponent?: string;
-  location?: string;
-  pre_match_report_id?: string;
-  match_type?: string;
-  final_score?: string;
-  player_position?: string;
-  team?: string;
-  team_name?: string;
-  player_role?: string;
-  pre_match_reports?: {
-    actions: PreMatchReportAction[];
-    havaya?: string;
-  };
-}
-
-type GamePhase = "preview" | "playing" | "halftime" | "secondHalf" | "ended";
-
-interface ActionLog {
-  actionId: string;
-  minute: number;
-  result: "success" | "failure";
-  note?: string;
-}
-
-interface SubstitutionLog {
-  playerIn: string;
-  playerOut: string;
-  minute: number;
-}
+import { Match, PreMatchReportAction, ActionLog, SubstitutionLog, GamePhase } from "@/types/game";
 
 export const GameTracker = () => {
   const { id } = useParams<{ id: string }>();
@@ -70,8 +29,18 @@ export const GameTracker = () => {
   const [matchDetails, setMatchDetails] = useState<Match>({
     id: "",
     player_id: "",
+    created_at: new Date().toISOString(),
     match_date: new Date().toISOString(),
     status: "preview",
+    opponent: null,
+    location: null,
+    pre_match_report_id: null,
+    match_type: null,
+    final_score: null,
+    player_position: null,
+    team: null,
+    team_name: null,
+    player_role: null
   });
   const [gamePhase, setGamePhase] = useState<GamePhase>("preview");
   const [showHalftimeDialog, setShowHalftimeDialog] = useState(false);
@@ -406,7 +375,6 @@ export const GameTracker = () => {
           )}
           
           <GamePreview
-            actions={actions}
             onActionAdd={handleAddAction}
             onStartMatch={startMatch}
           />

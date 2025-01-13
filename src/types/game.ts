@@ -1,6 +1,6 @@
 export type GamePhase = "preview" | "playing" | "halftime" | "secondHalf" | "ended";
 
-export interface PreMatchReportActions {
+export interface PreMatchReportAction {
   id: string;
   name: string;
   goal?: string;
@@ -29,8 +29,9 @@ export interface Game {
 }
 
 export interface PreMatchReport {
-  actions: PreMatchReportActions[];
+  actions: PreMatchReportAction[];
   questions_answers: Record<string, any>;
+  havaya?: string;
 }
 
 export interface Match {
