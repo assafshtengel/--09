@@ -404,6 +404,8 @@ export const GameTracker = () => {
             onLog={handleAddAction}
           />
           <GameNotes
+            generalNote=""
+            onNoteChange={() => {}}
             onAddNote={handleNoteWrapper}
           />
           <PlayerSubstitution
