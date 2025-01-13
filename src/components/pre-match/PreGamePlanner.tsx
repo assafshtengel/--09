@@ -67,7 +67,14 @@ export const PreGamePlanner = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw error;
+      }
+
+      if (!data || !data.schedule) {
+        throw new Error("Invalid response format from schedule generator");
+      }
       
       setSchedule(data.schedule);
       // Parse the schedule text into table items
