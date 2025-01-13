@@ -43,9 +43,9 @@ interface Match {
 type GamePhase = "preview" | "playing" | "halftime" | "secondHalf" | "ended";
 
 interface ActionLog {
-  action: Action;
-  result: "success" | "failure";
+  actionId: string;
   minute: number;
+  result: "success" | "failure";
   note?: string;
 }
 
@@ -106,15 +106,13 @@ export const GameTracker = () => {
         throw new Error("Match not found");
       }
 
-      setMatchDetails(match);
+      setMatchDetails(match as Match);
 
       if (match?.pre_match_reports) {
-        // Set havaya from pre-match report
         if (match.pre_match_reports.havaya) {
           setHavaya(match.pre_match_reports.havaya.split(','));
         }
 
-        // Set actions from pre-match report
         if (match.pre_match_reports.actions) {
           const rawActions = match.pre_match_reports.actions;
           
@@ -140,7 +138,6 @@ export const GameTracker = () => {
         }
       }
 
-      // Load existing action logs
       const { data: logs, error: logsError } = await supabase
         .from("match_actions")
         .select("*")
@@ -154,19 +151,14 @@ export const GameTracker = () => {
 
       if (logs) {
         const formattedLogs = logs.map(log => ({
-          action: actions.find(a => a.id === log.action_id) || {
-            id: log.action_id,
-            name: "Unknown Action",
-            isSelected: true
-          },
-          result: log.result as "success" | "failure",
+          actionId: log.action_id,
           minute: log.minute,
+          result: log.result as "success" | "failure",
           note: log.note
         }));
         setActionLogs(formattedLogs);
       }
 
-      // Load existing notes
       const { data: notes, error: notesError } = await supabase
         .from("match_notes")
         .select("*")
@@ -186,7 +178,6 @@ export const GameTracker = () => {
         setGeneralNotes(formattedNotes);
       }
 
-      // Load existing substitutions
       const { data: subs, error: subsError } = await supabase
         .from("match_substitutions")
         .select("*")
@@ -207,7 +198,6 @@ export const GameTracker = () => {
         setSubstitutions(formattedSubs);
       }
 
-      // Set game phase based on match status
       setGamePhase(match.status as GamePhase);
 
     } catch (error) {
@@ -222,16 +212,82 @@ export const GameTracker = () => {
     }
   };
 
-  const handleAddAction = async (action: Action) => {
-    // Implementation for adding action
+  const handleAddAction = async (actionId: string, result: "success" | "failure", note?: string) => {
+    try {
+      const { error } = await supabase
+        .from("match_actions")
+        .insert([
+          {
+            match_id: id,
+            action_id: actionId,
+            minute,
+            result,
+            note
+          }
+        ]);
+
+      if (error) throw error;
+
+      setActionLogs(prev => [...prev, { actionId, result, minute, note }]);
+    } catch (error) {
+      console.error("Error adding action:", error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן להוסיף את הפעולה",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddNote = async (note: string) => {
-    // Implementation for adding note
+    try {
+      const { error } = await supabase
+        .from("match_notes")
+        .insert([
+          {
+            match_id: id,
+            minute,
+            note
+          }
+        ]);
+
+      if (error) throw error;
+
+      setGeneralNotes(prev => [...prev, { text: note, minute }]);
+    } catch (error) {
+      console.error("Error adding note:", error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן להוסיף את ההערה",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleAddSubstitution = async (substitution: SubstitutionLog) => {
-    // Implementation for adding substitution
+  const handleAddSubstitution = async (sub: SubstitutionLog) => {
+    try {
+      const { error } = await supabase
+        .from("match_substitutions")
+        .insert([
+          {
+            match_id: id,
+            minute: sub.minute,
+            player_in: sub.playerIn,
+            player_out: sub.playerOut
+          }
+        ]);
+
+      if (error) throw error;
+
+      setSubstitutions(prev => [...prev, sub]);
+    } catch (error) {
+      console.error("Error adding substitution:", error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן להוסיף את החילוף",
+        variant: "destructive",
+      });
+    }
   };
 
   const startMatch = async () => {
@@ -368,7 +424,7 @@ export const GameTracker = () => {
             onAddNote={handleAddNote}
           />
           <PlayerSubstitution
-            onAddSubstitution={handleAddSubstitution}
+            onSubstitute={handleAddSubstitution}
           />
         </div>
       )}
