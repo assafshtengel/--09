@@ -14,24 +14,26 @@ serve(async (req) => {
 
   try {
     const { reportId, title } = await req.json();
+    console.log('Starting caption generation for report:', reportId);
 
     if (!reportId) {
       throw new Error('Report ID is required');
     }
 
-    console.log('Creating Supabase client...');
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('Fetching report data for ID:', reportId);
+    console.log('Fetching report data...');
     const { data: report, error: reportError } = await supabaseClient
       .from('pre_match_reports')
       .select(`
         *,
         profiles (
-          full_name
+          full_name,
+          club,
+          team_year
         )
       `)
       .eq('id', reportId)
@@ -47,45 +49,41 @@ serve(async (req) => {
       throw new Error('Report not found');
     }
 
-    console.log('Processing report data...');
+    console.log('Processing report data for comprehensive summary...');
     const havaya = report.havaya ? report.havaya.split(',') : [];
     const actions = report.actions || [];
     const answers = report.questions_answers || {};
+    const playerName = report.profiles?.full_name || 'שחקן';
+    const club = report.profiles?.club || '';
+    const teamYear = report.profiles?.team_year || '';
 
-    console.log('Preparing OpenAI prompt...');
+    console.log('Preparing OpenAI prompt for comprehensive summary...');
     const prompt = `
-      Create an engaging Instagram caption in Hebrew starting with "${title || 'ההכנה שלי למשחק'}" with these details:
-      - Player: ${report.profiles?.full_name || 'שחקן'}
-      - Opponent: ${report.opponent || 'היריבה'}
-      - Match Type: ${report.match_type || 'ידידות'}
+      Create an engaging, motivational Instagram caption in Hebrew that includes:
+      
+      Context:
+      - Player: ${playerName}${club ? ` from ${club}` : ''}${teamYear ? ` (${teamYear})` : ''}
+      - Match: ${report.match_type || 'ידידות'} against ${report.opponent || 'היריבה'}
       - Selected feelings: ${havaya.join(', ')}
-      - Game goals: ${actions.map((a: any) => a.name + (a.goal ? ` (${a.goal})` : '')).join(', ')}
+      - Game goals: ${actions.map((a: any) => `${a.name}${a.goal ? ` (${a.goal})` : ''}`).join(', ')}
       - Player's answers: ${Object.entries(answers).map(([q, a]) => `${q}: ${a}`).join('\n')}
 
-      The caption should:
-      1. Start with the title
-      2. Include relevant emojis
-      3. List the feelings and goals
-      4. Include a personal message about motivation
-      5. Add relevant Hebrew hashtags
-      6. Follow this structure:
-      
-      [${title}] 🔥
-      
-      היום אני מתכונן למשחק [סוג המשחק] מול [שם היריבה] ⚽
-      
-      התחושות שלי:
-      [רשימת תחושות עם אימוג'ים]
-      
-      היעדים שלי למשחק:
-      [רשימת יעדים עם אימוג'ים]
-      
-      [מסר אישי על מוטיבציה]
-      
-      [האשטגים]
+      Requirements:
+      1. Start with "ההכנה שלי למשחק 🔥"
+      2. Include a personal, motivational message based on their goals and feelings
+      3. Highlight their preparation and mindset
+      4. Add encouraging words about their selected goals
+      5. Include relevant emojis throughout
+      6. End with relevant Hebrew hashtags
+      7. Keep the tone positive and energetic
+      8. Make it personal and specific to their answers
+      9. Maximum length: 2000 characters
+      10. Structure the text in clear sections with line breaks
+
+      Make it feel like a personal, motivational message that will inspire both the player and their followers.
     `;
 
-    console.log('Calling OpenAI API...');
+    console.log('Calling OpenAI API for caption generation...');
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -97,7 +95,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a sports social media expert that creates engaging Instagram captions in Hebrew.'
+            content: 'You are a professional sports motivator and social media expert that creates engaging, personal, and motivational Instagram captions in Hebrew. Focus on creating content that inspires and motivates both the athlete and their followers.'
           },
           {
             role: 'user',
@@ -105,7 +103,7 @@ serve(async (req) => {
           }
         ],
         temperature: 0.7,
-        max_tokens: 500,
+        max_tokens: 1000,
       }),
     });
 
@@ -115,7 +113,7 @@ serve(async (req) => {
     }
 
     const aiData = await openAIResponse.json();
-    console.log('Received response from OpenAI');
+    console.log('Successfully generated caption');
     
     if (!aiData.choices?.[0]?.message?.content) {
       console.error('Invalid OpenAI response:', aiData);
@@ -123,7 +121,6 @@ serve(async (req) => {
     }
 
     const caption = aiData.choices[0].message.content;
-    console.log('Successfully generated caption');
 
     return new Response(
       JSON.stringify({ caption }),
