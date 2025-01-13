@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, Heart, Smile } from "lucide-react";
+import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, Heart, Smile, MessageCircle } from "lucide-react";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
@@ -53,37 +53,37 @@ const Dashboard = () => {
   const chatOptions = [
     {
       title: "אימון מנטאלי",
-      icon: <Brain className="h-6 w-6 text-white" />,
+      icon: <Brain className="h-4 w-4" />,
       type: "mental",
       gradient: "from-blue-600 to-blue-700"
     },
     {
       title: "תזונה",
-      icon: <Apple className="h-6 w-6 text-white" />,
+      icon: <Apple className="h-4 w-4" />,
       type: "nutrition",
       gradient: "from-green-600 to-green-700"
     },
     {
       title: "אימוני כוח",
-      icon: <Dumbbell className="h-6 w-6 text-white" />,
+      icon: <Dumbbell className="h-4 w-4" />,
       type: "strength",
       gradient: "from-purple-600 to-purple-700"
     },
     {
       title: "בריאות",
-      icon: <Heart className="h-6 w-6 text-white" />,
+      icon: <Heart className="h-4 w-4" />,
       type: "health",
       gradient: "from-red-600 to-red-700"
     },
     {
       title: "כושר",
-      icon: <Activity className="h-6 w-6 text-white" />,
+      icon: <Activity className="h-4 w-4" />,
       type: "fitness",
       gradient: "from-orange-600 to-orange-700"
     },
     {
       title: "מוטיבציה",
-      icon: <Smile className="h-6 w-6 text-white" />,
+      icon: <Smile className="h-4 w-4" />,
       type: "motivation",
       gradient: "from-yellow-600 to-yellow-700"
     }
@@ -144,6 +144,41 @@ const Dashboard = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-8 min-h-screen bg-gradient-to-b from-background to-background/80">
+      {/* Chat Options Section */}
+      <div className="bg-[#F7FBFF] rounded-lg p-6 shadow-sm">
+        <h2 className="text-center text-lg font-medium text-gray-700 mb-4">
+          לחץ כדי לשוחח בצ'אט עם מאמן
+        </h2>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-wrap justify-center gap-3"
+        >
+          {chatOptions.map((option, index) => (
+            <Sheet key={index}>
+              <SheetTrigger asChild>
+                <motion.button
+                  onClick={() => setSelectedChatType(option.type)}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#E0F7FA] hover:bg-[#B2EBF2] 
+                    transition-colors duration-200 rounded-md text-[#111827]
+                    shadow-sm hover:shadow focus:outline-none focus:ring-2 
+                    focus:ring-blue-300 focus:ring-opacity-50"
+                >
+                  <span className="flex items-center gap-1.5">
+                    {option.icon}
+                    <MessageCircle className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="text-sm font-medium">{option.title}</span>
+                </motion.button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-full sm:w-[400px]">
+                <MentalCoachingChat chatType={option.type} />
+              </SheetContent>
+            </Sheet>
+          ))}
+        </motion.div>
+      </div>
+
       {/* Header Section */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
@@ -152,57 +187,6 @@ const Dashboard = () => {
       >
         <h1 className="text-4xl font-bold mb-3">ברוך הבא, {profile?.full_name}</h1>
         <p className="text-muted-foreground text-lg">בחר באפשרות כדי להתחיל</p>
-      </motion.div>
-
-      {/* Chat Options Grid */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8"
-      >
-        {chatOptions.map((option, index) => (
-          <Sheet key={index}>
-            <SheetTrigger asChild>
-              <motion.button
-                onClick={() => setSelectedChatType(option.type)}
-                className={`p-4 rounded-xl bg-gradient-to-r ${option.gradient} 
-                  transform hover:scale-105 transition-all duration-300 
-                  shadow-lg hover:shadow-xl text-white
-                  flex flex-col items-center justify-center space-y-2`}
-              >
-                <div className="bg-white/20 p-3 rounded-full">
-                  {option.icon}
-                </div>
-                <h3 className="text-lg font-bold">{option.title}</h3>
-              </motion.button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-full sm:w-[400px]">
-              <MentalCoachingChat chatType={option.type} />
-            </SheetContent>
-          </Sheet>
-        ))}
-      </motion.div>
-
-      {/* Quick Actions Grid */}
-      <motion.div 
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12"
-      >
-        {quickActions.map((action, index) => (
-          <motion.button
-            key={index}
-            onClick={action.onClick}
-            className={`p-6 rounded-xl bg-gradient-to-r ${action.gradient} 
-              transform hover:scale-105 transition-all duration-300 
-              shadow-lg hover:shadow-xl text-white min-h-[200px]
-              flex flex-col items-end space-y-4`}
-          >
-            <div className="bg-white/20 p-3 rounded-full">
-              {action.icon}
-            </div>
-            <h3 className="text-xl font-bold">{action.title}</h3>
-            <p className="text-sm opacity-90 text-right">{action.description}</p>
-          </motion.button>
-        ))}
       </motion.div>
 
       {/* Statistics Section */}
