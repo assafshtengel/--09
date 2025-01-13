@@ -25,7 +25,7 @@ export interface Game {
   match_date: string;
   opponent: string | null;
   match_id?: string;
-  status: "completed" | "preview";
+  status: string;
 }
 
 export interface PreMatchReport {
