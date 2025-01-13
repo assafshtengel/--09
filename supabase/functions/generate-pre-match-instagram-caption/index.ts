@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { reportId } = await req.json();
+    const { reportId, title } = await req.json();
 
     if (!reportId) {
       throw new Error('Report ID is required');
@@ -34,6 +34,7 @@ serve(async (req) => {
           full_name
         )
       `)
+      .eq('id', reportId)
       .maybeSingle();
 
     if (reportError) {
@@ -53,24 +54,25 @@ serve(async (req) => {
 
     console.log('Preparing OpenAI prompt...');
     const prompt = `
-      Create an engaging Instagram caption in Hebrew for a pre-match report with these details:
+      Create an engaging Instagram caption in Hebrew starting with "${title || 'ההכנה שלי למשחק'}" with these details:
       - Player: ${report.profiles?.full_name || 'שחקן'}
       - Opponent: ${report.opponent || 'היריבה'}
+      - Match Type: ${report.match_type || 'ידידות'}
       - Selected feelings: ${havaya.join(', ')}
       - Game goals: ${actions.map((a: any) => a.name + (a.goal ? ` (${a.goal})` : '')).join(', ')}
       - Player's answers: ${Object.entries(answers).map(([q, a]) => `${q}: ${a}`).join('\n')}
 
       The caption should:
-      1. Start with an enthusiastic opening statement
+      1. Start with the title
       2. Include relevant emojis
       3. List the feelings and goals
       4. Include a personal message about motivation
       5. Add relevant Hebrew hashtags
       6. Follow this structure:
       
-      [פתיחה נלהבת] 🔥
+      [${title}] 🔥
       
-      היום אני מתכונן למשחק מול [שם היריבה] ⚽
+      היום אני מתכונן למשחק [סוג המשחק] מול [שם היריבה] ⚽
       
       התחושות שלי:
       [רשימת תחושות עם אימוג'ים]

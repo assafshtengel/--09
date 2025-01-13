@@ -29,7 +29,10 @@ export const PreMatchCaptionPopup = ({ isOpen, onClose, reportId }: PreMatchCapt
         console.log('Starting caption generation for report:', reportId);
 
         const { data, error } = await supabase.functions.invoke('generate-pre-match-instagram-caption', {
-          body: { reportId },
+          body: { 
+            reportId,
+            title: "ההכנה שלי למשחק" // Adding the new title here
+          },
         });
 
         if (!isMounted) return;

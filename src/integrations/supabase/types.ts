@@ -833,36 +833,48 @@ export type Database = {
       schedule_activities: {
         Row: {
           activity_type: Database["public"]["Enums"]["activity_type"]
+          ai_priority: number | null
           created_at: string
           day_of_week: number
           end_time: string
           id: string
+          is_ai_generated: boolean | null
+          meal_type: string | null
           notes: string | null
           priority: number | null
+          recurring_days: number[] | null
           schedule_id: string
           start_time: string
           title: string | null
         }
         Insert: {
           activity_type: Database["public"]["Enums"]["activity_type"]
+          ai_priority?: number | null
           created_at?: string
           day_of_week: number
           end_time: string
           id?: string
+          is_ai_generated?: boolean | null
+          meal_type?: string | null
           notes?: string | null
           priority?: number | null
+          recurring_days?: number[] | null
           schedule_id: string
           start_time: string
           title?: string | null
         }
         Update: {
           activity_type?: Database["public"]["Enums"]["activity_type"]
+          ai_priority?: number | null
           created_at?: string
           day_of_week?: number
           end_time?: string
           id?: string
+          is_ai_generated?: boolean | null
+          meal_type?: string | null
           notes?: string | null
           priority?: number | null
+          recurring_days?: number[] | null
           schedule_id?: string
           start_time?: string
           title?: string | null
@@ -870,6 +882,111 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "schedule_activities_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_exams: {
+        Row: {
+          created_at: string
+          exam_date: string
+          id: string
+          schedule_id: string | null
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          exam_date: string
+          id?: string
+          schedule_id?: string | null
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          exam_date?: string
+          id?: string
+          schedule_id?: string | null
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_exams_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_matches: {
+        Row: {
+          created_at: string
+          id: string
+          match_date: string
+          match_time: string
+          opponent: string
+          schedule_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_date: string
+          match_time: string
+          opponent: string
+          schedule_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_date?: string
+          match_time?: string
+          opponent?: string
+          schedule_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_matches_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_social_events: {
+        Row: {
+          created_at: string
+          description: string
+          end_time: string
+          event_date: string
+          id: string
+          schedule_id: string | null
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          end_time: string
+          event_date: string
+          id?: string
+          schedule_id?: string | null
+          start_time: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          end_time?: string
+          event_date?: string
+          id?: string
+          schedule_id?: string | null
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_social_events_schedule_id_fkey"
             columns: ["schedule_id"]
             isOneToOne: false
             referencedRelation: "weekly_schedules"
@@ -923,25 +1040,49 @@ export type Database = {
       }
       weekly_schedules: {
         Row: {
+          ai_optimizations: Json | null
+          chat_progress: Json | null
           created_at: string
+          exams: Json | null
           id: string
           is_active: boolean
+          notes: string | null
           player_id: string
+          shared_with: string[] | null
+          social_events: Json | null
           start_date: string
+          status: string | null
+          team_games: Json | null
         }
         Insert: {
+          ai_optimizations?: Json | null
+          chat_progress?: Json | null
           created_at?: string
+          exams?: Json | null
           id?: string
           is_active?: boolean
+          notes?: string | null
           player_id: string
+          shared_with?: string[] | null
+          social_events?: Json | null
           start_date: string
+          status?: string | null
+          team_games?: Json | null
         }
         Update: {
+          ai_optimizations?: Json | null
+          chat_progress?: Json | null
           created_at?: string
+          exams?: Json | null
           id?: string
           is_active?: boolean
+          notes?: string | null
           player_id?: string
+          shared_with?: string[] | null
+          social_events?: Json | null
           start_date?: string
+          status?: string | null
+          team_games?: Json | null
         }
         Relationships: [
           {
@@ -987,6 +1128,23 @@ export type Database = {
         | "wake_up"
         | "departure"
         | "team_game"
+        | "exam_prep"
+        | "social_event"
+        | "meal"
+        | "travel"
+      activity_type_enum:
+        | "sleep"
+        | "screen_time"
+        | "school"
+        | "team_training"
+        | "personal_training"
+        | "match"
+        | "exam"
+        | "social_event"
+        | "meal"
+        | "free_time"
+        | "study_time"
+        | "travel"
       message_type: "incoming" | "outgoing"
       notification_type: "pre_match" | "weekly" | "mental_tip" | "custom"
       report_status: "draft" | "completed"

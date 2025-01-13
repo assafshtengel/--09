@@ -1,13 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { useState } from "react";
 
 interface MatchDetails {
   date: string;
-  time?: string | null;  // Updated type to allow null
+  time?: string | null;
   opponent?: string;
   location?: string;
   position?: string;
+  match_type?: string;
 }
 
 interface MatchDetailsFormProps {
@@ -20,14 +22,16 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
   const [time, setTime] = useState(initialData.time || "");
   const [opponent, setOpponent] = useState(initialData.opponent || "");
   const [position, setPosition] = useState(initialData.position || "forward");
+  const [matchType, setMatchType] = useState(initialData.match_type || "friendly");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({ 
       date, 
-      time: time.trim() || null,  // Convert empty string to null
-      opponent, 
-      position 
+      time: time.trim() || null,
+      opponent,
+      position,
+      match_type: matchType
     });
   };
 
@@ -70,6 +74,21 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
         </div>
 
         <div>
+          <label htmlFor="match_type" className="block text-right mb-2">סוג משחק</label>
+          <select
+            id="match_type"
+            value={matchType}
+            onChange={(e) => setMatchType(e.target.value)}
+            className="w-full p-2 border rounded text-right"
+          >
+            <option value="cup">גביע</option>
+            <option value="league">ליגה</option>
+            <option value="friendly">ידידות</option>
+            <option value="other">אחר</option>
+          </select>
+        </div>
+
+        <div>
           <label htmlFor="position" className="block text-right mb-2">עמדה</label>
           <select
             id="position"
@@ -81,6 +100,8 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
             <option value="midfielder">קשר</option>
             <option value="defender">מגן</option>
             <option value="goalkeeper">שוער</option>
+            <option value="centerback">בלם</option>
+            <option value="winger">כנף</option>
           </select>
         </div>
       </div>

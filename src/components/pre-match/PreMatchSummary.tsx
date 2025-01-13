@@ -8,12 +8,14 @@ import { format } from "date-fns";
 import { useState } from "react";
 import { InstagramPreMatchSummary } from "./InstagramPreMatchSummary";
 import { PreMatchCaptionPopup } from "./PreMatchCaptionPopup";
+import { useNavigate } from "react-router-dom";
 
 interface PreMatchSummaryProps {
   matchDetails: {
     date: string;
     time?: string;
     opponent?: string;
+    match_type?: string;
   };
   actions: Action[];
   answers: Record<string, string>;
@@ -34,109 +36,24 @@ export const PreMatchSummary = ({
   const [showInstagramSummary, setShowInstagramSummary] = useState(false);
   const [showCaptionPopup, setShowCaptionPopup] = useState(false);
   const [reportId, setReportId] = useState<string>();
-  
-  const sendEmail = async (recipientType: 'user' | 'coach') => {
+  const navigate = useNavigate();
+
+  const handleFinish = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.email) throw new Error("No user email found");
-
-      // Get player's name from profiles
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, coach_email')
-        .eq('id', user.id)
-        .single();
-
-      const coachEmail = profile?.coach_email;
-      if (recipientType === 'coach' && !coachEmail) {
-        toast({
-          title: "שגיאה",
-          description: "לא נמצא מייל של המאמן בפרופיל",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const playerName = profile?.full_name || "שחקן";
-
-      // Create HTML content with player name at the top
-      const htmlContent = `
-        <div dir="rtl">
-          <h2>דוח טרום משחק - ${playerName}</h2>
-          <div>
-            <h3>פרטי המשחק</h3>
-            <p>תאריך: ${format(new Date(matchDetails.date), 'dd/MM/yyyy')}</p>
-            ${matchDetails.opponent ? `<p>נגד: ${matchDetails.opponent}</p>` : ''}
-          </div>
-          
-          <div>
-            <h3>הוויות נבחרות</h3>
-            <p>${havaya.join(' • ')}</p>
-          </div>
-
-          <div>
-            <h3>יעדים למשחק</h3>
-            <ul>
-              ${actions.map(action => `
-                <li>
-                  ${action.name}
-                  ${action.goal ? `<br>יעד: ${action.goal}` : ''}
-                </li>
-              `).join('')}
-            </ul>
-          </div>
-
-          <div>
-            <h3>תשובות לשאלות</h3>
-            ${Object.entries(answers).map(([question, answer]) => `
-              <div>
-                <p><strong>${question}</strong></p>
-                <p>${answer}</p>
-              </div>
-            `).join('')}
-          </div>
-
-          ${aiInsights.length > 0 ? `
-            <div>
-              <h3>תובנות AI</h3>
-              <ul>
-                ${aiInsights.map(insight => `<li>${insight}</li>`).join('')}
-              </ul>
-            </div>
-          ` : ''}
-        </div>
-      `;
-
-      const { error } = await supabase.functions.invoke('send-pre-match-report', {
-        body: {
-          to: recipientType === 'coach' ? [coachEmail] : [user.email],
-          subject: `דוח טרום משחק - ${playerName} - ${format(new Date(matchDetails.date), 'dd/MM/yyyy')}`,
-          html: htmlContent,
-        },
-      });
-
-      if (error) throw error;
-
+      await onFinish();
+      navigate('/pre-game-planner');
       toast({
-        title: "הדוח נשלח בהצלחה",
-        description: recipientType === 'coach' ? "הדוח נשלח למאמן" : "הדוח נשלח למייל שלך",
+        title: "הדוח נשמר בהצלחה",
+        description: "מועבר לתכנון 24 שעות לפני המשחק",
       });
     } catch (error) {
-      console.error('Error sending email:', error);
+      console.error('Error completing report:', error);
       toast({
-        title: "שגיאה בשליחת המייל",
+        title: "שגיאה בשמירת הדוח",
         description: "אנא נסה שנית",
         variant: "destructive",
       });
     }
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const shareToInstagram = () => {
-    setShowInstagramSummary(true);
   };
 
   return (
@@ -147,6 +64,7 @@ export const PreMatchSummary = ({
           <p className="text-muted-foreground">
             תאריך: {matchDetails.date}
             {matchDetails.opponent && ` | נגד: ${matchDetails.opponent}`}
+            {matchDetails.match_type && ` | סוג משחק: ${matchDetails.match_type}`}
           </p>
         </div>
 
@@ -226,7 +144,7 @@ export const PreMatchSummary = ({
           <Instagram className="h-4 w-4" />
           שתף באינסטגרם
         </Button>
-        <Button onClick={onFinish}>סיים</Button>
+        <Button onClick={handleFinish}>סיים</Button>
       </div>
 
       {showInstagramSummary && (
