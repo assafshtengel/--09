@@ -40,7 +40,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Pre Match Report <onboarding@resend.dev>",
+        from: "socr.co.il@gmail.com", // Use the verified email address
         to,
         subject: `Pre Match Report - ${matchDetails.date}`,
         html: `
