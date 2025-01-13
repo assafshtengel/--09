@@ -3,14 +3,41 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, Heart, Smile, MessageCircle } from "lucide-react";
+import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, Heart, Smile, MessageCircle, Shield } from "lucide-react";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { MentalCoachingChat } from "@/components/dashboard/MentalCoachingChat";
 import { motion } from "framer-motion";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Shield } from "lucide-react";
+
+const chatOptions = [
+  {
+    type: "mental",
+    title: "מנטלי",
+    icon: <Brain className="h-4 w-4" />,
+  },
+  {
+    type: "physical",
+    title: "פיזי",
+    icon: <Dumbbell className="h-4 w-4" />,
+  },
+  {
+    type: "nutrition",
+    title: "תזונה",
+    icon: <Apple className="h-4 w-4" />,
+  },
+  {
+    type: "health",
+    title: "בריאות",
+    icon: <Heart className="h-4 w-4" />,
+  },
+  {
+    type: "wellbeing",
+    title: "רווחה",
+    icon: <Smile className="h-4 w-4" />,
+  },
+];
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -18,6 +45,51 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<any>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [selectedChatType, setSelectedChatType] = useState<string | null>(null);
+
+  const quickActions = [
+    {
+      title: "דוח טרום משחק",
+      description: "הכן דוח לפני המשחק הבא",
+      icon: <FileText className="h-6 w-6" />,
+      gradient: "from-blue-500 to-blue-600",
+      onClick: () => navigate("/pre-match-report"),
+    },
+    {
+      title: "לוח זמנים שבועי",
+      description: "נהל את הפעילויות השבועיות שלך",
+      icon: <Calendar className="h-6 w-6" />,
+      gradient: "from-green-500 to-green-600",
+      onClick: () => navigate("/schedule"),
+    },
+    {
+      title: "סיכום אימון",
+      description: "סכם את האימון האחרון שלך",
+      icon: <Activity className="h-6 w-6" />,
+      gradient: "from-purple-500 to-purple-600",
+      onClick: () => navigate("/training-summary"),
+    },
+    {
+      title: "היסטוריית משחקים",
+      description: "צפה בהיסטוריית המשחקים שלך",
+      icon: <History className="h-6 w-6" />,
+      gradient: "from-orange-500 to-orange-600",
+      onClick: () => navigate("/game-history"),
+    },
+    {
+      title: "שתף הישגים",
+      description: "שתף את ההישגים שלך",
+      icon: <Trophy className="h-6 w-6" />,
+      gradient: "from-yellow-500 to-yellow-600",
+      onClick: () => navigate("/portfolio"),
+    },
+    {
+      title: "שגרה יומית",
+      description: "עקוב אחר השגרה היומית שלך",
+      icon: <Timer className="h-6 w-6" />,
+      gradient: "from-red-500 to-red-600",
+      onClick: () => navigate("/daily-routine"),
+    },
+  ];
 
   useEffect(() => {
     const checkAuth = async () => {
