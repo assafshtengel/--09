@@ -57,9 +57,9 @@ export const AdminAuth = () => {
         return;
       }
 
-      // Set admin session
+      // Set admin session with proper typing
       const { error: updateError } = await supabase.auth.updateUser({
-        data: { is_admin: true }
+        data: { isAdmin: true } as { isAdmin: boolean }
       });
 
       if (updateError) throw updateError;
@@ -85,7 +85,7 @@ export const AdminAuth = () => {
   const handleForgotPassword = async () => {
     try {
       const { error } = await supabase.functions.invoke("send-admin-credentials", {
-        body: { email: "socr.co.il@gmail.com" }
+        body: { email: formData.email }
       });
       
       if (error) throw error;
