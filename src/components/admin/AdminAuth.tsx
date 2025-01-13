@@ -21,7 +21,7 @@ type VerifyPasswordParams = {
   input_password: string;
 }
 
-interface VerifyPasswordResponse {
+type VerifyPasswordResponse = {
   verified: boolean;
 }
 
