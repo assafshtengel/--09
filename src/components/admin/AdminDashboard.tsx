@@ -9,9 +9,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Mail, MessageSquare } from "lucide-react";
+import { toast } from "sonner";
 
 export const AdminDashboard = () => {
   const [showUsersDialog, setShowUsersDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [showActionsDialog, setShowActionsDialog] = useState(false);
 
   const { data: playersCount } = useQuery({
     queryKey: ['playersCount'],
@@ -45,6 +49,60 @@ export const AdminDashboard = () => {
       return data;
     }
   });
+
+  const { data: userActions } = useQuery({
+    queryKey: ['userActions', selectedUser?.id],
+    enabled: !!selectedUser,
+    queryFn: async () => {
+      const { data: matches } = await supabase
+        .from('matches')
+        .select(`
+          id,
+          match_date,
+          opponent,
+          match_actions (*)
+        `)
+        .eq('player_id', selectedUser.id)
+        .order('match_date', { ascending: false });
+      return matches;
+    }
+  });
+
+  const handleSendEmail = async (email: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: { 
+          to: [email],
+          subject: "הודעה מהמערכת",
+          html: "<p>תוכן ההודעה כאן</p>"
+        }
+      });
+
+      if (error) throw error;
+      toast.success("המייל נשלח בהצלחה");
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast.error("שגיאה בשליחת המייל");
+    }
+  };
+
+  const handleSendWhatsApp = async (phoneNumber: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('send-whatsapp', {
+        body: { 
+          recipientId: selectedUser.id,
+          message: "הודעה מהמערכת",
+          notificationId: "manual-admin"
+        }
+      });
+
+      if (error) throw error;
+      toast.success("ההודעה נשלחה בהצלחה");
+    } catch (error) {
+      console.error('Error sending WhatsApp:', error);
+      toast.error("שגיאה בשליחת ההודעה");
+    }
+  };
 
   return (
     <div className="container mx-auto p-4 space-y-4">
@@ -86,7 +144,14 @@ export const AdminDashboard = () => {
           </DialogHeader>
           <div className="space-y-4">
             {users?.map((user) => (
-              <Card key={user.id}>
+              <Card 
+                key={user.id} 
+                className="cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => {
+                  setSelectedUser(user);
+                  setShowActionsDialog(true);
+                }}
+              >
                 <CardContent className="pt-4">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
@@ -114,9 +179,72 @@ export const AdminDashboard = () => {
                       <p>{user.age_category || 'לא צוין'}</p>
                     </div>
                   </div>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSendEmail(user.email);
+                      }}
+                    >
+                      <Mail className="h-4 w-4 ml-2" />
+                      שלח מייל
+                    </Button>
+                    {user.phone_number && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendWhatsApp(user.phone_number);
+                        }}
+                      >
+                        <MessageSquare className="h-4 w-4 ml-2" />
+                        שלח הודעת וואטסאפ
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showActionsDialog} onOpenChange={setShowActionsDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>פעולות המשתמש - {selectedUser?.full_name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {userActions?.map((match) => (
+              <Card key={match.id}>
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    משחק נגד {match.opponent || 'לא צוין'} - {new Date(match.match_date).toLocaleDateString()}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {match.match_actions?.map((action: any) => (
+                      <div key={action.id} className="p-2 bg-gray-50 rounded">
+                        <p>פעולה: {action.action_id}</p>
+                        <p>דקה: {action.minute}</p>
+                        <p>תוצאה: {action.result}</p>
+                        {action.note && <p>הערה: {action.note}</p>}
+                      </div>
+                    ))}
+                    {!match.match_actions?.length && (
+                      <p className="text-gray-500">לא נמצאו פעולות במשחק זה</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {!userActions?.length && (
+              <p className="text-center text-gray-500">לא נמצאו משחקים למשתמש זה</p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
