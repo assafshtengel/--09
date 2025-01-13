@@ -119,11 +119,17 @@ export const PreGamePlanner = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("משתמש לא מחובר");
 
+      // Convert scheduleItems to the correct format for the database
+      const formattedActions = scheduleItems.map(item => ({
+        time: item.time,
+        description: item.activity
+      }));
+
       const { error } = await supabase.from("pre_match_reports").insert({
         player_id: user.id,
         match_date: gameDate,
         match_time: gameTime,
-        actions: scheduleItems,
+        actions: formattedActions,
         status: "draft"
       });
 
