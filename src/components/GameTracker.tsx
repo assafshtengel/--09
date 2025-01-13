@@ -78,7 +78,6 @@ export const GameTracker = () => {
         throw new Error("Match not found");
       }
 
-      // Type assertion after validation
       const typedMatch = match as unknown as Match;
       setMatchDetails(typedMatch);
 
@@ -242,6 +241,10 @@ export const GameTracker = () => {
     }
   };
 
+  const handleNoteWrapper = () => {
+    handleAddNote("");
+  };
+
   const handleAddSubstitution = async (sub: SubstitutionLog) => {
     try {
       const { error } = await supabase
@@ -401,8 +404,7 @@ export const GameTracker = () => {
             onLog={handleAddAction}
           />
           <GameNotes
-            notes={generalNotes}
-            onAddNote={handleAddNote}
+            onAddNote={handleNoteWrapper}
           />
           <PlayerSubstitution
             minute={minute}
