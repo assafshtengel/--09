@@ -6,33 +6,83 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy } from "lucide-react";
+import { Copy, Share2, Edit, Save } from "lucide-react";
+import { format, formatDistanceToNow, addDays } from "date-fns";
+import { he } from "date-fns/locale";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+interface ScheduleItem {
+  time: string;
+  activity: string;
+}
 
 export const PreGamePlanner = () => {
-  const [currentTime, setCurrentTime] = useState("");
+  const [currentDate, setCurrentDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [currentTime, setCurrentTime] = useState(format(new Date(), "HH:mm"));
+  const [gameDate, setGameDate] = useState(format(addDays(new Date(), 1), "yyyy-MM-dd"));
   const [gameTime, setGameTime] = useState("");
   const [commitments, setCommitments] = useState("");
   const [schedule, setSchedule] = useState<string | null>(null);
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const calculateTimeRemaining = () => {
+    if (!gameDate || !gameTime) return null;
+    
+    const gameDateTime = new Date(`${gameDate}T${gameTime}`);
+    const currentDateTime = new Date(`${currentDate}T${currentTime}`);
+    
+    if (isNaN(gameDateTime.getTime()) || isNaN(currentDateTime.getTime())) {
+      return null;
+    }
+
+    return formatDistanceToNow(gameDateTime, { locale: he, addSuffix: true });
+  };
 
   const generateSchedule = async () => {
     if (!currentTime || !gameTime) {
-      toast.error("נא למלא את השעה הנוכחית ושעת המשחק");
+      toast.error("נא למלא את כל השדות הנדרשים");
       return;
     }
 
     setIsLoading(true);
     try {
+      const timeRemaining = calculateTimeRemaining();
       const { data, error } = await supabase.functions.invoke('generate-pre-game-schedule', {
         body: {
+          currentDate,
           currentTime,
+          gameDate,
           gameTime,
-          commitments: commitments || "אין מחויבויות נוספות"
+          commitments: commitments || "אין מחויבויות נוספות",
+          timeRemaining
         }
       });
 
       if (error) throw error;
+      
       setSchedule(data.schedule);
+      // Parse the schedule text into table items
+      const items = data.schedule
+        .split("\n")
+        .filter((line: string) => line.match(/^\d{2}:\d{2}/))
+        .map((line: string) => {
+          const [time, ...activityParts] = line.split(" - ");
+          return {
+            time: time.trim(),
+            activity: activityParts.join(" - ").trim()
+          };
+        });
+      setScheduleItems(items);
+      
       toast.success("סדר היום נוצר בהצלחה!");
     } catch (error) {
       console.error("Error generating schedule:", error);
@@ -49,34 +99,102 @@ export const PreGamePlanner = () => {
     }
   };
 
+  const shareSchedule = async () => {
+    if (schedule) {
+      try {
+        await navigator.share({
+          title: "סדר יום למשחק",
+          text: schedule
+        });
+      } catch (error) {
+        console.error("Error sharing:", error);
+        // Fallback to copy if sharing is not supported
+        copySchedule();
+      }
+    }
+  };
+
+  const saveSchedule = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("משתמש לא מחובר");
+
+      const { error } = await supabase.from("pre_match_reports").insert({
+        player_id: user.id,
+        match_date: gameDate,
+        match_time: gameTime,
+        actions: scheduleItems,
+        status: "draft"
+      });
+
+      if (error) throw error;
+      toast.success("סדר היום נשמר בהצלחה!");
+    } catch (error) {
+      console.error("Error saving schedule:", error);
+      toast.error("שגיאה בשמירת סדר היום");
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold text-right text-primary">תכנון 24 שעות לפני משחק</h1>
       
       <div className="space-y-4">
-        <div>
-          <Label htmlFor="currentTime" className="text-primary">מה השעה כעת?</Label>
-          <Input
-            id="currentTime"
-            type="time"
-            value={currentTime}
-            onChange={(e) => setCurrentTime(e.target.value)}
-            className="text-right"
-            dir="ltr"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="currentDate" className="text-primary">תאריך נוכחי</Label>
+            <Input
+              id="currentDate"
+              type="date"
+              value={currentDate}
+              onChange={(e) => setCurrentDate(e.target.value)}
+              className="text-right"
+              dir="ltr"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="currentTime" className="text-primary">שעה נוכחית</Label>
+            <Input
+              id="currentTime"
+              type="time"
+              value={currentTime}
+              onChange={(e) => setCurrentTime(e.target.value)}
+              className="text-right"
+              dir="ltr"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="gameDate" className="text-primary">תאריך המשחק</Label>
+            <Input
+              id="gameDate"
+              type="date"
+              value={gameDate}
+              onChange={(e) => setGameDate(e.target.value)}
+              className="text-right"
+              dir="ltr"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="gameTime" className="text-primary">שעת המשחק</Label>
+            <Input
+              id="gameTime"
+              type="time"
+              value={gameTime}
+              onChange={(e) => setGameTime(e.target.value)}
+              className="text-right"
+              dir="ltr"
+            />
+          </div>
         </div>
 
-        <div>
-          <Label htmlFor="gameTime" className="text-primary">מתי שעת המשחק?</Label>
-          <Input
-            id="gameTime"
-            type="time"
-            value={gameTime}
-            onChange={(e) => setGameTime(e.target.value)}
-            className="text-right"
-            dir="ltr"
-          />
-        </div>
+        {calculateTimeRemaining() && (
+          <div className="text-right text-primary font-medium">
+            זמן עד למשחק: {calculateTimeRemaining()}
+          </div>
+        )}
 
         <div>
           <Label htmlFor="commitments" className="text-primary">האם יש בית ספר או מחויבויות נוספות?</Label>
@@ -98,19 +216,70 @@ export const PreGamePlanner = () => {
         </Button>
 
         {schedule && (
-          <Card className="p-4 mt-4 relative">
-            <pre className="whitespace-pre-wrap text-right text-lg leading-relaxed text-primary" dir="rtl">
-              {schedule}
-            </pre>
-            <Button
-              onClick={copySchedule}
-              variant="secondary"
-              className="mt-4 gap-2"
-            >
-              <Copy className="h-4 w-4" />
-              העתק סדר יום
-            </Button>
-          </Card>
+          <div className="space-y-6">
+            <Card className="p-4 relative">
+              <pre className="whitespace-pre-wrap text-right text-lg leading-relaxed text-primary" dir="rtl">
+                {schedule}
+              </pre>
+              
+              <div className="flex gap-2 mt-4">
+                <Button
+                  onClick={copySchedule}
+                  variant="secondary"
+                  className="gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  העתק
+                </Button>
+                
+                <Button
+                  onClick={shareSchedule}
+                  variant="secondary"
+                  className="gap-2"
+                >
+                  <Share2 className="h-4 w-4" />
+                  שתף
+                </Button>
+
+                <Button
+                  onClick={saveSchedule}
+                  variant="secondary"
+                  className="gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  שמור
+                </Button>
+
+                <Button
+                  onClick={() => setIsEditing(!isEditing)}
+                  variant="secondary"
+                  className="gap-2"
+                >
+                  <Edit className="h-4 w-4" />
+                  ערוך
+                </Button>
+              </div>
+            </Card>
+
+            <Card className="p-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-right">שעה</TableHead>
+                    <TableHead className="text-right">פעילות</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {scheduleItems.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{item.time}</TableCell>
+                      <TableCell>{item.activity}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </div>
         )}
       </div>
     </div>
