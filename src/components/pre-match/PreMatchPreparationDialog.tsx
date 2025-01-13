@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Copy, Printer } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Copy, Printer, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -19,7 +19,6 @@ export const PreMatchPreparationDialog = ({
 }: PreMatchPreparationDialogProps) => {
   const [preparation, setPreparation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showSocialShareDialog, setShowSocialShareDialog] = useState(false);
   const { toast } = useToast();
 
   const generatePreparation = async () => {
@@ -104,32 +103,15 @@ export const PreMatchPreparationDialog = ({
     }
   };
 
-  const cleanupAndClose = () => {
-    setPreparation("");
-    setIsLoading(false);
-    setShowSocialShareDialog(false);
-    onClose();
-  };
-
-  const handleSocialShareResponse = async (share: boolean) => {
-    if (share) {
-      await handleCopy();
-      window.open("https://www.instagram.com/", "_blank");
-    }
-    cleanupAndClose();
-  };
-
   useEffect(() => {
     if (isOpen && !preparation) {
       generatePreparation();
     }
 
-    // Cleanup function
     return () => {
       if (!isOpen) {
         setPreparation("");
         setIsLoading(false);
-        setShowSocialShareDialog(false);
       }
     };
   }, [isOpen, matchId]);
@@ -137,19 +119,16 @@ export const PreMatchPreparationDialog = ({
   if (!isOpen) return null;
 
   return (
-    <>
-      <Dialog open={isOpen} onOpenChange={(open) => {
-        if (!open) {
-          cleanupAndClose();
-        }
-      }}>
-        <DialogContent className="max-w-2xl" onInteractOutside={cleanupAndClose} onEscapeKeyDown={cleanupAndClose}>
-          <DialogTitle className="text-2xl font-bold text-right">
-            ההכנה שלי למשחק
-          </DialogTitle>
-          <DialogDescription className="text-right">
-            טקסט מותאם אישית להכנה למשחק, מבוסס על התשובות והיעדים שלך
-          </DialogDescription>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogTitle className="text-2xl font-bold text-right">
+          ההכנה שלי למשחק
+        </DialogTitle>
+        <DialogDescription className="text-right">
+          טקסט מותאם אישית להכנה למשחק, מבוסס על התשובות והיעדים שלך
+        </DialogDescription>
+        
+        <ScrollArea className="h-[60vh] w-full pr-4">
           <div className="mt-4">
             {isLoading ? (
               <div className="text-center py-8">
@@ -161,8 +140,15 @@ export const PreMatchPreparationDialog = ({
               </div>
             )}
           </div>
-          {preparation && !isLoading && (
-            <div className="flex justify-end gap-4 mt-4">
+        </ScrollArea>
+
+        {preparation && !isLoading && (
+          <div className="flex justify-between items-center gap-4 mt-4">
+            <Button onClick={onClose} variant="outline" className="gap-2">
+              <X className="h-4 w-4" />
+              סגור
+            </Button>
+            <div className="flex gap-4">
               <Button onClick={handleCopy} variant="outline" className="gap-2">
                 <Copy className="h-4 w-4" />
                 העתק
@@ -172,30 +158,9 @@ export const PreMatchPreparationDialog = ({
                 הדפס
               </Button>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog open={showSocialShareDialog} onOpenChange={setShowSocialShareDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-right">
-              שיתוף ברשתות חברתיות
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-right">
-              האם תרצה לשתף את טקסט ההכנה באינסטגרם?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-row-reverse justify-start gap-2">
-            <AlertDialogAction onClick={() => handleSocialShareResponse(true)}>
-              כן, שתף באינסטגרם
-            </AlertDialogAction>
-            <AlertDialogCancel onClick={() => handleSocialShareResponse(false)}>
-              לא, סגור
-            </AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 };
