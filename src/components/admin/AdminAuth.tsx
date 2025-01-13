@@ -20,6 +20,11 @@ interface VerifyPasswordResponse {
   verified: boolean;
 }
 
+type VerifyPasswordParams = {
+  input_email: string;
+  input_password: string;
+}
+
 export const AdminAuth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -53,10 +58,13 @@ export const AdminAuth = () => {
         return;
       }
 
-      const { data: verifyData, error: verifyError } = await supabase.rpc<VerifyPasswordResponse>("verify_admin_password", {
-        input_email: formData.email,
-        input_password: formData.password,
-      });
+      const { data: verifyData, error: verifyError } = await supabase.rpc<VerifyPasswordResponse, VerifyPasswordParams>(
+        "verify_admin_password",
+        {
+          input_email: formData.email,
+          input_password: formData.password,
+        }
+      );
 
       if (verifyError || !verifyData?.verified) {
         toast({
