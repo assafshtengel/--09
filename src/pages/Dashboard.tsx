@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, Heart, Running, Smile } from "lucide-react";
+import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, Heart, PersonRunning, Smile } from "lucide-react";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
@@ -77,7 +77,7 @@ const Dashboard = () => {
     },
     {
       title: "כושר",
-      icon: <Running className="h-6 w-6 text-white" />,
+      icon: <PersonRunning className="h-6 w-6 text-white" />,
       type: "fitness",
       gradient: "from-orange-600 to-orange-700"
     },
