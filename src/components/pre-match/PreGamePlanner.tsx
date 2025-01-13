@@ -23,53 +23,46 @@ export const PreGamePlanner = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No authenticated user");
 
-      console.log("Submitting pre-game planner form with:", {
-        matchTime,
-        departureTime,
-        commitments,
-        userId: user.id
-      });
-
       // Call the edge function to generate schedule
       const { data, error } = await supabase.functions.invoke('generate-pre-game-schedule', {
-        body: JSON.stringify({
+        body: {
           matchTime,
           departureTime,
           commitments,
           userId: user.id
-        })
+        }
       });
 
       if (error) throw error;
 
-      console.log("Received schedule data:", data);
-
-      if (data?.activities) {
-        // Process activities
-        const processedActivities = data.activities.map((activity: any) => ({
-          id: activity.id || undefined,
-          day_of_week: activity.day_of_week,
-          start_time: activity.start_time,
-          end_time: activity.end_time,
-          activity_type: activity.activity_type,
-          title: activity.title || undefined
-        }));
-
-        // Save activities to the database
-        const { error: saveError } = await supabase
-          .from('schedule_activities')
-          .insert(processedActivities);
-
-        if (saveError) throw saveError;
-
-        toast({
-          title: "תוכנית נשמרה בהצלחה",
-          description: "התוכנית שלך נוצרה ונשמרה",
-        });
-
-        // Navigate to weekly planner to view the schedule
-        navigate('/weekly-planner');
+      if (!data?.schedule || !Array.isArray(data.schedule)) {
+        throw new Error("Invalid schedule data received");
       }
+
+      // Process activities
+      const processedActivities = data.schedule.map((activity: any) => ({
+        schedule_id: activity.schedule_id || undefined,
+        day_of_week: activity.day_of_week,
+        start_time: activity.start_time,
+        end_time: activity.end_time,
+        activity_type: activity.activity_type,
+        title: activity.title || undefined
+      }));
+
+      // Save activities to the database
+      const { error: saveError } = await supabase
+        .from('schedule_activities')
+        .insert(processedActivities);
+
+      if (saveError) throw saveError;
+
+      toast({
+        title: "תוכנית נשמרה בהצלחה",
+        description: "התוכנית שלך נוצרה ונשמרה",
+      });
+
+      // Navigate to weekly planner to view the schedule
+      navigate('/weekly-planner');
     } catch (error) {
       console.error('Error generating schedule:', error);
       toast({
