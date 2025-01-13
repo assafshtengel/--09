@@ -4,17 +4,18 @@ import { Trophy, Calendar, Clock, User } from "lucide-react";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 
-interface GamePreviewProps {
+export interface GamePreviewProps {
   match: {
     match_date: string;
     match_time?: string;
     opponent?: string;
     location?: string;
   };
-  onStart: () => void;
+  onStartMatch: () => Promise<void>;
+  onActionAdd: (actionId: string, result: "success" | "failure", note?: string) => Promise<void>;
 }
 
-export const GamePreview = ({ match, onStart }: GamePreviewProps) => {
+export const GamePreview = ({ match, onStartMatch, onActionAdd }: GamePreviewProps) => {
   const matchDate = new Date(match.match_date);
   const formattedDate = format(matchDate, "EEEE, d בMMMM", { locale: he });
 
@@ -63,7 +64,7 @@ export const GamePreview = ({ match, onStart }: GamePreviewProps) => {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={onStart} size="lg">
+        <Button onClick={onStartMatch} size="lg">
           המשך
         </Button>
       </div>
