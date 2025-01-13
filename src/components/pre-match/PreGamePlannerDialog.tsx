@@ -62,7 +62,7 @@ export const PreGamePlannerDialog = ({
         <AlertDialogFooter className="sm:space-x-4">
           <AlertDialogAction
             onClick={handleConfirm}
-            className="bg-primary hover:bg-primary/90"
+            className="bg-primary hover:bg-primary/90 animate-fade-in"
           >
             כן, אשמח לקבל לוז
           </AlertDialogAction>
