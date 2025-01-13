@@ -23,43 +23,24 @@ import NotificationsManager from "./pages/NotificationsManager";
 import PlayerPortfolio from "./pages/PlayerPortfolio";
 import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryDashboard";
 import PreGamePlanner from "./pages/PreGamePlanner";
-import { AdminAuth } from "@/components/admin/AdminAuth"; // New import
-import { AdminDashboard } from "@/components/admin/AdminDashboard"; // New import
+import { AdminDashboard } from "@/components/admin/AdminDashboard";
 
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [userRoles, setUserRoles] = useState<string[] | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsAuthenticated(!!session);
-
-      if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('roles')
-          .eq('id', session.user.id)
-          .single();
-        
-        setUserRoles(profile?.roles || []);
-      }
+      setUserEmail(session?.user?.email || null);
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
-      if (session) {
-        supabase
-          .from('profiles')
-          .select('roles')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: profile }) => {
-            setUserRoles(profile?.roles || []);
-          });
-      }
+      setUserEmail(session?.user?.email || null);
     });
 
     checkAuth();
@@ -75,18 +56,37 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/auth" replace />;
   }
 
-  // If the user is a player and trying to access the index page,
-  // redirect them to the dashboard
-  if (window.location.pathname === '/' && userRoles?.includes('שחקן')) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   return (
     <>
       <Navigation />
       {children}
     </>
   );
+};
+
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAdminAccess = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUserEmail(session?.user?.email || null);
+      setIsLoading(false);
+    };
+
+    checkAdminAccess();
+  }, []);
+
+  if (isLoading) {
+    return <div>טוען...</div>;
+  }
+
+  if (userEmail !== "socr.co.il@gmail.com") {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
 };
 
 const App = () => (
@@ -108,14 +108,12 @@ const App = () => (
                 }
               />
               <Route
-                path="/admin/auth"
-                element={<AdminAuth />}
-              />
-              <Route
                 path="/admin/dashboard"
                 element={
                   <ProtectedRoute>
-                    <AdminDashboard />
+                    <AdminRoute>
+                      <AdminDashboard />
+                    </AdminRoute>
                   </ProtectedRoute>
                 }
               />

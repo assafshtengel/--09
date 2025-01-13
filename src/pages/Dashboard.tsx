@@ -16,23 +16,25 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [selectedChatType, setSelectedChatType] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (!user) {
+        if (!session) {
           navigate("/");
           return;
         }
 
+        setUserEmail(session.user.email);
+
         const { data: profileData } = await supabase
           .from("profiles")
           .select("*")
-          .eq("id", user.id)
+          .eq("id", session.user.id)
           .single();
 
         if (!profileData) {
@@ -52,107 +54,6 @@ const Dashboard = () => {
     checkAuth();
   }, [navigate]);
 
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { data } = await supabase
-        .from("admin_credentials")
-        .select("*")
-        .eq("email", session.user.email)
-        .single();
-
-      setIsAdmin(!!data);
-    };
-
-    checkAdminStatus();
-  }, []);
-
-  const chatOptions = [
-    {
-      title: "אימון מנטאלי",
-      icon: <Brain className="h-4 w-4" />,
-      type: "mental",
-      gradient: "from-blue-600 to-blue-700"
-    },
-    {
-      title: "תזונה",
-      icon: <Apple className="h-4 w-4" />,
-      type: "nutrition",
-      gradient: "from-green-600 to-green-700"
-    },
-    {
-      title: "אימוני כוח",
-      icon: <Dumbbell className="h-4 w-4" />,
-      type: "strength",
-      gradient: "from-purple-600 to-purple-700"
-    },
-    {
-      title: "בריאות",
-      icon: <Heart className="h-4 w-4" />,
-      type: "health",
-      gradient: "from-red-600 to-red-700"
-    },
-    {
-      title: "כושר",
-      icon: <Activity className="h-4 w-4" />,
-      type: "fitness",
-      gradient: "from-orange-600 to-orange-700"
-    },
-    {
-      title: "מוטיבציה",
-      icon: <Smile className="h-4 w-4" />,
-      type: "motivation",
-      gradient: "from-yellow-600 to-yellow-700"
-    }
-  ];
-
-  const quickActions = [
-    {
-      title: "יעדי טרום משחק",
-      icon: <Trophy className="h-6 w-6 text-white" />,
-      description: "הגדר יעדים ומטרות למשחק הבא",
-      onClick: () => navigate("/pre-match-report"),
-      gradient: "from-blue-600 to-blue-700"
-    },
-    {
-      title: "תכנון לפני משחק",
-      icon: <Calendar className="h-6 w-6 text-white" />,
-      description: "קבל סדר יום מותאם אישית ל-24 שעות לפני המשחק",
-      onClick: () => navigate("/pre-game-planner"),
-      gradient: "from-purple-600 to-purple-700"
-    },
-    {
-      title: "מעקב משחק",
-      icon: <Timer className="h-6 w-6 text-white" />,
-      description: "עקוב אחר ביצועים במהלך המשחק",
-      onClick: () => navigate("/game-selection"),
-      gradient: "from-emerald-600 to-emerald-700"
-    },
-    {
-      title: "סיכום אימון",
-      icon: <FileText className="h-6 w-6 text-white" />,
-      description: "תעד ונתח את האימון שלך",
-      onClick: () => navigate("/training-summary"),
-      gradient: "from-amber-600 to-amber-700"
-    },
-    {
-      title: "מערכת שעות",
-      icon: <Calendar className="h-6 w-6 text-white" />,
-      description: "נהל את לוח הזמנים השבועי שלך",
-      onClick: () => navigate("/schedule"),
-      gradient: "from-rose-600 to-rose-700"
-    },
-    {
-      title: "היסטוריית משחקים",
-      icon: <History className="h-6 w-6 text-white" />,
-      description: "צפה בכל המשחקים הקודמים שלך",
-      onClick: () => navigate("/game-history"),
-      gradient: "from-indigo-600 to-indigo-700"
-    }
-  ];
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -163,9 +64,12 @@ const Dashboard = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-8 min-h-screen bg-gradient-to-b from-background to-background/80">
-      {/* Add Admin Link if user is admin */}
-      {isAdmin && (
-        <Card className="bg-gradient-to-br from-purple-600 to-purple-700 text-white cursor-pointer transform transition-all duration-200 hover:scale-105 hover:shadow-lg" onClick={() => navigate("/admin/auth")}>
+      {/* Admin Link - Only shown for authorized email */}
+      {userEmail === "socr.co.il@gmail.com" && (
+        <Card 
+          className="bg-gradient-to-br from-purple-600 to-purple-700 text-white cursor-pointer transform transition-all duration-200 hover:scale-105 hover:shadow-lg" 
+          onClick={() => navigate("/admin/dashboard")}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Shield className="h-6 w-6 text-white" />
@@ -177,7 +81,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       )}
-      
+
       {/* Chat Options Section */}
       <div className="bg-[#F7FBFF] rounded-lg p-6 shadow-sm">
         <h2 className="text-center text-lg font-medium text-gray-700 mb-4">
