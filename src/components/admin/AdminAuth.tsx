@@ -50,7 +50,7 @@ export const AdminAuth = () => {
       }
 
       // Verify password using Supabase's built-in crypto functions
-      const { data: verifyData, error: verifyError } = await supabase.rpc<boolean>(
+      const { data: verifyData, error: verifyError } = await supabase.rpc<boolean, { input_email: string; input_password: string }>(
         "verify_admin_password",
         {
           input_email: formData.email,
