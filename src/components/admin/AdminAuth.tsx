@@ -10,6 +10,12 @@ interface AdminUserMetadata {
   isAdmin: boolean;
 }
 
+interface AdminCredentials {
+  id: string;
+  email: string;
+  phone_number: string;
+}
+
 export const AdminAuth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -25,16 +31,16 @@ export const AdminAuth = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase
+      const { data: adminData, error: fetchError } = await supabase
         .from("admin_credentials")
         .select("*")
         .eq("email", formData.email)
         .eq("phone_number", formData.phoneNumber)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
 
-      if (!data) {
+      if (!adminData) {
         toast({
           title: "גישה נדחתה",
           description: "אנא נסה שנית",
@@ -44,7 +50,7 @@ export const AdminAuth = () => {
       }
 
       // Verify password using Supabase's built-in crypto functions
-      const { data: verifyData, error: verifyError } = await supabase.rpc(
+      const { data: verifyData, error: verifyError } = await supabase.rpc<boolean>(
         "verify_admin_password",
         {
           input_email: formData.email,
