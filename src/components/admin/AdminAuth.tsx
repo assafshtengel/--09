@@ -53,17 +53,10 @@ export const AdminAuth = () => {
         return;
       }
 
-      // Verify password using Supabase's built-in crypto functions
-      const { data: verifyData, error: verifyError } = await supabase.rpc<VerifyPasswordResponse, { 
-        input_email: string; 
-        input_password: string;
-      }>(
-        "verify_admin_password",
-        {
-          input_email: formData.email,
-          input_password: formData.password,
-        }
-      );
+      const { data: verifyData, error: verifyError } = await supabase.rpc<VerifyPasswordResponse>("verify_admin_password", {
+        input_email: formData.email,
+        input_password: formData.password,
+      });
 
       if (verifyError || !verifyData?.verified) {
         toast({
