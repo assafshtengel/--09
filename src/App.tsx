@@ -28,15 +28,36 @@ const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [userRoles, setUserRoles] = useState<string[] | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsAuthenticated(!!session);
+
+      if (session) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('roles')
+          .eq('id', session.user.id)
+          .single();
+        
+        setUserRoles(profile?.roles || []);
+      }
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
+      if (session) {
+        supabase
+          .from('profiles')
+          .select('roles')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profile }) => {
+            setUserRoles(profile?.roles || []);
+          });
+      }
     });
 
     checkAuth();
@@ -50,6 +71,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
+  }
+
+  // If the user is a player and trying to access the index page,
+  // redirect them to the dashboard
+  if (window.location.pathname === '/' && userRoles?.includes('שחקן')) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (
