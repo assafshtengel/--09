@@ -38,6 +38,102 @@ export const PreMatchSummary = ({
   const [reportId, setReportId] = useState<string>();
   const navigate = useNavigate();
 
+  const sendEmail = async (recipient: 'coach' | 'user') => {
+    try {
+      const element = document.getElementById('pre-match-summary');
+      if (!element) return;
+
+      const canvas = await html2canvas(element);
+      const imageData = canvas.toDataURL('image/png');
+
+      // Get user profile to get coach's email if sending to coach
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not found');
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('coach_email, email')
+        .eq('id', user.id)
+        .single();
+
+      const emailTo = recipient === 'coach' ? profile?.coach_email : profile?.email;
+      if (!emailTo) {
+        toast({
+          title: recipient === 'coach' ? "אימייל המאמן לא נמצא" : "אימייל המשתמש לא נמצא",
+          description: "בדוק את הגדרות הפרופיל",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke('send-pre-match-report', {
+        body: {
+          email: emailTo,
+          imageData,
+          matchDetails,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "הדוח נשלח בהצלחה",
+        description: `נשלח ל${recipient === 'coach' ? 'מאמן' : 'מייל שלך'}`,
+      });
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast({
+        title: "שגיאה בשליחת הדוח",
+        description: "אנא נסה שנית",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePrint = async () => {
+    try {
+      const element = document.getElementById('pre-match-summary');
+      if (!element) return;
+
+      const canvas = await html2canvas(element);
+      const imageUrl = canvas.toDataURL('image/png');
+
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast({
+          title: "שגיאה",
+          description: "לא ניתן לפתוח חלון הדפסה",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Pre-Match Summary</title>
+          </head>
+          <body style="margin: 0;">
+            <img src="${imageUrl}" style="width: 100%;" />
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    } catch (error) {
+      console.error('Error printing:', error);
+      toast({
+        title: "שגיאה בהדפסה",
+        description: "אנא נסה שנית",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const shareToInstagram = () => {
+    setShowInstagramSummary(true);
+  };
+
   const handleFinish = async () => {
     try {
       await onFinish();
