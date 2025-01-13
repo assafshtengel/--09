@@ -382,6 +382,12 @@ export const GameTracker = () => {
           )}
           
           <GamePreview
+            match={{
+              match_date: matchDetails.match_date,
+              match_time: undefined,
+              opponent: matchDetails.opponent || undefined,
+              location: matchDetails.location || undefined
+            }}
             onActionAdd={handleAddAction}
             onStartMatch={startMatch}
           />
@@ -399,6 +405,7 @@ export const GameTracker = () => {
             onAddNote={handleAddNote}
           />
           <PlayerSubstitution
+            minute={minute}
             onSubstitute={handleAddSubstitution}
           />
         </div>
