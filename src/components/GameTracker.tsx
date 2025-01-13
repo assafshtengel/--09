@@ -62,7 +62,8 @@ export const GameTracker = () => {
           *,
           pre_match_reports (
             actions,
-            havaya
+            havaya,
+            questions_answers
           )
         `)
         .eq("id", id)
@@ -77,25 +78,31 @@ export const GameTracker = () => {
         throw new Error("Match not found");
       }
 
-      setMatchDetails(match as Match);
+      // Type assertion after validation
+      const typedMatch = match as unknown as Match;
+      setMatchDetails(typedMatch);
 
-      if (match?.pre_match_reports) {
-        if (match.pre_match_reports.havaya) {
-          setHavaya(match.pre_match_reports.havaya.split(','));
+      if (typedMatch.pre_match_reports) {
+        if (typedMatch.pre_match_reports.havaya) {
+          setHavaya(typedMatch.pre_match_reports.havaya.split(','));
         }
 
-        if (match.pre_match_reports.actions) {
-          const rawActions = match.pre_match_reports.actions;
+        if (typedMatch.pre_match_reports.actions) {
+          const rawActions = typedMatch.pre_match_reports.actions;
           
+          const isPreMatchReportAction = (action: unknown): action is PreMatchReportAction => {
+            return (
+              typeof action === 'object' &&
+              action !== null &&
+              'id' in action &&
+              'name' in action &&
+              'isSelected' in action
+            );
+          };
+
           if (Array.isArray(rawActions)) {
             const validActions = rawActions
-              .filter((action): action is PreMatchReportAction => 
-                typeof action === 'object' && 
-                action !== null && 
-                'id' in action && 
-                'name' in action && 
-                'isSelected' in action
-              )
+              .filter(isPreMatchReportAction)
               .map(action => ({
                 id: action.id,
                 name: action.name,
