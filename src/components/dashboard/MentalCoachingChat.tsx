@@ -13,7 +13,28 @@ interface Message {
   content: string;
 }
 
-export const MentalCoachingChat = () => {
+interface MentalCoachingChatProps {
+  chatType?: string;
+}
+
+const getChatTitle = (type: string = 'mental') => {
+  switch (type) {
+    case 'nutrition':
+      return 'שיחה עם יועץ תזונה';
+    case 'strength':
+      return 'שיחה עם מאמן כוח';
+    case 'health':
+      return 'שיחה עם יועץ בריאות';
+    case 'fitness':
+      return 'שיחה עם מאמן כושר';
+    case 'motivation':
+      return 'שיחה על מוטיבציה';
+    default:
+      return 'שיחה עם מאמן מנטאלי';
+  }
+};
+
+export const MentalCoachingChat = ({ chatType = 'mental' }: MentalCoachingChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +51,7 @@ export const MentalCoachingChat = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('mental-coaching-chat', {
-        body: { message: userMessage }
+        body: { message: userMessage, chatType }
       });
 
       if (error) throw error;
@@ -55,7 +76,7 @@ export const MentalCoachingChat = () => {
   return (
     <Card className="w-full bg-gradient-to-br from-background to-background/95 shadow-lg">
       <CardHeader>
-        <CardTitle className="text-2xl">שיחה עם מאמן מנטאלי</CardTitle>
+        <CardTitle className="text-2xl">{getChatTitle(chatType)}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <ScrollArea className="h-[400px] rounded-md border p-4">
@@ -99,7 +120,7 @@ export const MentalCoachingChat = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="שאל את המאמן המנטאלי..."
+            placeholder="שאל את המאמן..."
             className="min-h-[80px]"
           />
           <Button

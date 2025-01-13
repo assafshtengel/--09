@@ -3,17 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye } from "lucide-react";
+import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, Heart, Running, Smile } from "lucide-react";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { MentalCoachingChat } from "@/components/dashboard/MentalCoachingChat";
 import { motion } from "framer-motion";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
+  const [selectedChatType, setSelectedChatType] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -47,6 +49,45 @@ const Dashboard = () => {
 
     checkAuth();
   }, [navigate]);
+
+  const chatOptions = [
+    {
+      title: "אימון מנטאלי",
+      icon: <Brain className="h-6 w-6 text-white" />,
+      type: "mental",
+      gradient: "from-blue-600 to-blue-700"
+    },
+    {
+      title: "תזונה",
+      icon: <Apple className="h-6 w-6 text-white" />,
+      type: "nutrition",
+      gradient: "from-green-600 to-green-700"
+    },
+    {
+      title: "אימוני כוח",
+      icon: <Dumbbell className="h-6 w-6 text-white" />,
+      type: "strength",
+      gradient: "from-purple-600 to-purple-700"
+    },
+    {
+      title: "בריאות",
+      icon: <Heart className="h-6 w-6 text-white" />,
+      type: "health",
+      gradient: "from-red-600 to-red-700"
+    },
+    {
+      title: "כושר",
+      icon: <Running className="h-6 w-6 text-white" />,
+      type: "fitness",
+      gradient: "from-orange-600 to-orange-700"
+    },
+    {
+      title: "מוטיבציה",
+      icon: <Smile className="h-6 w-6 text-white" />,
+      type: "motivation",
+      gradient: "from-yellow-600 to-yellow-700"
+    }
+  ];
 
   const quickActions = [
     {
@@ -101,21 +142,6 @@ const Dashboard = () => {
     );
   }
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-  };
-
   return (
     <div className="container mx-auto p-4 space-y-8 min-h-screen bg-gradient-to-b from-background to-background/80">
       {/* Header Section */}
@@ -128,17 +154,42 @@ const Dashboard = () => {
         <p className="text-muted-foreground text-lg">בחר באפשרות כדי להתחיל</p>
       </motion.div>
 
+      {/* Chat Options Grid */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8"
+      >
+        {chatOptions.map((option, index) => (
+          <Sheet key={index}>
+            <SheetTrigger asChild>
+              <motion.button
+                onClick={() => setSelectedChatType(option.type)}
+                className={`p-4 rounded-xl bg-gradient-to-r ${option.gradient} 
+                  transform hover:scale-105 transition-all duration-300 
+                  shadow-lg hover:shadow-xl text-white
+                  flex flex-col items-center justify-center space-y-2`}
+              >
+                <div className="bg-white/20 p-3 rounded-full">
+                  {option.icon}
+                </div>
+                <h3 className="text-lg font-bold">{option.title}</h3>
+              </motion.button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-full sm:w-[400px]">
+              <MentalCoachingChat chatType={option.type} />
+            </SheetContent>
+          </Sheet>
+        ))}
+      </motion.div>
+
       {/* Quick Actions Grid */}
       <motion.div 
-        variants={container}
-        initial="hidden"
-        animate="show"
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12"
       >
         {quickActions.map((action, index) => (
           <motion.button
             key={index}
-            variants={item}
             onClick={action.onClick}
             className={`p-6 rounded-xl bg-gradient-to-r ${action.gradient} 
               transform hover:scale-105 transition-all duration-300 
@@ -191,20 +242,6 @@ const Dashboard = () => {
             <GoalsProgress />
           </motion.div>
         </div>
-      </motion.div>
-
-      {/* Mental Coaching Chat Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
-      >
-        <div className="flex justify-between items-center mb-6">
-          <div className="h-0.5 flex-grow bg-gradient-to-r from-transparent to-gray-200"></div>
-          <h2 className="text-2xl font-bold px-4">אימון מנטאלי</h2>
-          <div className="h-0.5 flex-grow bg-gradient-to-l from-transparent to-gray-200"></div>
-        </div>
-        <MentalCoachingChat />
       </motion.div>
 
       {/* Call to Action Buttons */}
