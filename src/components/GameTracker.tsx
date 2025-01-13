@@ -15,6 +15,13 @@ import { GameSummary } from "./game/GameSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
+interface PreMatchReportAction {
+  id: string;
+  name: string;
+  goal?: string;
+  isSelected: boolean;
+}
+
 interface Match {
   id: string;
   player_id: string;
@@ -30,12 +37,7 @@ interface Match {
   team_name?: string;
   player_role?: string;
   pre_match_reports?: {
-    actions: Array<{
-      id: string;
-      name: string;
-      goal?: string;
-      isSelected: boolean;
-    }>;
+    actions: PreMatchReportAction[];
     havaya?: string;
   };
 }
@@ -118,7 +120,7 @@ export const GameTracker = () => {
           
           if (Array.isArray(rawActions)) {
             const validActions = rawActions
-              .filter(action => 
+              .filter((action): action is PreMatchReportAction => 
                 typeof action === 'object' && 
                 action !== null && 
                 'id' in action && 
@@ -318,7 +320,6 @@ export const GameTracker = () => {
 
   const startSecondHalf = async () => {
     try {
-      // Save halftime notes if any
       if (halftimeNotes) {
         const { error } = await supabase
           .from("match_halftime_notes")
@@ -332,7 +333,6 @@ export const GameTracker = () => {
         if (error) throw error;
       }
 
-      // Update match status
       const { error: matchError } = await supabase
         .from("matches")
         .update({ status: "secondHalf" })
