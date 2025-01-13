@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
-import { Mail, Printer, Instagram, FileText } from "lucide-react";
+import { Mail, Printer, Instagram } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import html2canvas from "html2canvas";
 import { format } from "date-fns";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { InstagramPreMatchSummary } from "./InstagramPreMatchSummary";
-import { PreMatchPreparationDialog } from "./PreMatchPreparationDialog";
+import { PreMatchCaptionPopup } from "./PreMatchCaptionPopup";
 
 interface PreMatchSummaryProps {
   matchDetails: {
@@ -31,14 +32,15 @@ export const PreMatchSummary = ({
 }: PreMatchSummaryProps) => {
   const { toast } = useToast();
   const [showInstagramSummary, setShowInstagramSummary] = useState(false);
-  const [showPreparationDialog, setShowPreparationDialog] = useState(false);
+  const [showCaptionPopup, setShowCaptionPopup] = useState(false);
   const [reportId, setReportId] = useState<string>();
-
+  
   const sendEmail = async (recipientType: 'user' | 'coach') => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error("No user email found");
 
+      // Get player's name from profiles
       const { data: profile } = await supabase
         .from('profiles')
         .select('full_name, coach_email')
@@ -57,6 +59,7 @@ export const PreMatchSummary = ({
 
       const playerName = profile?.full_name || "שחקן";
 
+      // Create HTML content with player name at the top
       const htmlContent = `
         <div dir="rtl">
           <h2>דוח טרום משחק - ${playerName}</h2>
@@ -136,37 +139,6 @@ export const PreMatchSummary = ({
     setShowInstagramSummary(true);
   };
 
-  const createMatchRecord = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: match, error } = await supabase
-        .from('matches')
-        .insert([
-          {
-            player_id: user.id,
-            match_date: matchDetails.date,
-            opponent: matchDetails.opponent,
-            status: 'preview'
-          }
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (match) setReportId(match.id);
-    } catch (error) {
-      console.error('Error creating match record:', error);
-    }
-  };
-
-  useEffect(() => {
-    if (!reportId) {
-      createMatchRecord();
-    }
-  }, []);
-
   return (
     <div className="space-y-6">
       <div id="pre-match-summary">
@@ -243,12 +215,12 @@ export const PreMatchSummary = ({
           הדפס
         </Button>
         <Button 
-          onClick={() => setShowPreparationDialog(true)}
+          onClick={() => setShowCaptionPopup(true)} 
           variant="outline"
           className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100"
         >
-          <FileText className="h-4 w-4" />
-          ההכנה שלי למשחק
+          <Instagram className="h-4 w-4" />
+          צור טקסט לאינסטגרם
         </Button>
         <Button onClick={shareToInstagram} variant="outline" className="flex items-center gap-2">
           <Instagram className="h-4 w-4" />
@@ -270,15 +242,14 @@ export const PreMatchSummary = ({
               description: "כעת תוכל להעלות אותה לאינסטגרם",
             });
           }}
-          matchId={reportId}
         />
       )}
 
-      {showPreparationDialog && (
-        <PreMatchPreparationDialog
-          isOpen={showPreparationDialog}
-          onClose={() => setShowPreparationDialog(false)}
-          matchId={reportId}
+      {showCaptionPopup && (
+        <PreMatchCaptionPopup
+          isOpen={showCaptionPopup}
+          onClose={() => setShowCaptionPopup(false)}
+          reportId={reportId}
         />
       )}
     </div>

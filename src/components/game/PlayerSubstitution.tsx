@@ -2,16 +2,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { SubstitutionLog } from "@/types/game";
 
-export interface PlayerSubstitutionProps {
+interface PlayerSubstitutionProps {
   minute: number;
-  onSubstitute: (sub: SubstitutionLog) => Promise<void>;
+  onPlayerExit: (playerName: string, canReturn: boolean) => void;
+  onPlayerReturn: (playerName: string) => void;
 }
 
 export const PlayerSubstitution = ({ 
   minute,
-  onSubstitute
+  onPlayerExit,
+  onPlayerReturn
 }: PlayerSubstitutionProps) => {
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [showReturnDialog, setShowReturnDialog] = useState(false);
@@ -24,34 +25,21 @@ export const PlayerSubstitution = ({
 
   const handleExitConfirmation = (canReturn: boolean) => {
     const playerName = "שחקן"; // Default player name since we're not collecting it anymore
+    onPlayerExit(playerName, canReturn);
     
     if (canReturn) {
       setWaitingForReturn(playerName);
       setShowReturnDialog(true);
-      onSubstitute({
-        playerIn: "",
-        playerOut: playerName,
-        minute
-      });
     } else {
-      setHasEndedGame(true);
-      onSubstitute({
-        playerIn: "",
-        playerOut: playerName,
-        minute
-      });
+      setHasEndedGame(true); // Set game as ended when player won't return
     }
     
     setShowExitDialog(false);
   };
 
-  const handlePlayerReturn = async () => {
+  const handlePlayerReturn = () => {
     if (waitingForReturn) {
-      await onSubstitute({
-        playerIn: waitingForReturn,
-        playerOut: "",
-        minute
-      });
+      onPlayerReturn(waitingForReturn);
       setWaitingForReturn(null);
       setShowReturnDialog(false);
       toast({
@@ -61,6 +49,7 @@ export const PlayerSubstitution = ({
     }
   };
 
+  // Don't show anything if game has ended
   if (hasEndedGame) {
     return null;
   }
@@ -80,6 +69,7 @@ export const PlayerSubstitution = ({
         )}
       </div>
 
+      {/* Exit Confirmation Dialog */}
       <Dialog open={showExitDialog} onOpenChange={setShowExitDialog}>
         <DialogContent>
           <DialogHeader>
@@ -99,6 +89,7 @@ export const PlayerSubstitution = ({
         </DialogContent>
       </Dialog>
 
+      {/* Return Dialog */}
       <Dialog open={showReturnDialog} onOpenChange={setShowReturnDialog}>
         <DialogContent>
           <DialogHeader>

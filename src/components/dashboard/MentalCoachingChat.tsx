@@ -2,59 +2,40 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2, Brain, Apple, Dumbbell, Target, Crosshair, Weight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Send, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
 
-type CoachType = 'mental' | 'nutrition' | 'fitness' | 'tactical' | 'technical' | 'strength';
-
-const coachTypes: Record<CoachType, { title: string; icon: React.ComponentType; color: string }> = {
-  mental: { title: "מאמן מנטאלי", icon: Brain, color: "#3B82F6" },
-  nutrition: { title: "מאמן תזונה", icon: Apple, color: "#F97316" },
-  fitness: { title: "מאמן כושר", icon: Dumbbell, color: "#10B981" },
-  tactical: { title: "מאמן טקטי", icon: Target, color: "#3B82F6" },
-  technical: { title: "מאמן טכני", icon: Crosshair, color: "#6366F1" },
-  strength: { title: "מאמן כוח", icon: Weight, color: "#EC4899" }
-};
-
 export const MentalCoachingChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedCoach, setSelectedCoach] = useState<CoachType | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const sendMessage = async () => {
-    if (!input.trim() || isLoading || !selectedCoach) return;
+    if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
     setInput('');
     setIsLoading(true);
 
+    // Add user message immediately
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
 
     try {
       const { data, error } = await supabase.functions.invoke('mental-coaching-chat', {
-        body: { 
-          message: userMessage,
-          coachType: selectedCoach
-        }
+        body: { message: userMessage }
       });
 
       if (error) throw error;
 
+      // Add AI response
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -71,146 +52,69 @@ export const MentalCoachingChat = () => {
     }
   };
 
-  const selectCoach = async (type: CoachType) => {
-    setSelectedCoach(type);
-    setMessages([]);
-    setIsLoading(true);
-    setIsDialogOpen(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('mental-coaching-chat', {
-        body: { 
-          message: "התחל שיחה",
-          coachType: type
-        }
-      });
-
-      if (error) throw error;
-
-      setMessages([{ role: 'assistant', content: data.reply }]);
-    } catch (error) {
-      console.error('Error starting chat:', error);
-      toast.error('שגיאה בהתחלת השיחה, נסה שוב');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const closeChat = () => {
-    setIsDialogOpen(false);
-    setSelectedCoach(null);
-    setMessages([]);
-  };
-
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <div className="bg-white rounded-xl shadow-md border border-[#E5E7EB] overflow-hidden">
-        <div className="p-6">
-          <h2 className="text-xl font-semibold text-center mb-6 text-[#111827]">התייעצות עם מאמנים</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {(Object.entries(coachTypes) as [CoachType, { title: string; icon: React.ComponentType; color: string }][]).map(([type, { title, icon: Icon, color }]) => (
-              <Button
-                key={type}
-                onClick={() => selectCoach(type)}
-                variant="outline"
-                className="relative h-24 flex flex-col items-center justify-center gap-3 bg-white hover:bg-gray-50 
-                  text-gray-800 transition-all duration-300 border border-gray-200 rounded-xl
-                  hover:shadow-md group"
+    <Card className="w-full bg-gradient-to-br from-background to-background/95 shadow-lg">
+      <CardHeader>
+        <CardTitle className="text-2xl">שיחה עם מאמן מנטאלי</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <ScrollArea className="h-[400px] rounded-md border p-4">
+          <AnimatePresence initial={false}>
+            {messages.map((message, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className={`mb-4 flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className="flex flex-col items-center gap-2">
-                  <div 
-                    style={{ color }} 
-                    className="h-6 w-6 group-hover:scale-110 transition-transform duration-300"
-                  >
-                    <Icon />
-                  </div>
-                  <span className="text-sm font-medium text-center line-clamp-2">{title}</span>
-                </div>
-                <motion.div
-                  className="absolute inset-0 bg-white/5 rounded-xl group-hover:bg-gray-50/50 transition-all duration-300"
-                  initial={false}
-                  animate={{ scale: 1 }}
-                  whileHover={{ scale: 1.02 }}
-                />
-              </Button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl h-[80vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span>{selectedCoach && coachTypes[selectedCoach].title}</span>
-              <Button variant="ghost" size="sm" onClick={closeChat}>
-                סגור
-              </Button>
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="flex-grow overflow-hidden">
-            <ScrollArea className="h-full p-4">
-              <AnimatePresence initial={false}>
-                {messages.map((message, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className={`mb-4 flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[80%] rounded-lg p-3 ${
-                        message.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap text-sm">{message.content}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-              {isLoading && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex justify-start"
+                <div
+                  className={`max-w-[80%] rounded-lg p-3 ${
+                    message.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
+                  }`}
                 >
-                  <div className="flex items-center space-x-2 rounded-lg bg-muted p-3">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">המאמן מקליד...</span>
-                  </div>
-                </motion.div>
-              )}
-            </ScrollArea>
-          </div>
+                  <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+          {isLoading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex justify-start"
+            >
+              <div className="flex items-center space-x-2 rounded-lg bg-muted p-3">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm">המאמן מקליד...</span>
+              </div>
+            </motion.div>
+          )}
+        </ScrollArea>
 
-          <div className="p-4 border-t">
-            <div className="flex gap-2">
-              <Textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder={`שאל את ${selectedCoach ? coachTypes[selectedCoach].title : 'המאמן'}...`}
-                className="min-h-[80px]"
-              />
-              <Button
-                onClick={sendMessage}
-                disabled={isLoading || !input.trim()}
-                className="self-end"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+        <div className="flex gap-2">
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyPress}
+            placeholder="שאל את המאמן המנטאלי..."
+            className="min-h-[80px]"
+          />
+          <Button
+            onClick={sendMessage}
+            disabled={isLoading || !input.trim()}
+            className="self-end"
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

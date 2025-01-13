@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SchoolHoursStep } from "./steps/SchoolHoursStep";
@@ -9,107 +9,50 @@ import { WeeklyScheduleViewer } from "./WeeklyScheduleViewer";
 import { ArrowRight, ArrowLeft, Save } from "lucide-react";
 import { useWeeklySchedule } from "@/hooks/use-weekly-schedule";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 export const WeeklyScheduleWizard = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const { saveSchedule, isLoading } = useWeeklySchedule();
   const [activities, setActivities] = useState<any[]>([]);
 
-  // Memoize step components to prevent unnecessary re-renders
   const steps = [
     {
       title: "שעות בית ספר",
-      component: <SchoolHoursStep onAddActivity={useCallback((activity) => {
-        console.log("Adding school activity:", activity);
-        // Remove existing school activities for this day before adding new ones
-        const filteredActivities = activities.filter(a => 
-          !(a.day_of_week === activity.day_of_week && a.activity_type === "school")
-        );
-        const newActivity = {
-          ...activity,
-          activity_type: "school",
-          title: "בית ספר"
-        };
-        const updatedActivities = [...filteredActivities, newActivity];
-        console.log("Updated activities after school:", updatedActivities);
-        setActivities(updatedActivities);
-      }, [activities])} />,
+      component: <SchoolHoursStep onAddActivity={(activity) => {
+        console.log("Adding activity:", activity);
+        setActivities(prev => [...prev, activity]);
+      }} />,
     },
     {
       title: "אימוני קבוצה",
-      component: <TeamTrainingStep onAddActivity={useCallback((activity) => {
-        console.log("Adding team training:", activity);
-        const newActivity = {
-          ...activity,
-          activity_type: activity.type || "team_training",
-          title: activity.title || "אימון קבוצה"
-        };
-        const updatedActivities = [...activities, newActivity];
-        console.log("Updated activities after team training:", updatedActivities);
-        setActivities(updatedActivities);
-      }, [activities])} />,
+      component: <TeamTrainingStep onAddActivity={(activity) => {
+        console.log("Adding activity:", activity);
+        setActivities(prev => [...prev, activity]);
+      }} />,
     },
     {
       title: "אימונים אישיים ומנטליים",
-      component: <PersonalTrainingStep onAddActivity={useCallback((activity) => {
-        console.log("Adding personal training:", activity);
-        const newActivity = {
-          ...activity,
-          activity_type: activity.type || "personal_training",
-          title: activity.title || "אימון אישי"
-        };
-        const updatedActivities = [...activities, newActivity];
-        console.log("Updated activities after personal training:", updatedActivities);
-        setActivities(updatedActivities);
-      }, [activities])} />,
+      component: <PersonalTrainingStep onAddActivity={(activity) => {
+        console.log("Adding activity:", activity);
+        setActivities(prev => [...prev, activity]);
+      }} />,
     },
     {
       title: "שגרה יומית",
-      component: <DailyRoutineStep onAddActivity={useCallback((activity) => {
-        console.log("Adding daily routine:", activity);
-        const newActivity = {
-          ...activity,
-          activity_type: activity.type || "other",
-          title: activity.title || "פעילות יומית"
-        };
-        const updatedActivities = [...activities, newActivity];
-        console.log("Updated activities after daily routine:", updatedActivities);
-        setActivities(updatedActivities);
-      }, [activities])} />,
+      component: <DailyRoutineStep onAddActivity={(activity) => {
+        console.log("Adding activity:", activity);
+        setActivities(prev => [...prev, activity]);
+      }} />,
     },
   ];
 
-  const optimizeSchedule = async (scheduleId: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-schedule-optimizations', {
-        body: {
-          activities,
-          scheduleId
-        }
-      });
-
-      if (error) throw error;
-
-      if (data.optimizedSchedule) {
-        setActivities(prev => [...prev, ...data.optimizedSchedule]);
-        toast.success('המערכת עודכנה עם ארוחות ואופטימיזציות');
-      }
-    } catch (error) {
-      console.error('Error optimizing schedule:', error);
-      toast.error('שגיאה באופטימיזציית המערכת');
-    }
-  };
-
   const handleNext = () => {
-    console.log("Moving to next step. Current activities:", activities);
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
   };
 
   const handleBack = () => {
-    console.log("Moving to previous step. Current activities:", activities);
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
@@ -117,9 +60,7 @@ export const WeeklyScheduleWizard = () => {
 
   const handleSave = async () => {
     try {
-      console.log("Saving activities:", activities);
-      const scheduleId = await saveSchedule(activities);
-      await optimizeSchedule(scheduleId);
+      await saveSchedule(activities);
       toast.success("המערכת השבועית נשמרה בהצלחה");
     } catch (error) {
       console.error("Error saving schedule:", error);

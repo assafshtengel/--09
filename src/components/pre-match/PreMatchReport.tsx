@@ -7,7 +7,6 @@ import { PreMatchDashboard } from "./PreMatchDashboard";
 import { SocialShareGoals } from "./SocialShareGoals";
 import { HavayaSelector } from "./HavayaSelector";
 import { ObserverLinkDialog } from "./ObserverLinkDialog";
-import { PreGamePlannerDialog } from "./PreGamePlannerDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,7 +30,6 @@ export const PreMatchReport = () => {
   const [reportId, setReportId] = useState<string | null>(null);
   const [showObserverLink, setShowObserverLink] = useState(false);
   const [observerToken, setObserverToken] = useState<string | null>(null);
-  const [showPlannerDialog, setShowPlannerDialog] = useState(false);
 
   const steps = [
     { id: "dashboard", label: "התחלה" },
@@ -65,6 +63,7 @@ export const PreMatchReport = () => {
 
       if (error) throw error;
       
+      // Create match record with observer token
       const { data: match, error: matchError } = await supabase
         .from("matches")
         .insert({
@@ -95,6 +94,7 @@ export const PreMatchReport = () => {
     if (!reportId) return;
 
     try {
+      // Convert Action[] to a JSON-compatible format
       const jsonActions = actions.map(action => ({
         id: action.id,
         name: action.name,
@@ -106,6 +106,7 @@ export const PreMatchReport = () => {
         .from("pre_match_reports")
         .update({
           actions: jsonActions,
+          // Join array elements with a comma to store as a single string
           havaya: havaya.join(',')
         })
         .eq("id", reportId);
@@ -156,21 +157,11 @@ export const PreMatchReport = () => {
       if (error) throw error;
 
       toast.success("הדוח נשמר בהצלחה");
-      setShowPlannerDialog(true);
+      navigate("/game-selection");
     } catch (error) {
       console.error("Error completing report:", error);
       toast.error("שגיאה בשמירת הדוח");
     }
-  };
-
-  const handlePlannerConfirm = () => {
-    setShowPlannerDialog(false);
-    navigate("/pre-game-planner");
-  };
-
-  const handlePlannerCancel = () => {
-    setShowPlannerDialog(false);
-    navigate("/dashboard");
   };
 
   const renderStep = () => {
@@ -292,13 +283,6 @@ export const PreMatchReport = () => {
           open={showObserverLink}
           onOpenChange={setShowObserverLink}
           observerToken={observerToken}
-        />
-
-        <PreGamePlannerDialog
-          open={showPlannerDialog}
-          onOpenChange={setShowPlannerDialog}
-          onConfirm={handlePlannerConfirm}
-          onCancel={handlePlannerCancel}
         />
       </div>
     </div>

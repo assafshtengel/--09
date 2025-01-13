@@ -13,10 +13,10 @@ serve(async (req) => {
   }
 
   try {
-    const { matchId } = await req.json();
+    const { reportId } = await req.json();
 
-    if (!matchId) {
-      throw new Error('Match ID is required');
+    if (!reportId) {
+      throw new Error('Report ID is required');
     }
 
     console.log('Creating Supabase client...');
@@ -25,39 +25,37 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('Fetching match data for ID:', matchId);
-    const { data: match, error: matchError } = await supabaseClient
-      .from('matches')
+    console.log('Fetching report data for ID:', reportId);
+    const { data: report, error: reportError } = await supabaseClient
+      .from('pre_match_reports')
       .select(`
         *,
-        pre_match_report:pre_match_reports!matches_pre_match_report_id_fkey (
-          questions_answers,
-          havaya,
-          actions
+        profiles (
+          full_name
         )
       `)
-      .eq('id', matchId)
       .maybeSingle();
 
-    if (matchError) {
-      console.error('Error fetching match:', matchError);
-      throw matchError;
+    if (reportError) {
+      console.error('Error fetching report:', reportError);
+      throw reportError;
     }
 
-    if (!match) {
-      console.error('No match found for ID:', matchId);
-      throw new Error('Match not found');
+    if (!report) {
+      console.error('No report found for ID:', reportId);
+      throw new Error('Report not found');
     }
 
-    console.log('Processing match data...');
-    const havaya = match.pre_match_report?.havaya ? match.pre_match_report.havaya.split(',') : [];
-    const actions = Array.isArray(match.pre_match_report?.actions) ? match.pre_match_report.actions : [];
-    const answers = match.pre_match_report?.questions_answers || {};
+    console.log('Processing report data...');
+    const havaya = report.havaya ? report.havaya.split(',') : [];
+    const actions = report.actions || [];
+    const answers = report.questions_answers || {};
 
     console.log('Preparing OpenAI prompt...');
     const prompt = `
       Create an engaging Instagram caption in Hebrew for a pre-match report with these details:
-      - Opponent: ${match.opponent || 'היריבה'}
+      - Player: ${report.profiles?.full_name || 'שחקן'}
+      - Opponent: ${report.opponent || 'היריבה'}
       - Selected feelings: ${havaya.join(', ')}
       - Game goals: ${actions.map((a: any) => a.name + (a.goal ? ` (${a.goal})` : '')).join(', ')}
       - Player's answers: ${Object.entries(answers).map(([q, a]) => `${q}: ${a}`).join('\n')}

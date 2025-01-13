@@ -4,7 +4,6 @@ export interface GameHistoryItem {
   id: string;
   match_date: string;
   opponent: string | null;
-  isPreMatchOnly?: boolean;
   pre_match_report?: {
     actions: Json;
     questions_answers: Json;

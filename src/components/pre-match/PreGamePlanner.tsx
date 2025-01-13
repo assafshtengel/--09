@@ -1,137 +1,118 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Copy } from "lucide-react";
 
 export const PreGamePlanner = () => {
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [matchTime, setMatchTime] = useState("");
-  const [departureTime, setDepartureTime] = useState("");
+  const [currentTime, setCurrentTime] = useState("");
+  const [gameTime, setGameTime] = useState("");
   const [commitments, setCommitments] = useState("");
+  const [schedule, setSchedule] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const generateSchedule = async () => {
+    if (!currentTime || !gameTime) {
+      toast.error("נא למלא את השעה הנוכחית ושעת המשחק");
+      return;
+    }
+
     setIsLoading(true);
-
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No authenticated user");
-
-      // Call the edge function to generate schedule
       const { data, error } = await supabase.functions.invoke('generate-pre-game-schedule', {
         body: {
-          matchTime,
-          departureTime,
-          commitments,
-          userId: user.id
+          currentTime,
+          gameTime,
+          commitments: commitments || "אין מחויבויות נוספות"
         }
       });
 
       if (error) throw error;
-
-      if (!data?.schedule || !Array.isArray(data.schedule)) {
-        throw new Error("Invalid schedule data received");
-      }
-
-      // Process activities
-      const processedActivities = data.schedule.map((activity: any) => ({
-        schedule_id: activity.schedule_id || undefined,
-        day_of_week: activity.day_of_week,
-        start_time: activity.start_time,
-        end_time: activity.end_time,
-        activity_type: activity.activity_type,
-        title: activity.title || undefined
-      }));
-
-      // Save activities to the database
-      const { error: saveError } = await supabase
-        .from('schedule_activities')
-        .insert(processedActivities);
-
-      if (saveError) throw saveError;
-
-      toast({
-        title: "תוכנית נשמרה בהצלחה",
-        description: "התוכנית שלך נוצרה ונשמרה",
-      });
-
-      // Navigate to weekly planner to view the schedule
-      navigate('/weekly-planner');
+      setSchedule(data.schedule);
+      toast.success("סדר היום נוצר בהצלחה!");
     } catch (error) {
-      console.error('Error generating schedule:', error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן ליצור את התוכנית כרגע",
-        variant: "destructive",
-      });
+      console.error("Error generating schedule:", error);
+      toast.error("שגיאה ביצירת סדר היום");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const copySchedule = () => {
+    if (schedule) {
+      navigator.clipboard.writeText(schedule);
+      toast.success("הטקסט הועתק!");
+    }
+  };
+
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6 text-right">תכנון לפני משחק</h1>
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold text-right text-primary">תכנון 24 שעות לפני משחק</h1>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="matchTime" className="text-right block">שעת המשחק</Label>
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="currentTime" className="text-primary">מה השעה כעת?</Label>
           <Input
-            id="matchTime"
+            id="currentTime"
             type="time"
-            value={matchTime}
-            onChange={(e) => setMatchTime(e.target.value)}
-            required
+            value={currentTime}
+            onChange={(e) => setCurrentTime(e.target.value)}
             className="text-right"
+            dir="ltr"
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="departureTime" className="text-right block">שעת יציאה</Label>
+        <div>
+          <Label htmlFor="gameTime" className="text-primary">מתי שעת המשחק?</Label>
           <Input
-            id="departureTime"
+            id="gameTime"
             type="time"
-            value={departureTime}
-            onChange={(e) => setDepartureTime(e.target.value)}
-            required
+            value={gameTime}
+            onChange={(e) => setGameTime(e.target.value)}
             className="text-right"
+            dir="ltr"
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="commitments" className="text-right block">התחייבויות אחרות (אופציונלי)</Label>
+        <div>
+          <Label htmlFor="commitments" className="text-primary">האם יש בית ספר או מחויבויות נוספות?</Label>
           <Textarea
             id="commitments"
             value={commitments}
             onChange={(e) => setCommitments(e.target.value)}
+            placeholder="פרט את המחויבויות שלך (אופציונלי)"
             className="text-right"
-            placeholder="למשל: מבחן בשעה 10:00, אימון בשעה 16:00"
           />
         </div>
 
         <Button 
-          type="submit" 
+          onClick={generateSchedule} 
           className="w-full"
           disabled={isLoading}
         >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              יוצר תוכנית...
-            </>
-          ) : (
-            'צור תוכנית'
-          )}
+          {isLoading ? "מייצר סדר יום..." : "תן לי סדר יום"}
         </Button>
-      </form>
+
+        {schedule && (
+          <Card className="p-4 mt-4 relative">
+            <pre className="whitespace-pre-wrap text-right text-lg leading-relaxed text-primary" dir="rtl">
+              {schedule}
+            </pre>
+            <Button
+              onClick={copySchedule}
+              variant="secondary"
+              className="mt-4 gap-2"
+            >
+              <Copy className="h-4 w-4" />
+              העתק סדר יום
+            </Button>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };
-
-export default PreGamePlanner;

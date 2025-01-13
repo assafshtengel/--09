@@ -8,78 +8,30 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const coachTypes = {
-  mental: "מאמן מנטאלי",
-  nutrition: "מאמן תזונה",
-  fitness: "מאמן כושר",
-  tactical: "מאמן טקטי",
-  technical: "מאמן טכני",
-  strength: "מאמן כוח"
-};
-
-const getInitialQuestion = (coachType: keyof typeof coachTypes) => {
-  const questions = {
-    mental: "שלום, אני המאמן המנטאלי שלך. איך אני יכול לעזור לך היום?",
-    nutrition: "היי, אני מאמן התזונה שלך. איך אני יכול לעזור לך לשפר את התזונה שלך?",
-    fitness: "שלום, אני מאמן הכושר שלך. במה תרצה להתמקד היום?",
-    tactical: "היי, אני המאמן הטקטי שלך. איך אני יכול לעזור לך להבין טוב יותר את המשחק?",
-    technical: "שלום, אני המאמן הטכני שלך. על איזה אספקט טכני תרצה לעבוד?",
-    strength: "היי, אני מאמן הכוח שלך. איך אני יכול לעזור לך להתחזק?"
-  };
-  return questions[coachType];
-};
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { message, coachType } = await req.json();
+    const { message } = await req.json();
 
     const systemPrompt = `
-    אתה ${coachTypes[coachType]} מקצועי לכדורגל שעוזר לשחקנים צעירים.
+    אתה מאמן מנטאלי מקצועי לכדורגל שעוזר לשחקנים צעירים. 
     התמקד אך ורק בנושאים הבאים:
-    ${coachType === 'mental' ? `
     - טיפים לאימונים
     - שגרה יומית
     - טקטיקה במשחק
     - שיקום והתאוששות
-    - התמודדות עם לחץ
-    - מוטיבציה` : ''}
-    ${coachType === 'nutrition' ? `
-    - תזונה ספורטיבית
-    - תזונה לפני ואחרי אימון
-    - תזונה לפני משחק
-    - תוספי תזונה מותרים
-    - הידרציה` : ''}
-    ${coachType === 'fitness' ? `
-    - אימוני סיבולת
-    - אימוני מהירות
-    - אימוני זריזות
-    - חימום נכון
-    - שיפור יכולת אירובית` : ''}
-    ${coachType === 'tactical' ? `
-    - הבנת המשחק
-    - מיקום במגרש
-    - קריאת משחק
-    - אסטרטגיות משחק
-    - עבודת צוות` : ''}
-    ${coachType === 'technical' ? `
-    - טכניקת כדרור
-    - טכניקת בעיטה
-    - שליטה בכדור
-    - מסירות
-    - תרגילים טכניים` : ''}
-    ${coachType === 'strength' ? `
+    - טכניקה
     - אימוני כוח
-    - חיזוק שרירים
-    - מניעת פציעות
-    - תרגילי התנגדות
-    - יציבה נכונה` : ''}
+    - התמודדות עם לחץ לפני ובמהלך משחקים
+    - תזונה ספורטיבית
+    - שינה ומנוחה
+    - הצבת מטרות
+    - מוטיבציה
 
     אסור בהחלט להתייחס לנושאים הבאים:
-    - פציעות (הפנה לגורם רפואי מוסמך)
     - פוליטיקה
     - כלכלה
     - מוות
@@ -88,7 +40,7 @@ serve(async (req) => {
     - אלכוהול
     - אלימות
     - הימורים
-    - או כל נושא שאינו קשור ישירות לתחום ההתמחות שלך
+    - או כל נושא שאינו קשור ישירות לכדורגל ולהתפתחות השחקן
 
     התשובות שלך תמיד יהיו:
     1. בעברית
@@ -97,25 +49,6 @@ serve(async (req) => {
     4. מקצועיות ומבוססות
     5. קצרות וממוקדות
     `;
-
-    // Check for forbidden topics
-    const forbiddenTopics = [
-      'פציעה', 'פציעות', 'כאב', 'התאבדות', 'מוות',
-      'פוליטיקה', 'כסף', 'גזענות', 'סמים', 'אלכוהול',
-      'הימורים', 'אלימות'
-    ];
-
-    const hasForbiddenTopic = forbiddenTopics.some(topic => 
-      message.toLowerCase().includes(topic.toLowerCase())
-    );
-
-    if (hasForbiddenTopic) {
-      return new Response(JSON.stringify({
-        reply: "מצטער, אני לא יכול לדון בנושא זה. אני מתמקד רק בנושאים הקשורים לספורט ולתחום ההתמחות שלי. אם יש לך שאלות רפואיות, אנא פנה לגורם רפואי מוסמך."
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

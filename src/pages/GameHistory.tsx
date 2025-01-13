@@ -1,113 +1,194 @@
-import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { toast } from "sonner";
+import { Eye, RefreshCw, Target, ChartBar } from "lucide-react";
+import { GameHistoryItem } from "@/components/game/history/types";
+import { GameDetailsDialog } from "@/components/game/history/GameDetailsDialog";
+import { PreMatchGoalsDialog } from "@/components/game/history/PreMatchGoalsDialog";
+import { GameSummaryDialog } from "@/components/game/history/GameSummaryDialog";
 
-interface Game {
-  id: string;
-  date: string;
-  opponent: string;
-  result: string;
-  score: string;
-  type: string;
-}
+const GameHistory = () => {
+  const navigate = useNavigate();
+  const [games, setGames] = useState<GameHistoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedGame, setSelectedGame] = useState<GameHistoryItem | null>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showGoalsDialog, setShowGoalsDialog] = useState(false);
+  const [showSummaryDialog, setShowSummaryDialog] = useState(false);
 
-const GameHistoryPage = () => {
-  const [games] = useState<Game[]>([
-    {
-      id: "1",
-      date: "2024-01-15",
-      opponent: "מכבי חיפה",
-      result: "ניצחון",
-      score: "2-1",
-      type: "ליגה",
-    },
-    {
-      id: "2",
-      date: "2024-01-08",
-      opponent: "הפועל באר שבע",
-      result: "הפסד",
-      score: "0-2",
-      type: "גביע",
-    },
-  ]);
+  useEffect(() => {
+    fetchGames();
+  }, []);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("all");
+  const fetchGames = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
 
-  const filteredGames = games.filter((game) => {
-    const matchesSearch = game.opponent.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === "all" || game.type === filterType;
-    return matchesSearch && matchesType;
-  });
+      const { data, error } = await supabase
+        .from("matches")
+        .select(`
+          id,
+          match_date,
+          opponent,
+          pre_match_report:pre_match_report_id (
+            actions,
+            questions_answers,
+            havaya
+          ),
+          match_actions (*)
+        `)
+        .eq("player_id", user.id)
+        .eq("status", "ended")
+        .order("match_date", { ascending: false });
+
+      if (error) throw error;
+      setGames(data || []);
+    } catch (error) {
+      console.error("Error fetching games:", error);
+      toast.error("שגיאה בטעינת המשחקים");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetGame = async (gameId: string) => {
+    try {
+      const { error: deleteError } = await supabase
+        .from("match_actions")
+        .delete()
+        .eq("match_id", gameId);
+
+      if (deleteError) throw deleteError;
+
+      const { error: updateError } = await supabase
+        .from("matches")
+        .update({ status: "preview" })
+        .eq("id", gameId);
+
+      if (updateError) throw updateError;
+
+      toast.success("המשחק אופס בהצלחה");
+      navigate(`/match/${gameId}`);
+    } catch (error) {
+      console.error("Error resetting game:", error);
+      toast.error("שגיאה באיפוס המשחק");
+    }
+  };
+
+  if (isLoading) {
+    return <div className="text-center p-8">טוען...</div>;
+  }
 
   return (
-    <div className="container mx-auto p-6">
-      <Card className="p-6">
-        <h1 className="text-2xl font-bold mb-6">היסטוריית משחקים</h1>
+    <div className="container mx-auto p-4 space-y-6">
+      <div className="flex items-center justify-between mb-6">
+        <Button variant="outline" onClick={() => navigate("/dashboard")}>
+          חזרה לדשבורד
+        </Button>
+        <h1 className="text-2xl font-bold">היסטוריית משחקים</h1>
+      </div>
 
-        <div className="flex gap-4 mb-6">
-          <div className="flex-1">
-            <Label>חיפוש</Label>
-            <Input
-              placeholder="חפש לפי יריב..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="w-48">
-            <Label>סוג משחק</Label>
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger>
-                <SelectValue placeholder="בחר סוג משחק" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">הכל</SelectItem>
-                <SelectItem value="ליגה">ליגה</SelectItem>
-                <SelectItem value="גביע">גביע</SelectItem>
-                <SelectItem value="ידידות">ידידות</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-end">
-            <Button variant="outline">ייצא לאקסל</Button>
-          </div>
-        </div>
-
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>תאריך</TableHead>
-              <TableHead>יריבה</TableHead>
-              <TableHead>תוצאה</TableHead>
-              <TableHead>תוצאה מספרית</TableHead>
-              <TableHead>סוג משחק</TableHead>
-              <TableHead>פעולות</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredGames.map((game) => (
-              <TableRow key={game.id}>
-                <TableCell>{new Date(game.date).toLocaleDateString("he-IL")}</TableCell>
-                <TableCell>{game.opponent}</TableCell>
-                <TableCell>{game.result}</TableCell>
-                <TableCell>{game.score}</TableCell>
-                <TableCell>{game.type}</TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="sm">
-                    צפה בפרטים
+      <div className="grid gap-4">
+        {games.map((game) => (
+          <Card key={game.id} className="hover:bg-gray-50 transition-colors">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center">
+                <div className="space-y-1 text-right">
+                  <h3 className="font-semibold">
+                    {game.opponent ? `נגד ${game.opponent}` : "משחק"}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(game.match_date).toLocaleDateString("he-IL")}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedGame(game);
+                      setShowDetailsDialog(true);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
                   </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedGame(game);
+                      setShowGoalsDialog(true);
+                    }}
+                  >
+                    <Target className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedGame(game);
+                      setShowSummaryDialog(true);
+                    }}
+                  >
+                    <ChartBar className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleResetGame(game.id)}
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+
+        {games.length === 0 && (
+          <div className="text-center p-8 text-muted-foreground">
+            לא נמצאו משחקים בהיסטוריה
+          </div>
+        )}
+      </div>
+
+      {selectedGame && (
+        <>
+          <GameDetailsDialog
+            isOpen={showDetailsDialog}
+            onClose={() => {
+              setShowDetailsDialog(false);
+              setSelectedGame(null);
+            }}
+            game={selectedGame}
+          />
+          <PreMatchGoalsDialog
+            isOpen={showGoalsDialog}
+            onClose={() => {
+              setShowGoalsDialog(false);
+              setSelectedGame(null);
+            }}
+            preMatchReport={selectedGame.pre_match_report}
+          />
+          <GameSummaryDialog
+            isOpen={showSummaryDialog}
+            onClose={() => {
+              setShowSummaryDialog(false);
+              setSelectedGame(null);
+            }}
+            game={selectedGame}
+          />
+        </>
+      )}
     </div>
   );
 };
 
-export default GameHistoryPage;
+export default GameHistory;

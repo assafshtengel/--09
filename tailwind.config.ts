@@ -22,23 +22,18 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: "#F5F7FA",
-        foreground: "#111827",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#2563EB",
-          hover: "#1D4ED8",
+          DEFAULT: "#1E40AF",
           foreground: "#ffffff",
         },
         secondary: {
-          DEFAULT: "#10B981",
+          DEFAULT: "#059669",
           foreground: "#ffffff",
         },
         accent: {
-          DEFAULT: "#7C3AED",
-          foreground: "#ffffff",
-        },
-        highlight: {
-          DEFAULT: "#F97316",
+          DEFAULT: "#EA580C",
           foreground: "#ffffff",
         },
         destructive: {
@@ -57,16 +52,8 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        activity: {
-          sleep: "#33C3F0",
-          team: "#10B981",
-          personal: "#F97316",
-          game: "#EF4444",
-          free: "#E5E7EB",
-        },
       },
       fontFamily: {
-        inter: ["Inter", "sans-serif"],
         heebo: ["Heebo", "sans-serif"],
       },
       borderRadius: {
@@ -74,20 +61,6 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      keyframes: {
-        "card-hover": {
-          "0%": { transform: "translateY(0)" },
-          "100%": { transform: "translateY(-5px)" }
-        },
-        "fade-in": {
-          "0%": { opacity: "0", transform: "translateY(10px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" }
-        }
-      },
-      animation: {
-        "card-hover": "card-hover 0.2s ease-out forwards",
-        "fade-in": "fade-in 0.3s ease-out"
-      }
     },
   },
   plugins: [require("tailwindcss-animate")],

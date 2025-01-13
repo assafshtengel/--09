@@ -38,7 +38,6 @@ const getActivityStyle = (activity: Activity) => {
 };
 
 const getActivityProps = (activity: Activity) => {
-  console.log("Activity type:", activity.activity_type); // Debug log
   switch (activity.activity_type) {
     case 'school':
       return {
@@ -51,29 +50,14 @@ const getActivityProps = (activity: Activity) => {
         icon: '⚽'
       };
     case 'personal_training':
-    case 'mental_training':
       return {
         colorClass: 'bg-purple-100',
         icon: '🏃'
       };
     case 'sleep':
-    case 'wake_up':
       return {
         colorClass: 'bg-gray-100',
         icon: '😴'
-      };
-    case 'meal':
-    case 'lunch':
-    case 'breakfast':
-    case 'dinner':
-      return {
-        colorClass: 'bg-orange-100',
-        icon: '🍽️'
-      };
-    case 'free_time':
-      return {
-        colorClass: 'bg-yellow-100',
-        icon: '🎮'
       };
     default:
       return {
@@ -116,21 +100,18 @@ export const ScheduleGrid = ({
         (activity) => activity.day_of_week === actualDayIndex
       );
 
-      console.log(`Activities for day ${actualDayIndex}:`, dayActivities); // Debug log
-
       return (
         <div key={day} className="flex-1 min-w-[200px]">
           <div className="h-12 border-b px-2 font-medium text-center">{day}</div>
           <div className="relative">
             {hours.map((hour, hourIndex) => (
-              <div key={`${day}-${hour}`} className="h-16 border-b border-r" />
+              <div key={hour} className="h-16 border-b border-r" />
             ))}
-            {dayActivities.map((activity, index) => {
+            {dayActivities.map((activity) => {
               const { colorClass, icon } = getActivityProps(activity);
-              const activityKey = activity.id || `${activity.day_of_week}-${activity.start_time}-${index}`;
               return (
                 <ActivityBlock
-                  key={activityKey}
+                  key={activity.id}
                   activity={activity}
                   style={getActivityStyle(activity)}
                   colorClass={colorClass}
@@ -150,8 +131,6 @@ export const ScheduleGrid = ({
       (activity) => activity.day_of_week === selectedDay
     );
 
-    console.log(`Mobile activities for day ${selectedDay}:`, dayActivities); // Debug log
-
     return (
       <div className="border rounded-lg overflow-hidden">
         <div className="relative">
@@ -162,14 +141,13 @@ export const ScheduleGrid = ({
             </div>
             <div className="relative">
               {hours.map((hour) => (
-                <div key={`mobile-${hour}`} className="h-16 border-b border-r" />
+                <div key={hour} className="h-16 border-b border-r" />
               ))}
-              {dayActivities.map((activity, index) => {
+              {dayActivities.map((activity) => {
                 const { colorClass, icon } = getActivityProps(activity);
-                const activityKey = activity.id || `${activity.day_of_week}-${activity.start_time}-${index}`;
                 return (
                   <ActivityBlock
-                    key={activityKey}
+                    key={activity.id}
                     activity={activity}
                     style={getActivityStyle(activity)}
                     colorClass={colorClass}

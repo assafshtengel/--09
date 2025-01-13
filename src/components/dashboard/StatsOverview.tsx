@@ -11,12 +11,10 @@ import {
   ResponsiveContainer
 } from "recharts";
 import { motion } from "framer-motion";
-import { useToast } from "@/components/ui/use-toast";
 
 export const StatsOverview = () => {
   const [stats, setStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -37,29 +35,19 @@ export const StatsOverview = () => {
 
         if (error) {
           console.error("Error fetching stats:", error);
-          toast({
-            variant: "destructive",
-            title: "שגיאה בטעינת נתונים",
-            description: "לא ניתן לטעון את הנתונים כרגע, אנא נסה שוב מאוחר יותר"
-          });
           return;
         }
 
         setStats(data);
       } catch (error) {
         console.error("Error in fetchStats:", error);
-        toast({
-          variant: "destructive",
-          title: "שגיאה בטעינת נתונים",
-          description: "אירעה שגיאה בלתי צפויה, אנא נסה שוב מאוחר יותר"
-        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchStats();
-  }, [toast]);
+  }, []);
 
   const chartData = stats ? [
     { name: "דקות משחק", value: stats.minutes_played },
@@ -74,17 +62,6 @@ export const StatsOverview = () => {
       <div className="space-y-6 animate-pulse">
         <div className="h-64 bg-muted rounded-lg"></div>
       </div>
-    );
-  }
-
-  if (!stats) {
-    return (
-      <Card className="p-6 text-center">
-        <CardTitle className="mb-4">אין נתונים זמינים</CardTitle>
-        <p className="text-muted-foreground">
-          לא נמצאו נתונים סטטיסטיים. הנתונים יתעדכנו לאחר המשחק הראשון.
-        </p>
-      </Card>
     );
   }
 

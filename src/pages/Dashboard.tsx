@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Timer, FileText, Calendar, Activity, History, PlayCircle, Eye } from "lucide-react";
+import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye } from "lucide-react";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
@@ -48,148 +48,194 @@ const Dashboard = () => {
     checkAuth();
   }, [navigate]);
 
+  const quickActions = [
+    {
+      title: "יעדי טרום משחק",
+      icon: <Trophy className="h-6 w-6 text-white" />,
+      description: "הגדר יעדים ומטרות למשחק הבא",
+      onClick: () => navigate("/pre-match-report"),
+      gradient: "from-blue-600 to-blue-700"
+    },
+    {
+      title: "תכנון לפני משחק",
+      icon: <Calendar className="h-6 w-6 text-white" />,
+      description: "קבל סדר יום מותאם אישית ל-24 שעות לפני המשחק",
+      onClick: () => navigate("/pre-game-planner"),
+      gradient: "from-purple-600 to-purple-700"
+    },
+    {
+      title: "מעקב משחק",
+      icon: <Timer className="h-6 w-6 text-white" />,
+      description: "עקוב אחר ביצועים במהלך המשחק",
+      onClick: () => navigate("/game-selection"),
+      gradient: "from-emerald-600 to-emerald-700"
+    },
+    {
+      title: "סיכום אימון",
+      icon: <FileText className="h-6 w-6 text-white" />,
+      description: "תעד ונתח את האימון שלך",
+      onClick: () => navigate("/training-summary"),
+      gradient: "from-amber-600 to-amber-700"
+    },
+    {
+      title: "מערכת שעות",
+      icon: <Calendar className="h-6 w-6 text-white" />,
+      description: "נהל את לוח הזמנים השבועי שלך",
+      onClick: () => navigate("/schedule"),
+      gradient: "from-rose-600 to-rose-700"
+    },
+    {
+      title: "היסטוריית משחקים",
+      icon: <History className="h-6 w-6 text-white" />,
+      description: "צפה בכל המשחקים הקודמים שלך",
+      onClick: () => navigate("/game-history"),
+      gradient: "from-indigo-600 to-indigo-700"
+    }
+  ];
+
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-[#F5F7FA]">
-        <div className="animate-pulse text-lg font-inter">טוען...</div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-pulse text-lg">טוען...</div>
       </div>
     );
   }
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
+
   return (
-    <div className="min-h-screen bg-[#F5F7FA] font-inter">
-      {/* Hero Section with Enhanced Gradient Background */}
-      <div className="relative bg-gradient-to-r from-primary via-accent to-secondary py-16 mb-12">
-        <div className="container mx-auto px-4">
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center text-white"
+    <div className="container mx-auto p-4 space-y-8 min-h-screen bg-gradient-to-b from-background to-background/80">
+      {/* Header Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center py-8 border-b"
+      >
+        <h1 className="text-4xl font-bold mb-3">ברוך הבא, {profile?.full_name}</h1>
+        <p className="text-muted-foreground text-lg">בחר באפשרות כדי להתחיל</p>
+      </motion.div>
+
+      {/* Quick Actions Grid */}
+      <motion.div 
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12"
+      >
+        {quickActions.map((action, index) => (
+          <motion.button
+            key={index}
+            variants={item}
+            onClick={action.onClick}
+            className={`p-6 rounded-xl bg-gradient-to-r ${action.gradient} 
+              transform hover:scale-105 transition-all duration-300 
+              shadow-lg hover:shadow-xl text-white min-h-[200px]
+              flex flex-col items-end space-y-4`}
           >
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">ברוך הבא, {profile?.full_name}</h1>
-            <p className="text-xl opacity-90 mb-8">בוא נתחיל לעבוד על השיפור שלך</p>
-            <Button 
-              onClick={() => navigate("/game-selection")}
-              className="bg-white text-primary hover:bg-opacity-90 text-lg px-8 py-3 rounded-xl
-                transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
-            >
-              התחל עכשיו
-            </Button>
+            <div className="bg-white/20 p-3 rounded-full">
+              {action.icon}
+            </div>
+            <h3 className="text-xl font-bold">{action.title}</h3>
+            <p className="text-sm opacity-90 text-right">{action.description}</p>
+          </motion.button>
+        ))}
+      </motion.div>
+
+      {/* Statistics Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="space-y-8"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <div className="h-0.5 flex-grow bg-gradient-to-r from-transparent to-gray-200"></div>
+          <h2 className="text-2xl font-bold px-4">סטטיסטיקות וביצועים</h2>
+          <div className="h-0.5 flex-grow bg-gradient-to-l from-transparent to-gray-200"></div>
+        </div>
+
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+        >
+          <StatsOverview />
+        </motion.div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <PerformanceChart />
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <GoalsProgress />
           </motion.div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="container mx-auto px-4 space-y-12">
-        {/* Mental Coaching Chat */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl shadow-md p-6"
-        >
-          <MentalCoachingChat />
-        </motion.div>
-
-        {/* Section Title */}
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-8">תכנים מרכזיים</h2>
+      {/* Mental Coaching Chat Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+      >
+        <div className="flex justify-between items-center mb-6">
+          <div className="h-0.5 flex-grow bg-gradient-to-r from-transparent to-gray-200"></div>
+          <h2 className="text-2xl font-bold px-4">אימון מנטאלי</h2>
+          <div className="h-0.5 flex-grow bg-gradient-to-l from-transparent to-gray-200"></div>
         </div>
+        <MentalCoachingChat />
+      </motion.div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[
-            {
-              title: "יעדים לפני משחק",
-              icon: <Trophy className="h-5 w-5" />,
-              description: "הגדר יעדים ומטרות למשחק הבא",
-              path: "/pre-game-planner",
-              color: "bg-[#D1FAE5] hover:bg-[#A7F3D0]"
-            },
-            {
-              title: "תכנון לפני משחק",
-              icon: <Calendar className="h-5 w-5" />,
-              description: "קבל סדר יום מותאם אישית",
-              path: "/pre-game-planner",
-              color: "bg-[#DBEAFE] hover:bg-[#BFDBFE]"
-            },
-            {
-              title: "מעקב משחק",
-              icon: <Timer className="h-5 w-5" />,
-              description: "עקוב אחר ביצועים במהלך המשחק",
-              path: "/game-selection",
-              color: "bg-[#FEE2E2] hover:bg-[#FECACA]"
-            },
-            {
-              title: "סיכום אימון",
-              icon: <FileText className="h-5 w-5" />,
-              description: "תעד ונתח את האימון שלך",
-              path: "/training-summary",
-              color: "bg-[#EDE9FE] hover:bg-[#DDD6FE]"
-            },
-            {
-              title: "היסטוריית משחקים",
-              icon: <History className="h-5 w-5" />,
-              description: "צפה בכל המשחקים הקודמים שלך",
-              path: "/game-history",
-              color: "bg-[#D1FAE5] hover:bg-[#A7F3D0]"
-            },
-            {
-              title: "תכנון וניהול לוח זמנים שבועי",
-              icon: <Activity className="h-5 w-5" />,
-              description: "תכנון וניהול לוח זמנים שבועי",
-              path: "/weekly-planner",
-              color: "bg-[#DBEAFE] hover:bg-[#BFDBFE]"
-            },
-          ].map((item, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ y: -5, transition: { duration: 0.2 } }}
-            >
-              <Card
-                onClick={() => navigate(item.path)}
-                className={`cursor-pointer ${item.color} border border-white/20
-                  transform transition-all duration-300
-                  hover:shadow-xl rounded-xl overflow-hidden`}
-              >
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white/10 rounded-full">
-                      {item.icon}
-                    </div>
-                    <CardTitle className="text-lg font-bold text-gray-800">{item.title}</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 text-sm">{item.description}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Statistics Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl shadow-lg p-8 space-y-8"
+      {/* Call to Action Buttons */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+        className="flex flex-wrap justify-center gap-4 pt-8"
+      >
+        <Button 
+          onClick={() => navigate("/game-selection")}
+          className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-full flex items-center gap-2"
         >
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">סטטיסטיקות וביצועים</h2>
-            <div className="h-1 w-24 bg-primary mx-auto rounded-full"></div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-[#F5F7FA] rounded-lg p-6">
-              <PerformanceChart />
-            </div>
-            <div className="bg-[#F5F7FA] rounded-lg p-6">
-              <GoalsProgress />
-            </div>
-          </div>
-        </motion.div>
-      </div>
+          <PlayCircle className="h-5 w-5" />
+          שחק משחק נוסף
+        </Button>
+        <Button 
+          onClick={() => navigate("/game-history")}
+          className="bg-secondary hover:bg-secondary/90 text-white px-6 py-2 rounded-full flex items-center gap-2"
+        >
+          <Eye className="h-5 w-5" />
+          צפה במשחקים קודמים
+        </Button>
+        <Button 
+          onClick={() => navigate("/player")}
+          className="bg-accent hover:bg-accent/90 text-white px-6 py-2 rounded-full flex items-center gap-2"
+        >
+          <Share2 className="h-5 w-5" />
+          שתף את ההישגים שלך
+        </Button>
+      </motion.div>
     </div>
   );
 };

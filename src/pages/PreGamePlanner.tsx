@@ -1,7 +1,7 @@
-import { PreMatchReport } from "@/components/pre-match/PreMatchReport";
+import { PreGamePlanner } from "@/components/pre-match/PreGamePlanner";
 
 const PreGamePlannerPage = () => {
-  return <PreMatchReport />;
+  return <PreGamePlanner />;
 };
 
 export default PreGamePlannerPage;

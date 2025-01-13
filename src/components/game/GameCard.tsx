@@ -14,21 +14,19 @@ interface GameCardProps {
 }
 
 export const GameCard = ({ game, onSelect, onDelete, isDeleting }: GameCardProps) => {
-  const isCompleted = game.status === "completed";
-  
   return (
     <Card 
       key={game.id}
       className={cn(
         "cursor-pointer hover:shadow-lg transition-shadow relative",
-        isCompleted ? "bg-[#ea384c] text-white" : "bg-white"
+        game.status === "completed" ? "bg-[#ea384c] text-white" : "bg-white"
       )}
       onClick={() => onSelect(game)}
     >
       <CardHeader>
         <CardTitle className="text-right flex justify-between items-center">
           <span>{format(new Date(game.match_date), "dd/MM/yyyy", { locale: he })}</span>
-          {isCompleted && (
+          {game.status === "completed" && (
             <span className="text-sm">הושלם</span>
           )}
         </CardTitle>
@@ -40,7 +38,7 @@ export const GameCard = ({ game, onSelect, onDelete, isDeleting }: GameCardProps
             size="icon"
             className={cn(
               "hover:bg-red-500 hover:text-white",
-              isCompleted ? "text-white" : "text-red-500"
+              game.status === "completed" ? "text-white" : "text-red-500"
             )}
             onClick={(e) => onDelete(e, game.id, game.match_id)}
             disabled={isDeleting}

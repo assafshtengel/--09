@@ -1,126 +1,180 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
-import { GameCard } from "./GameCard";
+import { toast } from "sonner";
 import { Game } from "@/types/game";
+import { GameCard } from "./GameCard";
 
 export const GameSelection = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    loadGames();
-  }, []);
+    const fetchGames = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          navigate("/");
+          return;
+        }
 
-  const loadGames = async () => {
+        const { data, error } = await supabase
+          .from("pre_match_reports")
+          .select(`
+            id,
+            match_date,
+            opponent,
+            matches (
+              id,
+              status
+            )
+          `)
+          .eq("player_id", user.id)
+          .eq("status", "completed")
+          .order("match_date", { ascending: false });
+
+        if (error) throw error;
+
+        const formattedGames: Game[] = (data || []).map(game => ({
+          id: game.id,
+          match_date: game.match_date,
+          opponent: game.opponent,
+          match_id: game.matches?.[0]?.id,
+          status: game.matches?.[0]?.status === "ended" ? "completed" : "preview"
+        }));
+
+        setGames(formattedGames);
+      } catch (error) {
+        console.error("Error fetching games:", error);
+        toast.error("שגיאה בטעינת המשחקים");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGames();
+  }, [navigate]);
+
+  const handleGameSelect = async (game: Game) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No authenticated user");
 
-      // First get all pre-match reports
-      const { data: reports, error: reportsError } = await supabase
-        .from('pre_match_reports')
-        .select('*')
-        .eq('player_id', user.id)
-        .order('match_date', { ascending: false });
+      if (game.status === "completed" && game.match_id) {
+        navigate(`/match/${game.match_id}`);
+        return;
+      }
 
-      if (reportsError) throw reportsError;
+      const { data: newMatch, error: createError } = await supabase
+        .from("matches")
+        .insert({
+          match_date: game.match_date,
+          opponent: game.opponent,
+          pre_match_report_id: game.id,
+          player_id: user.id,
+          status: "preview"
+        })
+        .select()
+        .single();
 
-      // Then get matches that have these reports
-      const { data: matches, error: matchesError } = await supabase
-        .from('matches')
-        .select('*')
-        .eq('player_id', user.id)
-        .in('pre_match_report_id', reports?.map(r => r.id) || [])
-        .order('match_date', { ascending: false });
-
-      if (matchesError) throw matchesError;
-
-      setGames(matches || []);
-    } catch (error) {
-      console.error("Error loading games:", error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לטעון את רשימת המשחקים",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGameSelect = async (game: Game) => {
-    try {
-      navigate(`/game/${game.id}`);
+      if (createError) throw createError;
+      if (newMatch) {
+        navigate(`/match/${newMatch.id}`);
+      }
     } catch (error) {
       console.error("Error handling game selection:", error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לבחור משחק",
-        variant: "destructive",
-      });
+      toast.error("שגיאה בבחירת המשחק");
     }
   };
 
   const handleDeleteGame = async (e: React.MouseEvent, gameId: string, matchId?: string) => {
     e.stopPropagation();
-    setIsDeleting(true);
+    
+    if (isDeleting) return;
     
     try {
-      const { error: deleteError } = await supabase
-        .from('matches')
-        .delete()
-        .eq('id', gameId);
+      setIsDeleting(true);
+      
+      // First, delete all related match_actions if there's a match
+      if (matchId) {
+        const { error: actionsError } = await supabase
+          .from("match_actions")
+          .delete()
+          .eq("match_id", matchId);
 
-      if (deleteError) throw deleteError;
+        if (actionsError) {
+          console.error("Error deleting match actions:", actionsError);
+        }
+
+        // Delete match notes
+        const { error: notesError } = await supabase
+          .from("match_notes")
+          .delete()
+          .eq("match_id", matchId);
+
+        if (notesError) {
+          console.error("Error deleting match notes:", notesError);
+        }
+
+        // Delete match substitutions
+        const { error: subsError } = await supabase
+          .from("match_substitutions")
+          .delete()
+          .eq("match_id", matchId);
+
+        if (subsError) {
+          console.error("Error deleting substitutions:", subsError);
+        }
+
+        // Delete the match itself
+        const { error: matchError } = await supabase
+          .from("matches")
+          .delete()
+          .eq("id", matchId);
+
+        if (matchError) {
+          console.error("Error deleting match:", matchError);
+          throw matchError;
+        }
+      }
+
+      // Finally, delete the pre-match report
+      const { error: reportError } = await supabase
+        .from("pre_match_reports")
+        .delete()
+        .eq("id", gameId);
+
+      if (reportError) {
+        console.error("Error deleting pre-match report:", reportError);
+        throw reportError;
+      }
 
       setGames(prevGames => prevGames.filter(game => game.id !== gameId));
-      
-      toast({
-        title: "נמחק בהצלחה",
-        description: "המשחק נמחק בהצלחה",
-      });
+      toast.success("המשחק נמחק בהצלחה");
     } catch (error) {
       console.error("Error deleting game:", error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן למחוק את המשחק",
-        variant: "destructive",
-      });
+      toast.error("שגיאה במחיקת המשחק");
     } finally {
       setIsDeleting(false);
     }
   };
 
   const handleNewGame = () => {
-    navigate("/pre-game-planner");
+    navigate("/pre-match-report");
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <div className="text-center p-8">טוען...</div>;
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">בחירת משחק</h1>
-        <Button onClick={handleNewGame}>
-          משחק חדש
-        </Button>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="container mx-auto p-4 max-w-2xl">
+      <h1 className="text-2xl font-bold mb-6 text-right">בחר משחק למעקב</h1>
+      
+      <div className="space-y-4">
         {games.map((game) => (
           <GameCard
             key={game.id}
@@ -130,11 +184,19 @@ export const GameSelection = () => {
             isDeleting={isDeleting}
           />
         ))}
+
         {games.length === 0 && (
-          <div className="col-span-full text-center py-8 text-gray-500">
-            לא נמצאו משחקים עם יעדים מוגדרים
+          <div className="text-center p-8 text-gray-500">
+            לא נמצאו משחקים. צור משחק חדש כדי להתחיל.
           </div>
         )}
+
+        <Button 
+          className="w-full mt-4"
+          onClick={handleNewGame}
+        >
+          צור משחק חדש
+        </Button>
       </div>
     </div>
   );

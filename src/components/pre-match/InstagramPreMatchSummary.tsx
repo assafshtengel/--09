@@ -34,6 +34,8 @@ export const InstagramPreMatchSummary = ({
 }: InstagramPreMatchSummaryProps) => {
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState<string | null>(null);
+  const [caption, setCaption] = useState<string>("");
+  const [showCaptionPopup, setShowCaptionPopup] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -52,8 +54,29 @@ export const InstagramPreMatchSummary = ({
       }
     };
 
+    const generateCaption = async () => {
+      if (!matchId) return;
+
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-pre-match-instagram-caption', {
+          body: { matchId },
+        });
+
+        if (error) throw error;
+        setCaption(data.caption);
+      } catch (error) {
+        console.error('Error generating caption:', error);
+        toast({
+          title: "שגיאה",
+          description: "לא ניתן ליצור כיתוב לאינסטגרם",
+          variant: "destructive",
+        });
+      }
+    };
+
     fetchPlayerProfile();
-  }, []);
+    generateCaption();
+  }, [matchId]);
 
   const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -138,6 +161,22 @@ export const InstagramPreMatchSummary = ({
     }
   };
 
+  const handleCopyCaption = async () => {
+    try {
+      await navigator.clipboard.writeText(caption);
+      toast({
+        title: "הטקסט הועתק",
+        description: "כעת תוכל להדביק את הטקסט באינסטגרם",
+      });
+    } catch (error) {
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן להעתיק את הטקסט",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-md mx-auto p-0 overflow-hidden">
@@ -197,6 +236,22 @@ export const InstagramPreMatchSummary = ({
                 <Upload className="h-5 w-5 text-gray-400" />
               </div>
             </div>
+
+            {caption && (
+              <div className="space-y-2">
+                <Button
+                  onClick={handleCopyCaption}
+                  variant="outline"
+                  className="w-full flex items-center gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  העתק טקסט לאינסטגרם
+                </Button>
+                <div className="bg-gray-50 p-4 rounded-lg text-sm whitespace-pre-line text-right">
+                  {caption}
+                </div>
+              </div>
+            )}
             
             <Button
               onClick={handleShare}
