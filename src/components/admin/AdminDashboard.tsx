@@ -77,7 +77,9 @@ export const AdminDashboard = () => {
 
   const handleSendEmail = async (email: string) => {
     try {
-      const { error } = await supabase.functions.invoke('send-email', {
+      console.log('Attempting to send email to:', email);
+      
+      const { data, error } = await supabase.functions.invoke('send-email', {
         body: { 
           to: [email],
           subject: "הודעה מהמערכת",
@@ -85,11 +87,17 @@ export const AdminDashboard = () => {
         }
       });
 
-      if (error) throw error;
+      console.log('Email send response:', { data, error });
+
+      if (error) {
+        console.error('Detailed email error:', error);
+        throw error;
+      }
+
       toast.success("המייל נשלח בהצלחה");
     } catch (error) {
       console.error('Error sending email:', error);
-      toast.error("שגיאה בשליחת המייל");
+      toast.error("שגיאה בשליחת המייל: " + (error.message || 'Unknown error'));
     }
   };
 
