@@ -53,14 +53,20 @@ export const PreGamePlanner = () => {
     }
   };
 
+  const cleanTimeString = (timeStr: string): string => {
+    // Remove markdown formatting and trim whitespace
+    return timeStr.replace(/\*/g, '').trim();
+  };
+
   const isValidTimeFormat = (time: string): boolean => {
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    return timeRegex.test(time);
+    return timeRegex.test(cleanTimeString(time));
   };
 
   const createDateFromTimeString = (baseDate: Date, timeStr: string): Date | null => {
     try {
-      const [hours, minutes] = timeStr.split(":").map(Number);
+      const cleanTime = cleanTimeString(timeStr);
+      const [hours, minutes] = cleanTime.split(":").map(Number);
       if (isNaN(hours) || isNaN(minutes)) return null;
       
       const newDate = new Date(baseDate);
@@ -68,6 +74,22 @@ export const PreGamePlanner = () => {
       return newDate;
     } catch (error) {
       console.error("Error creating date from time string:", error);
+      return null;
+    }
+  };
+
+  const parseScheduleItem = (line: string): { time: string; activity: string } | null => {
+    try {
+      // Match time pattern at the start of the line (with or without markdown)
+      const timeMatch = line.match(/^\**(\d{1,2}:\d{2})\**\s*-\s*/);
+      if (!timeMatch) return null;
+
+      const time = timeMatch[1]; // Get the actual time part
+      const activity = line.substring(timeMatch[0].length).trim();
+
+      return { time, activity };
+    } catch (error) {
+      console.error("Error parsing schedule item:", error);
       return null;
     }
   };
@@ -110,11 +132,11 @@ export const PreGamePlanner = () => {
 
       const items = data.schedule
         .split("\n")
-        .filter((line: string) => line.includes(" - "))
         .map((line: string) => {
-          const [timeStr, ...activityParts] = line.split(" - ");
-          const time = timeStr.trim();
-          const activity = activityParts.join(" - ").trim();
+          const parsedItem = parseScheduleItem(line);
+          if (!parsedItem) return null;
+
+          const { time, activity } = parsedItem;
           
           if (!isValidTimeFormat(time)) {
             console.warn(`Invalid time format: ${time}`);
@@ -137,7 +159,7 @@ export const PreGamePlanner = () => {
             activity
           };
         })
-        .filter((item): item is ScheduleItem => item !== null && Boolean(item.time) && Boolean(item.activity));
+        .filter((item): item is ScheduleItem => item !== null);
       
       setScheduleItems(items);
       toast.success("סדר היום נוצר בהצלחה!");
