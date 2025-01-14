@@ -11,18 +11,29 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Mail, MessageSquare, Search, Loader2, AlertCircle } from "lucide-react";
+import { Mail, MessageSquare, Search, Loader2, AlertCircle, Download, Filter, List } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const AdminDashboard = () => {
   const [showUsersDialog, setShowUsersDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showActionsDialog, setShowActionsDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [showGamesDialog, setShowGamesDialog] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<any>(null);
 
   // Query to check data integrity between tables
   const { data: dataIntegrityCheck, isLoading: isCheckingIntegrity } = useQuery({
@@ -72,6 +83,44 @@ export const AdminDashboard = () => {
         orphanedNotes,
         hasIssues: orphanedReports.length > 0 || orphanedActions.length > 0 || orphanedNotes.length > 0
       };
+    }
+  });
+
+  // Query to fetch all games with player names and related data
+  const { data: games, isLoading: isLoadingGames } = useQuery({
+    queryKey: ['adminGames'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('matches_with_players')
+        .select(`
+          *,
+          pre_match_report:pre_match_report_id (
+            id,
+            actions,
+            questions_answers,
+            havaya
+          ),
+          match_actions (
+            id,
+            action_id,
+            minute,
+            result,
+            note
+          ),
+          match_notes (
+            id,
+            minute,
+            note
+          )
+        `)
+        .order('match_date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching games:', error);
+        throw error;
+      }
+
+      return data || [];
     }
   });
 
@@ -221,18 +270,38 @@ export const AdminDashboard = () => {
     }
   };
 
-  const filteredUsers = users?.filter(user => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      user.full_name?.toLowerCase().includes(searchLower) ||
-      user.email?.toLowerCase().includes(searchLower) ||
-      user.phone_number?.includes(searchQuery)
-    );
+  const filteredGames = games?.filter(game => {
+    const matchesSearch = 
+      game.player_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      game.opponent?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (statusFilter === "all") return matchesSearch;
+    if (statusFilter === "missing_report" && !game.pre_match_report) return matchesSearch;
+    return game.status === statusFilter && matchesSearch;
   });
 
-  const formatGameDate = (date: string, time?: string) => {
-    const formattedDate = format(new Date(date), 'dd/MM/yyyy');
-    return time ? `${formattedDate} ${time}` : formattedDate;
+  const handleExportGames = () => {
+    if (!games) return;
+
+    const csvContent = games.map(game => ({
+      'Player Name': game.player_name,
+      'Opponent': game.opponent,
+      'Date': format(new Date(game.match_date), 'dd/MM/yyyy'),
+      'Status': game.status,
+      'Final Score': game.final_score || 'N/A',
+      'Minutes Played': game.played_minutes || 'N/A'
+    }));
+
+    const csvString = [
+      Object.keys(csvContent[0]).join(','),
+      ...csvContent.map(row => Object.values(row).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `games_export_${format(new Date(), 'dd_MM_yyyy')}.csv`;
+    link.click();
   };
 
   return (
@@ -257,35 +326,343 @@ export const AdminDashboard = () => {
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="cursor-pointer" onClick={() => setShowUsersDialog(true)}>
-          <CardHeader>
-            <CardTitle>סטטיסטיקות כלליות</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>מספר שחקנים רשומים: {playersCount || 0}</p>
-            <p>מספר משחקים במערכת: {dataIntegrityCheck?.matches.length || 0}</p>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">סקירה כללית</TabsTrigger>
+          <TabsTrigger value="users">משתמשים</TabsTrigger>
+          <TabsTrigger value="games">רשימת משחקים</TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>פעולות אחרונות</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {recentActions?.map((action) => (
-                <div key={action.id} className="text-sm">
-                  <p>{action.action} - {action.entity_type}</p>
-                  <p className="text-gray-500 text-xs">
-                    {new Date(action.created_at).toLocaleString()}
-                  </p>
+        <TabsContent value="overview">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="cursor-pointer" onClick={() => setShowUsersDialog(true)}>
+              <CardHeader>
+                <CardTitle>סטטיסטיקות כלליות</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>מספר שחקנים רשומים: {playersCount || 0}</p>
+                <p>מספר משחקים במערכת: {dataIntegrityCheck?.matches.length || 0}</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>פעולות אחרונות</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {recentActions?.map((action) => (
+                    <div key={action.id} className="text-sm">
+                      <p>{action.action} - {action.entity_type}</p>
+                      <p className="text-gray-500 text-xs">
+                        {new Date(action.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="users">
+          <Dialog open={showUsersDialog} onOpenChange={setShowUsersDialog}>
+            <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>רשימת משתמשים</DialogTitle>
+                <DialogDescription>
+                  חיפוש וניהול משתמשים במערכת
+                </DialogDescription>
+              </DialogHeader>
+              <div className="mb-4">
+                <div className="relative">
+                  <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="חיפוש לפי שם, מייל או טלפון..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pr-10"
+                  />
+                </div>
+              </div>
+              <div className="space-y-4">
+                {filteredUsers?.map((user) => (
+                  <Card 
+                    key={user.id} 
+                    className="cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => {
+                      setSelectedUser(user);
+                      setShowActionsDialog(true);
+                    }}
+                  >
+                    <CardContent className="pt-4">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="font-semibold">שם מלא:</p>
+                          <p>{user.full_name || 'לא צוין'}</p>
+                        </div>
+                        <div>
+                          <p className="font-semibold">אימייל:</p>
+                          <p>{user.email}</p>
+                        </div>
+                        <div>
+                          <p className="font-semibold">מועדון:</p>
+                          <p>{user.club || 'לא צוין'}</p>
+                        </div>
+                        <div>
+                          <p className="font-semibold">טלפון:</p>
+                          <p>{user.phone_number || 'לא צוין'}</p>
+                        </div>
+                        <div>
+                          <p className="font-semibold">תפקיד:</p>
+                          <p>{user.role || 'לא צוין'}</p>
+                        </div>
+                        <div>
+                          <p className="font-semibold">קטגוריית גיל:</p>
+                          <p>{user.age_category || 'לא צוין'}</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2 mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendEmail(user.email);
+                          }}
+                        >
+                          <Mail className="h-4 w-4 ml-2" />
+                          שלח מייל
+                        </Button>
+                        {user.phone_number && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSendWhatsApp(user.phone_number);
+                            }}
+                          >
+                            <MessageSquare className="h-4 w-4 ml-2" />
+                            שלח הודעת וואטסאפ
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </TabsContent>
+
+        <TabsContent value="games">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle>רשימת משחקים</CardTitle>
+              <Button variant="outline" onClick={handleExportGames}>
+                <Download className="h-4 w-4 ml-2" />
+                ייצוא לקובץ CSV
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-4 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="חיפוש לפי שם שחקן או יריבה..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pr-10"
+                  />
+                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="סינון לפי סטטוס" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">הכל</SelectItem>
+                    <SelectItem value="preview">טרום משחק</SelectItem>
+                    <SelectItem value="playing">במהלך משחק</SelectItem>
+                    <SelectItem value="ended">הסתיים</SelectItem>
+                    <SelectItem value="missing_report">ללא דוח טרום משחק</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <ScrollArea className="h-[600px]">
+                <div className="space-y-4">
+                  {isLoadingGames ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                      <span className="mr-2">טוען משחקים...</span>
+                    </div>
+                  ) : filteredGames?.length ? (
+                    filteredGames.map((game) => (
+                      <Card 
+                        key={game.id}
+                        className={`cursor-pointer hover:bg-gray-50 transition-colors ${
+                          !game.pre_match_report ? 'border-yellow-400' : ''
+                        }`}
+                        onClick={() => {
+                          setSelectedGame(game);
+                          setShowGamesDialog(true);
+                        }}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-semibold">{game.player_name}</h3>
+                              <p className="text-sm text-gray-600">נגד {game.opponent || 'לא צוין'}</p>
+                            </div>
+                            <div className="text-left">
+                              <p className="text-sm">{format(new Date(game.match_date), 'dd/MM/yyyy')}</p>
+                              <div className="flex gap-2 mt-1">
+                                <Badge variant={game.status === 'ended' ? 'default' : 'secondary'}>
+                                  {game.status === 'preview' ? 'טרום משחק' :
+                                   game.status === 'playing' ? 'במהלך משחק' : 'הסתיים'}
+                                </Badge>
+                                {!game.pre_match_report && (
+                                  <Badge variant="outline" className="border-yellow-400 text-yellow-600">
+                                    חסר דוח טרום משחק
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          {game.status === 'ended' && (
+                            <div className="mt-2 flex justify-between text-sm">
+                              <span>תוצאה סופית: {game.final_score || 'לא צוין'}</span>
+                              <span>דקות משחק: {game.played_minutes || 'לא צוין'}</span>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      לא נמצאו משחקים
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Game Details Dialog */}
+      <Dialog open={showGamesDialog} onOpenChange={setShowGamesDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>פרטי משחק</DialogTitle>
+            <DialogDescription>
+              {selectedGame?.player_name} נגד {selectedGame?.opponent}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedGame && (
+              <>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-2">מידע כללי</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-sm font-medium">תאריך:</p>
+                      <p className="text-sm">{format(new Date(selectedGame.match_date), 'dd/MM/yyyy')}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">סטטוס:</p>
+                      <p className="text-sm">
+                        {selectedGame.status === 'preview' ? 'טרום משחק' :
+                         selectedGame.status === 'playing' ? 'במהלך משחק' : 'הסתיים'}
+                      </p>
+                    </div>
+                    {selectedGame.status === 'ended' && (
+                      <>
+                        <div>
+                          <p className="text-sm font-medium">תוצאה סופית:</p>
+                          <p className="text-sm">{selectedGame.final_score || 'לא צוין'}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">דקות משחק:</p>
+                          <p className="text-sm">{selectedGame.played_minutes || 'לא צוין'}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {selectedGame.pre_match_report && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold mb-2">דוח טרום משחק</h3>
+                    {selectedGame.pre_match_report.havaya && (
+                      <div className="mb-2">
+                        <p className="text-sm font-medium">הוויות:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedGame.pre_match_report.havaya.split(',').map((havaya: string, index: number) => (
+                            <Badge key={index} variant="outline">
+                              {havaya.trim()}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {selectedGame.pre_match_report.actions && (
+                      <div>
+                        <p className="text-sm font-medium">יעדים:</p>
+                        <div className="space-y-1">
+                          {Array.isArray(selectedGame.pre_match_report.actions) &&
+                            selectedGame.pre_match_report.actions.map((action: any, index: number) => (
+                              <p key={index} className="text-sm">
+                                {action.name}: {action.goal || 'לא הוגדר יעד'}
+                              </p>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {selectedGame.match_actions?.length > 0 && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold mb-2">פעולות במשחק</h3>
+                    <div className="space-y-2">
+                      {selectedGame.match_actions.map((action: any) => (
+                        <div key={action.id} className="border-b border-gray-200 pb-2">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">דקה {action.minute}</span>
+                            <Badge variant={action.result === 'success' ? 'default' : 'destructive'}>
+                              {action.result === 'success' ? 'הצלחה' : 'כישלון'}
+                            </Badge>
+                          </div>
+                          <p className="text-sm mt-1">{action.action_id}</p>
+                          {action.note && (
+                            <p className="text-sm text-gray-600 mt-1">{action.note}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedGame.match_notes?.length > 0 && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold mb-2">הערות משחק</h3>
+                    <div className="space-y-2">
+                      {selectedGame.match_notes.map((note: any) => (
+                        <div key={note.id} className="text-sm">
+                          <span className="font-medium">דקה {note.minute}: </span>
+                          <span>{note.note}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showActionsDialog} onOpenChange={setShowActionsDialog}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">

@@ -190,6 +190,13 @@ export type Database = {
             referencedRelation: "matches"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "match_actions_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches_with_players"
+            referencedColumns: ["id"]
+          },
         ]
       }
       match_halftime_notes: {
@@ -217,6 +224,13 @@ export type Database = {
             columns: ["match_id"]
             isOneToOne: false
             referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_halftime_notes_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches_with_players"
             referencedColumns: ["id"]
           },
         ]
@@ -257,6 +271,13 @@ export type Database = {
             referencedRelation: "matches"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "match_mental_feedback_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches_with_players"
+            referencedColumns: ["id"]
+          },
         ]
       }
       match_notes: {
@@ -284,6 +305,13 @@ export type Database = {
             columns: ["match_id"]
             isOneToOne: false
             referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_notes_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches_with_players"
             referencedColumns: ["id"]
           },
         ]
@@ -318,6 +346,13 @@ export type Database = {
             referencedRelation: "matches"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "match_substitutions_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches_with_players"
+            referencedColumns: ["id"]
+          },
         ]
       }
       matches: {
@@ -330,6 +365,7 @@ export type Database = {
           match_type: string | null
           observer_token: string | null
           opponent: string | null
+          played_minutes: number | null
           player_id: string
           player_position: string | null
           player_role: string | null
@@ -347,6 +383,7 @@ export type Database = {
           match_type?: string | null
           observer_token?: string | null
           opponent?: string | null
+          played_minutes?: number | null
           player_id: string
           player_position?: string | null
           player_role?: string | null
@@ -364,6 +401,7 @@ export type Database = {
           match_type?: string | null
           observer_token?: string | null
           opponent?: string | null
+          played_minutes?: number | null
           player_id?: string
           player_position?: string | null
           player_role?: string | null
@@ -675,6 +713,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "post_game_feedback_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: true
+            referencedRelation: "matches_with_players"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "post_game_feedback_player_id_fkey"
             columns: ["player_id"]
             isOneToOne: false
@@ -718,6 +763,13 @@ export type Database = {
             columns: ["match_id"]
             isOneToOne: false
             referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pre_match_attribute_selections_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches_with_players"
             referencedColumns: ["id"]
           },
           {
@@ -1179,7 +1231,43 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      matches_with_players: {
+        Row: {
+          created_at: string | null
+          final_score: string | null
+          id: string | null
+          location: string | null
+          match_date: string | null
+          match_type: string | null
+          observer_token: string | null
+          opponent: string | null
+          played_minutes: number | null
+          player_id: string | null
+          player_name: string | null
+          player_position: string | null
+          player_role: string | null
+          pre_match_report_id: string | null
+          status: string | null
+          team: string | null
+          team_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_pre_match_report_id_fkey"
+            columns: ["pre_match_report_id"]
+            isOneToOne: false
+            referencedRelation: "pre_match_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never
