@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Mail, MessageSquare, Search, Loader2, AlertCircle, Download, Filter, List } from "lucide-react";
+import { Mail, MessageSquare, Search, Loader2, AlertCircle, Download, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -87,7 +87,7 @@ export const AdminDashboard = () => {
   });
 
   // Query to fetch all games with player names and related data
-  const { data: games, isLoading: isLoadingGames } = useQuery({
+  const { data: games, isLoading: isLoadingAllGames } = useQuery({
     queryKey: ['adminGames'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -164,7 +164,7 @@ export const AdminDashboard = () => {
     }
   });
 
-  const { data: userGames, isLoading: isLoadingGames } = useQuery({
+  const { data: userGames, isLoading: isLoadingUserGames } = useQuery({
     queryKey: ['userGames', selectedUser?.id],
     enabled: !!selectedUser,
     queryFn: async () => {
@@ -269,6 +269,20 @@ export const AdminDashboard = () => {
       toast.error("שגיאה בשליחת ההודעה: " + (error.message || 'Unknown error'));
     }
   };
+
+  const formatGameDate = (date: string, time?: string) => {
+    const formattedDate = format(new Date(date), 'dd/MM/yyyy');
+    return time ? `${formattedDate} ${time}` : formattedDate;
+  };
+
+  const filteredUsers = users?.filter(user => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      user.full_name?.toLowerCase().includes(searchLower) ||
+      user.email?.toLowerCase().includes(searchLower) ||
+      user.phone_number?.includes(searchQuery)
+    );
+  });
 
   const filteredGames = games?.filter(game => {
     const matchesSearch = 
@@ -492,7 +506,7 @@ export const AdminDashboard = () => {
 
               <ScrollArea className="h-[600px]">
                 <div className="space-y-4">
-                  {isLoadingGames ? (
+                  {isLoadingAllGames ? (
                     <div className="flex items-center justify-center py-8">
                       <Loader2 className="h-8 w-8 animate-spin" />
                       <span className="mr-2">טוען משחקים...</span>
@@ -674,7 +688,7 @@ export const AdminDashboard = () => {
           </DialogHeader>
           <ScrollArea className="h-[600px] w-full pr-4">
             <div className="space-y-4">
-              {isLoadingGames ? (
+              {isLoadingUserGames ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin" />
                   <span className="mr-2">טוען משחקים...</span>
