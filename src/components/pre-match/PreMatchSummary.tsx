@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
-import { Mail, Printer, Instagram } from "lucide-react";
+import { Mail, Printer, Instagram, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import html2canvas from "html2canvas";
@@ -46,7 +46,6 @@ export const PreMatchSummary = ({
       const canvas = await html2canvas(element);
       const imageData = canvas.toDataURL('image/png');
 
-      // Get user profile to get coach's email if sending to coach
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not found');
 
@@ -132,6 +131,10 @@ export const PreMatchSummary = ({
 
   const shareToInstagram = () => {
     setShowInstagramSummary(true);
+  };
+
+  const openChatGPT = () => {
+    window.open('https://chatgpt.com/g/g-6780940ac570819189306621c59a067f-tsvr-tqst-lynstgrm', '_blank');
   };
 
   const handleFinish = async () => {
@@ -229,12 +232,12 @@ export const PreMatchSummary = ({
           הדפס
         </Button>
         <Button 
-          onClick={() => setShowCaptionPopup(true)} 
+          onClick={openChatGPT} 
           variant="outline"
           className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100"
         >
-          <Instagram className="h-4 w-4" />
-          צור טקסט לאינסטגרם
+          <ExternalLink className="h-4 w-4" />
+          ההכנה שלי למשחק
         </Button>
         <Button onClick={shareToInstagram} variant="outline" className="flex items-center gap-2">
           <Instagram className="h-4 w-4" />
