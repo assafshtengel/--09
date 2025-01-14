@@ -133,8 +133,30 @@ export const PreMatchSummary = ({
     setShowInstagramSummary(true);
   };
 
-  const openChatGPT = () => {
-    window.open('https://chatgpt.com/g/g-6780940ac570819189306621c59a067f-tsvr-tqst-lynstgrm', '_blank');
+  const openChatGPT = async () => {
+    try {
+      // First save the report
+      await onFinish();
+      
+      // Show success toast
+      toast({
+        title: "הדוח נשמר בהצלחה",
+        description: "מועבר לדף ההכנה למשחק",
+      });
+
+      // Open ChatGPT in a new tab
+      window.open('https://chatgpt.com/g/g-6780940ac570819189306621c59a067f-tsvr-tqst-lynstgrm', '_blank');
+      
+      // Navigate to pre-game-planner
+      navigate('/pre-game-planner');
+    } catch (error) {
+      console.error('Error saving report:', error);
+      toast({
+        title: "שגיאה בשמירת הדוח",
+        description: "אנא נסה שנית",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleFinish = async () => {
