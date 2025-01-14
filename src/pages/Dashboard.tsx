@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, Heart, Smile, MessageCircle, Shield } from "lucide-react";
+import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, Target, Settings, Moon, MessageCircle, Shield } from "lucide-react";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
@@ -18,24 +18,29 @@ const chatOptions = [
     icon: <Brain className="h-4 w-4" />,
   },
   {
-    type: "physical",
-    title: "פיזי",
-    icon: <Dumbbell className="h-4 w-4" />,
-  },
-  {
     type: "nutrition",
     title: "תזונה",
     icon: <Apple className="h-4 w-4" />,
   },
   {
-    type: "health",
-    title: "בריאות",
-    icon: <Heart className="h-4 w-4" />,
+    type: "physical",
+    title: "פיזי",
+    icon: <Dumbbell className="h-4 w-4" />,
   },
   {
-    type: "wellbeing",
-    title: "רווחה",
-    icon: <Smile className="h-4 w-4" />,
+    type: "technical",
+    title: "טכני",
+    icon: <Settings className="h-4 w-4" />,
+  },
+  {
+    type: "tactical",
+    title: "טקטי",
+    icon: <Target className="h-4 w-4" />,
+  },
+  {
+    type: "sleep",
+    title: "שינה",
+    icon: <Moon className="h-4 w-4" />,
   },
 ];
 
@@ -203,6 +208,7 @@ const Dashboard = () => {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
       >
         {quickActions.map((action, index) => (
