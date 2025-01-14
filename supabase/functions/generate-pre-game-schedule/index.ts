@@ -6,6 +6,38 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const getMealPlan = (gameHour: number) => {
+  // Convert game hour to number for comparison
+  const gameTime = parseInt(gameHour.toString());
+  
+  if (gameTime >= 17) {
+    return `
+    07:00 - ארוחת בוקר: דייסת קוואקר עם חלב/משקה שקדים + פירות חתוכים, או חביתה עם ירקות ולחם מלא
+    10:00 - חטיף בוקר: פרי (בננה/תפוח) + חופן אגוזים/שקדים
+    13:00 - ארוחת צהריים: פסטה עם רוטב עגבניות ונתחי עוף/הודו/טונה, לצד ירקות
+    15:30 - חטיף לפני המשחק: בננה או תמרים, או חטיף אנרגיה
+    ${gameTime}:00 - משחק
+    ${gameTime + 2}:00 - ארוחת התאוששות: שייק חלבון עם פירות או ארוחה עשירה בחלבון ופחמימות
+    `;
+  } else if (gameTime >= 13 && gameTime < 17) {
+    return `
+    07:00 - ארוחת בוקר: דייסת קוואקר עם חלב/משקה סויה/שקדים, תוספת פירות ואגוזים
+    10:00 - ארוחה עיקרית: פסטה עם רוטב עגבניות קל + עוף/טונה
+    ${gameTime - 1}:30 - חטיף קל: פרי (בננה/תמרים) או חטיף אנרגיה
+    ${gameTime}:00 - משחק
+    ${gameTime + 2}:00 - ארוחת התאוששות: כריך מלחם מלא עם חזה עוף/גבינה לבנה/טונה + ירקות
+    `;
+  } else {
+    return `
+    ${gameTime - 4}:00 - ארוחת בוקר מוקדמת: דייסת קוואקר עם חלב/משקה סויה/שקדים + פרי
+    ${gameTime - 2}:00 - חטיף קל: פרי (בננה/תפוח/תמרים) + חופן אגוזים/שקדים
+    ${gameTime}:00 - משחק
+    ${gameTime + 2}:00 - ארוחת התאוששות: שייק חלבון או כריך מלא עם חלבון
+    ${gameTime + 4}:00 - ארוחת צהריים מלאה: אורז/פסטה + חזה עוף/דג, סלט ירקות
+    `;
+  }
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -16,15 +48,22 @@ serve(async (req) => {
 
     console.log('Received request with params:', { currentDate, currentTime, gameDate, gameTime, commitments, timeRemaining })
 
+    // Extract game hour for meal planning
+    const gameHour = parseInt(gameTime.split(':')[0]);
+    const mealPlan = getMealPlan(gameHour);
+
     const prompt = `
     אני שחקן כדורגל וצריך סדר יום מפורט מהתאריך ${currentDate} בשעה ${currentTime} ועד למשחק שמתחיל בתאריך ${gameDate} בשעה ${gameTime}.
     הזמן שנותר עד למשחק: ${timeRemaining}
     המחויבויות שלי הן: ${commitments}
     
+    תוכנית הארוחות המומלצת:
+    ${mealPlan}
+    
     אנא צור לי סדר יום מפורט עם הדגשים הבאים:
     1. תכנון של 9 שעות שינה בכל לילה
     2. הגעה למגרש שעה וחצי לפני תחילת המשחק
-    3. זמני ארוחות מדויקים עם המלצות ספציפיות למה לאכול בכל ארוחה
+    3. זמני ארוחות מדויקים לפי התוכנית שצוינה למעלה
     4. זמן מוגדר למתיחות וחימום
     5. זמן לקריאת דוח טרום משחק והכנה מנטלית
     6. הגבלת זמן מסכים (טלפון, טלוויזיה, מחשב)
@@ -32,8 +71,7 @@ serve(async (req) => {
     
     חשוב:
     - השעות הן בפורמט של 24 שעות (למשל, 10:00 היא עשר בבוקר)
-    - יש לכלול את כל הארוחות: בוקר, ביניים בוקר, צהריים, ביניים אחה"צ, ערב
-    - יש לציין במפורש מה לאכול בכל ארוחה
+    - יש לכלול את כל הארוחות לפי התוכנית שצוינה
     - יש להקפיד על זמני מנוחה בין פעילויות
     
     אנא הצג את התשובה בפורמט הבא:
@@ -49,7 +87,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
