@@ -24,6 +24,9 @@ const handler = async (req: Request): Promise<Response> => {
     const emailRequest: EmailRequest = await req.json();
     console.log("Email request data:", emailRequest);
 
+    // For testing, always send to socr.co.il@gmail.com until domain is verified
+    const testEmail = "socr.co.il@gmail.com";
+    
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -32,9 +35,11 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "Game Summary <onboarding@resend.dev>",
-        to: emailRequest.to,
-        subject: emailRequest.subject,
-        html: emailRequest.html,
+        to: [testEmail], // Always send to verified email for testing
+        subject: `[TEST] ${emailRequest.subject}`,
+        html: `<p>This is a test email. Original recipients would have been: ${emailRequest.to.join(', ')}</p>
+              <hr/>
+              ${emailRequest.html}`,
       }),
     });
 
