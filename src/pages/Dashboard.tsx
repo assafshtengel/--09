@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, Target, Settings, Moon, MessageCircle, Shield } from "lucide-react";
+import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, Target, Settings, Moon, MessageCircle, Shield, Clock } from "lucide-react";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
@@ -58,6 +58,13 @@ const Dashboard = () => {
       icon: <FileText className="h-6 w-6" />,
       gradient: "from-blue-500 to-blue-600",
       onClick: () => navigate("/pre-match-report"),
+    },
+    {
+      title: "תכנון 24 שעות לפני משחק",
+      description: "קבל תוכנית מפורטת להכנה למשחק",
+      icon: <Clock className="h-6 w-6" />,
+      gradient: "from-purple-500 to-purple-600",
+      onClick: () => navigate("/pre-game-planner"),
     },
     {
       title: "מעקב משחק",
@@ -148,7 +155,6 @@ const Dashboard = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-8 min-h-screen bg-gradient-to-b from-background to-background/80">
-      {/* Admin Link - Only shown for authorized email */}
       {userEmail === "socr.co.il@gmail.com" && (
         <Card 
           className="bg-gradient-to-br from-purple-600 to-purple-700 text-white cursor-pointer transform transition-all duration-200 hover:scale-105 hover:shadow-lg" 
@@ -166,7 +172,6 @@ const Dashboard = () => {
         </Card>
       )}
 
-      {/* Chat Options Section */}
       <div className="bg-[#F7FBFF] rounded-lg p-6 shadow-sm">
         <h2 className="text-center text-lg font-medium text-gray-700 mb-4">
           לחץ כדי לשוחח בצ'אט עם מאמן
@@ -201,7 +206,6 @@ const Dashboard = () => {
         </motion.div>
       </div>
 
-      {/* Header Section */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -211,7 +215,6 @@ const Dashboard = () => {
         <p className="text-muted-foreground text-lg">בחר באפשרות כדי להתחיל</p>
       </motion.div>
 
-      {/* Quick Actions Grid */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -238,7 +241,6 @@ const Dashboard = () => {
         ))}
       </motion.div>
 
-      {/* Statistics Section */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -277,7 +279,6 @@ const Dashboard = () => {
         </div>
       </motion.div>
 
-      {/* Call to Action Buttons */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
