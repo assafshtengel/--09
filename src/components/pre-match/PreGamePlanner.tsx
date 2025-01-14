@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Copy, Share2, Edit, Save } from "lucide-react";
-import { format, formatDistanceToNow, addDays, isSameDay } from "date-fns";
+import { format, formatDistanceToNow, addDays, isSameDay, parse } from "date-fns";
 import { he } from "date-fns/locale";
 import {
   Table,
@@ -38,19 +38,43 @@ export const PreGamePlanner = () => {
   const calculateTimeRemaining = () => {
     if (!gameDate || !gameTime) return null;
     
-    const gameDateTime = new Date(`${gameDate}T${gameTime}`);
-    const currentDateTime = new Date(`${currentDate}T${currentTime}`);
-    
-    if (isNaN(gameDateTime.getTime()) || isNaN(currentDateTime.getTime())) {
+    try {
+      const gameDateTime = new Date(`${gameDate}T${gameTime}`);
+      const currentDateTime = new Date(`${currentDate}T${currentTime}`);
+      
+      if (isNaN(gameDateTime.getTime()) || isNaN(currentDateTime.getTime())) {
+        return null;
+      }
+
+      return formatDistanceToNow(gameDateTime, { locale: he, addSuffix: true });
+    } catch (error) {
+      console.error("Error calculating time remaining:", error);
       return null;
     }
+  };
 
-    return formatDistanceToNow(gameDateTime, { locale: he, addSuffix: true });
+  const isValidTimeFormat = (time: string): boolean => {
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    return timeRegex.test(time);
+  };
+
+  const createDateFromTimeString = (baseDate: Date, timeStr: string): Date | null => {
+    try {
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      if (isNaN(hours) || isNaN(minutes)) return null;
+      
+      const newDate = new Date(baseDate);
+      newDate.setHours(hours, minutes, 0, 0);
+      return newDate;
+    } catch (error) {
+      console.error("Error creating date from time string:", error);
+      return null;
+    }
   };
 
   const generateSchedule = async () => {
-    if (!currentTime || !gameTime) {
-      toast.error("נא למלא את כל השדות הנדרשים");
+    if (!currentTime || !gameTime || !isValidTimeFormat(currentTime) || !isValidTimeFormat(gameTime)) {
+      toast.error("נא למלא את כל השדות הנדרשים בפורמט תקין");
       return;
     }
 
@@ -79,6 +103,11 @@ export const PreGamePlanner = () => {
       
       setSchedule(data.schedule);
       
+      const baseDate = new Date(`${currentDate}T${currentTime}`);
+      if (isNaN(baseDate.getTime())) {
+        throw new Error("Invalid base date");
+      }
+
       // Parse the schedule text into table items with dates
       const items = data.schedule
         .split("\n")
@@ -88,14 +117,20 @@ export const PreGamePlanner = () => {
           const time = timeStr.trim();
           const activity = activityParts.join(" - ").trim();
           
+          if (!isValidTimeFormat(time)) {
+            console.warn(`Invalid time format: ${time}`);
+            return null;
+          }
+
           // Calculate the date for this schedule item
-          const [hours, minutes] = time.split(":");
-          const itemDate = new Date(`${currentDate}T${currentTime}`);
-          const itemDateTime = new Date(itemDate);
-          itemDateTime.setHours(parseInt(hours), parseInt(minutes));
+          const itemDateTime = createDateFromTimeString(baseDate, time);
+          if (!itemDateTime) {
+            console.warn(`Could not create date for time: ${time}`);
+            return null;
+          }
           
           // If the time is earlier than the current time, it must be for the next day
-          if (itemDateTime < new Date(`${currentDate}T${currentTime}`)) {
+          if (itemDateTime < baseDate) {
             itemDateTime.setDate(itemDateTime.getDate() + 1);
           }
           
@@ -105,7 +140,7 @@ export const PreGamePlanner = () => {
             activity
           };
         })
-        .filter((item: ScheduleItem) => item.time && item.activity); // Filter out any invalid entries
+        .filter((item): item is ScheduleItem => item !== null && Boolean(item.time) && Boolean(item.activity));
       
       setScheduleItems(items);
       toast.success("סדר היום נוצר בהצלחה!");
@@ -119,11 +154,15 @@ export const PreGamePlanner = () => {
 
   // Group schedule items by date
   const groupedScheduleItems = scheduleItems.reduce((groups: { [key: string]: ScheduleItem[] }, item) => {
-    const dateKey = format(item.date, "yyyy-MM-dd");
-    if (!groups[dateKey]) {
-      groups[dateKey] = [];
+    try {
+      const dateKey = format(item.date, "yyyy-MM-dd");
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(item);
+    } catch (error) {
+      console.error("Error grouping schedule item:", error);
     }
-    groups[dateKey].push(item);
     return groups;
   }, {});
 
