@@ -109,7 +109,7 @@ const Dashboard = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
-          navigate("/");
+          navigate("/login");
           return;
         }
 
@@ -129,7 +129,7 @@ const Dashboard = () => {
         setProfile(profileData);
       } catch (error) {
         console.error("Error checking auth:", error);
-        navigate("/");
+        navigate("/login");
       } finally {
         setIsLoading(false);
       }
