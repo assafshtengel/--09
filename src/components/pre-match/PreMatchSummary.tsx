@@ -147,8 +147,8 @@ export const PreMatchSummary = ({
       // Open ChatGPT in a new tab
       window.open('https://chatgpt.com/g/g-6780940ac570819189306621c59a067f-tsvr-tqst-lynstgrm', '_blank');
       
-      // Navigate to pre-game-planner
-      navigate('/pre-game-planner');
+      // Navigate to game selection instead of pre-game-planner
+      navigate('/game-selection');
     } catch (error) {
       console.error('Error saving report:', error);
       toast({
@@ -162,7 +162,7 @@ export const PreMatchSummary = ({
   const handleFinish = async () => {
     try {
       await onFinish();
-      navigate('/pre-game-planner');
+      navigate('/game-selection');
       toast({
         title: "הדוח נשמר בהצלחה",
         description: "מועבר לתכנון 24 שעות לפני המשחק",
