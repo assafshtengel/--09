@@ -9,10 +9,13 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { Mail, MessageSquare, Search } from "lucide-react";
+import { Mail, MessageSquare, Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const AdminDashboard = () => {
   const [showUsersDialog, setShowUsersDialog] = useState(false);
@@ -68,13 +71,20 @@ export const AdminDashboard = () => {
           pre_match_report:pre_match_report_id (
             actions,
             questions_answers,
-            havaya
+            havaya,
+            match_date,
+            match_time
           ),
           match_actions (
             id,
             action_id,
             minute,
             result,
+            note
+          ),
+          match_notes (
+            id,
+            minute,
             note
           )
         `)
@@ -146,6 +156,11 @@ export const AdminDashboard = () => {
     );
   });
 
+  const formatGameDate = (date: string, time?: string) => {
+    const formattedDate = format(new Date(date), 'dd/MM/yyyy');
+    return time ? `${formattedDate} ${time}` : formattedDate;
+  };
+
   return (
     <div className="container mx-auto p-4 space-y-4">
       <h1 className="text-2xl font-bold mb-6">דף ניהול</h1>
@@ -183,6 +198,9 @@ export const AdminDashboard = () => {
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>רשימת משתמשים</DialogTitle>
+            <DialogDescription>
+              חיפוש וניהול משתמשים במערכת
+            </DialogDescription>
           </DialogHeader>
           <div className="mb-4">
             <div className="relative">
@@ -269,59 +287,119 @@ export const AdminDashboard = () => {
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>משחקים של {selectedUser?.full_name}</DialogTitle>
+            <DialogDescription>
+              רשימת כל המשחקים והפעילויות של השחקן
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            {isLoadingGames ? (
-              <p className="text-center">טוען משחקים...</p>
-            ) : userGames && userGames.length > 0 ? (
-              userGames.map((game) => (
-                <Card key={game.id}>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex justify-between items-center">
-                      <span>נגד {game.opponent || 'לא צוין'}</span>
-                      <span className="text-sm">
-                        {format(new Date(game.match_date), 'dd/MM/yyyy')}
-                      </span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {game.final_score && (
-                        <p className="font-medium">תוצאה סופית: {game.final_score}</p>
-                      )}
-                      
-                      {game.pre_match_report && (
-                        <div className="bg-gray-50 p-3 rounded-lg">
-                          <h4 className="font-medium mb-2">דוח טרום משחק</h4>
-                          {game.pre_match_report.havaya && (
-                            <p>הוויה: {game.pre_match_report.havaya}</p>
+          <ScrollArea className="h-[600px] w-full pr-4">
+            <div className="space-y-4">
+              {isLoadingGames ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                  <span className="mr-2">טוען משחקים...</span>
+                </div>
+              ) : userGames && userGames.length > 0 ? (
+                userGames.map((game) => (
+                  <Card key={game.id} className="hover:bg-gray-50 transition-colors">
+                    <CardHeader>
+                      <CardTitle className="text-lg flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span>נגד {game.opponent || 'לא צוין'}</span>
+                          {game.status === 'completed' && (
+                            <Badge variant="secondary">הושלם</Badge>
                           )}
                         </div>
-                      )}
-
-                      {game.match_actions && game.match_actions.length > 0 && (
-                        <div>
-                          <h4 className="font-medium mb-2">פעולות במשחק</h4>
-                          <div className="space-y-2">
-                            {game.match_actions.map((action) => (
-                              <div key={action.id} className="bg-gray-50 p-2 rounded">
-                                <p>פעולה: {action.action_id}</p>
-                                <p>דקה: {action.minute}</p>
-                                <p>תוצאה: {action.result}</p>
-                                {action.note && <p>הערה: {action.note}</p>}
-                              </div>
-                            ))}
+                        <span className="text-sm">
+                          {formatGameDate(game.match_date, game.pre_match_report?.match_time)}
+                        </span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {game.final_score && (
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <p className="font-medium">תוצאה סופית: {game.final_score}</p>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <p className="text-center text-gray-500">לא נמצאו משחקים</p>
-            )}
-          </div>
+                        )}
+                        
+                        {game.pre_match_report && (
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <h4 className="font-medium mb-2">דוח טרום משחק</h4>
+                            {game.pre_match_report.havaya && (
+                              <div className="mb-2">
+                                <p className="text-sm font-medium mb-1">הוויות:</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {game.pre_match_report.havaya.split(',').map((havaya, index) => (
+                                    <Badge key={index} variant="outline">
+                                      {havaya.trim()}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {game.pre_match_report.actions && (
+                              <div className="mt-2">
+                                <p className="text-sm font-medium mb-1">יעדים:</p>
+                                <div className="space-y-1">
+                                  {Array.isArray(game.pre_match_report.actions) && 
+                                    game.pre_match_report.actions.map((action: any, index: number) => (
+                                      <p key={index} className="text-sm">
+                                        {action.name}: {action.goal || 'לא הוגדר יעד'}
+                                      </p>
+                                    ))
+                                  }
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {game.match_actions && game.match_actions.length > 0 && (
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <h4 className="font-medium mb-2">פעולות במשחק</h4>
+                            <div className="space-y-2">
+                              {game.match_actions.map((action) => (
+                                <div key={action.id} className="border-b border-gray-200 pb-2">
+                                  <div className="flex justify-between items-center">
+                                    <span className="font-medium">דקה {action.minute}</span>
+                                    <Badge variant={action.result === 'success' ? 'default' : 'destructive'}>
+                                      {action.result === 'success' ? 'הצלחה' : 'כישלון'}
+                                    </Badge>
+                                  </div>
+                                  <p className="text-sm mt-1">{action.action_id}</p>
+                                  {action.note && (
+                                    <p className="text-sm text-gray-600 mt-1">{action.note}</p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {game.match_notes && game.match_notes.length > 0 && (
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <h4 className="font-medium mb-2">הערות משחק</h4>
+                            <div className="space-y-2">
+                              {game.match_notes.map((note) => (
+                                <div key={note.id} className="text-sm">
+                                  <span className="font-medium">דקה {note.minute}: </span>
+                                  <span>{note.note}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  אין משחקים לשחקן זה
+                </div>
+              )}
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>
