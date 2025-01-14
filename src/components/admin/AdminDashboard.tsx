@@ -121,6 +121,7 @@ export const AdminDashboard = () => {
     queryFn: async () => {
       console.log('Fetching games for user:', selectedUser?.id);
       
+      // First, get all matches for the user
       const { data: games, error } = await supabase
         .from('matches')
         .select(`
@@ -158,7 +159,7 @@ export const AdminDashboard = () => {
         throw error;
       }
 
-      // Validate relationships
+      // Validate relationships and mark games with incomplete data
       const gamesWithIssues = games?.map(game => ({
         ...game,
         hasIncompleteData: !game.pre_match_report || game.match_actions.length === 0
@@ -286,95 +287,6 @@ export const AdminDashboard = () => {
         </Card>
       </div>
 
-      <Dialog open={showUsersDialog} onOpenChange={setShowUsersDialog}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>רשימת משתמשים</DialogTitle>
-            <DialogDescription>
-              חיפוש וניהול משתמשים במערכת
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mb-4">
-            <div className="relative">
-              <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="חיפוש לפי שם, מייל או טלפון..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10"
-              />
-            </div>
-          </div>
-          <div className="space-y-4">
-            {filteredUsers?.map((user) => (
-              <Card 
-                key={user.id} 
-                className="cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => {
-                  setSelectedUser(user);
-                  setShowActionsDialog(true);
-                }}
-              >
-                <CardContent className="pt-4">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <p className="font-semibold">שם מלא:</p>
-                      <p>{user.full_name || 'לא צוין'}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">אימייל:</p>
-                      <p>{user.email}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">מועדון:</p>
-                      <p>{user.club || 'לא צוין'}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">טלפון:</p>
-                      <p>{user.phone_number || 'לא צוין'}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">תפקיד:</p>
-                      <p>{user.role || 'לא צוין'}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">קטגוריית גיל:</p>
-                      <p>{user.age_category || 'לא צוין'}</p>
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-2 mt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSendEmail(user.email);
-                      }}
-                    >
-                      <Mail className="h-4 w-4 ml-2" />
-                      שלח מייל
-                    </Button>
-                    {user.phone_number && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSendWhatsApp(user.phone_number);
-                        }}
-                      >
-                        <MessageSquare className="h-4 w-4 ml-2" />
-                        שלח הודעת וואטסאפ
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-
       <Dialog open={showActionsDialog} onOpenChange={setShowActionsDialog}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -488,17 +400,112 @@ export const AdminDashboard = () => {
                             </div>
                           </div>
                         )}
+
+                        {!game.pre_match_report && !game.match_actions.length && !game.match_notes.length && (
+                          <div className="text-center py-4 text-gray-500">
+                            לא נמצאו נתונים נוספים למשחק זה
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
                 ))
               ) : (
                 <div className="text-center py-8 text-gray-500">
-                  אין משחקים לשחקן זה
+                  לא נמצאו משחקים לשחקן זה. ייתכן שהנתונים לא נשמרו כראוי או שחסר מידע.
                 </div>
               )}
             </div>
           </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showUsersDialog} onOpenChange={setShowUsersDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>רשימת משתמשים</DialogTitle>
+            <DialogDescription>
+              חיפוש וניהול משתמשים במערכת
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="חיפוש לפי שם, מייל או טלפון..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pr-10"
+              />
+            </div>
+          </div>
+          <div className="space-y-4">
+            {filteredUsers?.map((user) => (
+              <Card 
+                key={user.id} 
+                className="cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => {
+                  setSelectedUser(user);
+                  setShowActionsDialog(true);
+                }}
+              >
+                <CardContent className="pt-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <p className="font-semibold">שם מלא:</p>
+                      <p>{user.full_name || 'לא צוין'}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">אימייל:</p>
+                      <p>{user.email}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">מועדון:</p>
+                      <p>{user.club || 'לא צוין'}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">טלפון:</p>
+                      <p>{user.phone_number || 'לא צוין'}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">תפקיד:</p>
+                      <p>{user.role || 'לא צוין'}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">קטגוריית גיל:</p>
+                      <p>{user.age_category || 'לא צוין'}</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSendEmail(user.email);
+                      }}
+                    >
+                      <Mail className="h-4 w-4 ml-2" />
+                      שלח מייל
+                    </Button>
+                    {user.phone_number && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendWhatsApp(user.phone_number);
+                        }}
+                      >
+                        <MessageSquare className="h-4 w-4 ml-2" />
+                        שלח הודעת וואטסאפ
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
