@@ -30,8 +30,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Ensure email is properly formatted as an array
     const to = Array.isArray(email) ? email : [email];
-
-    console.log("Sending email to:", to);
+    
+    console.log("Attempting to send email to:", to);
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -40,7 +40,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "socr.co.il@gmail.com", // Use the verified email address
+        from: "Pre Match Report <onboarding@resend.dev>", // Using the default Resend domain
         to,
         subject: `Pre Match Report - ${matchDetails.date}`,
         html: `
@@ -63,13 +63,20 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const data = await res.json();
+    console.log("Email sent successfully:", data);
+    
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Error in send-pre-match-report function:", error);
+    
+    // Return a more detailed error response
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: "If you're using a custom domain, please verify it at https://resend.com/domains. Meanwhile, emails will be sent from onboarding@resend.dev"
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
