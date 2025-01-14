@@ -95,7 +95,9 @@ export const AdminDashboard = () => {
 
   const handleSendWhatsApp = async (phoneNumber: string) => {
     try {
-      const { error } = await supabase.functions.invoke('send-whatsapp', {
+      console.log('Attempting to send WhatsApp message to:', phoneNumber);
+      
+      const { data, error } = await supabase.functions.invoke('send-whatsapp', {
         body: { 
           recipientId: selectedUser.id,
           message: "הודעה מהמערכת",
@@ -103,11 +105,17 @@ export const AdminDashboard = () => {
         }
       });
 
-      if (error) throw error;
+      console.log('WhatsApp send response:', { data, error });
+
+      if (error) {
+        console.error('Detailed WhatsApp error:', error);
+        throw error;
+      }
+      
       toast.success("ההודעה נשלחה בהצלחה");
     } catch (error) {
       console.error('Error sending WhatsApp:', error);
-      toast.error("שגיאה בשליחת ההודעה");
+      toast.error("שגיאה בשליחת ההודעה: " + (error.message || 'Unknown error'));
     }
   };
 
