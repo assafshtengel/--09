@@ -3,19 +3,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Mail, MessageSquare } from "lucide-react";
+import { Mail, MessageSquare, Search } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 export const AdminDashboard = () => {
   const [showUsersDialog, setShowUsersDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showActionsDialog, setShowActionsDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: playersCount } = useQuery({
     queryKey: ['playersCount'],
@@ -50,28 +53,35 @@ export const AdminDashboard = () => {
     }
   });
 
-  const { data: userActions } = useQuery({
-    queryKey: ['userActions', selectedUser?.id],
+  const { data: userGames, isLoading: isLoadingGames } = useQuery({
+    queryKey: ['userGames', selectedUser?.id],
     enabled: !!selectedUser,
     queryFn: async () => {
-      // First get all pre-match reports for this user
-      const { data: preMatchReports } = await supabase
-        .from('pre_match_reports')
+      const { data: games } = await supabase
+        .from('matches')
         .select(`
           id,
           match_date,
           opponent,
-          actions,
-          questions_answers,
-          matches (
+          final_score,
+          status,
+          pre_match_report:pre_match_report_id (
+            actions,
+            questions_answers,
+            havaya
+          ),
+          match_actions (
             id,
-            match_actions (*)
+            action_id,
+            minute,
+            result,
+            note
           )
         `)
         .eq('player_id', selectedUser.id)
         .order('match_date', { ascending: false });
 
-      return preMatchReports;
+      return games;
     }
   });
 
@@ -127,6 +137,15 @@ export const AdminDashboard = () => {
     }
   };
 
+  const filteredUsers = users?.filter(user => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      user.full_name?.toLowerCase().includes(searchLower) ||
+      user.email?.toLowerCase().includes(searchLower) ||
+      user.phone_number?.includes(searchQuery)
+    );
+  });
+
   return (
     <div className="container mx-auto p-4 space-y-4">
       <h1 className="text-2xl font-bold mb-6">דף ניהול</h1>
@@ -165,8 +184,19 @@ export const AdminDashboard = () => {
           <DialogHeader>
             <DialogTitle>רשימת משתמשים</DialogTitle>
           </DialogHeader>
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="חיפוש לפי שם, מייל או טלפון..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pr-10"
+              />
+            </div>
+          </div>
           <div className="space-y-4">
-            {users?.map((user) => (
+            {filteredUsers?.map((user) => (
               <Card 
                 key={user.id} 
                 className="cursor-pointer hover:bg-gray-50 transition-colors"
@@ -238,35 +268,58 @@ export const AdminDashboard = () => {
       <Dialog open={showActionsDialog} onOpenChange={setShowActionsDialog}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>פעולות המשתמש - {selectedUser?.full_name}</DialogTitle>
+            <DialogTitle>משחקים של {selectedUser?.full_name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {userActions?.map((report) => (
-              <Card key={report.id}>
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    משחק נגד {report.opponent || 'לא צוין'} - {new Date(report.match_date).toLocaleDateString()}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {report.matches?.[0]?.match_actions?.map((action: any) => (
-                      <div key={action.id} className="p-2 bg-gray-50 rounded">
-                        <p>פעולה: {action.action_id}</p>
-                        <p>דקה: {action.minute}</p>
-                        <p>תוצאה: {action.result}</p>
-                        {action.note && <p>הערה: {action.note}</p>}
-                      </div>
-                    ))}
-                    {!report.matches?.[0]?.match_actions?.length && (
-                      <p className="text-gray-500">לא נמצאו פעולות במשחק זה</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {!userActions?.length && (
-              <p className="text-center text-gray-500">לא נמצאו משחקים למשתמש זה</p>
+            {isLoadingGames ? (
+              <p className="text-center">טוען משחקים...</p>
+            ) : userGames && userGames.length > 0 ? (
+              userGames.map((game) => (
+                <Card key={game.id}>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex justify-between items-center">
+                      <span>נגד {game.opponent || 'לא צוין'}</span>
+                      <span className="text-sm">
+                        {format(new Date(game.match_date), 'dd/MM/yyyy')}
+                      </span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {game.final_score && (
+                        <p className="font-medium">תוצאה סופית: {game.final_score}</p>
+                      )}
+                      
+                      {game.pre_match_report && (
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <h4 className="font-medium mb-2">דוח טרום משחק</h4>
+                          {game.pre_match_report.havaya && (
+                            <p>הוויה: {game.pre_match_report.havaya}</p>
+                          )}
+                        </div>
+                      )}
+
+                      {game.match_actions && game.match_actions.length > 0 && (
+                        <div>
+                          <h4 className="font-medium mb-2">פעולות במשחק</h4>
+                          <div className="space-y-2">
+                            {game.match_actions.map((action) => (
+                              <div key={action.id} className="bg-gray-50 p-2 rounded">
+                                <p>פעולה: {action.action_id}</p>
+                                <p>דקה: {action.minute}</p>
+                                <p>תוצאה: {action.result}</p>
+                                {action.note && <p>הערה: {action.note}</p>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <p className="text-center text-gray-500">לא נמצאו משחקים</p>
             )}
           </div>
         </DialogContent>
