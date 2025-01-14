@@ -161,6 +161,62 @@ export const AdminDashboard = () => {
     return time ? `${formattedDate} ${time}` : formattedDate;
   };
 
+  // Add this query to find Liam specifically
+  const { data: liamData } = useQuery({
+    queryKey: ['liamProfile'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .ilike('full_name', '%ליאם אורצקי%');
+      
+      if (error) {
+        console.error('Error finding Liam:', error);
+        return null;
+      }
+      
+      if (data && data.length > 0) {
+        console.log('Found Liam\'s profile:', data[0]);
+        
+        // Now fetch his games
+        const { data: games, error: gamesError } = await supabase
+          .from('matches')
+          .select(`
+            *,
+            pre_match_report:pre_match_report_id (
+              actions,
+              questions_answers,
+              havaya,
+              match_date,
+              match_time
+            ),
+            match_actions (
+              id,
+              action_id,
+              minute,
+              result,
+              note
+            ),
+            match_notes (
+              id,
+              minute,
+              note
+            )
+          `)
+          .eq('player_id', data[0].id)
+          .order('match_date', { ascending: false });
+          
+        if (gamesError) {
+          console.error('Error finding Liam\'s games:', gamesError);
+        } else {
+          console.log('Liam\'s games:', games);
+        }
+      }
+      
+      return data;
+    }
+  });
+
   return (
     <div className="container mx-auto p-4 space-y-4">
       <h1 className="text-2xl font-bold mb-6">דף ניהול</h1>
