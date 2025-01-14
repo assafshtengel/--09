@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Copy, Share2, Edit, Save } from "lucide-react";
-import { format, formatDistanceToNow, addDays } from "date-fns";
+import { format, formatDistanceToNow, addDays, isSameDay } from "date-fns";
 import { he } from "date-fns/locale";
 import {
   Table,
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 
 interface ScheduleItem {
+  date: Date;
   time: string;
   activity: string;
 }
@@ -78,15 +79,30 @@ export const PreGamePlanner = () => {
       
       setSchedule(data.schedule);
       
-      // Parse the schedule text into table items
+      // Parse the schedule text into table items with dates
       const items = data.schedule
         .split("\n")
         .filter((line: string) => line.includes(" - ")) // Only include lines with time and activity
         .map((line: string) => {
-          const [time, ...activityParts] = line.split(" - ");
+          const [timeStr, ...activityParts] = line.split(" - ");
+          const time = timeStr.trim();
+          const activity = activityParts.join(" - ").trim();
+          
+          // Calculate the date for this schedule item
+          const [hours, minutes] = time.split(":");
+          const itemDate = new Date(`${currentDate}T${currentTime}`);
+          const itemDateTime = new Date(itemDate);
+          itemDateTime.setHours(parseInt(hours), parseInt(minutes));
+          
+          // If the time is earlier than the current time, it must be for the next day
+          if (itemDateTime < new Date(`${currentDate}T${currentTime}`)) {
+            itemDateTime.setDate(itemDateTime.getDate() + 1);
+          }
+          
           return {
-            time: time.trim(),
-            activity: activityParts.join(" - ").trim()
+            date: itemDateTime,
+            time,
+            activity
           };
         })
         .filter((item: ScheduleItem) => item.time && item.activity); // Filter out any invalid entries
@@ -100,6 +116,16 @@ export const PreGamePlanner = () => {
       setIsLoading(false);
     }
   };
+
+  // Group schedule items by date
+  const groupedScheduleItems = scheduleItems.reduce((groups: { [key: string]: ScheduleItem[] }, item) => {
+    const dateKey = format(item.date, "yyyy-MM-dd");
+    if (!groups[dateKey]) {
+      groups[dateKey] = [];
+    }
+    groups[dateKey].push(item);
+    return groups;
+  }, {});
 
   const copySchedule = () => {
     if (schedule) {
@@ -152,7 +178,7 @@ export const PreGamePlanner = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-right text-primary">תכנון 24 שעות לפני משחק</h1>
+      <h1 className="text-2xl font-bold text-right text-primary">תכנון לפני משחק</h1>
       
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -238,16 +264,22 @@ export const PreGamePlanner = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="text-right">תאריך</TableHead>
                       <TableHead className="text-right">שעה</TableHead>
                       <TableHead className="text-right">פעילות</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {scheduleItems.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium text-right">{item.time}</TableCell>
-                        <TableCell className="text-right">{item.activity}</TableCell>
-                      </TableRow>
+                    {Object.entries(groupedScheduleItems).map(([dateKey, items]) => (
+                      items.map((item, index) => (
+                        <TableRow key={`${dateKey}-${index}`}>
+                          <TableCell className="font-medium text-right">
+                            {format(item.date, "dd/MM/yyyy", { locale: he })}
+                          </TableCell>
+                          <TableCell className="font-medium text-right">{item.time}</TableCell>
+                          <TableCell className="text-right">{item.activity}</TableCell>
+                        </TableRow>
+                      ))
                     ))}
                   </TableBody>
                 </Table>
