@@ -33,9 +33,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
-      setUserEmail(session?.user?.email || null);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsAuthenticated(!!session);
+        setUserEmail(session?.user?.email || null);
+      } catch (error) {
+        console.error("Auth check error:", error);
+        setIsAuthenticated(false);
+      }
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -70,9 +75,14 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const checkAdminAccess = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUserEmail(session?.user?.email || null);
-      setIsLoading(false);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUserEmail(session?.user?.email || null);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Admin check error:", error);
+        setIsLoading(false);
+      }
     };
 
     checkAdminAccess();
