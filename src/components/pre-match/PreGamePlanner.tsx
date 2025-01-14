@@ -77,19 +77,21 @@ export const PreGamePlanner = () => {
       }
       
       setSchedule(data.schedule);
+      
       // Parse the schedule text into table items
       const items = data.schedule
         .split("\n")
-        .filter((line: string) => line.match(/^\d{2}:\d{2}/))
+        .filter((line: string) => line.includes(" - ")) // Only include lines with time and activity
         .map((line: string) => {
           const [time, ...activityParts] = line.split(" - ");
           return {
             time: time.trim(),
             activity: activityParts.join(" - ").trim()
           };
-        });
-      setScheduleItems(items);
+        })
+        .filter((item: ScheduleItem) => item.time && item.activity); // Filter out any invalid entries
       
+      setScheduleItems(items);
       toast.success("סדר היום נוצר בהצלחה!");
     } catch (error) {
       console.error("Error generating schedule:", error);
@@ -230,14 +232,35 @@ export const PreGamePlanner = () => {
 
         {schedule && (
           <div className="space-y-6">
-            <Card className="p-4 relative">
-              <pre className="whitespace-pre-wrap text-right text-lg leading-relaxed text-primary" dir="rtl">
-                {schedule}
-              </pre>
+            <Card className="p-4">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold mb-2 text-right">סדר היום שלך</h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-right">שעה</TableHead>
+                      <TableHead className="text-right">פעילות</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {scheduleItems.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium text-right">{item.time}</TableCell>
+                        <TableCell className="text-right">{item.activity}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
               
-              <div className="flex gap-2 mt-4">
+              <div className="flex gap-2">
                 <Button
-                  onClick={copySchedule}
+                  onClick={() => {
+                    if (schedule) {
+                      navigator.clipboard.writeText(schedule);
+                      toast.success("הטקסט הועתק!");
+                    }
+                  }}
                   variant="secondary"
                   className="gap-2"
                 >
@@ -246,7 +269,21 @@ export const PreGamePlanner = () => {
                 </Button>
                 
                 <Button
-                  onClick={shareSchedule}
+                  onClick={async () => {
+                    if (schedule) {
+                      try {
+                        await navigator.share({
+                          title: "סדר יום למשחק",
+                          text: schedule
+                        });
+                      } catch (error) {
+                        console.error("Error sharing:", error);
+                        // Fallback to copy if sharing is not supported
+                        navigator.clipboard.writeText(schedule);
+                        toast.success("הטקסט הועתק!");
+                      }
+                    }
+                  }}
                   variant="secondary"
                   className="gap-2"
                 >
@@ -255,7 +292,31 @@ export const PreGamePlanner = () => {
                 </Button>
 
                 <Button
-                  onClick={saveSchedule}
+                  onClick={async () => {
+                    try {
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (!user) throw new Error("משתמש לא מחובר");
+
+                      const formattedActions = scheduleItems.map(item => ({
+                        time: item.time,
+                        description: item.activity
+                      }));
+
+                      const { error } = await supabase.from("pre_match_reports").insert({
+                        player_id: user.id,
+                        match_date: gameDate,
+                        match_time: gameTime,
+                        actions: formattedActions,
+                        status: "draft"
+                      });
+
+                      if (error) throw error;
+                      toast.success("סדר היום נשמר בהצלחה!");
+                    } catch (error) {
+                      console.error("Error saving schedule:", error);
+                      toast.error("שגיאה בשמירת סדר היום");
+                    }
+                  }}
                   variant="secondary"
                   className="gap-2"
                 >
@@ -272,25 +333,6 @@ export const PreGamePlanner = () => {
                   ערוך
                 </Button>
               </div>
-            </Card>
-
-            <Card className="p-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-right">שעה</TableHead>
-                    <TableHead className="text-right">פעילות</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {scheduleItems.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{item.time}</TableCell>
-                      <TableCell>{item.activity}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
             </Card>
           </div>
         )}
