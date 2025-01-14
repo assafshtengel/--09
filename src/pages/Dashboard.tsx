@@ -60,6 +60,13 @@ const Dashboard = () => {
       onClick: () => navigate("/pre-match-report"),
     },
     {
+      title: "מעקב משחק",
+      description: "עקוב אחר משחק בזמן אמת",
+      icon: <PlayCircle className="h-6 w-6" />,
+      gradient: "from-indigo-500 to-indigo-600",
+      onClick: () => navigate("/game-selection"),
+    },
+    {
       title: "לוח זמנים שבועי",
       description: "נהל את הפעילויות השבועיות שלך",
       icon: <Calendar className="h-6 w-6" />,
