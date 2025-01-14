@@ -23,6 +23,69 @@ export const AdminDashboard = () => {
   const [showActionsDialog, setShowActionsDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Query to check for any games in the system
+  const { data: gamesCheck } = useQuery({
+    queryKey: ['gamesCheck'],
+    queryFn: async () => {
+      console.log('Checking for games in the system...');
+      
+      // Check matches table
+      const { data: matches, error: matchesError } = await supabase
+        .from('matches')
+        .select('*')
+        .limit(5);
+      
+      if (matchesError) {
+        console.error('Error checking matches:', matchesError);
+      } else {
+        console.log('Found matches:', matches);
+      }
+
+      // Check pre_match_reports table
+      const { data: reports, error: reportsError } = await supabase
+        .from('pre_match_reports')
+        .select('*')
+        .limit(5);
+      
+      if (reportsError) {
+        console.error('Error checking pre_match_reports:', reportsError);
+      } else {
+        console.log('Found pre_match_reports:', reports);
+      }
+
+      // Check match_actions table
+      const { data: actions, error: actionsError } = await supabase
+        .from('match_actions')
+        .select('*')
+        .limit(5);
+      
+      if (actionsError) {
+        console.error('Error checking match_actions:', actionsError);
+      } else {
+        console.log('Found match_actions:', actions);
+      }
+
+      // Check match_notes table
+      const { data: notes, error: notesError } = await supabase
+        .from('match_notes')
+        .select('*')
+        .limit(5);
+      
+      if (notesError) {
+        console.error('Error checking match_notes:', notesError);
+      } else {
+        console.log('Found match_notes:', notes);
+      }
+
+      return {
+        matches,
+        reports,
+        actions,
+        notes
+      };
+    }
+  });
+
   const { data: playersCount } = useQuery({
     queryKey: ['playersCount'],
     queryFn: async () => {
@@ -48,10 +111,18 @@ export const AdminDashboard = () => {
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const { data } = await supabase
+      console.log('Fetching users...');
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching users:', error);
+      } else {
+        console.log('Found users:', data);
+      }
+      
       return data;
     }
   });
@@ -60,7 +131,9 @@ export const AdminDashboard = () => {
     queryKey: ['userGames', selectedUser?.id],
     enabled: !!selectedUser,
     queryFn: async () => {
-      const { data: games } = await supabase
+      console.log('Fetching games for user:', selectedUser?.id);
+      
+      const { data: games, error } = await supabase
         .from('matches')
         .select(`
           id,
@@ -90,6 +163,12 @@ export const AdminDashboard = () => {
         `)
         .eq('player_id', selectedUser.id)
         .order('match_date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching user games:', error);
+      } else {
+        console.log('Found games for user:', games);
+      }
 
       return games;
     }
@@ -160,62 +239,6 @@ export const AdminDashboard = () => {
     const formattedDate = format(new Date(date), 'dd/MM/yyyy');
     return time ? `${formattedDate} ${time}` : formattedDate;
   };
-
-  // Add this query to find Liam specifically
-  const { data: liamData } = useQuery({
-    queryKey: ['liamProfile'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .ilike('full_name', '%ליאם אורצקי%');
-      
-      if (error) {
-        console.error('Error finding Liam:', error);
-        return null;
-      }
-      
-      if (data && data.length > 0) {
-        console.log('Found Liam\'s profile:', data[0]);
-        
-        // Now fetch his games
-        const { data: games, error: gamesError } = await supabase
-          .from('matches')
-          .select(`
-            *,
-            pre_match_report:pre_match_report_id (
-              actions,
-              questions_answers,
-              havaya,
-              match_date,
-              match_time
-            ),
-            match_actions (
-              id,
-              action_id,
-              minute,
-              result,
-              note
-            ),
-            match_notes (
-              id,
-              minute,
-              note
-            )
-          `)
-          .eq('player_id', data[0].id)
-          .order('match_date', { ascending: false });
-          
-        if (gamesError) {
-          console.error('Error finding Liam\'s games:', gamesError);
-        } else {
-          console.log('Liam\'s games:', games);
-        }
-      }
-      
-      return data;
-    }
-  });
 
   return (
     <div className="container mx-auto p-4 space-y-4">
