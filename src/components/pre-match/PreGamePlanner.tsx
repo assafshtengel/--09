@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Copy, Share2, Edit, Save, Mail } from "lucide-react";
-import { format, formatDistanceToNow, addDays, isSameDay, parse } from "date-fns";
+import { format, formatDistanceToNow, parse, isValid } from "date-fns";
 import { he } from "date-fns/locale";
 import {
   Table,
@@ -27,7 +27,7 @@ interface ScheduleItem {
 export const PreGamePlanner = () => {
   const [currentDate, setCurrentDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [currentTime, setCurrentTime] = useState(format(new Date(), "HH:mm"));
-  const [gameDate, setGameDate] = useState(format(addDays(new Date(), 1), "yyyy-MM-dd"));
+  const [gameDate, setGameDate] = useState("");
   const [gameTime, setGameTime] = useState("");
   const [commitments, setCommitments] = useState("");
   const [schedule, setSchedule] = useState<string | null>(null);
@@ -54,7 +54,6 @@ export const PreGamePlanner = () => {
   };
 
   const cleanTimeString = (timeStr: string): string => {
-    // Remove markdown formatting and trim whitespace
     return timeStr.replace(/\*/g, '').trim();
   };
 
@@ -80,11 +79,10 @@ export const PreGamePlanner = () => {
 
   const parseScheduleItem = (line: string): { time: string; activity: string } | null => {
     try {
-      // Match time pattern at the start of the line (with or without markdown)
       const timeMatch = line.match(/^\**(\d{1,2}:\d{2})\**\s*-\s*/);
       if (!timeMatch) return null;
 
-      const time = timeMatch[1]; // Get the actual time part
+      const time = timeMatch[1];
       const activity = line.substring(timeMatch[0].length).trim();
 
       return { time, activity };
@@ -97,6 +95,19 @@ export const PreGamePlanner = () => {
   const generateSchedule = async () => {
     if (!currentTime || !gameTime || !isValidTimeFormat(currentTime) || !isValidTimeFormat(gameTime)) {
       toast.error("נא למלא את כל השדות הנדרשים בפורמט תקין");
+      return;
+    }
+
+    if (!gameDate) {
+      toast.error("נא לבחור תאריך משחק");
+      return;
+    }
+
+    const currentDateTime = new Date(`${currentDate}T${currentTime}`);
+    const gameDateTime = new Date(`${gameDate}T${gameTime}`);
+
+    if (gameDateTime <= currentDateTime) {
+      toast.error("תאריך ושעת המשחק חייבים להיות בעתיד");
       return;
     }
 
@@ -143,13 +154,23 @@ export const PreGamePlanner = () => {
             return null;
           }
 
-          const itemDateTime = createDateFromTimeString(baseDate, time);
+          let itemDateTime = createDateFromTimeString(baseDate, time);
           if (!itemDateTime) {
             console.warn(`Could not create date for time: ${time}`);
             return null;
           }
           
+          // If the time is earlier than current time, it must be for the next day
           if (itemDateTime < baseDate) {
+            itemDateTime.setDate(itemDateTime.getDate() + 1);
+          }
+
+          // If we're still before the game date and the game is more than a day away,
+          // keep adding days until we reach the correct date
+          while (
+            itemDateTime < gameDateTime && 
+            format(itemDateTime, "yyyy-MM-dd") !== gameDate
+          ) {
             itemDateTime.setDate(itemDateTime.getDate() + 1);
           }
           
