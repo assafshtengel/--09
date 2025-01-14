@@ -11,11 +11,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Mail, MessageSquare, Search, Loader2 } from "lucide-react";
+import { Mail, MessageSquare, Search, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const AdminDashboard = () => {
   const [showUsersDialog, setShowUsersDialog] = useState(false);
@@ -23,65 +24,53 @@ export const AdminDashboard = () => {
   const [showActionsDialog, setShowActionsDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Query to check for any games in the system
-  const { data: gamesCheck } = useQuery({
-    queryKey: ['gamesCheck'],
+  // Query to check data integrity between tables
+  const { data: dataIntegrityCheck, isLoading: isCheckingIntegrity } = useQuery({
+    queryKey: ['dataIntegrityCheck'],
     queryFn: async () => {
-      console.log('Checking for games in the system...');
+      console.log('Checking data integrity between tables...');
       
-      // Check matches table
+      // Get all matches
       const { data: matches, error: matchesError } = await supabase
         .from('matches')
-        .select('*')
-        .limit(5);
+        .select('id, player_id, match_date, opponent, pre_match_report_id');
       
       if (matchesError) {
         console.error('Error checking matches:', matchesError);
-      } else {
-        console.log('Found matches:', matches);
+        return { error: matchesError };
       }
 
-      // Check pre_match_reports table
-      const { data: reports, error: reportsError } = await supabase
+      // Get all pre_match_reports
+      const { data: reports } = await supabase
         .from('pre_match_reports')
-        .select('*')
-        .limit(5);
-      
-      if (reportsError) {
-        console.error('Error checking pre_match_reports:', reportsError);
-      } else {
-        console.log('Found pre_match_reports:', reports);
-      }
+        .select('id, player_id, match_date');
 
-      // Check match_actions table
-      const { data: actions, error: actionsError } = await supabase
+      // Get all match_actions
+      const { data: actions } = await supabase
         .from('match_actions')
-        .select('*')
-        .limit(5);
-      
-      if (actionsError) {
-        console.error('Error checking match_actions:', actionsError);
-      } else {
-        console.log('Found match_actions:', actions);
-      }
+        .select('id, match_id');
 
-      // Check match_notes table
-      const { data: notes, error: notesError } = await supabase
+      // Get all match_notes
+      const { data: notes } = await supabase
         .from('match_notes')
-        .select('*')
-        .limit(5);
+        .select('id, match_id');
+
+      // Check for orphaned records
+      const matchIds = new Set(matches?.map(m => m.id) || []);
       
-      if (notesError) {
-        console.error('Error checking match_notes:', notesError);
-      } else {
-        console.log('Found match_notes:', notes);
-      }
+      const orphanedReports = reports?.filter(r => 
+        !matches?.some(m => m.pre_match_report_id === r.id)
+      ) || [];
+
+      const orphanedActions = actions?.filter(a => !matchIds.has(a.match_id)) || [];
+      const orphanedNotes = notes?.filter(n => !matchIds.has(n.match_id)) || [];
 
       return {
-        matches,
-        reports,
-        actions,
-        notes
+        matches: matches || [],
+        orphanedReports,
+        orphanedActions,
+        orphanedNotes,
+        hasIssues: orphanedReports.length > 0 || orphanedActions.length > 0 || orphanedNotes.length > 0
       };
     }
   });
@@ -119,8 +108,7 @@ export const AdminDashboard = () => {
       
       if (error) {
         console.error('Error fetching users:', error);
-      } else {
-        console.log('Found users:', data);
+        throw error;
       }
       
       return data;
@@ -142,6 +130,7 @@ export const AdminDashboard = () => {
           final_score,
           status,
           pre_match_report:pre_match_report_id (
+            id,
             actions,
             questions_answers,
             havaya,
@@ -166,11 +155,16 @@ export const AdminDashboard = () => {
 
       if (error) {
         console.error('Error fetching user games:', error);
-      } else {
-        console.log('Found games for user:', games);
+        throw error;
       }
 
-      return games;
+      // Validate relationships
+      const gamesWithIssues = games?.map(game => ({
+        ...game,
+        hasIncompleteData: !game.pre_match_report || game.match_actions.length === 0
+      }));
+
+      return gamesWithIssues || [];
     }
   });
 
@@ -244,6 +238,24 @@ export const AdminDashboard = () => {
     <div className="container mx-auto p-4 space-y-4">
       <h1 className="text-2xl font-bold mb-6">דף ניהול</h1>
       
+      {dataIntegrityCheck?.hasIssues && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            נמצאו בעיות בקשרים בין הטבלאות:
+            {dataIntegrityCheck.orphanedReports.length > 0 && (
+              <div>• {dataIntegrityCheck.orphanedReports.length} דוחות טרום משחק לא מקושרים</div>
+            )}
+            {dataIntegrityCheck.orphanedActions.length > 0 && (
+              <div>• {dataIntegrityCheck.orphanedActions.length} פעולות משחק לא מקושרות</div>
+            )}
+            {dataIntegrityCheck.orphanedNotes.length > 0 && (
+              <div>• {dataIntegrityCheck.orphanedNotes.length} הערות משחק לא מקושרות</div>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="cursor-pointer" onClick={() => setShowUsersDialog(true)}>
           <CardHeader>
@@ -251,6 +263,7 @@ export const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <p>מספר שחקנים רשומים: {playersCount || 0}</p>
+            <p>מספר משחקים במערכת: {dataIntegrityCheck?.matches.length || 0}</p>
           </CardContent>
         </Card>
 
@@ -379,13 +392,20 @@ export const AdminDashboard = () => {
                 </div>
               ) : userGames && userGames.length > 0 ? (
                 userGames.map((game) => (
-                  <Card key={game.id} className="hover:bg-gray-50 transition-colors">
+                  <Card key={game.id} className={`hover:bg-gray-50 transition-colors ${
+                    game.hasIncompleteData ? 'border-yellow-400' : ''
+                  }`}>
                     <CardHeader>
                       <CardTitle className="text-lg flex justify-between items-center">
                         <div className="flex items-center gap-2">
                           <span>נגד {game.opponent || 'לא צוין'}</span>
                           {game.status === 'completed' && (
                             <Badge variant="secondary">הושלם</Badge>
+                          )}
+                          {game.hasIncompleteData && (
+                            <Badge variant="outline" className="border-yellow-400 text-yellow-600">
+                              חסרים נתונים
+                            </Badge>
                           )}
                         </div>
                         <span className="text-sm">
