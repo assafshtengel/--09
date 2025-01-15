@@ -165,17 +165,37 @@ export const MotivationalPopup = ({ isOpen, onClose }: MotivationalPopupProps) =
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-gradient-to-br from-amber-50 to-orange-50 border-none shadow-xl">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center space-y-6 p-4"
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="text-center space-y-6 p-6"
         >
-          <p className="text-xl font-semibold text-primary">{randomQuote}</p>
+          <div className="relative">
+            <div 
+              className="absolute -top-1 -right-1 w-full h-full bg-primary/5 rounded-lg transform rotate-2"
+              aria-hidden="true"
+            />
+            <div 
+              className="absolute -top-2 -right-2 w-full h-full bg-primary/5 rounded-lg transform -rotate-1"
+              aria-hidden="true"
+            />
+            <p 
+              className="relative font-heebo text-xl leading-relaxed text-gray-800 p-6 bg-white rounded-lg shadow-sm transform transition-transform hover:scale-[1.02] cursor-default"
+              style={{ 
+                fontWeight: 500,
+                letterSpacing: '0.01em',
+                lineHeight: 1.6
+              }}
+            >
+              {randomQuote}
+            </p>
+          </div>
+          
           <Button 
             onClick={onClose}
-            className="w-full bg-primary hover:bg-primary/90"
+            className="w-full bg-gradient-to-r from-primary/90 to-primary hover:from-primary hover:to-primary/90 text-white font-medium px-8 py-3 rounded-full shadow-md hover:shadow-lg transform transition-all duration-200 hover:scale-[1.02]"
           >
             סגור
           </Button>
