@@ -425,6 +425,13 @@ export type Database = {
             referencedRelation: "pre_match_reports"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "matches_pre_match_report_id_fkey"
+            columns: ["pre_match_report_id"]
+            isOneToOne: false
+            referencedRelation: "pre_match_reports_with_details"
+            referencedColumns: ["id"]
+          },
         ]
       }
       messages: {
@@ -1266,7 +1273,30 @@ export type Database = {
             referencedRelation: "pre_match_reports"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "matches_pre_match_report_id_fkey"
+            columns: ["pre_match_report_id"]
+            isOneToOne: false
+            referencedRelation: "pre_match_reports_with_details"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      pre_match_reports_with_details: {
+        Row: {
+          actions: Json | null
+          created_at: string | null
+          havaya: string | null
+          id: string | null
+          match_date: string | null
+          match_time: string | null
+          opponent: string | null
+          player_name: string | null
+          questions_answers: Json | null
+          status: Database["public"]["Enums"]["report_status"] | null
+          updated_at: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {
