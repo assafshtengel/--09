@@ -30,6 +30,7 @@ const queryClient = new QueryClient();
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -37,15 +38,29 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         const { data: { session } } = await supabase.auth.getSession();
         setIsAuthenticated(!!session);
         setUserEmail(session?.user?.email || null);
+
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('roles')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+          setHasProfile(!!profile?.roles?.length);
+        }
       } catch (error) {
         console.error("Auth check error:", error);
         setIsAuthenticated(false);
+        setHasProfile(false);
       }
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
       setUserEmail(session?.user?.email || null);
+      if (session?.user) {
+        checkAuth();
+      }
     });
 
     checkAuth();
@@ -53,7 +68,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (isAuthenticated === null) {
+  if (isAuthenticated === null || hasProfile === null) {
     return <div>טוען...</div>;
   }
 
@@ -67,6 +82,38 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       {children}
     </>
   );
+};
+
+const HomeRoute = () => {
+  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkProfile = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('roles')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+          setHasProfile(!!profile?.roles?.length);
+        }
+      } catch (error) {
+        console.error("Profile check error:", error);
+        setHasProfile(false);
+      }
+    };
+
+    checkProfile();
+  }, []);
+
+  if (hasProfile === null) {
+    return <div>טוען...</div>;
+  }
+
+  return hasProfile ? <Navigate to="/dashboard" replace /> : <Index />;
 };
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -113,7 +160,7 @@ const App = () => (
                 path="/"
                 element={
                   <ProtectedRoute>
-                    <Index />
+                    <HomeRoute />
                   </ProtectedRoute>
                 }
               />
