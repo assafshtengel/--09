@@ -3,7 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Timer, FileText, Calendar, Activity, History, Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, Target, Settings, Moon, MessageCircle, Shield } from "lucide-react";
+import { 
+  Trophy, Timer, FileText, Calendar, Activity, History, 
+  Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, 
+  Target, Settings, Moon, MessageCircle, Clock, ClipboardList,
+  BarChart2, ListTodo, Book
+} from "lucide-react";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
@@ -55,46 +60,60 @@ const Dashboard = () => {
 
   const quickActions = [
     {
-      title: "משחק חדש",
-      description: "התחל משחק חדש ועקוב אחר הביצועים שלך",
+      title: "מעקב משחק",
+      description: "עקוב אחר משחקים בזמן אמת",
       icon: <PlayCircle className="h-6 w-6" />,
-      gradient: "from-blue-500 to-blue-600",
+      gradient: "from-indigo-500 to-indigo-600",
       onClick: () => navigate("/game-selection")
     },
     {
-      title: "היסטוריית משחקים",
-      description: "צפה במשחקים קודמים ונתח את הביצועים",
-      icon: <History className="h-6 w-6" />,
+      title: "תכנון 24 שעות",
+      description: "כלל המטלות המומלצות להכנה למשחק",
+      icon: <Clock className="h-6 w-6" />,
       gradient: "from-purple-500 to-purple-600",
+      onClick: () => navigate("/pre-game-planner")
+    },
+    {
+      title: "דוח טרום משחק",
+      description: "הכן דוח לפני המשחק הבא",
+      icon: <ClipboardList className="h-6 w-6" />,
+      gradient: "from-blue-500 to-blue-600",
+      onClick: () => navigate("/pre-match-report")
+    },
+    {
+      title: "היסטוריית משחקים",
+      description: "צפה בהיסטוריית המשחקים שלך",
+      icon: <History className="h-6 w-6" />,
+      gradient: "from-orange-500 to-orange-600",
       onClick: () => navigate("/game-history")
     },
     {
-      title: "אימון יומי",
-      description: "תעד ונתח את האימונים היומיים שלך",
-      icon: <Activity className="h-6 w-6" />,
-      gradient: "from-green-500 to-green-600",
-      onClick: () => navigate("/training")
+      title: "סיכום אימון",
+      description: "סכם את האימון האחרון שלך",
+      icon: <BarChart2 className="h-6 w-6" />,
+      gradient: "from-purple-500 to-purple-600",
+      onClick: () => navigate("/training-summary")
     },
     {
-      title: "לוח זמנים",
-      description: "נהל את לוח הזמנים השבועי שלך",
+      title: "לוח זמנים שבועי",
+      description: "נהל את הפעילויות השבועיות שלך",
       icon: <Calendar className="h-6 w-6" />,
-      gradient: "from-yellow-500 to-yellow-600",
+      gradient: "from-green-500 to-green-600",
       onClick: () => navigate("/schedule")
     },
     {
-      title: "דוחות ביצועים",
-      description: "צפה בדוחות מפורטים על התקדמותך",
-      icon: <FileText className="h-6 w-6" />,
+      title: "שגרה יומית",
+      description: "עקוב אחר השגרה היומית שלך",
+      icon: <Timer className="h-6 w-6" />,
       gradient: "from-red-500 to-red-600",
-      onClick: () => navigate("/reports")
+      onClick: () => navigate("/daily-routine")
     },
     {
-      title: "הישגים",
-      description: "עקוב אחר ההישגים והמטרות שלך",
+      title: "שעות הישגים",
+      description: "צפה בהישגים שלך",
       icon: <Trophy className="h-6 w-6" />,
-      gradient: "from-indigo-500 to-indigo-600",
-      onClick: () => navigate("/achievements")
+      gradient: "from-yellow-500 to-yellow-600",
+      onClick: () => navigate("/portfolio")
     }
   ];
 
@@ -155,7 +174,7 @@ const Dashboard = () => {
         >
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Shield className="h-6 w-6 text-white" />
+              <Trophy className="h-6 w-6 text-white" />
               דף ניהול
             </CardTitle>
           </CardHeader>
@@ -270,35 +289,6 @@ const Dashboard = () => {
             <GoalsProgress />
           </motion.div>
         </div>
-      </motion.div>
-
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
-        className="flex flex-wrap justify-center gap-4 pt-8"
-      >
-        <Button 
-          onClick={() => navigate("/game-selection")}
-          className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-full flex items-center gap-2"
-        >
-          <PlayCircle className="h-5 w-5" />
-          שחק משחק נוסף
-        </Button>
-        <Button 
-          onClick={() => navigate("/game-history")}
-          className="bg-secondary hover:bg-secondary/90 text-white px-6 py-2 rounded-full flex items-center gap-2"
-        >
-          <Eye className="h-5 w-5" />
-          צפה במשחקים קודמים
-        </Button>
-        <Button 
-          onClick={() => navigate("/player")}
-          className="bg-accent hover:bg-accent/90 text-white px-6 py-2 rounded-full flex items-center gap-2"
-        >
-          <Share2 className="h-5 w-5" />
-          שתף את ההישגים שלך
-        </Button>
       </motion.div>
     </div>
   );
