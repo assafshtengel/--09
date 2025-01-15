@@ -38,7 +38,17 @@ export const StatsOverview = () => {
           return;
         }
 
-        setStats(data);
+        // If no stats exist, create default stats object
+        setStats(data || {
+          minutes_played: 0,
+          goals: 0,
+          assists: 0,
+          shots_on_target: 0,
+          defensive_actions: 0,
+          speed_record: 0,
+          jump_height: 0,
+          endurance_score: 0
+        });
       } catch (error) {
         console.error("Error in fetchStats:", error);
       } finally {
