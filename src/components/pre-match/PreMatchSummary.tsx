@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
-import { Mail, Printer, Instagram, ExternalLink } from "lucide-react";
+import { Mail, Printer, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import html2canvas from "html2canvas";
@@ -21,7 +21,7 @@ interface PreMatchSummaryProps {
   answers: Record<string, string>;
   havaya: string[];
   aiInsights: string[];
-  onFinish: () => void;
+  onFinish: () => Promise<void>;
 }
 
 export const PreMatchSummary = ({
@@ -36,6 +36,7 @@ export const PreMatchSummary = ({
   const [showInstagramSummary, setShowInstagramSummary] = useState(false);
   const [showCaptionPopup, setShowCaptionPopup] = useState(false);
   const [reportId, setReportId] = useState<string>();
+  const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
 
   const sendEmail = async (recipient: 'coach' | 'user') => {
@@ -129,12 +130,12 @@ export const PreMatchSummary = ({
     }
   };
 
-  const shareToInstagram = () => {
-    setShowInstagramSummary(true);
-  };
-
   const openChatGPT = async () => {
+    if (isSaving) return;
+    
     try {
+      setIsSaving(true);
+      
       // First save the report
       await onFinish();
       
@@ -147,7 +148,7 @@ export const PreMatchSummary = ({
       // Open ChatGPT in a new tab
       window.open('https://chatgpt.com/g/g-6780940ac570819189306621c59a067f-tsvr-tqst-lynstgrm', '_blank');
       
-      // Navigate to game selection instead of pre-game-planner
+      // Navigate to game selection
       navigate('/game-selection');
     } catch (error) {
       console.error('Error saving report:', error);
@@ -156,11 +157,16 @@ export const PreMatchSummary = ({
         description: "אנא נסה שנית",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleFinish = async () => {
+    if (isSaving) return;
+    
     try {
+      setIsSaving(true);
       await onFinish();
       navigate('/game-selection');
       toast({
@@ -174,6 +180,8 @@ export const PreMatchSummary = ({
         description: "אנא נסה שנית",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -257,15 +265,12 @@ export const PreMatchSummary = ({
           onClick={openChatGPT} 
           variant="outline"
           className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100"
+          disabled={isSaving}
         >
           <ExternalLink className="h-4 w-4" />
           ההכנה שלי למשחק
         </Button>
-        <Button onClick={shareToInstagram} variant="outline" className="flex items-center gap-2">
-          <Instagram className="h-4 w-4" />
-          שתף באינסטגרם
-        </Button>
-        <Button onClick={handleFinish}>סיים</Button>
+        <Button onClick={handleFinish} disabled={isSaving}>סיים</Button>
       </div>
 
       {showInstagramSummary && (
