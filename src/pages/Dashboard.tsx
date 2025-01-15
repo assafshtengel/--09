@@ -45,6 +45,51 @@ const chatOptions = [
   },
 ];
 
+const quickActions = [
+  {
+    title: "משחק חדש",
+    description: "התחל משחק חדש ועקוב אחר הביצועים שלך",
+    icon: <PlayCircle className="h-6 w-6" />,
+    gradient: "from-blue-500 to-blue-600",
+    onClick: () => navigate("/game-selection")
+  },
+  {
+    title: "היסטוריית משחקים",
+    description: "צפה במשחקים קודמים ונתח את הביצועים",
+    icon: <History className="h-6 w-6" />,
+    gradient: "from-purple-500 to-purple-600",
+    onClick: () => navigate("/game-history")
+  },
+  {
+    title: "אימון יומי",
+    description: "תעד ונתח את האימונים היומיים שלך",
+    icon: <Activity className="h-6 w-6" />,
+    gradient: "from-green-500 to-green-600",
+    onClick: () => navigate("/training")
+  },
+  {
+    title: "לוח זמנים",
+    description: "נהל את לוח הזמנים השבועי שלך",
+    icon: <Calendar className="h-6 w-6" />,
+    gradient: "from-yellow-500 to-yellow-600",
+    onClick: () => navigate("/schedule")
+  },
+  {
+    title: "דוחות ביצועים",
+    description: "צפה בדוחות מפורטים על התקדמותך",
+    icon: <FileText className="h-6 w-6" />,
+    gradient: "from-red-500 to-red-600",
+    onClick: () => navigate("/reports")
+  },
+  {
+    title: "הישגים",
+    description: "עקוב אחר ההישגים והמטרות שלך",
+    icon: <Trophy className="h-6 w-6" />,
+    gradient: "from-indigo-500 to-indigo-600",
+    onClick: () => navigate("/achievements")
+  }
+];
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
