@@ -153,7 +153,7 @@ const App = () => (
         <div className="max-w-md mx-auto min-h-screen bg-white">
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <BrowserRouter basename="/">
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route
