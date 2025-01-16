@@ -232,9 +232,11 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-8 w-full max-w-4xl mx-auto p-6">
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-right mb-4">בחר פעולות למעקב</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-right">בחר פעולות למעקב</h2>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {actions.map((action, index) => (
             <motion.div
               key={action.id}
@@ -243,7 +245,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
               transition={{ delay: index * 0.1 }}
               className={`
                 relative p-4 rounded-lg border transition-all duration-200
-                ${action.isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}
+                ${action.isSelected ? 'border-primary bg-primary/5 shadow-lg' : 'border-border hover:border-primary/50'}
               `}
             >
               <button
@@ -254,7 +256,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
                 <div className="flex items-start gap-3 mb-2">
                   {getActionIcon(index)}
                   <div className="flex-grow">
-                    <h3 className="font-medium">{action.name}</h3>
+                    <h3 className="font-medium text-lg">{action.name}</h3>
                     <p className="text-sm text-muted-foreground">{action.description}</p>
                   </div>
                   {action.isSelected && (
@@ -262,25 +264,6 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
                   )}
                 </div>
               </button>
-              
-              <AnimatePresence>
-                {action.isSelected && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-3"
-                  >
-                    <Input
-                      type="text"
-                      value={action.goal || ""}
-                      onChange={(e) => handleGoalChange(action.id, e.target.value)}
-                      placeholder="הגדר יעד (לדוגמה: 5 פעולות)"
-                      className="text-right"
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </motion.div>
           ))}
         </div>
@@ -300,7 +283,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-3 p-4 border rounded-lg"
+              className="space-y-3 p-4 border rounded-lg bg-card"
             >
               <Input
                 value={customAction}
@@ -340,12 +323,21 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
             animate={{ opacity: 1 }}
             className="mt-8 p-4 bg-muted/50 rounded-lg"
           >
-            <h3 className="font-medium mb-3">פעולות נבחרות:</h3>
-            <div className="space-y-2">
+            <h3 className="font-medium mb-3 text-right">פעולות נבחרות:</h3>
+            <div className="space-y-4">
               {actions.filter(a => a.isSelected).map(action => (
-                <div key={action.id} className="flex items-center justify-between text-sm">
-                  <span>{action.name}</span>
-                  <span className="text-muted-foreground">{action.goal || 'טרם הוגדר יעד'}</span>
+                <div key={action.id} className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <Check className="h-4 w-4 text-primary" />
+                    <span className="font-medium">{action.name}</span>
+                  </div>
+                  <Input
+                    type="text"
+                    value={action.goal || ""}
+                    onChange={(e) => handleGoalChange(action.id, e.target.value)}
+                    placeholder="הגדר יעד (לדוגמה: 5 פעולות)"
+                    className="text-right mt-2"
+                  />
                 </div>
               ))}
             </div>
@@ -355,11 +347,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
 
       <Button 
         type="submit" 
-        className="w-full max-w-md mx-auto block mt-8"
-        style={{ 
-          backgroundColor: "#0043CE",
-          color: "white",
-        }}
+        className="w-full max-w-md mx-auto block mt-8 bg-primary hover:bg-primary-hover text-white"
       >
         המשך
       </Button>
