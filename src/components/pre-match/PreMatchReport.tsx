@@ -119,7 +119,7 @@ export const PreMatchReport = () => {
       const { error } = await supabase
         .from("pre_match_reports")
         .update({
-          actions: actions
+          actions: JSON.stringify(actions)
         })
         .eq("id", reportId);
 
@@ -157,7 +157,8 @@ export const PreMatchReport = () => {
     }
   };
 
-  const handleFinalSubmit = () => {
+  const handleFinalSubmit = async () => {
+    await Promise.resolve();
     navigate("/dashboard");
   };
 
