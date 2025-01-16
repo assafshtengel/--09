@@ -211,6 +211,29 @@ export const PreMatchReport = () => {
         {currentStep === "actions" && (
           <motion.div {...commonProps} key="actions">
             <div className="space-y-8">
+              {Object.entries(havayot).length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg p-6 shadow-sm"
+                >
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                    ההוויות שבחרת למשחק
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    {Object.entries(havayot).map(([category, havaya]) => (
+                      havaya && (
+                        <div
+                          key={category}
+                          className="bg-white px-4 py-2 rounded-full shadow-sm border border-primary/20"
+                        >
+                          <span className="text-primary font-medium">{havaya}</span>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                </motion.div>
+              )}
               <ActionSelector
                 position={matchDetails.position || "forward"}
                 onSubmit={handleActionsSubmit}
