@@ -10,6 +10,9 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { CornerDownLeft, ChevronRight, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { format, addDays } from "date-fns";
+import { he } from "date-fns/locale";
 
 interface MatchQuestionDialogProps {
   isOpen: boolean;
@@ -36,10 +39,12 @@ export const MatchQuestionDialog = ({
   isFirstQuestion = false,
 }: MatchQuestionDialogProps) => {
   const [inputValue, setInputValue] = useState("");
+  const [showCalendar, setShowCalendar] = useState(false);
 
   // Reset input value when question changes
   useEffect(() => {
     setInputValue("");
+    setShowCalendar(false);
   }, [question.id]);
 
   const handleSubmit = (e?: React.FormEvent) => {
@@ -58,6 +63,74 @@ export const MatchQuestionDialog = ({
     }
   };
 
+  const formatDateWithDay = (date: Date) => {
+    return format(date, "EEEE, d בMMMM", { locale: he });
+  };
+
+  const handleQuickDateSelect = (daysToAdd: number) => {
+    const selectedDate = addDays(new Date(), daysToAdd);
+    const formattedDate = format(selectedDate, "yyyy-MM-dd");
+    setInputValue(formattedDate);
+    handleSubmit();
+  };
+
+  const renderDateSelection = () => {
+    if (showCalendar) {
+      return (
+        <div className="space-y-4">
+          <Calendar
+            mode="single"
+            selected={inputValue ? new Date(inputValue) : undefined}
+            onSelect={(date) => {
+              if (date) {
+                setInputValue(format(date, "yyyy-MM-dd"));
+                handleSubmit();
+              }
+            }}
+            className="rounded-md border mx-auto rtl"
+          />
+          <Button
+            variant="ghost"
+            onClick={() => setShowCalendar(false)}
+            className="w-full"
+          >
+            חזור לאפשרויות מהירות
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        <Button
+          onClick={() => handleQuickDateSelect(0)}
+          className="w-full bg-primary/10 hover:bg-primary/20 text-primary"
+        >
+          היום - {formatDateWithDay(new Date())}
+        </Button>
+        <Button
+          onClick={() => handleQuickDateSelect(1)}
+          className="w-full bg-primary/10 hover:bg-primary/20 text-primary"
+        >
+          מחר - {formatDateWithDay(addDays(new Date(), 1))}
+        </Button>
+        <Button
+          onClick={() => handleQuickDateSelect(2)}
+          className="w-full bg-primary/10 hover:bg-primary/20 text-primary"
+        >
+          מחרתיים - {formatDateWithDay(addDays(new Date(), 2))}
+        </Button>
+        <Button
+          onClick={() => setShowCalendar(true)}
+          variant="outline"
+          className="w-full"
+        >
+          תאריך אחר
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md mx-auto">
@@ -72,12 +145,13 @@ export const MatchQuestionDialog = ({
           transition={{ duration: 0.3 }}
         >
           <form onSubmit={handleSubmit} className="space-y-6">
-            {question.type === "select" ? (
+            {question.type === "date" ? (
+              renderDateSelection()
+            ) : question.type === "select" ? (
               <Select
                 value={inputValue}
                 onValueChange={(value) => {
                   setInputValue(value);
-                  // Automatically submit when a value is selected for select type questions
                   setTimeout(() => handleSubmit(), 100);
                 }}
               >
@@ -114,15 +188,17 @@ export const MatchQuestionDialog = ({
               </div>
             )}
 
-            {/* Continue button for all questions */}
-            <Button
-              type="submit"
-              className="w-full bg-primary hover:bg-primary/90 text-white"
-              onClick={() => handleSubmit()}
-            >
-              המשך
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
+            {/* Continue button for all questions except date type */}
+            {question.type !== "date" && (
+              <Button
+                type="submit"
+                className="w-full bg-primary hover:bg-primary/90 text-white"
+                onClick={() => handleSubmit()}
+              >
+                המשך
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+            )}
           </form>
           
           {!isFirstQuestion && (
