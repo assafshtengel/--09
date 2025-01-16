@@ -27,6 +27,36 @@ export const HavayotPopup = ({ isOpen, onClose, category }: HavayotPopupProps) =
     }
   }, [isOpen, category.havayot]);
 
+  const getProfessionalDescription = () => {
+    if (category.name === "מקצועי (טכני/טקטי)") {
+      return (
+        <div className="space-y-4">
+          <p className="text-gray-700 leading-relaxed">
+            בהוויה המקצועית, אתה בוחר להתמקד באספקטים הטכניים והטקטיים של המשחק. הבחירה שלך משקפת את ההתנהלות שלך כשחקן שמכוון לשפר את השליטה בכדור, להבין את המרחב סביבך, ולבצע מהלכים מדויקים ואחראיים על המגרש.
+          </p>
+          <div className="space-y-3">
+            <p className="font-medium text-gray-800">דוגמאות להוויות מקצועיות:</p>
+            <ul className="space-y-2 text-gray-700">
+              <li className="flex gap-2">
+                <span className="font-medium">סורק:</span>
+                <span>מתמקד בסריקת המרחב סביבך כדי להיות צעד אחד לפני היריב ולקבל החלטות חכמות.</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-medium">מדויק למרחב:</span>
+                <span>מבין וממקסם את המיקום האופטימלי שלך במגרש, תוך שליטה מלאה על תנועותיך.</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-medium">שיטתי:</span>
+                <span>פועל לפי שיטה מסודרת ועקבית שמביאה אותך להישגים גבוהים.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      );
+    }
+    return <p className="text-muted-foreground leading-relaxed text-sm text-right">{category.description}</p>;
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-4 md:p-6">
@@ -36,7 +66,7 @@ export const HavayotPopup = ({ isOpen, onClose, category }: HavayotPopupProps) =
           </DialogTitle>
           <div className="text-sm md:text-base">
             <h3 className="font-semibold mb-1 text-right">{category.name}</h3>
-            <p className="text-muted-foreground leading-relaxed text-sm text-right">{category.description}</p>
+            {getProfessionalDescription()}
           </div>
         </DialogHeader>
         <ScrollArea className="h-[calc(90vh-12rem)] md:h-auto rounded-md">

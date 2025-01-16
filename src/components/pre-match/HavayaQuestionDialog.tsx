@@ -65,9 +65,8 @@ export const HavayaQuestionDialog = ({
             <div className="space-y-4">
               <Button
                 type="button"
-                variant="outline"
                 onClick={onShowHavayot}
-                className="w-full flex items-center gap-2 justify-center py-2 hover:bg-gray-100"
+                className="w-full flex items-center gap-2 justify-center py-2 text-base bg-[#0043CE] hover:bg-[#007BFF] text-white transition-colors"
               >
                 <BookOpen className="h-4 w-4" />
                 צפה בהוויות לדוגמה
