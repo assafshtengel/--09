@@ -49,14 +49,13 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
           const rawHavaya = match.pre_match_reports.havaya;
           console.log('Raw havaya string:', rawHavaya);
           
-          // Split the string and preserve all non-empty values
+          // Enhanced splitting logic to handle all cases
           const havayotArray = rawHavaya
             .split(',')
             .map(h => h.trim())
-            .filter(Boolean); // This will keep all truthy values (non-empty strings)
+            .filter(h => h && h !== 'undefined' && h !== 'null' && h.length > 0);
           
           console.log('Final processed havayot array:', havayotArray);
-          
           setHavaya(havayotArray);
         }
       } catch (error) {
@@ -132,7 +131,8 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
               <Badge 
                 key={index} 
                 variant="secondary" 
-                className="text-lg py-2 px-4"
+                className="text-lg py-2 px-4 whitespace-normal break-words max-w-full"
+                style={{ direction: 'rtl' }}
               >
                 {h}
               </Badge>
