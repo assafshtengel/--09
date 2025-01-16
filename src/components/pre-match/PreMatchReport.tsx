@@ -162,6 +162,10 @@ export const PreMatchReport = () => {
     navigate("/dashboard");
   };
 
+  const handleEditHavaya = (category: string) => {
+    setCurrentStep("havayot");
+  };
+
   const renderHavayotByCategory = () => {
     if (Object.entries(havayot).length === 0) return null;
 
