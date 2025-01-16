@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Action } from "@/components/ActionSelector";
+import { Action, ActionSelector } from "@/components/ActionSelector";
 import { PreMatchQuestionnaire } from "./PreMatchQuestionnaire";
 import { MatchDetailsForm } from "./MatchDetailsForm";
 import { PreMatchSummary } from "./PreMatchSummary";
@@ -25,7 +25,7 @@ export const PreMatchReport = () => {
     position: "forward",
   });
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
-  const [questionsAnswers, setQuestionsAnswers] = useState({});
+  const [questionsAnswers, setQuestionsAnswers] = useState<Record<string, string>>({});
   const [havayot, setHavayot] = useState<Record<string, string>>({});
   const [reportId, setReportId] = useState<string | null>(null);
   const [showObserverLink, setShowObserverLink] = useState(false);
@@ -110,6 +110,55 @@ export const PreMatchReport = () => {
       console.error("Error saving havayot:", error);
       toast.error("שגיאה בשמירת ההוויות");
     }
+  };
+
+  const handleActionsSubmit = async (actions: Action[]) => {
+    if (!reportId) return;
+
+    try {
+      const { error } = await supabase
+        .from("pre_match_reports")
+        .update({
+          actions: actions
+        })
+        .eq("id", reportId);
+
+      if (error) throw error;
+
+      setSelectedActions(actions);
+      setCurrentStep("questions");
+      toast.success("הפעולות נשמרו");
+    } catch (error) {
+      console.error("Error saving actions:", error);
+      toast.error("שגיאה בשמירת הפעולות");
+    }
+  };
+
+  const handleQuestionsSubmit = async (answers: Record<string, string>) => {
+    if (!reportId) return;
+
+    try {
+      const { error } = await supabase
+        .from("pre_match_reports")
+        .update({
+          questions_answers: answers,
+          status: "completed"
+        })
+        .eq("id", reportId);
+
+      if (error) throw error;
+
+      setQuestionsAnswers(answers);
+      setCurrentStep("summary");
+      toast.success("התשובות נשמרו");
+    } catch (error) {
+      console.error("Error saving questions:", error);
+      toast.error("שגיאה בשמירת התשובות");
+    }
+  };
+
+  const handleFinalSubmit = () => {
+    navigate("/dashboard");
   };
 
   const renderStep = () => {
