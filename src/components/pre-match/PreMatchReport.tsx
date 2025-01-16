@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
-import { ChevronRight, ChevronLeft, Link } from "lucide-react";
+import { ChevronRight, ChevronLeft, Link, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -162,6 +162,64 @@ export const PreMatchReport = () => {
     navigate("/dashboard");
   };
 
+  const categoryColors = {
+    professional: "bg-purple-100 border-purple-200 text-purple-700 hover:bg-purple-50",
+    mental: "bg-pink-100 border-pink-200 text-pink-700 hover:bg-pink-50",
+    emotional: "bg-orange-100 border-orange-200 text-orange-700 hover:bg-orange-50",
+    social: "bg-blue-100 border-blue-200 text-blue-700 hover:bg-blue-50"
+  };
+
+  const categoryTitles = {
+    professional: "מקצועי",
+    mental: "מנטלי",
+    emotional: "רגשי",
+    social: "חברתי-תקשורתי"
+  };
+
+  const handleEditHavaya = (category: string) => {
+    setCurrentStep("havayot");
+  };
+
+  const renderHavayotByCategory = () => {
+    if (Object.entries(havayot).length === 0) return null;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-6 bg-white rounded-lg p-6 shadow-sm border border-gray-100"
+      >
+        <h3 className="text-xl font-semibold text-right text-gray-800 mb-6">
+          ההוויות שבחרת למשחק
+        </h3>
+        <div className="space-y-6">
+          {Object.entries(categoryTitles).map(([category, title]) => (
+            havayot[category] && (
+              <div key={category} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => handleEditHavaya(category)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <Pencil className="h-4 w-4 text-gray-500" />
+                  </button>
+                  <h4 className="text-lg font-medium text-gray-700">{title}</h4>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-end">
+                  <div
+                    className={`px-4 py-2 rounded-full border transition-colors ${categoryColors[category]} cursor-pointer`}
+                  >
+                    {havayot[category]}
+                  </div>
+                </div>
+              </div>
+            )
+          ))}
+        </div>
+      </motion.div>
+    );
+  };
+
   const renderStep = () => {
     const commonProps = {
       className: "w-full max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg space-y-6",
@@ -211,29 +269,7 @@ export const PreMatchReport = () => {
         {currentStep === "actions" && (
           <motion.div {...commonProps} key="actions">
             <div className="space-y-8">
-              {Object.entries(havayot).length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg p-6 shadow-sm"
-                >
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                    ההוויות שבחרת למשחק
-                  </h3>
-                  <div className="flex flex-wrap gap-3">
-                    {Object.entries(havayot).map(([category, havaya]) => (
-                      havaya && (
-                        <div
-                          key={category}
-                          className="bg-white px-4 py-2 rounded-full shadow-sm border border-primary/20"
-                        >
-                          <span className="text-primary font-medium">{havaya}</span>
-                        </div>
-                      )
-                    ))}
-                  </div>
-                </motion.div>
-              )}
+              {renderHavayotByCategory()}
               <ActionSelector
                 position={matchDetails.position || "forward"}
                 onSubmit={handleActionsSubmit}
