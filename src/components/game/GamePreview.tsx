@@ -3,7 +3,6 @@ import { Action } from "@/components/ActionSelector";
 import { AdditionalActions } from "./AdditionalActions";
 import { GameNotes } from "./GameNotes";
 import { toast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -123,24 +122,6 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
 
   return (
     <div id="goals-preview" className="space-y-4">
-      {havaya.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <h2 className="text-xl font-bold text-right mb-4">הוויות נבחרות</h2>
-          <div className="flex flex-wrap gap-3 justify-end">
-            {havaya.map((h, index) => (
-              <Badge 
-                key={index} 
-                variant="secondary" 
-                className="text-lg py-2 px-4 whitespace-normal break-words max-w-full"
-                style={{ direction: 'rtl' }}
-              >
-                {h}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="bg-white rounded-lg shadow-md p-4">
         <h2 className="text-xl font-bold text-right mb-4">יעדי המשחק</h2>
         <div className="grid gap-3">
