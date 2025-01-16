@@ -89,7 +89,7 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
                     <Textarea
                       value={havayotInputs[key]}
                       onChange={(e) => handleInputChange(key, e.target.value)}
-                      className="w-full text-right resize-none bg-white/80 hover:bg-white focus:bg-white transition-colors border-gray-200 focus:border-primary h-[40px] min-h-[40px]"
+                      className="w-full text-right resize-none bg-white/80 hover:bg-white focus:bg-white transition-colors border-gray-200 focus:border-primary h-[60px] min-h-[60px]"
                       placeholder={`רשום את ההוויה שאיתה אתה מגיע למשחק בתחום ה${category.name} (יש לבחור הוויה אחת בלבד)`}
                     />
                   </div>
