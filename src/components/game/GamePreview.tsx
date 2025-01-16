@@ -46,13 +46,14 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
         if (error) throw error;
 
         if (match?.pre_match_reports?.havaya) {
-          // Split by comma, trim whitespace, and filter out empty strings
+          // Split by comma and handle each havaya
           const havayotArray = match.pre_match_reports.havaya
             .split(',')
             .map(h => h.trim())
-            .filter(h => h.length > 0 && h !== 'undefined' && h !== 'null');
+            .filter(h => h && h !== 'undefined' && h !== 'null' && h.length > 0);
           
-          console.log('Loaded havayot:', havayotArray); // Debug log
+          console.log('Raw havaya string:', match.pre_match_reports.havaya);
+          console.log('Processed havayot array:', havayotArray);
           setHavaya(havayotArray);
         }
       } catch (error) {
