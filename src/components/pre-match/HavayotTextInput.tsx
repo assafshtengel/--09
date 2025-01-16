@@ -81,7 +81,7 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
                       type="button"
                       variant="outline"
                       onClick={() => setOpenCategory(key as keyof typeof havayotCategories)}
-                      className="w-auto h-auto py-2 px-4 bg-white hover:bg-gray-50 transition-all duration-300 hover:scale-105"
+                      className="w-auto h-auto py-2 px-4 bg-white hover:bg-primary/10 text-gray-700 hover:text-primary transition-all duration-300 hover:scale-105"
                     >
                       <BookOpen className="h-4 w-4 ml-2 rtl:ml-0 rtl:mr-2" />
                       רשימת הוויות לדוגמה
