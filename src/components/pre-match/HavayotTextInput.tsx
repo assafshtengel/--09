@@ -1,30 +1,20 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { HavayotPopup } from "@/components/havayot/HavayotPopup";
 import { havayotCategories } from "@/data/havayotCategories";
-import { BookOpen, Save, Settings, Brain, Heart, Users } from "lucide-react";
+import { Save } from "lucide-react";
+import { HavayotExplanationDialog } from "./HavayotExplanationDialog";
+import { HavayaQuestionDialog } from "./HavayaQuestionDialog";
 
 interface HavayotTextInputProps {
   onSubmit: (havayot: Record<string, string>) => void;
 }
 
-const categoryIcons = {
-  professional: Settings,
-  mental: Brain,
-  emotional: Heart,
-  social: Users,
-};
-
-const categoryColors = {
-  professional: "from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100",
-  mental: "from-emerald-50 to-green-50 hover:from-emerald-100 hover:to-green-100",
-  emotional: "from-rose-50 to-pink-50 hover:from-rose-100 hover:to-pink-100",
-  social: "from-amber-50 to-yellow-50 hover:from-amber-100 hover:to-yellow-100",
-};
-
 export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
+  const [showExplanation, setShowExplanation] = useState(true);
+  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(-1);
   const [openCategory, setOpenCategory] = useState<keyof typeof havayotCategories | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [havayotInputs, setHavayotInputs] = useState<Record<string, string>>({
     professional: "",
     mental: "",
@@ -32,81 +22,67 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
     social: "",
   });
 
+  const categoryKeys = Object.keys(havayotCategories) as Array<keyof typeof havayotCategories>;
+
+  const handleExplanationContinue = () => {
+    setShowExplanation(false);
+    setCurrentCategoryIndex(0);
+  };
+
   const handleInputChange = (category: string, value: string) => {
     setHavayotInputs(prev => ({
       ...prev,
       [category]: value
     }));
+
+    if (currentCategoryIndex < categoryKeys.length - 1) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentCategoryIndex(prev => prev + 1);
+        setIsTransitioning(false);
+      }, 100);
+    } else {
+      onSubmit(havayotInputs);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(havayotInputs);
+  const handleBack = () => {
+    if (currentCategoryIndex > 0) {
+      setCurrentCategoryIndex(prev => prev - 1);
+    }
   };
+
+  const getCurrentCategory = () => {
+    if (currentCategoryIndex < 0 || currentCategoryIndex >= categoryKeys.length) return null;
+    const currentKey = categoryKeys[currentCategoryIndex];
+    return {
+      key: currentKey,
+      ...havayotCategories[currentKey]
+    };
+  };
+
+  const currentCategory = getCurrentCategory();
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 w-full max-w-4xl mx-auto p-4 md:p-6 font-heebo">
-      <div className="text-center space-y-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-6 shadow-sm">
-        <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-          תכנן את ההוויות שלך למשחק הקרוב
-        </h2>
-        <p className="text-muted-foreground w-full leading-relaxed text-base">
-          מלא את ההוויות שאיתן תגיע למשחק בתחומים הבאים. תוכל לבחור מתוך רשימת הוויות לדוגמה או לכתוב הוויות משלך. תכנון זה יעזור לך להגיע ממוקד, מחויב ומוכן.
-        </p>
-      </div>
+    <div className="w-full max-w-4xl mx-auto p-4">
+      <HavayotExplanationDialog
+        isOpen={showExplanation}
+        onClose={() => setShowExplanation(false)}
+        onContinue={handleExplanationContinue}
+      />
 
-      <div className="grid gap-6">
-        {Object.entries(havayotCategories).map(([key, category]) => {
-          const Icon = categoryIcons[key as keyof typeof categoryIcons];
-          const gradientColor = categoryColors[key as keyof typeof categoryColors];
-          
-          return (
-            <div 
-              key={key} 
-              className={`rounded-lg p-6 bg-gradient-to-r ${gradientColor} transition-all duration-300 shadow-sm hover:shadow-md`}
-            >
-              <div className="flex flex-col gap-4">
-                <div className="flex-grow space-y-4 text-right">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Icon className="h-5 w-5 text-gray-700" />
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      {category.name}
-                    </h3>
-                  </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    {category.description}
-                  </p>
-                  <div className="flex flex-col items-center gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setOpenCategory(key as keyof typeof havayotCategories)}
-                      className="w-auto h-auto py-2 px-4 bg-white hover:bg-primary/10 text-gray-700 hover:text-primary transition-all duration-300 hover:scale-105"
-                    >
-                      <BookOpen className="h-4 w-4 ml-2 rtl:ml-0 rtl:mr-2" />
-                      רשימת הוויות לדוגמה
-                    </Button>
-                    <Textarea
-                      value={havayotInputs[key]}
-                      onChange={(e) => handleInputChange(key, e.target.value)}
-                      className="w-full text-right resize-none bg-white/80 hover:bg-white focus:bg-white transition-colors border-gray-200 focus:border-primary h-[60px] min-h-[60px]"
-                      placeholder={`רשום את ההוויה שאיתה אתה מגיע למשחק בתחום ה${category.name}`}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <Button 
-        type="submit" 
-        className="w-full max-w-md mx-auto flex items-center justify-center gap-2 py-6 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300 shadow-md hover:shadow-lg"
-      >
-        <Save className="h-5 w-5 ml-2 rtl:ml-0 rtl:mr-2" />
-        שמור את ההוויות שלי
-      </Button>
+      {currentCategory && (
+        <HavayaQuestionDialog
+          isOpen={currentCategoryIndex >= 0 && !isTransitioning}
+          onClose={() => {}}
+          category={currentCategory}
+          value={havayotInputs[currentCategory.key]}
+          onSubmit={(value) => handleInputChange(currentCategory.key, value)}
+          onShowHavayot={() => setOpenCategory(currentCategory.key)}
+          onBack={handleBack}
+          isFirstQuestion={currentCategoryIndex === 0}
+        />
+      )}
 
       {Object.entries(havayotCategories).map(([key, category]) => (
         <HavayotPopup
@@ -116,6 +92,6 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
           category={category}
         />
       ))}
-    </form>
+    </div>
   );
 };
