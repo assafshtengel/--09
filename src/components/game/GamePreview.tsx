@@ -49,21 +49,13 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
           const rawHavaya = match.pre_match_reports.havaya;
           console.log('Raw havaya string:', rawHavaya);
           
-          // Split by comma but preserve empty strings
-          const splitHavayot = rawHavaya.split(',');
-          console.log('Split havayot:', splitHavayot);
-          
-          // Filter and clean the array more carefully
-          const havayotArray = splitHavayot
+          // Split the string and preserve all non-empty values
+          const havayotArray = rawHavaya
+            .split(',')
             .map(h => h.trim())
-            .filter(h => h && h !== 'undefined' && h !== 'null');
+            .filter(Boolean); // This will keep all truthy values (non-empty strings)
           
           console.log('Final processed havayot array:', havayotArray);
-          
-          // Log any discrepancies
-          if (havayotArray.length !== splitHavayot.filter(h => h.trim()).length) {
-            console.log('Warning: Possible havayot loss. Original:', splitHavayot, 'Processed:', havayotArray);
-          }
           
           setHavaya(havayotArray);
         }
