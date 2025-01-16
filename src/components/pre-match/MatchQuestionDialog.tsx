@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { CornerDownLeft, ChevronRight } from "lucide-react";
+import { CornerDownLeft, ChevronRight, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface MatchQuestionDialogProps {
@@ -113,6 +113,16 @@ export const MatchQuestionDialog = ({
                 </button>
               </div>
             )}
+
+            {/* Continue button for all questions */}
+            <Button
+              type="submit"
+              className="w-full bg-primary hover:bg-primary/90 text-white"
+              onClick={() => handleSubmit()}
+            >
+              המשך
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
           </form>
           
           {!isFirstQuestion && (
