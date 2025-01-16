@@ -40,6 +40,10 @@ export const PreMatchSummary = ({
   const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
 
+  const processedHavaya = havaya
+    .map(h => h.trim())
+    .filter(h => h.length > 0);
+
   const sendEmail = async (recipient: 'coach' | 'user') => {
     try {
       const element = document.getElementById('pre-match-summary');
@@ -137,19 +141,15 @@ export const PreMatchSummary = ({
     try {
       setIsSaving(true);
       
-      // First save the report
       await onFinish();
       
-      // Show success toast
       toast({
         title: "הדוח נשמר בהצלחה",
         description: "מועבר לדף ההכנה למשחק",
       });
 
-      // Open ChatGPT in a new tab
       window.open('https://chatgpt.com/g/g-6780940ac570819189306621c59a067f-tsvr-tqst-lynstgrm', '_blank');
       
-      // Navigate to game selection
       navigate('/game-selection');
     } catch (error) {
       console.error('Error saving report:', error);
@@ -198,15 +198,15 @@ export const PreMatchSummary = ({
           </p>
         </div>
 
-        {havaya.length > 0 && (
+        {processedHavaya.length > 0 && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="border p-6 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 mt-6"
           >
-            <h3 className="text-lg font-semibold mb-4">הוויות נבחרות</h3>
+            <h3 className="text-lg font-semibold mb-4 text-right">הוויות נבחרות</h3>
             <div className="grid grid-cols-2 gap-4">
-              {havaya.map((h, index) => (
+              {processedHavaya.map((h, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 10 }}
@@ -224,7 +224,7 @@ export const PreMatchSummary = ({
         )}
 
         <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-4">יעדים למשחק</h3>
+          <h3 className="text-lg font-semibold mb-4 text-right">יעדים למשחק</h3>
           <div className="space-y-2">
             {actions.map((action, index) => (
               <motion.div
@@ -234,11 +234,11 @@ export const PreMatchSummary = ({
                 transition={{ delay: index * 0.1 }}
                 className="bg-white border rounded-lg p-2.5 hover:shadow-sm transition-all"
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-primary">{action.name}</span>
+                <div className="flex items-center justify-end gap-4">
                   {action.goal && (
                     <span className="text-sm text-gray-600">יעד: {action.goal}</span>
                   )}
+                  <span className="font-medium text-primary">{action.name}</span>
                 </div>
               </motion.div>
             ))}
@@ -246,12 +246,12 @@ export const PreMatchSummary = ({
         </div>
 
         <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-4">תשובות לשאלות</h3>
+          <h3 className="text-lg font-semibold mb-4 text-right">תשובות לשאלות</h3>
           <div className="space-y-4">
             {Object.entries(answers).map(([question, answer], index) => (
               <div key={index} className="border p-3 rounded-lg">
-                <p className="font-medium">{question}</p>
-                <p className="text-muted-foreground">{answer}</p>
+                <p className="font-medium text-right">{question}</p>
+                <p className="text-muted-foreground text-right">{answer}</p>
               </div>
             ))}
           </div>
@@ -259,10 +259,10 @@ export const PreMatchSummary = ({
 
         {aiInsights.length > 0 && (
           <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-4">תובנות AI</h3>
+            <h3 className="text-lg font-semibold mb-4 text-right">תובנות AI</h3>
             <ul className="space-y-2">
               {aiInsights.map((insight, index) => (
-                <li key={index} className="text-muted-foreground">
+                <li key={index} className="text-muted-foreground text-right">
                   {insight}
                 </li>
               ))}
