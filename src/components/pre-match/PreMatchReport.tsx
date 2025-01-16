@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { ActionSelector, Action } from "@/components/ActionSelector";
+import { Action } from "@/components/ActionSelector";
 import { PreMatchQuestionnaire } from "./PreMatchQuestionnaire";
 import { MatchDetailsForm } from "./MatchDetailsForm";
 import { PreMatchSummary } from "./PreMatchSummary";
 import { PreMatchDashboard } from "./PreMatchDashboard";
 import { SocialShareGoals } from "./SocialShareGoals";
-import { HavayaSelector } from "./HavayaSelector";
+import { HavayotTextInput } from "./HavayotTextInput";
 import { ObserverLinkDialog } from "./ObserverLinkDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 export const PreMatchReport = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<
-    "dashboard" | "details" | "actions" | "questions" | "summary"
+    "dashboard" | "details" | "havayot" | "actions" | "questions" | "summary"
   >("dashboard");
   const [matchDetails, setMatchDetails] = useState({
     date: new Date().toISOString().split("T")[0],
@@ -26,7 +26,7 @@ export const PreMatchReport = () => {
   });
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
   const [questionsAnswers, setQuestionsAnswers] = useState({});
-  const [havaya, setHavaya] = useState<string[]>([]);
+  const [havayot, setHavayot] = useState<Record<string, string>>({});
   const [reportId, setReportId] = useState<string | null>(null);
   const [showObserverLink, setShowObserverLink] = useState(false);
   const [observerToken, setObserverToken] = useState<string | null>(null);
@@ -34,6 +34,7 @@ export const PreMatchReport = () => {
   const steps = [
     { id: "dashboard", label: "התחלה" },
     { id: "details", label: "פרטי משחק" },
+    { id: "havayot", label: "הוויות" },
     { id: "actions", label: "יעדים" },
     { id: "questions", label: "שאלון" },
     { id: "summary", label: "סיכום" },
@@ -63,7 +64,6 @@ export const PreMatchReport = () => {
 
       if (error) throw error;
       
-      // Create match record with observer token
       const { data: match, error: matchError } = await supabase
         .from("matches")
         .insert({
@@ -81,7 +81,7 @@ export const PreMatchReport = () => {
       setReportId(report.id);
       setMatchDetails(details);
       setObserverToken(match.observer_token);
-      setCurrentStep("actions");
+      setCurrentStep("havayot");
       
       toast.success("פרטי המשחק נשמרו");
     } catch (error) {
@@ -90,77 +90,25 @@ export const PreMatchReport = () => {
     }
   };
 
-  const handleActionsSubmit = async (actions: Action[]) => {
-    if (!reportId) return;
-
-    try {
-      // Convert Action[] to a JSON-compatible format
-      const jsonActions = actions.map(action => ({
-        id: action.id,
-        name: action.name,
-        goal: action.goal || null,
-        isSelected: action.isSelected
-      }));
-
-      const { error } = await supabase
-        .from("pre_match_reports")
-        .update({
-          actions: jsonActions,
-          // Join array elements with a comma to store as a single string
-          havaya: havaya.join(',')
-        })
-        .eq("id", reportId);
-
-      if (error) throw error;
-
-      setSelectedActions(actions);
-      setCurrentStep("questions");
-      toast.success("היעדים נשמרו");
-    } catch (error) {
-      console.error("Error saving actions:", error);
-      toast.error("שגיאה בשמירת היעדים");
-    }
-  };
-
-  const handleQuestionsSubmit = async (answers: Record<string, string>) => {
+  const handleHavayotSubmit = async (havayotInputs: Record<string, string>) => {
     if (!reportId) return;
 
     try {
       const { error } = await supabase
         .from("pre_match_reports")
         .update({
-          questions_answers: answers,
-          status: "completed"
+          havaya: JSON.stringify(havayotInputs)
         })
         .eq("id", reportId);
 
       if (error) throw error;
 
-      setQuestionsAnswers(answers);
-      setCurrentStep("summary");
-      toast.success("תשובותיך נשמרו");
+      setHavayot(havayotInputs);
+      setCurrentStep("actions");
+      toast.success("ההוויות נשמרו");
     } catch (error) {
-      console.error("Error saving answers:", error);
-      toast.error("שגיאה בשמירת התשובות");
-    }
-  };
-
-  const handleFinalSubmit = async () => {
-    if (!reportId) return;
-
-    try {
-      const { error } = await supabase
-        .from("pre_match_reports")
-        .update({ status: "completed" })
-        .eq("id", reportId);
-
-      if (error) throw error;
-
-      toast.success("הדוח נשמר בהצלחה");
-      navigate("/game-selection");
-    } catch (error) {
-      console.error("Error completing report:", error);
-      toast.error("שגיאה בשמירת הדוח");
+      console.error("Error saving havayot:", error);
+      toast.error("שגיאה בשמירת ההוויות");
     }
   };
 
@@ -190,8 +138,8 @@ export const PreMatchReport = () => {
           </motion.div>
         )}
 
-        {currentStep === "actions" && (
-          <motion.div {...commonProps} key="actions">
+        {currentStep === "havayot" && (
+          <motion.div {...commonProps} key="havayot">
             <div className="space-y-8">
               {observerToken && (
                 <div className="flex justify-end mb-4">
@@ -205,7 +153,14 @@ export const PreMatchReport = () => {
                   </Button>
                 </div>
               )}
-              <HavayaSelector value={havaya} onChange={setHavaya} />
+              <HavayotTextInput onSubmit={handleHavayotSubmit} />
+            </div>
+          </motion.div>
+        )}
+
+        {currentStep === "actions" && (
+          <motion.div {...commonProps} key="actions">
+            <div className="space-y-8">
               <ActionSelector
                 position={matchDetails.position || "forward"}
                 onSubmit={handleActionsSubmit}
@@ -227,7 +182,7 @@ export const PreMatchReport = () => {
               matchDetails={matchDetails}
               actions={selectedActions}
               answers={questionsAnswers}
-              havaya={havaya}
+              havaya={havayot}
               aiInsights={[]}
               onFinish={handleFinalSubmit}
             />
