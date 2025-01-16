@@ -83,6 +83,12 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
     }
   };
 
+  const handleBack = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex((prev) => prev - 1);
+    }
+  };
+
   const handleContinue = () => {
     onSubmit(answers);
   };
@@ -95,6 +101,8 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
         question={QUESTIONS[currentQuestionIndex]}
         value={answers[QUESTIONS[currentQuestionIndex].id as keyof MatchDetails] || ""}
         onSubmit={handleQuestionSubmit}
+        onBack={handleBack}
+        isFirstQuestion={currentQuestionIndex === 0}
       />
 
       <PreMatchExplanationDialog

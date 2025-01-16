@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { CornerDownLeft } from "lucide-react";
+import { CornerDownLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface MatchQuestionDialogProps {
   isOpen: boolean;
@@ -21,6 +22,8 @@ interface MatchQuestionDialogProps {
   };
   value: string;
   onSubmit: (value: string) => void;
+  onBack?: () => void;
+  isFirstQuestion?: boolean;
 }
 
 export const MatchQuestionDialog = ({
@@ -29,6 +32,8 @@ export const MatchQuestionDialog = ({
   question,
   value,
   onSubmit,
+  onBack,
+  isFirstQuestion = false,
 }: MatchQuestionDialogProps) => {
   const [inputValue, setInputValue] = useState("");
 
@@ -109,6 +114,19 @@ export const MatchQuestionDialog = ({
               </div>
             )}
           </form>
+          
+          {!isFirstQuestion && (
+            <div className="mt-4">
+              <Button
+                variant="ghost"
+                onClick={onBack}
+                className="flex items-center gap-2 text-gray-500 hover:text-primary transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+                חזור
+              </Button>
+            </div>
+          )}
         </motion.div>
       </DialogContent>
     </Dialog>
