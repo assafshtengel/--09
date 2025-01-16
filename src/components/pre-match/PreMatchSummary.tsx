@@ -201,41 +201,51 @@ export const PreMatchSummary = ({
         {havaya.length > 0 && (
           <div className="border p-6 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50">
             <h3 className="text-lg font-semibold mb-4">הוויות נבחרות</h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               {havaya.map((h, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   className="flex items-center justify-center"
                 >
-                  <span className="bg-white text-primary px-4 py-2 rounded-full shadow-sm border border-primary/20 hover:shadow-md transition-all duration-200 text-center">
-                    {h}
-                  </span>
+                  <div className="w-full bg-white text-primary px-4 py-3 rounded-lg shadow-sm border border-primary/20 hover:shadow-md transition-all duration-200">
+                    <span className="text-center block font-medium">{h}</span>
+                  </div>
                 </motion.div>
               ))}
             </div>
           </div>
         )}
 
-        <div>
-          <h3 className="text-lg font-semibold mb-2">יעדים למשחק</h3>
-          <ul className="space-y-2">
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold mb-4">יעדים למשחק</h3>
+          <div className="space-y-2">
             {actions.map((action, index) => (
-              <li key={index} className="border p-2 rounded">
-                {action.name}
-                {action.goal && <div className="text-sm">יעד: {action.goal}</div>}
-              </li>
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white border rounded-lg p-3 hover:shadow-sm transition-all"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-primary">{action.name}</span>
+                  {action.goal && (
+                    <span className="text-sm text-gray-600">יעד: {action.goal}</span>
+                  )}
+                </div>
+              </motion.div>
             ))}
-          </ul>
+          </div>
         </div>
 
-        <div>
-          <h3 className="text-lg font-semibold mb-2">תשובות לשאלות</h3>
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold mb-4">תשובות לשאלות</h3>
           <div className="space-y-4">
             {Object.entries(answers).map(([question, answer], index) => (
-              <div key={index} className="border p-3 rounded">
+              <div key={index} className="border p-3 rounded-lg">
                 <p className="font-medium">{question}</p>
                 <p className="text-muted-foreground">{answer}</p>
               </div>
@@ -244,8 +254,8 @@ export const PreMatchSummary = ({
         </div>
 
         {aiInsights.length > 0 && (
-          <div>
-            <h3 className="text-lg font-semibold mb-2">תובנות AI</h3>
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold mb-4">תובנות AI</h3>
             <ul className="space-y-2">
               {aiInsights.map((insight, index) => (
                 <li key={index} className="text-muted-foreground">
