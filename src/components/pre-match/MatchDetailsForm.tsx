@@ -4,7 +4,6 @@ import { MatchQuestionDialog } from "./MatchQuestionDialog";
 
 interface MatchDetails {
   date: string;
-  time?: string | null;
   opponent?: string;
   location?: string;
   position?: string;
@@ -23,11 +22,6 @@ const QUESTIONS = [
     type: "date" as const,
   },
   {
-    id: "time",
-    label: "באיזו שעה המשחק?",
-    type: "time" as const,
-  },
-  {
     id: "opponent",
     label: "נגד מי אתם משחקים?",
     type: "text" as const,
@@ -37,10 +31,9 @@ const QUESTIONS = [
     label: "מהו סוג המשחק?",
     type: "select" as const,
     options: [
-      { value: "cup", label: "גביע" },
       { value: "league", label: "ליגה" },
       { value: "friendly", label: "ידידות" },
-      { value: "other", label: "אחר" },
+      { value: "cup", label: "גביע" },
     ],
   },
   {
@@ -81,7 +74,6 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
       setCurrentQuestionIndex((prev) => prev + 1);
     } else {
       setIsTransitioning(true);
-      // Small delay before showing explanation dialog to ensure smooth transition
       setTimeout(() => {
         setShowExplanation(true);
         setIsTransitioning(false);

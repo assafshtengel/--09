@@ -5,10 +5,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { CornerDownLeft, ChevronRight, ChevronLeft } from "lucide-react";
+import { CornerDownLeft, ChevronRight, ChevronLeft, Trophy, Handshake, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { format, addDays } from "date-fns";
@@ -20,8 +19,8 @@ interface MatchQuestionDialogProps {
   question: {
     id: string;
     label: string;
-    type: "text" | "time" | "select" | "date";
-    options?: { value: string; label: string; }[];
+    type: "text" | "date" | "select";
+    options?: { value: string; label: string }[];
   };
   value: string;
   onSubmit: (value: string) => void;
@@ -41,7 +40,6 @@ export const MatchQuestionDialog = ({
   const [inputValue, setInputValue] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
 
-  // Reset input value when question changes
   useEffect(() => {
     setInputValue("");
     setShowCalendar(false);
@@ -72,6 +70,19 @@ export const MatchQuestionDialog = ({
     const formattedDate = format(selectedDate, "yyyy-MM-dd");
     setInputValue(formattedDate);
     handleSubmit();
+  };
+
+  const getMatchTypeIcon = (type: string) => {
+    switch (type) {
+      case "league":
+        return <Trophy className="w-5 h-5" />;
+      case "friendly":
+        return <Handshake className="w-5 h-5" />;
+      case "cup":
+        return <Award className="w-5 h-5" />;
+      default:
+        return null;
+    }
   };
 
   const renderDateSelection = () => {
@@ -131,6 +142,35 @@ export const MatchQuestionDialog = ({
     );
   };
 
+  const renderOptionButtons = () => {
+    return (
+      <div className="grid grid-cols-1 gap-3">
+        {question.options?.map((option) => (
+          <Button
+            key={option.value}
+            onClick={() => {
+              setInputValue(option.value);
+              setTimeout(() => handleSubmit(), 100);
+            }}
+            className={`h-14 relative flex items-center justify-between px-4 ${
+              inputValue === option.value
+                ? "bg-primary text-white"
+                : "bg-primary/10 hover:bg-primary/20 text-primary"
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              {getMatchTypeIcon(option.value)}
+              {option.label}
+            </span>
+            {inputValue === option.value && (
+              <span className="text-white">✓</span>
+            )}
+          </Button>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md mx-auto">
@@ -148,24 +188,7 @@ export const MatchQuestionDialog = ({
             {question.type === "date" ? (
               renderDateSelection()
             ) : question.type === "select" ? (
-              <Select
-                value={inputValue}
-                onValueChange={(value) => {
-                  setInputValue(value);
-                  setTimeout(() => handleSubmit(), 100);
-                }}
-              >
-                <SelectTrigger className="w-full text-right h-14">
-                  <SelectValue placeholder="בחר אפשרות" />
-                </SelectTrigger>
-                <SelectContent>
-                  {question.options?.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              renderOptionButtons()
             ) : (
               <div className="relative">
                 <Input
@@ -188,8 +211,8 @@ export const MatchQuestionDialog = ({
               </div>
             )}
 
-            {/* Continue button for all questions except date type */}
-            {question.type !== "date" && (
+            {/* Continue button for text input only */}
+            {question.type === "text" && (
               <Button
                 type="submit"
                 className="w-full bg-primary hover:bg-primary/90 text-white"
