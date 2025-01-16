@@ -360,8 +360,9 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
           backgroundColor: "#0043CE",
           color: "white",
         }}
-        className="hover:bg-[#007BFF] transition-colors"
       >
         המשך
       </Button>
     </form>
+  );
+};
