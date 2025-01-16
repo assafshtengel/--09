@@ -199,7 +199,11 @@ export const PreMatchSummary = ({
         </div>
 
         {havaya.length > 0 && (
-          <div className="border p-6 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="border p-6 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 mt-6"
+          >
             <h3 className="text-lg font-semibold mb-4">הוויות נבחרות</h3>
             <div className="grid grid-cols-2 gap-4">
               {havaya.map((h, index) => (
@@ -210,13 +214,13 @@ export const PreMatchSummary = ({
                   transition={{ delay: index * 0.1 }}
                   className="flex items-center justify-center"
                 >
-                  <div className="w-full bg-white text-primary px-4 py-3 rounded-lg shadow-sm border border-primary/20 hover:shadow-md transition-all duration-200">
+                  <div className="w-full bg-white text-primary px-4 py-2.5 rounded-lg shadow-sm border border-primary/20 hover:shadow-md transition-all duration-200">
                     <span className="text-center block font-medium">{h}</span>
                   </div>
                 </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
 
         <div className="mt-8">
@@ -228,7 +232,7 @@ export const PreMatchSummary = ({
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white border rounded-lg p-3 hover:shadow-sm transition-all"
+                className="bg-white border rounded-lg p-2.5 hover:shadow-sm transition-all"
               >
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-primary">{action.name}</span>
