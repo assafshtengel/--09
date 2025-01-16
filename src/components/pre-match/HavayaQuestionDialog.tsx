@@ -47,7 +47,11 @@ export const HavayaQuestionDialog = ({
       e.preventDefault();
     }
     if (inputValue.trim()) {
-      onSubmit(inputValue);
+      // Add category name as prefix for social havaya
+      const formattedValue = category.name === "חברתי תקשורתי" 
+        ? `חברתי: ${inputValue.trim()}`
+        : inputValue.trim();
+      onSubmit(formattedValue);
       setInputValue(""); // Clear input after submission
     }
   };
