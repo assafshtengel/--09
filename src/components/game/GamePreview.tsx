@@ -46,11 +46,13 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
         if (error) throw error;
 
         if (match?.pre_match_reports?.havaya) {
-          // Fix: Properly split and trim each havaya value
+          // Split by comma, trim whitespace, and filter out empty strings
           const havayotArray = match.pre_match_reports.havaya
             .split(',')
             .map(h => h.trim())
-            .filter(h => h.length > 0);
+            .filter(h => h.length > 0 && h !== 'undefined' && h !== 'null');
+          
+          console.log('Loaded havayot:', havayotArray); // Debug log
           setHavaya(havayotArray);
         }
       } catch (error) {
