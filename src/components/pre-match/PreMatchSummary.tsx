@@ -9,7 +9,7 @@ import { useState } from "react";
 import { InstagramPreMatchSummary } from "./InstagramPreMatchSummary";
 import { PreMatchCaptionPopup } from "./PreMatchCaptionPopup";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion"; // Added this import
+import { motion } from "framer-motion";
 
 interface PreMatchSummaryProps {
   matchDetails: {
@@ -201,17 +201,19 @@ export const PreMatchSummary = ({
         {havaya.length > 0 && (
           <div className="border p-6 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50">
             <h3 className="text-lg font-semibold mb-4">הוויות נבחרות</h3>
-            <div className="flex flex-wrap gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {havaya.map((h, index) => (
-                <motion.span
+                <motion.div
                   key={index}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white text-primary px-4 py-2 rounded-full shadow-sm border border-primary/20 hover:shadow-md transition-all duration-200"
+                  className="flex items-center justify-center"
                 >
-                  {h}
-                </motion.span>
+                  <span className="bg-white text-primary px-4 py-2 rounded-full shadow-sm border border-primary/20 hover:shadow-md transition-all duration-200 text-center">
+                    {h}
+                  </span>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -306,4 +308,3 @@ export const PreMatchSummary = ({
     </div>
   );
 };
-
