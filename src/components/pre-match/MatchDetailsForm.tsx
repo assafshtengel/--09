@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { PreMatchExplanationDialog } from "./PreMatchExplanationDialog";
 import { MatchQuestionDialog } from "./MatchQuestionDialog";
 
 interface MatchDetails {
@@ -53,7 +52,6 @@ const QUESTIONS = [
 
 export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProps) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [showExplanation, setShowExplanation] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [answers, setAnswers] = useState<MatchDetails>({
     date: initialData.date,
@@ -74,7 +72,7 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
     } else {
       setIsTransitioning(true);
       setTimeout(() => {
-        setShowExplanation(true);
+        onSubmit(answers);
         setIsTransitioning(false);
       }, 100);
     }
@@ -84,10 +82,6 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex((prev) => prev - 1);
     }
-  };
-
-  const handleContinue = () => {
-    onSubmit(answers);
   };
 
   return (
@@ -100,12 +94,6 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
         onSubmit={handleQuestionSubmit}
         onBack={handleBack}
         isFirstQuestion={currentQuestionIndex === 0}
-      />
-
-      <PreMatchExplanationDialog
-        isOpen={showExplanation}
-        onClose={() => setShowExplanation(false)}
-        onContinue={handleContinue}
       />
     </div>
   );
