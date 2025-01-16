@@ -57,7 +57,6 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [answers, setAnswers] = useState<MatchDetails>({
     date: initialData.date,
-    time: initialData.time || "",
     opponent: initialData.opponent || "",
     position: initialData.position || "forward",
     match_type: initialData.match_type || "friendly",
