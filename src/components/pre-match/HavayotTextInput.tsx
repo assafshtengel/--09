@@ -50,7 +50,7 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
         <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
           תכנן את ההוויות שלך למשחק הקרוב
         </h2>
-        <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed text-base">
+        <p className="text-muted-foreground w-full leading-relaxed text-base">
           מלא את ההוויות שאיתן תגיע למשחק בתחומים הבאים. תוכל לבחור מתוך רשימת הוויות לדוגמה או לכתוב הוויות משלך. תכנון זה יעזור לך להגיע ממוקד, מחויב ומוכן.
         </p>
       </div>
@@ -65,8 +65,8 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
               key={key} 
               className={`rounded-lg p-6 bg-gradient-to-r ${gradientColor} transition-all duration-300 shadow-sm hover:shadow-md`}
             >
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="flex-grow space-y-4 text-right order-2 md:order-1">
+              <div className="flex flex-col gap-4">
+                <div className="flex-grow space-y-4 text-right">
                   <div className="flex items-center gap-2 mb-4">
                     <Icon className="h-5 w-5 text-gray-700" />
                     <h3 className="text-lg font-semibold text-gray-800">
@@ -76,23 +76,23 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
                   <p className="text-sm text-gray-600 leading-relaxed">
                     {category.description}
                   </p>
-                  <Textarea
-                    value={havayotInputs[key]}
-                    onChange={(e) => handleInputChange(key, e.target.value)}
-                    className="min-h-[120px] w-full text-right resize-none bg-white/80 hover:bg-white focus:bg-white transition-colors border-gray-200 focus:border-primary"
-                    placeholder="הקלד את ההוויות שלך כאן..."
-                  />
-                </div>
-                <div className="order-1 md:order-2 w-full md:w-auto">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setOpenCategory(key as keyof typeof havayotCategories)}
-                    className="w-full md:w-auto h-auto py-3 px-4 bg-white hover:bg-gray-50 transition-all duration-300 hover:scale-105"
-                  >
-                    <BookOpen className="h-4 w-4 ml-2 rtl:ml-0 rtl:mr-2" />
-                    רשימת הוויות לדוגמה
-                  </Button>
+                  <div className="flex flex-col items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setOpenCategory(key as keyof typeof havayotCategories)}
+                      className="w-auto h-auto py-2 px-4 bg-white hover:bg-gray-50 transition-all duration-300 hover:scale-105"
+                    >
+                      <BookOpen className="h-4 w-4 ml-2 rtl:ml-0 rtl:mr-2" />
+                      רשימת הוויות לדוגמה
+                    </Button>
+                    <Textarea
+                      value={havayotInputs[key]}
+                      onChange={(e) => handleInputChange(key, e.target.value)}
+                      className="w-full text-right resize-none bg-white/80 hover:bg-white focus:bg-white transition-colors border-gray-200 focus:border-primary h-[40px] min-h-[40px]"
+                      placeholder={`רשום את ההוויה שאיתה אתה מגיע למשחק בתחום ה${category.name} (יש לבחור הוויה אחת בלבד)`}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
