@@ -162,28 +162,10 @@ export const PreMatchReport = () => {
     navigate("/dashboard");
   };
 
-  const categoryColors = {
-    professional: "bg-purple-50 border-purple-100 text-purple-700 hover:bg-purple-100",
-    mental: "bg-pink-50 border-pink-100 text-pink-700 hover:bg-pink-100",
-    emotional: "bg-orange-50 border-orange-100 text-orange-700 hover:bg-orange-100",
-    social: "bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100"
-  };
-
-  const categoryTitles = {
-    professional: "מקצועי",
-    mental: "מנטלי",
-    emotional: "רגשי",
-    social: "חברתי-תקשורתי"
-  };
-
-  const handleEditHavaya = (category: string) => {
-    setCurrentStep("havayot");
-  };
-
   const renderHavayotByCategory = () => {
     if (Object.entries(havayot).length === 0) return null;
 
-    const categories = Object.entries(categoryTitles).filter(([category]) => havayot[category]);
+    const categories = Object.entries(havayot).filter(([category]) => havayot[category]);
     const rows = [];
     
     for (let i = 0; i < categories.length; i += 2) {
@@ -197,13 +179,13 @@ export const PreMatchReport = () => {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-lg p-4 shadow-sm border border-gray-100"
       >
-        <h3 className="text-lg font-semibold text-right text-gray-800 mb-3">
+        <h3 className="text-lg font-semibold text-center mb-3">
           ההוויות שבחרת למשחק
         </h3>
         <div className="space-y-2">
           {rows.map((row, rowIndex) => (
             <div key={rowIndex} className="grid grid-cols-2 gap-3">
-              {row.map(([category, title]) => (
+              {row.map(([category]) => (
                 havayot[category] && (
                   <div key={category} className="flex items-center justify-between space-x-2 bg-gray-50/50 rounded-lg p-2">
                     <button
@@ -212,13 +194,12 @@ export const PreMatchReport = () => {
                     >
                       <Pencil className="h-3 w-3 text-gray-400" />
                     </button>
-                    <div className="flex items-center gap-2 justify-end flex-grow">
+                    <div className="flex items-center justify-end flex-grow">
                       <div
-                        className={`text-xs px-3 py-1 rounded-full border transition-colors ${categoryColors[category]}`}
+                        className={`text-xs px-3 py-1 rounded-full border transition-colors`}
                       >
                         {havayot[category]}
                       </div>
-                      <span className="text-sm font-medium text-gray-600 min-w-fit">{title}</span>
                     </div>
                   </div>
                 )
