@@ -14,59 +14,13 @@ interface GamePreviewProps {
   onStartMatch: () => void;
 }
 
-interface PreMatchReport {
-  pre_match_reports: {
-    havaya: string;
-  }[];
-}
-
 export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewProps) => {
   const { id: matchId } = useParams<{ id: string }>();
-  const [havaya, setHavaya] = useState<string[]>([]);
   const [insights, setInsights] = useState<string>("");
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
   const [generalNote, setGeneralNote] = useState<string>("");
 
   useEffect(() => {
-    const loadHavaya = async () => {
-      if (!matchId) return;
-
-      try {
-        const { data: match, error } = await supabase
-          .from('matches')
-          .select(`
-            pre_match_reports (
-              havaya
-            )
-          `)
-          .eq('id', matchId)
-          .single();
-
-        if (error) throw error;
-
-        if (match?.pre_match_reports?.havaya) {
-          const rawHavaya = match.pre_match_reports.havaya;
-          console.log('Raw havaya string:', rawHavaya);
-          
-          // Enhanced splitting logic to handle all cases
-          const havayotArray = rawHavaya
-            .split(',')
-            .map(h => h.trim())
-            .filter(h => h && h !== 'undefined' && h !== 'null' && h.length > 0);
-          
-          console.log('Final processed havayot array:', havayotArray);
-          setHavaya(havayotArray);
-        }
-      } catch (error) {
-        console.error('Error loading havaya:', error);
-        toast({
-          title: "שגיאה",
-          description: "לא ניתן לטעון את ההוויות",
-          variant: "destructive",
-        });
-      }
-    };
-
     const loadInsights = async () => {
       if (!matchId) return;
       
@@ -90,7 +44,6 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
       }
     };
 
-    loadHavaya();
     loadInsights();
   }, [matchId]);
 
