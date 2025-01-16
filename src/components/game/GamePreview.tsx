@@ -46,7 +46,12 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
         if (error) throw error;
 
         if (match?.pre_match_reports?.havaya) {
-          setHavaya(match.pre_match_reports.havaya.split(','));
+          // Fix: Properly split and trim each havaya value
+          const havayotArray = match.pre_match_reports.havaya
+            .split(',')
+            .map(h => h.trim())
+            .filter(h => h.length > 0);
+          setHavaya(havayotArray);
         }
       } catch (error) {
         console.error('Error loading havaya:', error);
