@@ -24,6 +24,7 @@ import PlayerPortfolio from "./pages/PlayerPortfolio";
 import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryDashboard";
 import PreGamePlanner from "./pages/PreGamePlanner";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
+import HavayotCategories from "./pages/HavayotCategories";
 
 const queryClient = new QueryClient();
 
@@ -291,6 +292,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <PreGamePlanner />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/havayot-categories"
+                element={
+                  <ProtectedRoute>
+                    <HavayotCategories />
                   </ProtectedRoute>
                 }
               />
