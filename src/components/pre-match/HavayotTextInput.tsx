@@ -19,10 +19,12 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
     professional: "",
     mental: "",
     emotional: "",
-    social: "",
   });
 
-  const categoryKeys = Object.keys(havayotCategories) as Array<keyof typeof havayotCategories>;
+  // Filter out the social category and only keep the main 3 categories
+  const categoryKeys = Object.keys(havayotCategories)
+    .filter(key => key !== 'social')
+    .map(key => key as keyof typeof havayotCategories);
 
   const handleExplanationContinue = () => {
     setShowExplanation(false);
@@ -30,7 +32,7 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
   };
 
   const handleInputChange = (category: string, value: string) => {
-    console.log('Saving havaya for category:', category, 'value:', value); // Debug log
+    console.log('Saving havaya for category:', category, 'value:', value);
     
     setHavayotInputs(prev => ({
       ...prev,
@@ -46,7 +48,7 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
     } else {
       // Convert havayot object to array and filter out empty values
       const havayotArray = Object.values(havayotInputs).filter(h => h.trim().length > 0);
-      console.log('Final havayot array:', havayotArray); // Debug log
+      console.log('Final havayot array:', havayotArray);
       onSubmit(havayotInputs);
     }
   };
@@ -89,14 +91,16 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
         />
       )}
 
-      {Object.entries(havayotCategories).map(([key, category]) => (
-        <HavayotPopup
-          key={key}
-          isOpen={openCategory === key}
-          onClose={() => setOpenCategory(null)}
-          category={category}
-        />
-      ))}
+      {Object.entries(havayotCategories)
+        .filter(([key]) => key !== 'social')
+        .map(([key, category]) => (
+          <HavayotPopup
+            key={key}
+            isOpen={openCategory === key}
+            onClose={() => setOpenCategory(null)}
+            category={category}
+          />
+        ))}
     </div>
   );
 };
