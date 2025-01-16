@@ -1,7 +1,6 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { PreMatchExplanationDialog } from "./PreMatchExplanationDialog";
+import { MatchQuestionDialog } from "./MatchQuestionDialog";
 
 interface MatchDetails {
   date: string;
@@ -17,111 +16,92 @@ interface MatchDetailsFormProps {
   initialData: MatchDetails;
 }
 
-export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProps) => {
-  const [date, setDate] = useState(initialData.date);
-  const [time, setTime] = useState(initialData.time || "");
-  const [opponent, setOpponent] = useState(initialData.opponent || "");
-  const [position, setPosition] = useState(initialData.position || "forward");
-  const [matchType, setMatchType] = useState(initialData.match_type || "friendly");
-  const [showExplanation, setShowExplanation] = useState(false);
+const QUESTIONS = [
+  {
+    id: "date",
+    label: "מתי המשחק?",
+    type: "date" as const,
+  },
+  {
+    id: "time",
+    label: "באיזו שעה המשחק?",
+    type: "time" as const,
+  },
+  {
+    id: "opponent",
+    label: "נגד מי אתם משחקים?",
+    type: "text" as const,
+  },
+  {
+    id: "match_type",
+    label: "מהו סוג המשחק?",
+    type: "select" as const,
+    options: [
+      { value: "cup", label: "גביע" },
+      { value: "league", label: "ליגה" },
+      { value: "friendly", label: "ידידות" },
+      { value: "other", label: "אחר" },
+    ],
+  },
+  {
+    id: "position",
+    label: "באיזה תפקיד תשחק במשחק?",
+    type: "select" as const,
+    options: [
+      { value: "forward", label: "חלוץ" },
+      { value: "midfielder", label: "קשר" },
+      { value: "defender", label: "מגן" },
+      { value: "goalkeeper", label: "שוער" },
+      { value: "centerback", label: "בלם" },
+      { value: "winger", label: "כנף" },
+    ],
+  },
+];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setShowExplanation(true);
+export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProps) => {
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [answers, setAnswers] = useState<MatchDetails>({
+    date: initialData.date,
+    time: initialData.time || "",
+    opponent: initialData.opponent || "",
+    position: initialData.position || "forward",
+    match_type: initialData.match_type || "friendly",
+  });
+
+  const handleQuestionSubmit = (value: string) => {
+    const currentQuestion = QUESTIONS[currentQuestionIndex];
+    setAnswers((prev) => ({
+      ...prev,
+      [currentQuestion.id]: value,
+    }));
+
+    if (currentQuestionIndex < QUESTIONS.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
+    } else {
+      setShowExplanation(true);
+    }
   };
 
   const handleContinue = () => {
-    onSubmit({ 
-      date, 
-      time: time.trim() || null,
-      opponent,
-      position,
-      match_type: matchType
-    });
+    onSubmit(answers);
   };
 
   return (
-    <>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="date" className="block text-right mb-2">תאריך המשחק</label>
-            <Input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-              className="text-right"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="time" className="block text-right mb-2">שעת המשחק</label>
-            <Input
-              id="time"
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="text-right"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="opponent" className="block text-right mb-2">קבוצה יריבה</label>
-            <Input
-              id="opponent"
-              type="text"
-              value={opponent}
-              onChange={(e) => setOpponent(e.target.value)}
-              className="text-right"
-              placeholder="שם הקבוצה היריבה"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="match_type" className="block text-right mb-2">סוג משחק</label>
-            <select
-              id="match_type"
-              value={matchType}
-              onChange={(e) => setMatchType(e.target.value)}
-              className="w-full p-2 border rounded text-right"
-            >
-              <option value="cup">גביע</option>
-              <option value="league">ליגה</option>
-              <option value="friendly">ידידות</option>
-              <option value="other">אחר</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="position" className="block text-right mb-2">עמדה</label>
-            <select
-              id="position"
-              value={position}
-              onChange={(e) => setPosition(e.target.value)}
-              className="w-full p-2 border rounded text-right"
-            >
-              <option value="forward">חלוץ</option>
-              <option value="midfielder">קשר</option>
-              <option value="defender">מגן</option>
-              <option value="goalkeeper">שוער</option>
-              <option value="centerback">בלם</option>
-              <option value="winger">כנף</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="flex justify-end">
-          <Button type="submit">המשך</Button>
-        </div>
-      </form>
+    <div className="space-y-4">
+      <MatchQuestionDialog
+        isOpen={currentQuestionIndex < QUESTIONS.length}
+        onClose={() => {}}
+        question={QUESTIONS[currentQuestionIndex]}
+        value={answers[QUESTIONS[currentQuestionIndex].id as keyof MatchDetails] || ""}
+        onSubmit={handleQuestionSubmit}
+      />
 
       <PreMatchExplanationDialog
         isOpen={showExplanation}
         onClose={() => setShowExplanation(false)}
         onContinue={handleContinue}
       />
-    </>
+    </div>
   );
 };
