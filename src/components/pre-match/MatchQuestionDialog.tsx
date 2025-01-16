@@ -30,13 +30,20 @@ export const MatchQuestionDialog = ({
   value,
   onSubmit,
 }: MatchQuestionDialogProps) => {
-  const [inputValue, setInputValue] = useState(value);
+  const [inputValue, setInputValue] = useState("");
+
+  // Reset input value when question changes
+  useState(() => {
+    setInputValue("");
+  }, [question.id]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
     }
-    onSubmit(inputValue);
+    if (inputValue.trim()) {
+      onSubmit(inputValue);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -90,12 +97,14 @@ export const MatchQuestionDialog = ({
                   placeholder="הקלד את תשובתך כאן..."
                   required
                 />
-                {question.type === "date" && (
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-gray-500">
-                    <CornerDownLeft className="w-5 h-5 text-primary" />
-                    <span className="text-sm">Enter</span>
-                  </div>
-                )}
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-gray-500 hover:text-primary transition-colors"
+                >
+                  <CornerDownLeft className="w-5 h-5" />
+                  <span className="text-sm">Enter</span>
+                </button>
               </div>
             )}
           </form>
