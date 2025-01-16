@@ -30,13 +30,13 @@ export const HavayotPopup = ({ isOpen, onClose, category }: HavayotPopupProps) =
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-4 md:p-6">
-        <DialogHeader className="space-y-2 mb-4">
+        <DialogHeader className="space-y-2 mb-4 text-right">
           <DialogTitle className="text-xl md:text-2xl text-center">
             איזה שחקן הקבוצה תקבל היום?
           </DialogTitle>
           <div className="text-sm md:text-base">
-            <h3 className="font-semibold mb-1">{category.name}</h3>
-            <p className="text-muted-foreground leading-relaxed text-sm">{category.description}</p>
+            <h3 className="font-semibold mb-1 text-right">{category.name}</h3>
+            <p className="text-muted-foreground leading-relaxed text-sm text-right">{category.description}</p>
           </div>
         </DialogHeader>
         <ScrollArea className="h-[calc(90vh-12rem)] md:h-auto rounded-md">
@@ -44,7 +44,7 @@ export const HavayotPopup = ({ isOpen, onClose, category }: HavayotPopupProps) =
             {shuffledHavayot.map((havaya, index) => (
               <div
                 key={index}
-                className="p-3 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition-colors shadow-sm"
+                className="p-3 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition-colors shadow-sm text-right"
               >
                 <h4 className="font-semibold text-base mb-1">{havaya.name}</h4>
                 <p className="text-gray-600 text-sm leading-relaxed">{havaya.description}</p>
