@@ -163,10 +163,10 @@ export const PreMatchReport = () => {
   };
 
   const categoryColors = {
-    professional: "bg-purple-100 border-purple-200 text-purple-700 hover:bg-purple-50",
-    mental: "bg-pink-100 border-pink-200 text-pink-700 hover:bg-pink-50",
-    emotional: "bg-orange-100 border-orange-200 text-orange-700 hover:bg-orange-50",
-    social: "bg-blue-100 border-blue-200 text-blue-700 hover:bg-blue-50"
+    professional: "bg-purple-50 border-purple-100 text-purple-700 hover:bg-purple-100",
+    mental: "bg-pink-50 border-pink-100 text-pink-700 hover:bg-pink-100",
+    emotional: "bg-orange-50 border-orange-100 text-orange-700 hover:bg-orange-100",
+    social: "bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100"
   };
 
   const categoryTitles = {
@@ -183,37 +183,47 @@ export const PreMatchReport = () => {
   const renderHavayotByCategory = () => {
     if (Object.entries(havayot).length === 0) return null;
 
+    const categories = Object.entries(categoryTitles).filter(([category]) => havayot[category]);
+    const rows = [];
+    
+    for (let i = 0; i < categories.length; i += 2) {
+      const row = categories.slice(i, i + 2);
+      rows.push(row);
+    }
+
     return (
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-6 bg-white rounded-lg p-6 shadow-sm border border-gray-100"
+        className="bg-white rounded-lg p-4 shadow-sm border border-gray-100"
       >
-        <h3 className="text-xl font-semibold text-right text-gray-800 mb-6">
+        <h3 className="text-lg font-semibold text-right text-gray-800 mb-3">
           ההוויות שבחרת למשחק
         </h3>
-        <div className="space-y-6">
-          {Object.entries(categoryTitles).map(([category, title]) => (
-            havayot[category] && (
-              <div key={category} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => handleEditHavaya(category)}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                  >
-                    <Pencil className="h-4 w-4 text-gray-500" />
-                  </button>
-                  <h4 className="text-lg font-medium text-gray-700">{title}</h4>
-                </div>
-                <div className="flex flex-wrap gap-2 justify-end">
-                  <div
-                    className={`px-4 py-2 rounded-full border transition-colors ${categoryColors[category]} cursor-pointer`}
-                  >
-                    {havayot[category]}
+        <div className="space-y-2">
+          {rows.map((row, rowIndex) => (
+            <div key={rowIndex} className="grid grid-cols-2 gap-3">
+              {row.map(([category, title]) => (
+                havayot[category] && (
+                  <div key={category} className="flex items-center justify-between space-x-2 bg-gray-50/50 rounded-lg p-2">
+                    <button
+                      onClick={() => handleEditHavaya(category)}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                      <Pencil className="h-3 w-3 text-gray-400" />
+                    </button>
+                    <div className="flex items-center gap-2 justify-end flex-grow">
+                      <div
+                        className={`text-xs px-3 py-1 rounded-full border transition-colors ${categoryColors[category]}`}
+                      >
+                        {havayot[category]}
+                      </div>
+                      <span className="text-sm font-medium text-gray-600 min-w-fit">{title}</span>
+                    </div>
                   </div>
-                </div>
-              </div>
-            )
+                )
+              ))}
+            </div>
           ))}
         </div>
       </motion.div>
