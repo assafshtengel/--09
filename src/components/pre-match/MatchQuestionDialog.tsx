@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { CornerDownLeft } from "lucide-react";
 
@@ -33,7 +33,7 @@ export const MatchQuestionDialog = ({
   const [inputValue, setInputValue] = useState("");
 
   // Reset input value when question changes
-  useState(() => {
+  useEffect(() => {
     setInputValue("");
   }, [question.id]);
 
