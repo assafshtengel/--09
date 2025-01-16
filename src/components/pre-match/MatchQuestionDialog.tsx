@@ -72,7 +72,8 @@ export const MatchQuestionDialog = ({
                 value={inputValue}
                 onValueChange={(value) => {
                   setInputValue(value);
-                  handleSubmit();
+                  // Automatically submit when a value is selected for select type questions
+                  setTimeout(() => handleSubmit(), 100);
                 }}
               >
                 <SelectTrigger className="w-full text-right h-14">
