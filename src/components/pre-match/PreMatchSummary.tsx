@@ -9,6 +9,7 @@ import { useState } from "react";
 import { InstagramPreMatchSummary } from "./InstagramPreMatchSummary";
 import { PreMatchCaptionPopup } from "./PreMatchCaptionPopup";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion"; // Added this import
 
 interface PreMatchSummaryProps {
   matchDetails: {
@@ -305,3 +306,4 @@ export const PreMatchSummary = ({
     </div>
   );
 };
+
