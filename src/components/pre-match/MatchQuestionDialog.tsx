@@ -15,7 +15,7 @@ interface MatchQuestionDialogProps {
   question: {
     id: string;
     label: string;
-    type: "text" | "time" | "select";
+    type: "text" | "time" | "select" | "date";
     options?: { value: string; label: string; }[];
   };
   value: string;
