@@ -19,6 +19,70 @@ interface EmailRequest {
   };
 }
 
+const generateEmailHtml = (matchDetails: EmailRequest["matchDetails"], imageData: string) => {
+  return `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="he">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Pre Match Report</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            direction: rtl;
+            text-align: right;
+            margin: 0;
+            padding: 20px;
+          }
+          .header {
+            margin-bottom: 20px;
+          }
+          .title {
+            color: #1E40AF;
+            font-size: 24px;
+            margin-bottom: 10px;
+          }
+          .details {
+            background-color: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+          }
+          .details p {
+            margin: 5px 0;
+            color: #4b5563;
+          }
+          .image-container {
+            margin-top: 20px;
+          }
+          img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1 class="title">דוח טרום משחק</h1>
+        </div>
+        <div class="details">
+          <p><strong>תאריך:</strong> ${matchDetails.date}</p>
+          ${matchDetails.time ? `<p><strong>שעה:</strong> ${matchDetails.time}</p>` : ''}
+          ${matchDetails.opponent ? `<p><strong>נגד:</strong> ${matchDetails.opponent}</p>` : ''}
+          ${matchDetails.match_type ? `<p><strong>סוג משחק:</strong> ${matchDetails.match_type}</p>` : ''}
+        </div>
+        <div class="image-container">
+          <img src="${imageData}" alt="Pre Match Report" />
+        </div>
+      </body>
+    </html>
+  `;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -27,12 +91,12 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { email, imageData, matchDetails }: EmailRequest = await req.json();
+    
+    console.log("Sending email to:", email);
+    console.log("Match details:", matchDetails);
 
-    // Ensure email is properly formatted as an array
     const to = Array.isArray(email) ? email : [email];
     
-    console.log("Attempting to send email to:", to);
-
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -40,19 +104,10 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Pre Match Report <onboarding@resend.dev>", // Using the default Resend domain
+        from: "onboarding@resend.dev", // Using default Resend domain until custom domain is verified
         to,
-        subject: `Pre Match Report - ${matchDetails.date}`,
-        html: `
-          <div>
-            <h1>Pre Match Report</h1>
-            <p>Date: ${matchDetails.date}</p>
-            ${matchDetails.time ? `<p>Time: ${matchDetails.time}</p>` : ''}
-            ${matchDetails.opponent ? `<p>Opponent: ${matchDetails.opponent}</p>` : ''}
-            ${matchDetails.match_type ? `<p>Match Type: ${matchDetails.match_type}</p>` : ''}
-            <img src="${imageData}" alt="Pre Match Report" style="max-width: 100%;" />
-          </div>
-        `,
+        subject: `דוח טרום משחק - ${matchDetails.date}`,
+        html: generateEmailHtml(matchDetails, imageData),
       }),
     });
 
@@ -71,7 +126,6 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error) {
     console.error("Error in send-pre-match-report function:", error);
     
-    // Return a more detailed error response
     return new Response(
       JSON.stringify({ 
         error: error.message,
