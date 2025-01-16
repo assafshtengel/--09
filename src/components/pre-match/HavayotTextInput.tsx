@@ -76,7 +76,7 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
           isOpen={currentCategoryIndex >= 0 && !isTransitioning}
           onClose={() => {}}
           category={currentCategory}
-          value={havayotInputs[currentCategory.key]}
+          value=""
           onSubmit={(value) => handleInputChange(currentCategory.key, value)}
           onShowHavayot={() => setOpenCategory(currentCategory.key)}
           onBack={handleBack}
