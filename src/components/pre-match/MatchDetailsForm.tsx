@@ -61,6 +61,7 @@ const QUESTIONS = [
 export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProps) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [answers, setAnswers] = useState<MatchDetails>({
     date: initialData.date,
     time: initialData.time || "",
@@ -79,7 +80,12 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
     if (currentQuestionIndex < QUESTIONS.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
     } else {
-      setShowExplanation(true);
+      setIsTransitioning(true);
+      // Small delay before showing explanation dialog to ensure smooth transition
+      setTimeout(() => {
+        setShowExplanation(true);
+        setIsTransitioning(false);
+      }, 100);
     }
   };
 
@@ -96,7 +102,7 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
   return (
     <div className="space-y-4">
       <MatchQuestionDialog
-        isOpen={currentQuestionIndex < QUESTIONS.length}
+        isOpen={currentQuestionIndex < QUESTIONS.length && !isTransitioning}
         onClose={() => {}}
         question={QUESTIONS[currentQuestionIndex]}
         value={answers[QUESTIONS[currentQuestionIndex].id as keyof MatchDetails] || ""}
