@@ -232,7 +232,7 @@ export const PreMatchReport = () => {
               matchDetails={matchDetails}
               actions={selectedActions}
               answers={questionsAnswers}
-              havaya={havayot}
+              havaya={Object.values(havayot)}
               aiInsights={[]}
               onFinish={handleFinalSubmit}
             />
