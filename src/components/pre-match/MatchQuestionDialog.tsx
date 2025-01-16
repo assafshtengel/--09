@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { CornerDownLeft } from "lucide-react";
 
 interface MatchQuestionDialogProps {
   isOpen: boolean;
@@ -67,7 +68,7 @@ export const MatchQuestionDialog = ({
                   handleSubmit();
                 }}
               >
-                <SelectTrigger className="w-full text-right">
+                <SelectTrigger className="w-full text-right h-14">
                   <SelectValue placeholder="בחר אפשרות" />
                 </SelectTrigger>
                 <SelectContent>
@@ -79,15 +80,23 @@ export const MatchQuestionDialog = ({
                 </SelectContent>
               </Select>
             ) : (
-              <Input
-                type={question.type}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full text-right"
-                placeholder="הקלד את תשובתך כאן..."
-                required
-              />
+              <div className="relative">
+                <Input
+                  type={question.type}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="w-full text-right h-14 pl-12 text-lg"
+                  placeholder="הקלד את תשובתך כאן..."
+                  required
+                />
+                {question.type === "date" && (
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-gray-500">
+                    <CornerDownLeft className="w-5 h-5 text-primary" />
+                    <span className="text-sm">Enter</span>
+                  </div>
+                )}
+              </div>
             )}
           </form>
         </motion.div>
