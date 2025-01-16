@@ -6,6 +6,8 @@ interface EmailTemplateProps {
   generalNotes: any[];
   insights: string;
   performanceRatings: Record<string, number>;
+  havaya?: string[];
+  questionsAnswers?: Record<string, string>;
 }
 
 export const generateEmailContent = ({
@@ -16,6 +18,8 @@ export const generateEmailContent = ({
   generalNotes,
   insights,
   performanceRatings,
+  havaya = [],
+  questionsAnswers = {},
 }: EmailTemplateProps): string => {
   return `
     <div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -26,14 +30,40 @@ export const generateEmailContent = ({
         ${opponent ? `<p>נגד: ${opponent}</p>` : ''}
       </div>
 
+      ${havaya.length > 0 ? `
+        <div style="margin: 20px 0;">
+          <h3 style="color: #4b5563;">הוויות נבחרות</h3>
+          <ul style="list-style-type: none; padding: 0;">
+            ${havaya.map(h => `<li style="margin: 5px 0; padding: 8px; background-color: #f3f4f6; border-radius: 4px;">${h}</li>`).join('')}
+          </ul>
+        </div>
+      ` : ''}
+
       <div style="margin: 20px 0;">
-        <h3 style="color: #4b5563;">פעולות במשחק</h3>
+        <h3 style="color: #4b5563;">יעדים למשחק</h3>
         <ul style="list-style-type: none; padding: 0;">
           ${actions.map(action => `
-            <li style="margin: 5px 0;">${action.name} - יעד: ${action.goal || 'לא הוגדר'}</li>
+            <li style="margin: 5px 0; padding: 8px; background-color: #f3f4f6; border-radius: 4px;">
+              ${action.name}
+              ${action.goal ? `<br><span style="font-size: 0.9em; color: #6b7280;">יעד: ${action.goal}</span>` : ''}
+            </li>
           `).join('')}
         </ul>
       </div>
+
+      ${Object.keys(questionsAnswers).length > 0 ? `
+        <div style="margin: 20px 0;">
+          <h3 style="color: #4b5563;">תשובות לשאלות</h3>
+          <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px;">
+            ${Object.entries(questionsAnswers).map(([question, answer]) => `
+              <div style="margin-bottom: 12px;">
+                <p style="font-weight: bold; margin-bottom: 4px;">${question}</p>
+                <p style="color: #4b5563;">${answer}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
 
       ${actionLogs.length > 0 ? `
         <div style="margin: 20px 0;">

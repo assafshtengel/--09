@@ -16,6 +16,10 @@ interface EmailRequest {
     time?: string;
     opponent?: string;
     match_type?: string;
+    playerName: string;
+    havaya?: string[];
+    actions?: any[];
+    questionsAnswers?: Record<string, string>;
   };
 }
 
@@ -26,7 +30,7 @@ const generateEmailHtml = (matchDetails: EmailRequest["matchDetails"], imageData
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Pre Match Report</title>
+        <title>דוח טרום משחק</title>
         <style>
           body {
             font-family: Arial, sans-serif;
@@ -54,6 +58,23 @@ const generateEmailHtml = (matchDetails: EmailRequest["matchDetails"], imageData
             margin: 5px 0;
             color: #4b5563;
           }
+          .section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+          }
+          .section-title {
+            color: #1E40AF;
+            font-size: 18px;
+            margin-bottom: 10px;
+          }
+          .item {
+            padding: 8px;
+            background-color: #ffffff;
+            border-radius: 4px;
+            margin: 5px 0;
+          }
           .image-container {
             margin-top: 20px;
           }
@@ -67,7 +88,7 @@ const generateEmailHtml = (matchDetails: EmailRequest["matchDetails"], imageData
       </head>
       <body>
         <div class="header">
-          <h1 class="title">דוח טרום משחק</h1>
+          <h1 class="title">דוח טרום משחק - ${matchDetails.playerName}</h1>
         </div>
         <div class="details">
           <p><strong>תאריך:</strong> ${matchDetails.date}</p>
@@ -75,6 +96,38 @@ const generateEmailHtml = (matchDetails: EmailRequest["matchDetails"], imageData
           ${matchDetails.opponent ? `<p><strong>נגד:</strong> ${matchDetails.opponent}</p>` : ''}
           ${matchDetails.match_type ? `<p><strong>סוג משחק:</strong> ${matchDetails.match_type}</p>` : ''}
         </div>
+
+        ${matchDetails.havaya && matchDetails.havaya.length > 0 ? `
+          <div class="section">
+            <h2 class="section-title">הוויות נבחרות</h2>
+            ${matchDetails.havaya.map(h => `<div class="item">${h}</div>`).join('')}
+          </div>
+        ` : ''}
+
+        ${matchDetails.actions && matchDetails.actions.length > 0 ? `
+          <div class="section">
+            <h2 class="section-title">יעדים למשחק</h2>
+            ${matchDetails.actions.map(action => `
+              <div class="item">
+                <div>${action.name}</div>
+                ${action.goal ? `<div style="font-size: 0.9em; color: #6b7280;">יעד: ${action.goal}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${matchDetails.questionsAnswers && Object.keys(matchDetails.questionsAnswers).length > 0 ? `
+          <div class="section">
+            <h2 class="section-title">תשובות לשאלות</h2>
+            ${Object.entries(matchDetails.questionsAnswers).map(([question, answer]) => `
+              <div class="item">
+                <div style="font-weight: bold;">${question}</div>
+                <div style="margin-top: 4px;">${answer}</div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
         <div class="image-container">
           <img src="${imageData}" alt="Pre Match Report" />
         </div>
@@ -106,7 +159,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "onboarding@resend.dev", // Using default Resend domain until custom domain is verified
         to,
-        subject: `דוח טרום משחק - ${matchDetails.date}`,
+        subject: `דוח טרום משחק - ${matchDetails.playerName} - ${matchDetails.date}`,
         html: generateEmailHtml(matchDetails, imageData),
       }),
     });
