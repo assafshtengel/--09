@@ -38,19 +38,21 @@ export const HavayaQuestionDialog = ({
 
   useEffect(() => {
     if (isOpen) {
-      setInputValue(""); // Clear input when dialog opens
+      setInputValue(value || ""); // Initialize with existing value if any
     }
-  }, [isOpen]);
+  }, [isOpen, value]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
     }
     if (inputValue.trim()) {
-      // Add category name as prefix for social havaya
+      // Format social havaya with prefix
       const formattedValue = category.name === "חברתי תקשורתי" 
         ? `חברתי: ${inputValue.trim()}`
         : inputValue.trim();
+      
+      console.log('Submitting havaya:', formattedValue); // Debug log
       onSubmit(formattedValue);
       setInputValue(""); // Clear input after submission
     }
