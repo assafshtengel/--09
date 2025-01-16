@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface HavayaQuestionDialogProps {
   isOpen: boolean;
@@ -34,7 +34,13 @@ export const HavayaQuestionDialog = ({
   onBack,
   isFirstQuestion = false,
 }: HavayaQuestionDialogProps) => {
-  const [inputValue, setInputValue] = useState(value);
+  const [inputValue, setInputValue] = useState("");
+
+  useEffect(() => {
+    if (isOpen) {
+      setInputValue(""); // Clear input when dialog opens
+    }
+  }, [isOpen]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) {
@@ -42,6 +48,7 @@ export const HavayaQuestionDialog = ({
     }
     if (inputValue.trim()) {
       onSubmit(inputValue);
+      setInputValue(""); // Clear input after submission
     }
   };
 

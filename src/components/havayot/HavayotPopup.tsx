@@ -27,7 +27,7 @@ export const HavayotPopup = ({ isOpen, onClose, category }: HavayotPopupProps) =
     }
   }, [isOpen, category.havayot]);
 
-  const getProfessionalDescription = () => {
+  const getCategoryDescription = () => {
     if (category.name === "מקצועי (טכני/טקטי)") {
       return (
         <div className="space-y-4">
@@ -54,6 +54,30 @@ export const HavayotPopup = ({ isOpen, onClose, category }: HavayotPopupProps) =
         </div>
       );
     }
+    
+    if (category.name === "מנטלי (גישה וחשיבה)") {
+      return (
+        <div className="space-y-4">
+          <p className="text-gray-700 leading-relaxed">
+            בחירת הוויה מנטלית עוזרת לך להגדיר את הגישה שלך למשחק ולשלוט במחשבות ובתגובות שלך במגרש. המטרה היא להתמודד טוב יותר עם אתגרים, לשמור על ריכוז ולהתנהל בביטחון גם ברגעי לחץ.
+          </p>
+          <div className="space-y-3">
+            <p className="font-medium text-gray-800">דוגמאות להוויות מנטליות:</p>
+            <ul className="space-y-2 text-gray-700">
+              <li className="flex gap-2">
+                <span className="font-medium">מוכן ללחץ:</span>
+                <span>בהוויה הזו אתה מתמודד עם מצבי לחץ במשחק באופן מחושב ורגוע. כשאתה בוחר להיות 'מוכן ללחץ', אתה מצליח לשמור על קור רוח ולקבל החלטות מהירות ונכונות גם במצבים קריטיים.</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-medium">זכיר:</span>
+                <span>ההוויה הזו מתמקדת בהשארת חותם על המשחק. כשאתה 'זכיר', אתה מוביל מהלכים שמרשימים את הצופים, המאמן והקבוצה – ויוצר רגעים בלתי נשכחים.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      );
+    }
+
     return <p className="text-muted-foreground leading-relaxed text-sm text-right">{category.description}</p>;
   };
 
@@ -66,7 +90,7 @@ export const HavayotPopup = ({ isOpen, onClose, category }: HavayotPopupProps) =
           </DialogTitle>
           <div className="text-sm md:text-base">
             <h3 className="font-semibold mb-1 text-right">{category.name}</h3>
-            {getProfessionalDescription()}
+            {getCategoryDescription()}
           </div>
         </DialogHeader>
         <ScrollArea className="h-[calc(90vh-12rem)] md:h-auto rounded-md">
