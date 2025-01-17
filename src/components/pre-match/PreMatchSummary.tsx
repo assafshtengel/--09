@@ -85,6 +85,16 @@ export const PreMatchSummary = ({
     }
   };
 
+  const handleCreateSchedule = () => {
+    navigate("/pre-game-planner", {
+      state: {
+        fromPreMatchReport: true,
+        matchDate: matchDetails.date,
+        matchTime: matchDetails.time
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div id="pre-match-summary">
@@ -176,6 +186,14 @@ export const PreMatchSummary = ({
         <Button onClick={handlePrint} variant="outline" className="flex items-center gap-2">
           <Printer className="h-4 w-4" />
           הדפס
+        </Button>
+        <Button 
+          onClick={handleCreateSchedule}
+          variant="outline" 
+          className="flex items-center gap-2"
+        >
+          <Calendar className="h-4 w-4" />
+          צור סדר יום למשחק
         </Button>
         <Button onClick={onFinish} disabled={isSaving}>סיים</Button>
       </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Copy, Share2, Edit, Save, Mail } from "lucide-react";
 import { format, formatDistanceToNow, parse, isValid } from "date-fns";
 import { he } from "date-fns/locale";
+import { useLocation } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -25,6 +26,7 @@ interface ScheduleItem {
 }
 
 export const PreGamePlanner = () => {
+  const location = useLocation();
   const [currentDate, setCurrentDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [currentTime, setCurrentTime] = useState(format(new Date(), "HH:mm"));
   const [gameDate, setGameDate] = useState("");
@@ -34,6 +36,19 @@ export const PreGamePlanner = () => {
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    // Check if we have match details in the location state (coming from pre-match report)
+    if (location.state?.fromPreMatchReport) {
+      const { matchDate, matchTime } = location.state;
+      if (matchDate) {
+        setGameDate(matchDate);
+      }
+      if (matchTime) {
+        setGameTime(matchTime);
+      }
+    }
+  }, [location]);
 
   const calculateTimeRemaining = () => {
     if (!gameDate || !gameTime) return null;
