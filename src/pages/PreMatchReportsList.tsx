@@ -16,17 +16,20 @@ import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Action } from "@/components/ActionSelector";
 
 interface PreMatchReport {
   id: string;
   match_date: string;
   match_time?: string;
   opponent?: string;
-  actions: any[];
+  actions: Action[];
   questions_answers: Record<string, any>;
   havaya?: string;
   status: "draft" | "completed";
   created_at: string;
+  updated_at: string;
+  ai_insights?: string[];
 }
 
 export const PreMatchReportsList = () => {
@@ -49,7 +52,14 @@ export const PreMatchReportsList = () => {
 
       if (error) throw error;
       
-      setReports(data || []);
+      // Transform the data to match our PreMatchReport type
+      const transformedData: PreMatchReport[] = data?.map(report => ({
+        ...report,
+        actions: Array.isArray(report.actions) ? report.actions : [],
+        questions_answers: report.questions_answers || {},
+      })) || [];
+      
+      setReports(transformedData);
     } catch (error) {
       console.error("Error fetching reports:", error);
       toast.error("שגיאה בטעינת הדוחות");
