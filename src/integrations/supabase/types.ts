@@ -1167,6 +1167,7 @@ export type Database = {
       }
       weekly_schedules: {
         Row: {
+          additional_commitments: Json | null
           ai_optimizations: Json | null
           chat_progress: Json | null
           created_at: string
@@ -1175,13 +1176,16 @@ export type Database = {
           is_active: boolean
           notes: string | null
           player_id: string
+          school_hours: Json | null
           shared_with: string[] | null
           social_events: Json | null
           start_date: string
           status: string | null
           team_games: Json | null
+          training_hours: Json | null
         }
         Insert: {
+          additional_commitments?: Json | null
           ai_optimizations?: Json | null
           chat_progress?: Json | null
           created_at?: string
@@ -1190,13 +1194,16 @@ export type Database = {
           is_active?: boolean
           notes?: string | null
           player_id: string
+          school_hours?: Json | null
           shared_with?: string[] | null
           social_events?: Json | null
           start_date: string
           status?: string | null
           team_games?: Json | null
+          training_hours?: Json | null
         }
         Update: {
+          additional_commitments?: Json | null
           ai_optimizations?: Json | null
           chat_progress?: Json | null
           created_at?: string
@@ -1205,11 +1212,13 @@ export type Database = {
           is_active?: boolean
           notes?: string | null
           player_id?: string
+          school_hours?: Json | null
           shared_with?: string[] | null
           social_events?: Json | null
           start_date?: string
           status?: string | null
           team_games?: Json | null
+          training_hours?: Json | null
         }
         Relationships: [
           {

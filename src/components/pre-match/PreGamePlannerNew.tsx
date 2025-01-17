@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { format, addDays } from "date-fns";
+import { format, addDays, differenceInDays } from "date-fns";
 import { he } from "date-fns/locale";
 import { MatchQuestionDialog } from "./MatchQuestionDialog";
+import { SchoolHoursInput } from "./components/SchoolHoursInput";
+import { TrainingHoursInput } from "./components/TrainingHoursInput";
 
 interface ScheduleData {
   gameDate: string;
@@ -13,7 +15,7 @@ interface ScheduleData {
   hasSchool: boolean;
   schoolHours: { [key: string]: { start: string; end: string } };
   hasTeamTraining: boolean;
-  teamTrainingHours?: { start: string; end: string };
+  teamTrainingHours: { [key: string]: { start: string; end: string } };
   otherCommitments?: string;
   notes?: string;
 }
@@ -26,8 +28,12 @@ export const PreGamePlannerNew = () => {
     hasSchool: false,
     schoolHours: {},
     hasTeamTraining: false,
+    teamTrainingHours: {},
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showSchoolHours, setShowSchoolHours] = useState(false);
+  const [currentSchoolDay, setCurrentSchoolDay] = useState<string | null>(null);
+  const [showTrainingHours, setShowTrainingHours] = useState(false);
 
   const questions = [
     {
@@ -38,7 +44,7 @@ export const PreGamePlannerNew = () => {
     {
       id: "game_time",
       label: "באיזו שעה המשחק?",
-      type: "text" as const, // Changed from "time" to "text" to match allowed types
+      type: "text" as const,
     },
     {
       id: "has_school",
@@ -65,32 +71,85 @@ export const PreGamePlannerNew = () => {
     },
   ];
 
+  const getDatesUntilGame = () => {
+    const startDate = new Date();
+    const gameDate = new Date(scheduleData.gameDate);
+    const days = differenceInDays(gameDate, startDate);
+    const dates = [];
+    
+    for (let i = 0; i <= days; i++) {
+      dates.push(format(addDays(startDate, i), "yyyy-MM-dd"));
+    }
+    
+    return dates;
+  };
+
   const handleQuestionSubmit = async (value: string) => {
     const currentQuestion = questions[currentStep];
 
     switch (currentQuestion.id) {
       case "game_date":
         setScheduleData((prev) => ({ ...prev, gameDate: value }));
+        setCurrentStep((prev) => prev + 1);
         break;
       case "game_time":
         setScheduleData((prev) => ({ ...prev, gameTime: value }));
+        setCurrentStep((prev) => prev + 1);
         break;
       case "has_school":
         setScheduleData((prev) => ({ ...prev, hasSchool: value === "yes" }));
+        if (value === "yes") {
+          setShowSchoolHours(true);
+          setCurrentSchoolDay(getDatesUntilGame()[0]);
+        } else {
+          setCurrentStep((prev) => prev + 1);
+        }
         break;
       case "has_team_training":
         setScheduleData((prev) => ({ ...prev, hasTeamTraining: value === "yes" }));
+        if (value === "yes") {
+          setShowTrainingHours(true);
+        } else {
+          setCurrentStep((prev) => prev + 1);
+        }
         break;
       case "other_commitments":
         setScheduleData((prev) => ({ ...prev, otherCommitments: value }));
+        await generateSchedule();
         break;
     }
+  };
 
-    if (currentStep < questions.length - 1) {
-      setCurrentStep((prev) => prev + 1);
+  const handleSchoolHoursSubmit = (hours: { start: string; end: string }) => {
+    if (!currentSchoolDay) return;
+
+    setScheduleData((prev) => ({
+      ...prev,
+      schoolHours: {
+        ...prev.schoolHours,
+        [currentSchoolDay]: hours,
+      },
+    }));
+
+    const dates = getDatesUntilGame();
+    const currentIndex = dates.indexOf(currentSchoolDay);
+    
+    if (currentIndex < dates.length - 1) {
+      setCurrentSchoolDay(dates[currentIndex + 1]);
     } else {
-      await generateSchedule();
+      setShowSchoolHours(false);
+      setCurrentSchoolDay(null);
+      setCurrentStep((prev) => prev + 1);
     }
+  };
+
+  const handleTrainingHoursSubmit = (trainingHours: { [key: string]: { start: string; end: string } }) => {
+    setScheduleData((prev) => ({
+      ...prev,
+      teamTrainingHours: trainingHours,
+    }));
+    setShowTrainingHours(false);
+    setCurrentStep((prev) => prev + 1);
   };
 
   const generateSchedule = async () => {
@@ -106,21 +165,28 @@ export const PreGamePlannerNew = () => {
           currentTime: format(new Date(), "HH:mm"),
           gameDate: scheduleData.gameDate,
           gameTime: scheduleData.gameTime,
+          schoolHours: scheduleData.schoolHours,
+          teamTrainingHours: scheduleData.teamTrainingHours,
           commitments: scheduleData.otherCommitments || "אין מחויבויות נוספות",
         }
       });
 
       if (error) throw error;
 
-      // Save the schedule to the database and update local state
+      // Save the schedule to the database
       const { error: saveError } = await supabase
         .from('weekly_schedules')
         .insert({
           player_id: user.id,
           start_date: new Date().toISOString(),
           notes: data.schedule,
-          status: 'active', // Add this line to set a valid status
-          is_active: true
+          status: 'active',
+          is_active: true,
+          school_hours: scheduleData.schoolHours,
+          training_hours: scheduleData.teamTrainingHours,
+          additional_commitments: scheduleData.otherCommitments 
+            ? [{ description: scheduleData.otherCommitments }] 
+            : []
         });
 
       if (saveError) throw saveError;
@@ -181,15 +247,47 @@ export const PreGamePlannerNew = () => {
     <div className="max-w-4xl mx-auto p-4">
       <Card className="p-6">
         <div className="space-y-4">
-          <MatchQuestionDialog
-            isOpen={currentStep < questions.length}
-            onClose={() => {}}
-            question={questions[currentStep]}
-            value=""
-            onSubmit={handleQuestionSubmit}
-            onBack={currentStep > 0 ? () => setCurrentStep(prev => prev - 1) : undefined}
-            isFirstQuestion={currentStep === 0}
-          />
+          {!showSchoolHours && !showTrainingHours && (
+            <MatchQuestionDialog
+              isOpen={currentStep < questions.length}
+              onClose={() => {}}
+              question={questions[currentStep]}
+              value=""
+              onSubmit={handleQuestionSubmit}
+              onBack={currentStep > 0 ? () => setCurrentStep(prev => prev - 1) : undefined}
+              isFirstQuestion={currentStep === 0}
+            />
+          )}
+
+          {showSchoolHours && currentSchoolDay && (
+            <Dialog open={true} onOpenChange={() => {}}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    מה שעות בית הספר ל-{format(new Date(currentSchoolDay), "EEEE, d בMMMM", { locale: he })}?
+                  </DialogTitle>
+                </DialogHeader>
+                <SchoolHoursInput
+                  date={currentSchoolDay}
+                  onSubmit={handleSchoolHoursSubmit}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
+
+          {showTrainingHours && (
+            <Dialog open={true} onOpenChange={() => {}}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>באילו ימים יש לך אימון קבוצתי?</DialogTitle>
+                </DialogHeader>
+                <TrainingHoursInput
+                  dates={getDatesUntilGame()}
+                  onSubmit={handleTrainingHoursSubmit}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
 
           {scheduleData.notes && (
             <div className="space-y-6">
