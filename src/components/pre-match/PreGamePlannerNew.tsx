@@ -15,7 +15,7 @@ interface ScheduleData {
   hasTeamTraining: boolean;
   teamTrainingHours?: { start: string; end: string };
   otherCommitments?: string;
-  notes?: string; // Added notes property
+  notes?: string;
 }
 
 export const PreGamePlannerNew = () => {
@@ -119,7 +119,8 @@ export const PreGamePlannerNew = () => {
           player_id: user.id,
           start_date: new Date().toISOString(),
           notes: data.schedule,
-          status: 'active',
+          status: 'active', // Add this line to set a valid status
+          is_active: true
         });
 
       if (saveError) throw saveError;
