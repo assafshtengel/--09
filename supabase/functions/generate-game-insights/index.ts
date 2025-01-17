@@ -14,6 +14,7 @@ serve(async (req) => {
 
   try {
     const { matchId } = await req.json();
+    console.log('Processing match ID:', matchId);
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -42,6 +43,7 @@ serve(async (req) => {
       .single();
 
     if (matchError) throw matchError;
+    console.log('Fetched match data:', currentMatch);
 
     // Calculate match statistics
     const totalActions = currentMatch.match_actions.length;
@@ -68,22 +70,40 @@ serve(async (req) => {
       }
     });
 
-    // Compare with goals from pre-match report
-    const preMatchActions = currentMatch.pre_match_reports?.actions || [];
-    const goalsComparison = preMatchActions.map(preMatchAction => {
-      const actionStats = actionTypes.get(preMatchAction.id) || { total: 0, successful: 0 };
-      const goalTarget = preMatchAction.goal ? parseInt(preMatchAction.goal) : null;
-      
-      if (!goalTarget) return null;
+    // Parse and handle pre-match actions
+    let preMatchActions = [];
+    if (currentMatch.pre_match_reports?.actions) {
+      const rawActions = currentMatch.pre_match_reports.actions;
+      try {
+        // Parse if string, otherwise use as is
+        preMatchActions = typeof rawActions === 'string' ? JSON.parse(rawActions) : rawActions;
+        // Ensure it's an array
+        preMatchActions = Array.isArray(preMatchActions) ? preMatchActions : [preMatchActions];
+        console.log('Parsed pre-match actions:', preMatchActions);
+      } catch (error) {
+        console.error('Error parsing pre-match actions:', error);
+        preMatchActions = [];
+      }
+    }
 
-      const achievementRate = (actionStats.successful / goalTarget) * 100;
-      return {
-        actionName: preMatchAction.name,
-        achieved: actionStats.successful,
-        goal: goalTarget,
-        achievementRate
-      };
-    }).filter(Boolean);
+    // Compare with goals from pre-match report
+    const goalsComparison = preMatchActions
+      .filter(action => action && typeof action === 'object' && action.goal)
+      .map(preMatchAction => {
+        const actionStats = actionTypes.get(String(preMatchAction.id)) || { total: 0, successful: 0 };
+        const goalTarget = parseInt(String(preMatchAction.goal));
+        
+        if (isNaN(goalTarget)) return null;
+
+        const achievementRate = (actionStats.successful / goalTarget) * 100;
+        return {
+          actionName: String(preMatchAction.name),
+          achieved: actionStats.successful,
+          goal: goalTarget,
+          achievementRate
+        };
+      })
+      .filter(Boolean);
 
     // Generate insights
     const insights = [];
@@ -93,7 +113,7 @@ serve(async (req) => {
 
     // Actions breakdown
     actionTypes.forEach((stats, actionId) => {
-      const action = preMatchActions.find(a => a.id === actionId);
+      const action = preMatchActions.find(a => String(a.id) === actionId);
       if (action) {
         const successRate = (stats.successful / stats.total) * 100;
         insights.push(`ב${action.name}: ביצעת ${stats.total} נסיונות, ${stats.successful} מוצלחים (${successRate.toFixed(1)}% הצלחה).`);
