@@ -1,16 +1,16 @@
 import { Button } from "@/components/ui/button";
-import { Mail, Printer, ExternalLink, List } from "lucide-react";
+import { Action } from "@/components/ActionSelector";
+import { Mail, Printer, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import html2canvas from "html2canvas";
 import { format } from "date-fns";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { InstagramPreMatchSummary } from "./InstagramPreMatchSummary";
 import { PreMatchCaptionPopup } from "./PreMatchCaptionPopup";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { SummaryWorkflow } from "./summary/SummaryWorkflow";
-import { Action } from "@/components/ActionSelector";
 
 interface PreMatchSummaryProps {
   matchDetails: {
@@ -44,55 +44,6 @@ export const PreMatchSummary = ({
   const processedHavaya = havaya
     .map(h => h.trim())
     .filter(h => h.length > 0);
-
-  // Auto-save report when component mounts
-  useEffect(() => {
-    const saveReport = async () => {
-      try {
-        setIsSaving(true);
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error("No authenticated user");
-
-        const { data: report, error } = await supabase
-          .from("pre_match_reports")
-          .insert({
-            player_id: user.id,
-            match_date: matchDetails.date,
-            match_time: matchDetails.time,
-            opponent: matchDetails.opponent,
-            actions: actions,
-            questions_answers: answers,
-            havaya: processedHavaya.join(", "),
-            status: "completed"
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-        
-        setReportId(report.id);
-        toast({
-          title: "הדוח נשמר בהצלחה",
-          description: "תוכל למצוא אותו בעמוד דוחות טרום משחק",
-        });
-      } catch (error) {
-        console.error('Error saving report:', error);
-        toast({
-          title: "שגיאה בשמירת הדוח",
-          description: "אנא נסה שנית",
-          variant: "destructive",
-        });
-      } finally {
-        setIsSaving(false);
-      }
-    };
-
-    saveReport();
-  }, []);
-
-  const handleViewReports = () => {
-    navigate('/pre-match-reports-list');
-  };
 
   const handlePrint = async () => {
     try {
@@ -138,17 +89,7 @@ export const PreMatchSummary = ({
     <div className="space-y-6">
       <div id="pre-match-summary">
         <div className="border-b pb-4">
-          <div className="flex justify-between items-center">
-            <Button
-              onClick={handleViewReports}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <List className="h-4 w-4" />
-              צפה בכל הדוחות
-            </Button>
-            <h2 className="text-2xl font-bold">סיכום דוח טרום משחק</h2>
-          </div>
+          <h2 className="text-2xl font-bold">סיכום דוח טרום משחק</h2>
           <p className="text-muted-foreground">
             תאריך: {matchDetails.date}
             {matchDetails.opponent && ` | נגד: ${matchDetails.opponent}`}
@@ -265,4 +206,3 @@ export const PreMatchSummary = ({
     </div>
   );
 };
-
