@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, addDays } from "date-fns";
 import { he } from "date-fns/locale";
 import { MatchQuestionDialog } from "./MatchQuestionDialog";
-import { useToast } from "@/hooks/use-toast";
 
 interface ScheduleData {
   gameDate: string;
@@ -16,6 +15,7 @@ interface ScheduleData {
   hasTeamTraining: boolean;
   teamTrainingHours?: { start: string; end: string };
   otherCommitments?: string;
+  notes?: string; // Added notes property
 }
 
 export const PreGamePlannerNew = () => {
@@ -38,7 +38,7 @@ export const PreGamePlannerNew = () => {
     {
       id: "game_time",
       label: "באיזו שעה המשחק?",
-      type: "time" as const,
+      type: "text" as const, // Changed from "time" to "text" to match allowed types
     },
     {
       id: "has_school",
@@ -112,7 +112,7 @@ export const PreGamePlannerNew = () => {
 
       if (error) throw error;
 
-      // Save the schedule to the database
+      // Save the schedule to the database and update local state
       const { error: saveError } = await supabase
         .from('weekly_schedules')
         .insert({
@@ -124,6 +124,7 @@ export const PreGamePlannerNew = () => {
 
       if (saveError) throw saveError;
 
+      setScheduleData(prev => ({ ...prev, notes: data.schedule }));
       toast.success("סדר היום נוצר בהצלחה!");
     } catch (error) {
       console.error("Error generating schedule:", error);
