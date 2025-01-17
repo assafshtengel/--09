@@ -52,6 +52,8 @@ export const GameTracker = () => {
     if (!matchId) return;
 
     try {
+      console.log("Loading match data for ID:", matchId);
+      
       const { data: match, error: matchError } = await supabase
         .from("matches")
         .select(`
@@ -65,14 +67,23 @@ export const GameTracker = () => {
 
       if (matchError) throw matchError;
 
+      console.log("Fetched match data:", match);
+
       // Type assertion for match data
       const typedMatch = match as unknown as Match;
       setMatchDetails(typedMatch);
 
       if (match?.pre_match_reports?.actions) {
-        const rawActions = match.pre_match_reports.actions as unknown as PreMatchReportActions[];
+        console.log("Raw actions from pre_match_reports:", match.pre_match_reports.actions);
         
-        const validActions = rawActions
+        // Ensure actions is an array before processing
+        const actionsArray = Array.isArray(match.pre_match_reports.actions) 
+          ? match.pre_match_reports.actions 
+          : typeof match.pre_match_reports.actions === 'object'
+            ? [match.pre_match_reports.actions]
+            : [];
+            
+        const validActions = actionsArray
           .filter(action => 
             typeof action === 'object' && 
             action !== null && 
@@ -89,6 +100,9 @@ export const GameTracker = () => {
           
         console.log("Parsed actions:", validActions);
         setActions(validActions);
+      } else {
+        console.log("No actions found in pre_match_reports");
+        setActions([]);
       }
 
       // Load existing action logs
