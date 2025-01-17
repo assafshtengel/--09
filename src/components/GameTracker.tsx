@@ -76,26 +76,29 @@ export const GameTracker = () => {
       if (match?.pre_match_reports?.actions) {
         console.log("Raw actions from pre_match_reports:", match.pre_match_reports.actions);
         
-        // Ensure actions is an array before processing
-        const actionsArray = Array.isArray(match.pre_match_reports.actions) 
-          ? match.pre_match_reports.actions 
-          : typeof match.pre_match_reports.actions === 'object'
-            ? [match.pre_match_reports.actions]
-            : [];
+        // Parse actions string if it's a string
+        const parsedActions = typeof match.pre_match_reports.actions === 'string' 
+          ? JSON.parse(match.pre_match_reports.actions)
+          : match.pre_match_reports.actions;
+        
+        // Ensure actions is an array
+        const actionsArray = Array.isArray(parsedActions) 
+          ? parsedActions 
+          : [parsedActions];
             
         const validActions = actionsArray
-          .filter(action => 
-            typeof action === 'object' && 
-            action !== null && 
-            'id' in action && 
-            'name' in action && 
+          .filter((action): action is PreMatchReportActions => 
+            action !== null &&
+            typeof action === 'object' &&
+            'id' in action &&
+            'name' in action &&
             'isSelected' in action
           )
           .map(action => ({
-            id: action.id,
-            name: action.name,
-            goal: action.goal,
-            isSelected: action.isSelected
+            id: String(action.id),
+            name: String(action.name),
+            goal: action.goal ? String(action.goal) : undefined,
+            isSelected: Boolean(action.isSelected)
           }));
           
         console.log("Parsed actions:", validActions);
