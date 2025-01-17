@@ -25,6 +25,7 @@ import { TrainingSummaryDashboard } from "@/components/training/TrainingSummaryD
 import PreGamePlanner from "./pages/PreGamePlanner";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import HavayotCategories from "./pages/HavayotCategories";
+import PreMatchReportsList from "./pages/PreMatchReportsList";
 
 const queryClient = new QueryClient();
 
@@ -300,6 +301,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <HavayotCategories />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/pre-match-reports-list"
+                element={
+                  <ProtectedRoute>
+                    <PreMatchReportsList />
                   </ProtectedRoute>
                 }
               />

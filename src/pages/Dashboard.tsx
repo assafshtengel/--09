@@ -114,6 +114,13 @@ const Dashboard = () => {
       icon: <Trophy className="h-6 w-6" />,
       gradient: "from-yellow-500 to-yellow-600",
       onClick: () => navigate("/portfolio")
+    },
+    {
+      title: "דוחות טרום משחק",
+      description: "צפה בכל דוחות טרום המשחק שלך",
+      icon: <FileText className="h-6 w-6" />,
+      gradient: "from-teal-500 to-teal-600",
+      onClick: () => navigate("/pre-match-reports-list")
     }
   ];
 
