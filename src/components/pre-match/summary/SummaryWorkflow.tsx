@@ -11,10 +11,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Download, Calendar, ArrowRight } from "lucide-react";
+import { Calendar, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 
 interface SummaryWorkflowProps {
   reportId: string;
@@ -40,28 +39,81 @@ export const SummaryWorkflow = ({ reportId }: SummaryWorkflowProps) => {
     };
   }, [hasVisitedExternalSite]);
 
-  const handleDownload = async () => {
+  const handleScreenshot = async () => {
     try {
       const element = document.getElementById("pre-match-summary");
       if (!element) {
         throw new Error("Summary element not found");
       }
 
-      const canvas = await html2canvas(element);
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imgData = canvas.toDataURL("image/png");
-      pdf.addImage(imgData, "PNG", 0, 0, 210, 297);
-      pdf.save(`pre-match-report-${reportId}.pdf`);
+      // Set temporary styles to ensure all content is visible in one view
+      const originalStyle = element.style.cssText;
+      element.style.cssText = `
+        position: relative;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 2rem;
+        box-sizing: border-box;
+      `;
+
+      const canvas = await html2canvas(element, {
+        scale: 2, // Higher quality
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        windowWidth: 1200,
+        windowHeight: element.scrollHeight,
+      });
+
+      // Restore original styles
+      element.style.cssText = originalStyle;
+
+      // Convert to blob
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => {
+          resolve(blob!);
+        }, 'image/png', 1.0);
+      });
+
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `pre-match-report-${reportId}.png`;
+      
+      // For mobile devices, try to use the device's native share if available
+      if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        try {
+          const file = new File([blob], `pre-match-report-${reportId}.png`, { type: 'image/png' });
+          await navigator.share({
+            files: [file],
+            title: 'Pre-Match Report',
+          });
+        } catch (error) {
+          // Fallback to regular download if sharing fails
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      } else {
+        // Regular download for desktop
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      URL.revokeObjectURL(url);
 
       toast({
         title: "הדוח נשמר בהצלחה",
-        description: "הקובץ נשמר במכשיר שלך",
+        description: "התמונה נשמרה במכשיר שלך",
       });
 
       setShowSaveDialog(false);
       setShowGuideDialog(true);
     } catch (error) {
-      console.error("Error generating PDF:", error);
+      console.error("Error generating screenshot:", error);
       toast({
         title: "שגיאה בשמירת הדוח",
         description: "אנא נסה שנית",
@@ -85,9 +137,9 @@ export const SummaryWorkflow = ({ reportId }: SummaryWorkflowProps) => {
       <AlertDialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>האם תרצה לשמור את הדוח במכשיר שלך?</AlertDialogTitle>
+            <AlertDialogTitle>מעוניין לשמור את הדוח במחשב/פלאפון?</AlertDialogTitle>
             <AlertDialogDescription>
-              הדוח יישמר בפורמט PDF ותוכל לפתוח אותו בכל עת
+              הדוח יישמר כתמונה במכשיר שלך
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex gap-2">
@@ -97,8 +149,7 @@ export const SummaryWorkflow = ({ reportId }: SummaryWorkflowProps) => {
             }}>
               לא
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDownload} className="gap-2">
-              <Download className="h-4 w-4" />
+            <AlertDialogAction onClick={handleScreenshot}>
               כן, שמור
             </AlertDialogAction>
           </AlertDialogFooter>
