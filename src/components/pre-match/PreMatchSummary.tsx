@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
-import { Mail, Printer, ExternalLink } from "lucide-react";
+import { Mail, Printer, ExternalLink, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import html2canvas from "html2canvas";
