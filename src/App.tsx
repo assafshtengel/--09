@@ -2,7 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Navigation } from "./components/Navigation";
 import { Toaster } from "@/components/ui/sonner";
 import PreGamePlannerNew from "./pages/PreGamePlannerNew";
-import PreGamePlanner from "./pages/PreGamePlanner"; // Assuming this is the existing import
+import PreGamePlanner from "./pages/PreGamePlanner";
+import Home from "./pages/Home";
 
 function App() {
   return (
@@ -11,7 +12,7 @@ function App() {
         <Navigation />
         <main>
           <Routes>
-            <Route path="/" element={<Home />} /> {/* Assuming Home is an existing component */}
+            <Route path="/" element={<Home />} />
             <Route path="/pre-game-planner" element={<PreGamePlanner />} />
             <Route path="/pre-game-planner_NEW" element={<PreGamePlannerNew />} />
           </Routes>
