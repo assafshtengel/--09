@@ -26,7 +26,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Use maybeSingle() instead of single() to handle cases where no row is found
     const { data: match, error: matchError } = await supabaseClient
       .from('matches')
       .select(`
@@ -75,7 +74,6 @@ serve(async (req) => {
     const strongestSkill = ratings.length > 0 ? ratings.reduce((a, b) => (b[1] > a[1] ? b : a), ['', 0])[0] : '';
     const weakestSkill = ratings.length > 0 ? ratings.reduce((a, b) => (b[1] < a[1] ? b : a), ['', 5])[0] : '';
 
-    // Generate the caption using GPT-4
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {

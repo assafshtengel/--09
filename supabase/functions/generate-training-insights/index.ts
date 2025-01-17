@@ -20,7 +20,6 @@ serve(async (req) => {
 
     const { trainingData } = await req.json();
 
-    // Create a structured prompt for the AI
     const prompt = `
     בתור מאמן כדורגל מקצועי, נתח את סיכום האימון הבא ותן תובנות מפורטות ומשמעותיות לשחקן:
 
@@ -52,7 +51,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -70,7 +69,7 @@ serve(async (req) => {
     if (!response.ok) {
       const error = await response.json();
       console.error('OpenAI API error:', error);
-      throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
+      throw new Error(error.error?.message || 'Failed to generate insights');
     }
 
     const data = await response.json();

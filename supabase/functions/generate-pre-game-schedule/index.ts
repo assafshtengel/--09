@@ -48,7 +48,6 @@ serve(async (req) => {
 
     console.log('Received request with params:', { currentDate, currentTime, gameDate, gameTime, commitments, timeRemaining })
 
-    // Extract game hour for meal planning
     const gameHour = parseInt(gameTime.split(':')[0]);
     const mealPlan = getMealPlan(gameHour);
 
@@ -87,7 +86,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
