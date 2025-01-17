@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { format, addDays, differenceInDays } from "https://deno.land/x/date_fns@v2.22.1/index.js";
+import { format, addDays, differenceInDays } from "npm:date-fns";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

@@ -8,6 +8,12 @@ import { he } from "date-fns/locale";
 import { MatchQuestionDialog } from "./MatchQuestionDialog";
 import { SchoolHoursInput } from "./components/SchoolHoursInput";
 import { TrainingHoursInput } from "./components/TrainingHoursInput";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ScheduleData {
   gameDate: string;
