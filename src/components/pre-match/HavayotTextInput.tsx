@@ -19,11 +19,11 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
     professional: "",
     mental: "",
     emotional: "",
+    social: "" // Added social category
   });
 
-  // Filter out the social category and only keep the main 3 categories
+  // Use all categories including social
   const categoryKeys = Object.keys(havayotCategories)
-    .filter(key => key !== 'social')
     .map(key => key as keyof typeof havayotCategories);
 
   const handleExplanationContinue = () => {
@@ -94,16 +94,14 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
         />
       )}
 
-      {Object.entries(havayotCategories)
-        .filter(([key]) => key !== 'social')
-        .map(([key, category]) => (
-          <HavayotPopup
-            key={key}
-            isOpen={openCategory === key}
-            onClose={() => setOpenCategory(null)}
-            category={category}
-          />
-        ))}
+      {Object.entries(havayotCategories).map(([key, category]) => (
+        <HavayotPopup
+          key={key}
+          isOpen={openCategory === key}
+          onClose={() => setOpenCategory(null)}
+          category={category}
+        />
+      ))}
     </div>
   );
 };
