@@ -190,14 +190,14 @@ export const PreGamePlannerNew = () => {
 
       if (error) throw error;
 
-      // Save the schedule to the database
+      // Save the schedule to the database with explicit status
       const { error: saveError } = await supabase
         .from('weekly_schedules')
         .insert({
           player_id: user.id,
           start_date: new Date().toISOString(),
           notes: data.schedule,
-          status: 'active',
+          status: 'draft',
           is_active: true,
           school_hours: scheduleData.schoolHours,
           training_hours: scheduleData.teamTrainingHours,
@@ -345,4 +345,3 @@ export const PreGamePlannerNew = () => {
     </div>
   );
 };
-
