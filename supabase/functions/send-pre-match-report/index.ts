@@ -23,7 +23,19 @@ interface EmailRequest {
   };
 }
 
-const generateEmailHtml = (matchDetails: EmailRequest["matchDetails"], imageData: string) => {
+const generateEmailHtml = (matchDetails: EmailRequest["matchDetails"]) => {
+  const formatSection = (title: string, content: string) => `
+    <div style="margin: 20px 0; padding: 15px; background-color: #f8fafc; border-radius: 8px;">
+      <h3 style="color: #1E40AF; margin: 0 0 10px 0;">${title}</h3>
+      <div style="color: #4b5563;">${content}</div>
+    </div>
+  `;
+
+  const formatList = (items: any[], formatter: (item: any) => string) => 
+    items?.length > 0 
+      ? `<ul style="list-style-type: none; padding: 0; margin: 0;">${items.map(formatter).join('')}</ul>`
+      : '';
+
   return `
     <!DOCTYPE html>
     <html dir="rtl" lang="he">
@@ -39,98 +51,70 @@ const generateEmailHtml = (matchDetails: EmailRequest["matchDetails"], imageData
             text-align: right;
             margin: 0;
             padding: 20px;
+            color: #1a1a1a;
           }
           .header {
-            margin-bottom: 20px;
-          }
-          .title {
-            color: #1E40AF;
-            font-size: 24px;
-            margin-bottom: 10px;
-          }
-          .details {
-            background-color: #f8fafc;
-            padding: 15px;
+            background-color: #1E40AF;
+            color: white;
+            padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
-          }
-          .details p {
-            margin: 5px 0;
-            color: #4b5563;
           }
           .section {
-            margin: 20px 0;
-            padding: 15px;
             background-color: #f8fafc;
+            padding: 15px;
             border-radius: 8px;
-          }
-          .section-title {
-            color: #1E40AF;
-            font-size: 18px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
           }
           .item {
-            padding: 8px;
-            background-color: #ffffff;
+            background-color: white;
+            padding: 10px;
             border-radius: 4px;
-            margin: 5px 0;
-          }
-          .image-container {
-            margin-top: 20px;
-          }
-          img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 8px 0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
           }
         </style>
       </head>
       <body>
         <div class="header">
-          <h1 class="title">דוח טרום משחק - ${matchDetails.playerName}</h1>
+          <h1 style="margin: 0;">דוח טרום משחק - ${matchDetails.playerName || 'שחקן'}</h1>
+          <p style="margin: 10px 0 0 0;">
+            ${matchDetails.date}
+            ${matchDetails.time ? ` | ${matchDetails.time}` : ''}
+            ${matchDetails.opponent ? ` | נגד ${matchDetails.opponent}` : ''}
+            ${matchDetails.match_type ? ` | ${matchDetails.match_type}` : ''}
+          </p>
         </div>
-        <div class="details">
-          <p><strong>תאריך:</strong> ${matchDetails.date}</p>
-          ${matchDetails.time ? `<p><strong>שעה:</strong> ${matchDetails.time}</p>` : ''}
-          ${matchDetails.opponent ? `<p><strong>נגד:</strong> ${matchDetails.opponent}</p>` : ''}
-          ${matchDetails.match_type ? `<p><strong>סוג משחק:</strong> ${matchDetails.match_type}</p>` : ''}
-        </div>
 
-        ${matchDetails.havaya && matchDetails.havaya.length > 0 ? `
-          <div class="section">
-            <h2 class="section-title">הוויות נבחרות</h2>
-            ${matchDetails.havaya.map(h => `<div class="item">${h}</div>`).join('')}
-          </div>
-        ` : ''}
+        ${matchDetails.havaya?.length > 0 ? formatSection(
+          'הוויות נבחרות',
+          formatList(matchDetails.havaya, (h) => `
+            <li class="item">${h}</li>
+          `)
+        ) : ''}
 
-        ${matchDetails.actions && matchDetails.actions.length > 0 ? `
-          <div class="section">
-            <h2 class="section-title">יעדים למשחק</h2>
-            ${matchDetails.actions.map(action => `
-              <div class="item">
-                <div>${action.name}</div>
-                ${action.goal ? `<div style="font-size: 0.9em; color: #6b7280;">יעד: ${action.goal}</div>` : ''}
-              </div>
-            `).join('')}
-          </div>
-        ` : ''}
+        ${matchDetails.actions?.length > 0 ? formatSection(
+          'יעדים למשחק',
+          formatList(matchDetails.actions, (action) => `
+            <li class="item">
+              <div style="font-weight: bold;">${action.name}</div>
+              ${action.goal ? `<div style="color: #6b7280; margin-top: 4px;">יעד: ${action.goal}</div>` : ''}
+            </li>
+          `)
+        ) : ''}
 
-        ${matchDetails.questionsAnswers && Object.keys(matchDetails.questionsAnswers).length > 0 ? `
-          <div class="section">
-            <h2 class="section-title">תשובות לשאלות</h2>
-            ${Object.entries(matchDetails.questionsAnswers).map(([question, answer]) => `
-              <div class="item">
+        ${Object.keys(matchDetails.questionsAnswers || {}).length > 0 ? formatSection(
+          'תשובות לשאלות',
+          formatList(
+            Object.entries(matchDetails.questionsAnswers || {}),
+            ([question, answer]) => `
+              <li class="item">
                 <div style="font-weight: bold;">${question}</div>
                 <div style="margin-top: 4px;">${answer}</div>
-              </div>
-            `).join('')}
-          </div>
-        ` : ''}
-
-        <div class="image-container">
-          <img src="${imageData}" alt="Pre Match Report" />
-        </div>
+              </li>
+            `
+          )
+        ) : ''}
       </body>
     </html>
   `;
@@ -143,7 +127,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, imageData, matchDetails }: EmailRequest = await req.json();
+    const { email, matchDetails }: EmailRequest = await req.json();
     
     console.log("Sending email to:", email);
     console.log("Match details:", matchDetails);
@@ -161,8 +145,8 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from,
         to,
-        subject: `דוח טרום משחק - ${matchDetails.playerName} - ${matchDetails.date}`,
-        html: generateEmailHtml(matchDetails, imageData),
+        subject: `דוח טרום משחק - ${matchDetails.playerName} ${matchDetails.opponent ? `נגד ${matchDetails.opponent}` : ''}`,
+        html: generateEmailHtml(matchDetails),
       }),
     });
 
@@ -175,7 +159,7 @@ const handler = async (req: Request): Promise<Response> => {
         return new Response(
           JSON.stringify({
             error: "Domain not verified",
-            message: "Please verify your domain at https://resend.com/domains. For testing, you can only send emails to socr.co.il@gmail.com",
+            message: "Please verify your domain at https://resend.com/domains. For testing, you can only send emails to verified emails",
           }),
           {
             status: 400,
