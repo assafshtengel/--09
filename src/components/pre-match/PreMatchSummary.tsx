@@ -10,6 +10,7 @@ import { InstagramPreMatchSummary } from "./InstagramPreMatchSummary";
 import { PreMatchCaptionPopup } from "./PreMatchCaptionPopup";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { SummaryWorkflow } from "./summary/SummaryWorkflow";
 
 interface PreMatchSummaryProps {
   matchDetails: {
@@ -43,57 +44,6 @@ export const PreMatchSummary = ({
   const processedHavaya = havaya
     .map(h => h.trim())
     .filter(h => h.length > 0);
-
-  const sendEmail = async (recipient: 'coach' | 'user') => {
-    try {
-      const element = document.getElementById('pre-match-summary');
-      if (!element) return;
-
-      const canvas = await html2canvas(element);
-      const imageData = canvas.toDataURL('image/png');
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not found');
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('coach_email, email')
-        .eq('id', user.id)
-        .single();
-
-      const emailTo = recipient === 'coach' ? profile?.coach_email : profile?.email;
-      if (!emailTo) {
-        toast({
-          title: recipient === 'coach' ? "אימייל המאמן לא נמצא" : "אימייל המשתמש לא נמצא",
-          description: "בדוק את הגדרות הפרופיל",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error } = await supabase.functions.invoke('send-pre-match-report', {
-        body: {
-          email: emailTo,
-          imageData,
-          matchDetails,
-        },
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "הדוח נשלח בהצלחה",
-        description: `נשלח ל${recipient === 'coach' ? 'מאמן' : 'מייל שלך'}`,
-      });
-    } catch (error) {
-      console.error('Error sending email:', error);
-      toast({
-        title: "שגיאה בשליחת הדוח",
-        description: "אנא נסה שנית",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handlePrint = async () => {
     try {
@@ -132,57 +82,6 @@ export const PreMatchSummary = ({
         description: "אנא נסה שנית",
         variant: "destructive",
       });
-    }
-  };
-
-  const openChatGPT = async () => {
-    if (isSaving) return;
-    
-    try {
-      setIsSaving(true);
-      
-      await onFinish();
-      
-      toast({
-        title: "הדוח נשמר בהצלחה",
-        description: "מועבר לדף ההכנה למשחק",
-      });
-
-      window.open('https://chatgpt.com/g/g-6780940ac570819189306621c59a067f-tsvr-tqst-lynstgrm', '_blank');
-      
-      navigate('/game-selection');
-    } catch (error) {
-      console.error('Error saving report:', error);
-      toast({
-        title: "שגיאה בשמירת הדוח",
-        description: "אנא נסה שנית",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleFinish = async () => {
-    if (isSaving) return;
-    
-    try {
-      setIsSaving(true);
-      await onFinish();
-      navigate('/game-selection');
-      toast({
-        title: "הדוח נשמר בהצלחה",
-        description: "מועבר לתכנון 24 שעות לפני המשחק",
-      });
-    } catch (error) {
-      console.error('Error completing report:', error);
-      toast({
-        title: "שגיאה בשמירת הדוח",
-        description: "אנא נסה שנית",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -271,29 +170,14 @@ export const PreMatchSummary = ({
         )}
       </div>
 
+      <SummaryWorkflow reportId={reportId || ""} />
+
       <div className="flex flex-wrap gap-4 justify-end print:hidden">
-        <Button onClick={() => sendEmail('coach')} variant="outline" className="flex items-center gap-2">
-          <Mail className="h-4 w-4" />
-          שלח למאמן
-        </Button>
-        <Button onClick={() => sendEmail('user')} variant="outline" className="flex items-center gap-2">
-          <Mail className="h-4 w-4" />
-          שלח למייל שלי
-        </Button>
         <Button onClick={handlePrint} variant="outline" className="flex items-center gap-2">
           <Printer className="h-4 w-4" />
           הדפס
         </Button>
-        <Button 
-          onClick={openChatGPT} 
-          variant="outline"
-          className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100"
-          disabled={isSaving}
-        >
-          <ExternalLink className="h-4 w-4" />
-          ההכנה שלי למשחק
-        </Button>
-        <Button onClick={handleFinish} disabled={isSaving}>סיים</Button>
+        <Button onClick={onFinish} disabled={isSaving}>סיים</Button>
       </div>
 
       {showInstagramSummary && (
