@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { PreMatchReport } from "@/components/game/history/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Json } from "@/integrations/supabase/types";
 
 interface Action {
   name: string;
@@ -64,6 +65,13 @@ export const PreMatchReportsList = () => {
       month: "long",
       day: "numeric",
     });
+  };
+
+  const parseJsonArray = <T extends unknown>(json: Json | null): T[] => {
+    if (!json || !Array.isArray(json)) {
+      return [];
+    }
+    return json as T[];
   };
 
   if (isLoading) {
@@ -159,12 +167,12 @@ export const PreMatchReportsList = () => {
                       </>
                     )}
 
-                    {Array.isArray(selectedReport?.actions) && selectedReport.actions.length > 0 && (
+                    {selectedReport?.actions && parseJsonArray<Action>(selectedReport.actions).length > 0 && (
                       <>
                         <div>
                           <h3 className="font-semibold mb-2">יעדים למשחק</h3>
                           <div className="grid gap-3">
-                            {(selectedReport.actions as Action[]).map((action, index) => (
+                            {parseJsonArray<Action>(selectedReport.actions).map((action, index) => (
                               <div
                                 key={index}
                                 className="border p-3 rounded-lg bg-muted/50"
@@ -183,11 +191,11 @@ export const PreMatchReportsList = () => {
                       </>
                     )}
 
-                    {Array.isArray(selectedReport?.questions_answers) && selectedReport.questions_answers.length > 0 && (
+                    {selectedReport?.questions_answers && parseJsonArray<QuestionAnswer>(selectedReport.questions_answers).length > 0 && (
                       <div>
                         <h3 className="font-semibold mb-2">שאלות ותשובות</h3>
                         <div className="space-y-3">
-                          {(selectedReport.questions_answers as QuestionAnswer[]).map((qa, index) => (
+                          {parseJsonArray<QuestionAnswer>(selectedReport.questions_answers).map((qa, index) => (
                             <div
                               key={index}
                               className="border p-3 rounded-lg bg-muted/50"
