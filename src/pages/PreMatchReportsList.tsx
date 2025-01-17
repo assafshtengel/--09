@@ -14,6 +14,16 @@ import { PreMatchReport } from "@/components/game/history/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
+interface Action {
+  name: string;
+  goal?: string;
+}
+
+interface QuestionAnswer {
+  question: string;
+  answer: string;
+}
+
 export const PreMatchReportsList = () => {
   const navigate = useNavigate();
   const [reports, setReports] = useState<PreMatchReport[]>([]);
@@ -154,7 +164,7 @@ export const PreMatchReportsList = () => {
                         <div>
                           <h3 className="font-semibold mb-2">יעדים למשחק</h3>
                           <div className="grid gap-3">
-                            {selectedReport.actions.map((action, index) => (
+                            {(selectedReport.actions as Action[]).map((action, index) => (
                               <div
                                 key={index}
                                 className="border p-3 rounded-lg bg-muted/50"
@@ -177,7 +187,7 @@ export const PreMatchReportsList = () => {
                       <div>
                         <h3 className="font-semibold mb-2">שאלות ותשובות</h3>
                         <div className="space-y-3">
-                          {selectedReport.questions_answers.map((qa, index) => (
+                          {(selectedReport.questions_answers as QuestionAnswer[]).map((qa, index) => (
                             <div
                               key={index}
                               className="border p-3 rounded-lg bg-muted/50"
