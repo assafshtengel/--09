@@ -40,16 +40,17 @@ const Auth = () => {
   };
 
   useEffect(() => {
-    // Check for password reset error
+    // Check for password reset parameters in URL
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const error = hashParams.get("error");
-    const errorDescription = hashParams.get("error_description");
+    const type = hashParams.get("type");
+    const access_token = hashParams.get("access_token");
     
-    if (error) {
+    if (type === "recovery" && access_token) {
+      // We're in a password reset flow
+      console.log("Password reset flow detected");
       toast({
-        title: "שגיאה",
-        description: errorDescription || "אירעה שגיאה בתהליך איפוס הסיסמה",
-        variant: "destructive",
+        title: "איפוס סיסמה",
+        description: "אנא הזן את הסיסמה החדשה שלך",
       });
     }
 
