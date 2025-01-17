@@ -14,16 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-
-interface PreMatchReport {
-  id: string;
-  match_date: string;
-  opponent: string | null;
-  actions: any[];
-  questions_answers: any[];
-  havaya?: string;
-  status: 'draft' | 'completed';
-}
+import { PreMatchReport } from "@/components/game/history/types";
 
 export const PreMatchReportsList = () => {
   const navigate = useNavigate();
@@ -47,7 +38,10 @@ export const PreMatchReportsList = () => {
           .order("match_date", { ascending: false });
 
         if (error) throw error;
-        setReports(data || []);
+        
+        // Cast the data to PreMatchReport[] type
+        const typedReports = (data || []) as PreMatchReport[];
+        setReports(typedReports);
       } catch (error) {
         console.error("Error fetching reports:", error);
         toast.error("שגיאה בטעינת הדוחות");
@@ -145,7 +139,7 @@ export const PreMatchReportsList = () => {
               <div>
                 <h3 className="font-semibold mb-2">יעדים למשחק</h3>
                 <div className="grid gap-3">
-                  {selectedReport.actions.map((action: any, index: number) => (
+                  {Array.isArray(selectedReport.actions) && selectedReport.actions.map((action: any, index: number) => (
                     <div
                       key={index}
                       className="border p-3 rounded-lg bg-muted/50"
@@ -161,7 +155,7 @@ export const PreMatchReportsList = () => {
                 </div>
               </div>
 
-              {selectedReport.questions_answers && selectedReport.questions_answers.length > 0 && (
+              {Array.isArray(selectedReport.questions_answers) && selectedReport.questions_answers.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-2">שאלות ותשובות</h3>
                   <div className="space-y-3">

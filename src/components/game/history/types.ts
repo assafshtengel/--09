@@ -18,3 +18,15 @@ export interface GameHistoryItem {
     note: string | null;
   }[];
 }
+
+export interface PreMatchReport {
+  id: string;
+  match_date: string;
+  opponent: string | null;
+  actions: Json;
+  questions_answers: Json;
+  havaya?: string;
+  status: 'draft' | 'completed';
+  created_at?: string;
+  updated_at?: string;
+}
