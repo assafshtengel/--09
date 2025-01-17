@@ -11,6 +11,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { PreMatchReport } from "@/components/game/history/types";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 export const PreMatchReportsList = () => {
   const navigate = useNavigate();
@@ -24,14 +26,18 @@ export const PreMatchReportsList = () => {
 
   const fetchReports = async () => {
     try {
+      console.log("Fetching pre-match reports...");
       const { data, error } = await supabase
         .from("pre_match_reports")
-        .select("*")
+        .select("*, profiles(full_name)")
         .order("match_date", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching reports:", error);
+        throw error;
+      }
       
-      // Cast the data to PreMatchReport[] type
+      console.log("Fetched reports data:", data);
       const typedReports = (data || []) as PreMatchReport[];
       setReports(typedReports);
     } catch (error) {
@@ -40,6 +46,14 @@ export const PreMatchReportsList = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString("he-IL", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
   if (isLoading) {
@@ -81,7 +95,7 @@ export const PreMatchReportsList = () => {
                         {report.opponent || "ללא יריב"}
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {new Date(report.match_date).toLocaleDateString("he-IL")}
+                        {formatDate(report.match_date)}
                       </p>
                     </div>
                     <Badge
@@ -98,66 +112,72 @@ export const PreMatchReportsList = () => {
                 </div>
               </DialogTrigger>
 
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>
+                  <DialogTitle className="text-xl font-bold">
                     דוח טרום משחק - {selectedReport?.opponent || "ללא יריב"}
                   </DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-6 py-4">
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm text-gray-500">
-                      {selectedReport?.match_date &&
-                        new Date(selectedReport.match_date).toLocaleDateString(
-                          "he-IL"
-                        )}
-                    </p>
-                    <Badge
-                      variant={
-                        selectedReport?.status === "completed"
-                          ? "default"
-                          : "secondary"
-                      }
-                    >
-                      {selectedReport?.status === "completed"
-                        ? "הושלם"
-                        : "טיוטה"}
-                    </Badge>
-                  </div>
-
-                  {selectedReport?.havaya && (
-                    <div>
-                      <h3 className="font-semibold mb-2">חוויה נבחרת</h3>
-                      <Badge variant="outline">{selectedReport.havaya}</Badge>
+                <ScrollArea className="max-h-[80vh] px-1">
+                  <div className="space-y-6 py-4">
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm text-gray-500">
+                        {selectedReport?.match_date &&
+                          formatDate(selectedReport.match_date)}
+                      </p>
+                      <Badge
+                        variant={
+                          selectedReport?.status === "completed"
+                            ? "default"
+                            : "secondary"
+                        }
+                      >
+                        {selectedReport?.status === "completed"
+                          ? "הושלם"
+                          : "טיוטה"}
+                      </Badge>
                     </div>
-                  )}
 
-                  <div>
-                    <h3 className="font-semibold mb-2">יעדים למשחק</h3>
-                    <div className="grid gap-3">
-                      {Array.isArray(selectedReport?.actions) && selectedReport?.actions.map((action: any, index: number) => (
-                        <div
-                          key={index}
-                          className="border p-3 rounded-lg bg-muted/50"
-                        >
-                          <p className="font-medium">{action.title}</p>
-                          {action.description && (
-                            <p className="text-sm text-gray-500 mt-1">
-                              {action.description}
-                            </p>
-                          )}
+                    {selectedReport?.havaya && (
+                      <>
+                        <div>
+                          <h3 className="font-semibold mb-2">חוויה נבחרת</h3>
+                          <Badge variant="outline">{selectedReport.havaya}</Badge>
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                        <Separator />
+                      </>
+                    )}
 
-                  {Array.isArray(selectedReport?.questions_answers) && selectedReport?.questions_answers.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold mb-2">שאלות ותשובות</h3>
-                      <div className="space-y-3">
-                        {selectedReport?.questions_answers.map(
-                          (qa: any, index: number) => (
+                    {Array.isArray(selectedReport?.actions) && selectedReport.actions.length > 0 && (
+                      <>
+                        <div>
+                          <h3 className="font-semibold mb-2">יעדים למשחק</h3>
+                          <div className="grid gap-3">
+                            {selectedReport.actions.map((action, index) => (
+                              <div
+                                key={index}
+                                className="border p-3 rounded-lg bg-muted/50"
+                              >
+                                <p className="font-medium">{action.name}</p>
+                                {action.goal && (
+                                  <p className="text-sm text-gray-500 mt-1">
+                                    {action.goal}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <Separator />
+                      </>
+                    )}
+
+                    {Array.isArray(selectedReport?.questions_answers) && selectedReport.questions_answers.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold mb-2">שאלות ותשובות</h3>
+                        <div className="space-y-3">
+                          {selectedReport.questions_answers.map((qa, index) => (
                             <div
                               key={index}
                               className="border p-3 rounded-lg bg-muted/50"
@@ -165,12 +185,12 @@ export const PreMatchReportsList = () => {
                               <p className="font-medium">{qa.question}</p>
                               <p className="text-sm mt-1">{qa.answer}</p>
                             </div>
-                          )
-                        )}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                </ScrollArea>
               </DialogContent>
             </Dialog>
           ))}
