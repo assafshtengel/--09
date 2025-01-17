@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { format } from "date-fns";
+import { he } from "date-fns/locale";
 
 interface SchoolHoursInputProps {
   date: string;
@@ -23,9 +25,11 @@ export const SchoolHoursInput = ({ date, onSubmit }: SchoolHoursInputProps) => {
     }
   };
 
+  const formattedDate = format(new Date(date), "EEEE, d/M/yyyy", { locale: he });
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex items-center space-x-2">
+      <div className="flex items-start gap-8">
         <Checkbox
           id="noSchool"
           checked={noSchool}
@@ -37,8 +41,8 @@ export const SchoolHoursInput = ({ date, onSubmit }: SchoolHoursInputProps) => {
             }
           }}
         />
-        <Label htmlFor="noSchool" className="text-sm">
-          אין בית ספר ביום זה
+        <Label htmlFor="noSchool" className="text-base">
+          {formattedDate}
         </Label>
       </div>
 
