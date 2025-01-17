@@ -34,10 +34,13 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
   const handleInputChange = (category: string, value: string) => {
     console.log('Saving havaya for category:', category, 'value:', value);
     
-    setHavayotInputs(prev => ({
-      ...prev,
+    // Update the havayot inputs
+    const updatedHavayot = {
+      ...havayotInputs,
       [category]: value
-    }));
+    };
+    
+    setHavayotInputs(updatedHavayot);
 
     if (currentCategoryIndex < categoryKeys.length - 1) {
       setIsTransitioning(true);
@@ -47,9 +50,9 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
       }, 100);
     } else {
       // Convert havayot object to array and filter out empty values
-      const havayotArray = Object.values(havayotInputs).filter(h => h.trim().length > 0);
+      const havayotArray = Object.values(updatedHavayot).filter(h => h.trim().length > 0);
       console.log('Final havayot array:', havayotArray);
-      onSubmit(havayotInputs);
+      onSubmit(updatedHavayot);
     }
   };
 
