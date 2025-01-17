@@ -1,92 +1,65 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { message } = await req.json();
+    const { messages, chatType } = await req.json()
 
-    const systemPrompt = `
-    אתה מאמן מנטאלי מקצועי לכדורגל שעוזר לשחקנים צעירים. 
-    התמקד אך ורק בנושאים הבאים:
-    - טיפים לאימונים
-    - שגרה יומית
-    - טקטיקה במשחק
-    - שיקום והתאוששות
-    - טכניקה
-    - אימוני כוח
-    - התמודדות עם לחץ לפני ובמהלך משחקים
-    - תזונה ספורטיבית
-    - שינה ומנוחה
-    - הצבת מטרות
-    - מוטיבציה
+    let systemMessage = 'אתה מאמן מנטלי מקצועי שעוזר לשחקני כדורגל צעירים. התשובות שלך תמיד בעברית.'
 
-    אסור בהחלט להתייחס לנושאים הבאים:
-    - פוליטיקה
-    - כלכלה
-    - מוות
-    - גזענות
-    - סמים
-    - אלכוהול
-    - אלימות
-    - הימורים
-    - או כל נושא שאינו קשור ישירות לכדורגל ולהתפתחות השחקן
+    if (chatType === 'pre_match') {
+      systemMessage = 'אתה מאמן מנטלי שעוזר לשחקנים להתכונן למשחק. התשובות שלך תמיד בעברית ומכוונות להכנה מנטלית למשחק.'
+    } else if (chatType === 'post_match') {
+      systemMessage = 'אתה מאמן מנטלי שעוזר לשחקנים לנתח את המשחק שלהם. התשובות שלך תמיד בעברית ומכוונות לניתוח והפקת לקחים.'
+    }
 
-    התשובות שלך תמיד יהיו:
-    1. בעברית
-    2. מותאמות לשחקן צעיר
-    3. חיוביות ומעודדות
-    4. מקצועיות ומבוססות
-    5. קצרות וממוקדות
-    `;
+    console.log('Sending request to OpenAI with messages:', messages)
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4',
         messages: [
           {
             role: 'system',
-            content: systemPrompt
+            content: systemMessage
           },
-          {
-            role: 'user',
-            content: message
-          }
+          ...messages
         ],
         temperature: 0.7,
       }),
-    });
+    })
 
     if (!response.ok) {
-      throw new Error('OpenAI API error');
+      const error = await response.text()
+      console.error('OpenAI API error:', error)
+      throw new Error(`OpenAI API error: ${response.status} ${error}`)
     }
 
-    const data = await response.json();
-    const reply = data.choices[0].message.content;
+    const data = await response.json()
+    console.log('Received response from OpenAI:', data)
 
-    return new Response(JSON.stringify({ reply }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ message: data.choices[0].message.content }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
   } catch (error) {
-    console.error('Error in mental-coaching-chat function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('Error in mental-coaching-chat function:', error)
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 },
+    )
   }
-});
+})
