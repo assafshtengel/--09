@@ -19,7 +19,7 @@ interface ScheduleData {
   gameDate: string;
   gameTime: string;
   hasSchool: boolean;
-  schoolHours: { [key: string]: { start: string; end: string } };
+  schoolHours: { [key: string]: { start: string; end: string } | null };
   hasTeamTraining: boolean;
   teamTrainingHours: { [key: string]: { start: string; end: string } };
   otherCommitments?: string;
@@ -126,16 +126,27 @@ export const PreGamePlannerNew = () => {
     }
   };
 
-  const handleSchoolHoursSubmit = (hours: { start: string; end: string }) => {
+  const handleSchoolHoursSubmit = (hours: { start: string; end: string } | null) => {
     if (!currentSchoolDay) return;
 
-    setScheduleData((prev) => ({
-      ...prev,
-      schoolHours: {
-        ...prev.schoolHours,
-        [currentSchoolDay]: hours,
-      },
-    }));
+    if (hours === null) {
+      // Handle case where there's no school on this day
+      setScheduleData((prev) => ({
+        ...prev,
+        schoolHours: {
+          ...prev.schoolHours,
+          [currentSchoolDay]: null,
+        },
+      }));
+    } else {
+      setScheduleData((prev) => ({
+        ...prev,
+        schoolHours: {
+          ...prev.schoolHours,
+          [currentSchoolDay]: hours,
+        },
+      }));
+    }
 
     const dates = getDatesUntilGame();
     const currentIndex = dates.indexOf(currentSchoolDay);
@@ -334,3 +345,4 @@ export const PreGamePlannerNew = () => {
     </div>
   );
 };
+
