@@ -148,6 +148,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Sending email to:", email);
     console.log("Match details:", matchDetails);
 
+    // For testing, we'll use the default Resend testing domain
+    const from = "onboarding@resend.dev";
     const to = Array.isArray(email) ? email : [email];
     
     const res = await fetch("https://api.resend.com/emails", {
@@ -157,23 +159,34 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "onboarding@resend.dev", // Using default Resend domain until custom domain is verified
+        from,
         to,
         subject: `דוח טרום משחק - ${matchDetails.playerName} - ${matchDetails.date}`,
         html: generateEmailHtml(matchDetails, imageData),
       }),
     });
 
+    const responseData = await res.text();
+    console.log("Resend API response:", responseData);
+
     if (!res.ok) {
-      const error = await res.text();
-      console.error("Error from Resend:", error);
-      throw new Error(error);
+      // If it's a validation error about sending to unverified emails
+      if (responseData.includes("verify a domain")) {
+        return new Response(
+          JSON.stringify({
+            error: "Domain not verified",
+            message: "Please verify your domain at https://resend.com/domains. For testing, you can only send emails to socr.co.il@gmail.com",
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+      throw new Error(responseData);
     }
 
-    const data = await res.json();
-    console.log("Email sent successfully:", data);
-    
-    return new Response(JSON.stringify(data), {
+    return new Response(responseData, {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
