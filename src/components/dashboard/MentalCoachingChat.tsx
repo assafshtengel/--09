@@ -26,7 +26,15 @@ const getChatTitle = (type: string = 'mental') => {
     case 'health':
       return 'שיחה עם יועץ בריאות';
     case 'fitness':
+      return 'שיחה עם מאמן חדר כושר';
+    case 'physical':
       return 'שיחה עם מאמן כושר';
+    case 'technical':
+      return 'שיחה עם מאמן טכני';
+    case 'tactical':
+      return 'שיחה עם מאמן טקטי';
+    case 'sleep':
+      return 'שיחה עם יועץ שינה';
     case 'motivation':
       return 'שיחה על מוטיבציה';
     default:
