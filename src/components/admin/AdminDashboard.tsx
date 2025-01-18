@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -263,6 +263,137 @@ export const AdminDashboard = () => {
     const formattedDate = format(new Date(date), 'dd/MM/yyyy');
     return time ? `${formattedDate} ${time}` : formattedDate;
   };
+
+  const handleExportGames = async () => {
+    try {
+      if (!games) return;
+      
+      // Convert games data to CSV format
+      const headers = ["תאריך", "שחקן", "יריב", "סטטוס", "תוצאה"];
+      const csvData = games.map(game => [
+        format(new Date(game.match_date), 'dd/MM/yyyy'),
+        game.player_name,
+        game.opponent || 'לא צוין',
+        game.status === 'preview' ? 'טרום משחק' :
+          game.status === 'playing' ? 'במהלך משחק' : 'הסתיים',
+        game.final_score || 'לא צוין'
+      ]);
+
+      // Create CSV content
+      const csvContent = [
+        headers.join(','),
+        ...csvData.map(row => row.join(','))
+      ].join('\n');
+
+      // Create and download the file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `games_export_${format(new Date(), 'dd-MM-yyyy')}.csv`;
+      link.click();
+      
+      toast.success('הקובץ יוצא בהצלחה');
+    } catch (error) {
+      console.error('Error exporting games:', error);
+      toast.error('שגיאה בייצוא הקובץ');
+    }
+  };
+
+  // Filter users based on search query
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    
+    const query = searchQuery.toLowerCase();
+    return users.filter(user => 
+      user.full_name?.toLowerCase().includes(query) ||
+      user.email.toLowerCase().includes(query) ||
+      user.phone_number?.toLowerCase().includes(query)
+    );
+  }, [users, searchQuery]);
+
+  // Filter games based on search query and status filter
+  const filteredGames = useMemo(() => {
+    if (!games) return [];
+    
+    let filtered = games;
+    
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(game => 
+        game.player_name?.toLowerCase().includes(query) ||
+        game.opponent?.toLowerCase().includes(query)
+      );
+    }
+    
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(game => {
+        switch (statusFilter) {
+          case 'preview':
+            return game.status === 'preview';
+          case 'playing':
+            return game.status === 'playing';
+          case 'ended':
+            return game.status === 'ended';
+          case 'missing_report':
+            return !game.pre_match_report;
+          default:
+            return true;
+        }
+      });
+    }
+    
+    return filtered;
+  }, [games, searchQuery, statusFilter]);
+
+  // Query to fetch user's games when viewing user details
+  const { data: userGames, isLoading: isLoadingUserGames } = useQuery({
+    queryKey: ['userGames', selectedUser?.id],
+    queryFn: async () => {
+      if (!selectedUser?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('matches_with_players')
+        .select(`
+          *,
+          pre_match_report:pre_match_report_id (
+            id,
+            actions,
+            questions_answers,
+            havaya,
+            match_time
+          ),
+          match_actions (
+            id,
+            action_id,
+            minute,
+            result,
+            note
+          ),
+          match_notes (
+            id,
+            minute,
+            note
+          )
+        `)
+        .eq('player_id', selectedUser.id)
+        .order('match_date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching user games:', error);
+        throw error;
+      }
+
+      return data.map(game => ({
+        ...game,
+        hasIncompleteData: !game.pre_match_report || 
+          !game.match_actions?.length || 
+          !game.match_notes?.length
+      }));
+    },
+    enabled: !!selectedUser?.id
+  });
 
   return (
     <div className="container mx-auto p-4 space-y-4">
