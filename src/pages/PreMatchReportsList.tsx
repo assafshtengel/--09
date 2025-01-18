@@ -34,8 +34,20 @@ export const PreMatchReportsList = () => {
 
       if (error) throw error;
       
-      const typedReports = (data || []) as PreMatchReport[];
-      setReports(typedReports);
+      // Transform the data to match our types
+      const transformedReports: PreMatchReport[] = (data || []).map(report => ({
+        ...report,
+        actions: Array.isArray(report.actions) ? report.actions.map(action => ({
+          name: String(action.name || ''),
+          goal: action.goal ? String(action.goal) : undefined
+        })) : [],
+        questions_answers: Array.isArray(report.questions_answers) ? report.questions_answers.map(qa => ({
+          question: String(qa.question || ''),
+          answer: String(qa.answer || '')
+        })) : []
+      }));
+
+      setReports(transformedReports);
     } catch (error) {
       console.error("Error fetching reports:", error);
       toast.error("שגיאה בטעינת הדוחות");

@@ -56,8 +56,18 @@ const GameHistory = () => {
         match_date: item.match_date,
         opponent: item.opponent,
         pre_match_report: item.pre_match_report ? {
-          actions: item.pre_match_report.actions,
-          questions_answers: item.pre_match_report.questions_answers,
+          actions: Array.isArray(item.pre_match_report.actions) 
+            ? item.pre_match_report.actions.map((action: any) => ({
+                name: String(action.name || ''),
+                goal: action.goal ? String(action.goal) : undefined
+              }))
+            : [],
+          questions_answers: Array.isArray(item.pre_match_report.questions_answers)
+            ? item.pre_match_report.questions_answers.map((qa: any) => ({
+                question: String(qa.question || ''),
+                answer: String(qa.answer || '')
+              }))
+            : [],
           havaya: item.pre_match_report.havaya
         } : undefined,
         match_actions: item.match_actions
