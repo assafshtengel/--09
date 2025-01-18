@@ -11,11 +11,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { PreMatchReport } from "@/components/game/history/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Camera, ExternalLink } from "lucide-react";
-import html2canvas from "html2canvas";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
 
 export const PreMatchReportsList = () => {
   const navigate = useNavigate();
@@ -169,62 +168,80 @@ export const PreMatchReportsList = () => {
           <ScrollArea className="max-h-[80vh]">
             <div id="report-content" className="space-y-6 p-4">
               {selectedReport?.havaya && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>הוויות נבחרות</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedReport.havaya.split(",").map((havaya, index) => (
-                        <Badge key={index} variant="secondary">
-                          {havaya.trim()}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="border p-6 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50"
+                >
+                  <h3 className="text-lg font-semibold mb-4 text-right">הוויות נבחרות</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedReport.havaya.split(",").map((havaya, index) => {
+                      // Remove category prefix if it exists (e.g., "professional-", "mental-")
+                      const cleanHavaya = havaya.trim().split('-').pop() || havaya.trim();
+                      return (
+                        <Badge 
+                          key={index} 
+                          variant="secondary"
+                          className="text-sm py-1 px-3"
+                        >
+                          {cleanHavaya}
                         </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                      );
+                    })}
+                  </div>
+                </motion.div>
               )}
 
               {selectedReport?.actions && selectedReport.actions.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>יעדים למשחק</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4"
+                >
+                  <h3 className="text-lg font-semibold text-right">יעדים למשחק</h3>
+                  <div className="space-y-3">
                     {selectedReport.actions.map((action, index) => (
-                      <div
+                      <motion.div
                         key={index}
-                        className="border p-3 rounded-lg bg-muted/50"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="bg-white border rounded-lg p-4 hover:shadow-sm transition-all"
                       >
-                        <div className="font-medium">{action.name}</div>
-                        {action.goal && (
-                          <div className="text-sm text-muted-foreground mt-1">
-                            יעד: {action.goal}
-                          </div>
-                        )}
-                      </div>
+                        <div className="flex items-center justify-end gap-4">
+                          {action.goal && (
+                            <span className="text-sm text-gray-600">יעד: {action.goal}</span>
+                          )}
+                          <span className="font-medium text-primary">{action.name}</span>
+                        </div>
+                      </motion.div>
                     ))}
-                  </CardContent>
-                </Card>
+                  </div>
+                </motion.div>
               )}
 
               {selectedReport?.questions_answers && selectedReport.questions_answers.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>תשובות לשאלות</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4"
+                >
+                  <h3 className="text-lg font-semibold text-right">תשובות לשאלות</h3>
+                  <div className="space-y-4">
                     {selectedReport.questions_answers.map((qa, index) => (
-                      <div
+                      <motion.div
                         key={index}
-                        className="border p-3 rounded-lg bg-muted/50"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="border p-4 rounded-lg bg-gray-50/50"
                       >
-                        <div className="font-medium">{qa.question}</div>
-                        <div className="text-sm mt-1">{qa.answer}</div>
-                      </div>
+                        <p className="font-medium text-right mb-2">{qa.question}</p>
+                        <p className="text-gray-600 text-right">{qa.answer}</p>
+                      </motion.div>
                     ))}
-                  </CardContent>
-                </Card>
+                  </div>
+                </motion.div>
               )}
             </div>
 
