@@ -11,17 +11,31 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, chatType } = await req.json()
+    const { message, chatType } = await req.json()
 
     let systemMessage = 'אתה מאמן מנטלי מקצועי שעוזר לשחקני כדורגל צעירים. התשובות שלך תמיד בעברית.'
 
-    if (chatType === 'pre_match') {
-      systemMessage = 'אתה מאמן מנטלי שעוזר לשחקנים להתכונן למשחק. התשובות שלך תמיד בעברית ומכוונות להכנה מנטלית למשחק.'
-    } else if (chatType === 'post_match') {
-      systemMessage = 'אתה מאמן מנטלי שעוזר לשחקנים לנתח את המשחק שלהם. התשובות שלך תמיד בעברית ומכוונות לניתוח והפקת לקחים.'
+    if (chatType === 'nutrition') {
+      systemMessage = 'אתה יועץ תזונה מקצועי שעוזר לשחקני כדורגל צעירים. התשובות שלך תמיד בעברית.'
+    } else if (chatType === 'strength') {
+      systemMessage = 'אתה מאמן כוח מקצועי שעוזר לשחקני כדורגל צעירים. התשובות שלך תמיד בעברית.'
+    } else if (chatType === 'health') {
+      systemMessage = 'אתה יועץ בריאות מקצועי שעוזר לשחקני כדורגל צעירים. התשובות שלך תמיד בעברית.'
+    } else if (chatType === 'fitness') {
+      systemMessage = 'אתה מאמן חדר כושר מקצועי שעוזר לשחקני כדורגל צעירים. התשובות שלך תמיד בעברית.'
+    } else if (chatType === 'physical') {
+      systemMessage = 'אתה מאמן כושר גופני מקצועי שעוזר לשחקני כדורגל צעירים. התשובות שלך תמיד בעברית.'
+    } else if (chatType === 'technical') {
+      systemMessage = 'אתה מאמן טכני מקצועי שעוזר לשחקני כדורגל צעירים. התשובות שלך תמיד בעברית.'
+    } else if (chatType === 'tactical') {
+      systemMessage = 'אתה מאמן טקטי מקצועי שעוזר לשחקני כדורגל צעירים. התשובות שלך תמיד בעברית.'
+    } else if (chatType === 'sleep') {
+      systemMessage = 'אתה יועץ שינה מקצועי שעוזר לשחקני כדורגל צעירים. התשובות שלך תמיד בעברית.'
+    } else if (chatType === 'motivation') {
+      systemMessage = 'אתה מאמן מוטיבציה מקצועי שעוזר לשחקני כדורגל צעירים. התשובות שלך תמיד בעברית.'
     }
 
-    console.log('Sending request to OpenAI with messages:', messages)
+    console.log('Sending request to OpenAI with message:', message)
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -36,7 +50,10 @@ serve(async (req) => {
             role: 'system',
             content: systemMessage
           },
-          ...messages
+          {
+            role: 'user',
+            content: message
+          }
         ],
         temperature: 0.7,
       }),
@@ -52,7 +69,7 @@ serve(async (req) => {
     console.log('Received response from OpenAI:', data)
 
     return new Response(
-      JSON.stringify({ message: data.choices[0].message.content }),
+      JSON.stringify({ reply: data.choices[0].message.content }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (error) {
