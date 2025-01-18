@@ -5,13 +5,11 @@ export interface PlayerFormData {
   club: string;
   teamYear: string;
   dateOfBirth: string;
-  profilePicture?: File;
-  ageCategory?: string;
-  coachEmail?: string;
-  sportBranches?: string[];
+  ageCategory: string;
+  coachEmail: string;
+  sportBranches: string[];
 }
 
-export interface PlayerFormProps {
-  onSubmit: () => void;
-  initialData?: PlayerFormData | null;
+export interface ProfileUpdateData extends PlayerFormData {
+  id: string;
 }

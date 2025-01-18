@@ -1,59 +1,53 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { PlayerFormData } from "./types";
+import type { PlayerFormData, ProfileUpdateData } from "./types";
 
 export class ProfileUpdateService {
-  static async updateProfile(formData: PlayerFormData, profilePictureUrl: string | null) {
-    try {
-      const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
-      
-      if (refreshError) {
-        console.error('Session refresh error:', refreshError);
-        throw new Error('נדרשת התחברות מחדש');
-      }
+  static async updateProfile(data: ProfileUpdateData): Promise<void> {
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: data.fullName,
+        roles: data.roles,
+        phone_number: data.phoneNumber,
+        club: data.club,
+        team_year: data.teamYear ? parseInt(data.teamYear) : null,
+        date_of_birth: data.dateOfBirth || null,
+        age_category: data.ageCategory,
+        coach_email: data.coachEmail,
+        sport_branches: data.sportBranches,
+      })
+      .eq("id", data.id);
 
-      if (!session) {
-        console.error('No active session found after refresh');
-        throw new Error('נדרשת התחברות מחדש');
-      }
-
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError) {
-        console.error('User error:', userError);
-        throw new Error('אירעה שגיאה בקבלת פרטי המשתמש');
-      }
-
-      if (!user?.id || !user?.email) {
-        console.error('Missing user data:', user);
-        throw new Error('חסרים פרטי משתמש חיוניים');
-      }
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          email: user.email,
-          full_name: formData.fullName,
-          roles: formData.roles,
-          phone_number: formData.phoneNumber,
-          profile_picture_url: profilePictureUrl,
-          club: formData.club,
-          team_year: parseInt(formData.teamYear),
-          date_of_birth: formData.dateOfBirth,
-          age_category: formData.ageCategory,
-          coach_email: formData.coachEmail,
-          sport_branches: formData.sportBranches,
-        });
-
-      if (updateError) {
-        console.error('Profile update error:', updateError);
-        throw updateError;
-      }
-
-      return { user };
-    } catch (error) {
-      console.error('Profile update service error:', error);
+    if (error) {
       throw error;
     }
+  }
+
+  static async getProfile(userId: string): Promise<PlayerFormData | null> {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    return {
+      fullName: data.full_name || "",
+      roles: data.roles || [],
+      phoneNumber: data.phone_number || "",
+      club: data.club || "",
+      teamYear: data.team_year?.toString() || "",
+      dateOfBirth: data.date_of_birth || "",
+      ageCategory: data.age_category || "",
+      coachEmail: data.coach_email || "",
+      sportBranches: data.sport_branches || [],
+    };
   }
 }

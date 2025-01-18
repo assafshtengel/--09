@@ -1,25 +1,21 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 import { FormField } from "./player-form/FormField";
 import { RoleSelector } from "./player-form/RoleSelector";
-import { SportBranchSelector } from "./player-form/SportBranchSelector";
-import { ProfilePictureUpload } from "./player-form/ProfilePictureUpload";
 import { ProfileUpdateService } from "./player-form/ProfileUpdateService";
-import type { PlayerFormData, PlayerFormProps } from "./player-form/types";
-import { useNavigate } from "react-router-dom";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import type { PlayerFormData } from "./player-form/types";
+import { SportBranchSelector } from "./player-form/SportBranchSelector";
 
-export const PlayerForm = ({ onSubmit, initialData }: PlayerFormProps) => {
+interface PlayerFormProps {
+  initialData?: PlayerFormData | null;
+  onSubmit?: () => void;
+}
+
+export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<PlayerFormData>({
     fullName: "",
     roles: [],
@@ -31,222 +27,130 @@ export const PlayerForm = ({ onSubmit, initialData }: PlayerFormProps) => {
     coachEmail: "",
     sportBranches: [],
   });
-  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-  const [selectedSports, setSelectedSports] = useState<string[]>([]);
-  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
-      setSelectedRoles(initialData.roles);
-      setSelectedSports(initialData.sportBranches || []);
     }
   }, [initialData]);
 
-  const ageCategories = [
-    "טרום א'",
-    "טרום ב'",
-    "ילדים א'",
-    "ילדים ב'",
-    "ילדים ג'",
-    "נערים א'",
-    "נערים ב'",
-    "נערים ג'",
-    "נוער",
-    "בוגרים",
-  ];
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.fullName || !formData.phoneNumber || !formData.club || !formData.teamYear || !formData.dateOfBirth || !formData.ageCategory || selectedRoles.length === 0) {
-      toast({
-        title: "שגיאה",
-        description: "אנא מלא את כל השדות",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate sport selection based on role
-    const isPlayer = selectedRoles.includes("שחקן");
-    if (isPlayer && selectedSports.length !== 1) {
-      toast({
-        title: "שגיאה",
-        description: "שחקן חייב לבחור ענף ספורט אחד בדיוק",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!isPlayer && selectedSports.length === 0) {
-      toast({
-        title: "שגיאה",
-        description: "מאמן חייב לבחור לפחות ענף ספורט אחד",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
+    setIsLoading(true);
 
     try {
-      await ProfileUpdateService.updateProfile(
-        { ...formData, roles: selectedRoles, sportBranches: selectedSports },
-        profilePictureUrl
-      );
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("No authenticated user found");
+      }
+
+      // Validate sport branches based on role
+      const isPlayer = formData.roles.includes("player");
+      if (isPlayer && formData.sportBranches.length !== 1) {
+        throw new Error("שחקן חייב לבחור ענף ספורט אחד בדיוק");
+      }
+      if (!isPlayer && formData.sportBranches.length === 0) {
+        throw new Error("מאמן חייב לבחור לפחות ענף ספורט אחד");
+      }
+
+      await ProfileUpdateService.updateProfile({
+        ...formData,
+        id: user.id,
+      });
 
       toast({
         title: "הצלחה",
-        description: "הפרטים נשמרו בהצלחה",
+        description: "הפרופיל עודכן בהצלחה",
       });
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (onSubmit) {
-        await onSubmit();
-      }
+      onSubmit?.();
     } catch (error) {
-      console.error('Error in form submission:', error);
+      console.error("Error updating profile:", error);
       toast({
         title: "שגיאה",
-        description: error.message || "אירעה שגיאה בשמירת הפרטים",
+        description: error.message || "אירעה שגיאה בעדכון הפרופיל",
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  const toggleRole = (role: string) => {
-    setSelectedRoles(prev => 
-      prev.includes(role)
-        ? prev.filter(r => r !== role)
-        : [...prev, role]
-    );
-    
-    // Reset sports selection when changing roles
-    if (role === "שחקן") {
-      setSelectedSports([]);
-    }
+  const handleInputChange = (field: keyof PlayerFormData, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  const toggleSport = (sport: string) => {
-    const isPlayer = selectedRoles.includes("שחקן");
-    
-    if (isPlayer) {
-      // For players - only one sport can be selected
-      setSelectedSports([sport]);
-    } else {
-      // For coaches - toggle multiple sports
-      setSelectedSports(prev => 
-        prev.includes(sport)
-          ? prev.filter(s => s !== sport)
-          : [...prev, sport]
-      );
-    }
-  };
+  const isPlayer = formData.roles.includes("player");
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-md mx-auto p-6">
-      <div className="space-y-4">
-        <FormField
-          id="fullName"
-          label="שם מלא"
-          value={formData.fullName}
-          onChange={(value) => setFormData({ ...formData, fullName: value })}
-          placeholder="הכנס את שמך המלא"
-        />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <FormField
+        label="שם מלא"
+        type="text"
+        value={formData.fullName}
+        onChange={(e) => handleInputChange("fullName", e.target.value)}
+        required
+      />
 
-        <RoleSelector
-          selectedRoles={selectedRoles}
-          onToggleRole={toggleRole}
-        />
+      <RoleSelector
+        value={formData.roles}
+        onChange={(value) => handleInputChange("roles", value)}
+      />
 
-        <SportBranchSelector
-          selectedSports={selectedSports}
-          onToggleSport={toggleSport}
-          isPlayer={selectedRoles.includes("שחקן")}
-        />
+      <SportBranchSelector
+        value={formData.sportBranches}
+        onChange={(value) => handleInputChange("sportBranches", value)}
+        isPlayer={isPlayer}
+      />
 
-        <FormField
-          id="phoneNumber"
-          label="מספר טלפון"
-          value={formData.phoneNumber}
-          onChange={(value) => setFormData({ ...formData, phoneNumber: value })}
-          placeholder="הכנס את מספר הטלפון שלך"
-        />
+      <FormField
+        label="מספר טלפון"
+        type="tel"
+        value={formData.phoneNumber}
+        onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+        required
+      />
 
-        <FormField
-          id="coachEmail"
-          label="מייל מאמן"
-          type="email"
-          value={formData.coachEmail || ""}
-          onChange={(value) => setFormData({ ...formData, coachEmail: value })}
-          placeholder="הכנס את כתובת המייל של המאמן"
-        />
+      <FormField
+        label="מועדון"
+        type="text"
+        value={formData.club}
+        onChange={(e) => handleInputChange("club", e.target.value)}
+      />
 
-        <div className="space-y-2">
-          <label className="block text-right">תמונת פרופיל</label>
-          <ProfilePictureUpload
-            onUploadComplete={setProfilePictureUrl}
-            onUploadError={(error) => {
-              toast({
-                title: "שגיאה",
-                description: error.message || "אירעה שגיאה בהעלאת התמונה",
-                variant: "destructive",
-              });
-            }}
-          />
-        </div>
+      <FormField
+        label="שנתון"
+        type="number"
+        value={formData.teamYear}
+        onChange={(e) => handleInputChange("teamYear", e.target.value)}
+      />
 
-        <FormField
-          id="club"
-          label="מועדון"
-          value={formData.club}
-          onChange={(value) => setFormData({ ...formData, club: value })}
-          placeholder="הכנס את שם המועדון שלך"
-        />
+      <FormField
+        label="תאריך לידה"
+        type="date"
+        value={formData.dateOfBirth}
+        onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+      />
 
-        <div className="space-y-2">
-          <label className="block text-right">קטגוריית גיל</label>
-          <Select
-            value={formData.ageCategory}
-            onValueChange={(value) => setFormData({ ...formData, ageCategory: value })}
-          >
-            <SelectTrigger className="w-full text-right">
-              <SelectValue placeholder="בחר קטגוריית גיל" />
-            </SelectTrigger>
-            <SelectContent>
-              {ageCategories.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <FormField
+        label="קטגוריית גיל"
+        type="text"
+        value={formData.ageCategory}
+        onChange={(e) => handleInputChange("ageCategory", e.target.value)}
+      />
 
-        <FormField
-          id="teamYear"
-          label="שנת קבוצה"
-          value={formData.teamYear}
-          onChange={(value) => setFormData({ ...formData, teamYear: value })}
-          type="number"
-          placeholder="הכנס את שנת הקבוצה"
-        />
+      <FormField
+        label="אימייל מאמן"
+        type="email"
+        value={formData.coachEmail}
+        onChange={(e) => handleInputChange("coachEmail", e.target.value)}
+      />
 
-        <FormField
-          id="dateOfBirth"
-          label="תאריך לידה"
-          value={formData.dateOfBirth}
-          onChange={(value) => setFormData({ ...formData, dateOfBirth: value })}
-          type="date"
-        />
-      </div>
-
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? "שומר..." : "שמור פרטים"}
+      <Button type="submit" disabled={isLoading}>
+        {isLoading ? "שומר..." : "שמור"}
       </Button>
     </form>
   );
