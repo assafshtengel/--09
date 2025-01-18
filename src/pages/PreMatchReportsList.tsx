@@ -12,8 +12,10 @@ import { toast } from "sonner";
 import { PreMatchReport } from "@/components/game/history/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Camera, ExternalLink, Calendar } from "lucide-react";
+import { Camera, ExternalLink } from "lucide-react";
 import html2canvas from "html2canvas";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export const PreMatchReportsList = () => {
   const navigate = useNavigate();
@@ -34,19 +36,20 @@ export const PreMatchReportsList = () => {
 
       if (error) throw error;
       
-      // Transform the data to match our types
       const transformedReports: PreMatchReport[] = (data || []).map(report => {
         const actions = Array.isArray(report.actions) 
           ? report.actions.map((action: any) => ({
-              name: String(action.name || ''),
-              goal: action.goal ? String(action.goal) : undefined
+              name: String(action.name || ""),
+              goal: action.goal ? String(action.goal) : undefined,
+              id: String(action.id || ""),
+              isSelected: Boolean(action.isSelected)
             }))
           : [];
           
         const questions_answers = Array.isArray(report.questions_answers)
           ? report.questions_answers.map((qa: any) => ({
-              question: String(qa.question || ''),
-              answer: String(qa.answer || '')
+              question: String(qa.question || ""),
+              answer: String(qa.answer || "")
             }))
           : [];
 
@@ -82,7 +85,7 @@ export const PreMatchReportsList = () => {
 
   const handleScreenshot = async () => {
     try {
-      const element = document.getElementById('report-content');
+      const element = document.getElementById("report-content");
       if (!element) return;
 
       const canvas = await html2canvas(element, {
@@ -91,8 +94,8 @@ export const PreMatchReportsList = () => {
         logging: true,
       });
 
-      const url = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
+      const url = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
       link.href = url;
       link.download = `pre-match-report-${selectedReport?.match_date}.png`;
       document.body.appendChild(link);
@@ -101,13 +104,13 @@ export const PreMatchReportsList = () => {
 
       toast.success("הדוח נשמר בהצלחה");
     } catch (error) {
-      console.error('Error generating screenshot:', error);
+      console.error("Error generating screenshot:", error);
       toast.error("שגיאה בשמירת הדוח");
     }
   };
 
   const openPreparationGuide = () => {
-    window.open('https://chatgpt.com/g/g-6780940ac570819189306621c59a067f-hhknh-shly-lmshkhq', '_blank');
+    window.open("https://chatgpt.com/g/g-6780940ac570819189306621c59a067f-hhknh-shly-lmshkhq", "_blank");
   };
 
   if (isLoading) {
@@ -126,7 +129,6 @@ export const PreMatchReportsList = () => {
           onClick={() => navigate("/pre-match-report")}
           className="bg-primary text-white hover:bg-primary/90"
         >
-          <Calendar className="ml-2 h-4 w-4" />
           דוח חדש
         </Button>
       </div>
@@ -138,26 +140,26 @@ export const PreMatchReportsList = () => {
       ) : (
         <div className="grid gap-4">
           {reports.map((report) => (
-            <div
+            <Card
               key={report.id}
               onClick={() => setSelectedReport(report)}
-              className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-all"
+              className="cursor-pointer hover:bg-gray-50 transition-all"
             >
-              <div className="flex justify-between items-center">
+              <CardHeader className="flex flex-row justify-between items-center">
+                <CardTitle className="text-lg">
+                  נגד: {report.opponent || "ללא יריב"}
+                </CardTitle>
                 <span className="text-sm text-gray-500">
                   {formatDate(report.match_date)}
                 </span>
-                <h3 className="font-semibold">
-                  נגד: {report.opponent || "ללא יריב"}
-                </h3>
-              </div>
-            </div>
+              </CardHeader>
+            </Card>
           ))}
         </div>
       )}
 
       <Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">
               דוח טרום משחק - {selectedReport?.opponent || "ללא יריב"}
@@ -167,52 +169,62 @@ export const PreMatchReportsList = () => {
           <ScrollArea className="max-h-[80vh]">
             <div id="report-content" className="space-y-6 p-4">
               {selectedReport?.havaya && (
-                <div className="bg-primary/10 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">חוויה נבחרת</h3>
-                  <p>{selectedReport.havaya}</p>
-                </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>הוויות נבחרות</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedReport.havaya.split(",").map((havaya, index) => (
+                        <Badge key={index} variant="secondary">
+                          {havaya.trim()}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               )}
 
-              <Separator />
-
               {selectedReport?.actions && selectedReport.actions.length > 0 && (
-                <div>
-                  <h3 className="font-semibold mb-2">יעדים למשחק</h3>
-                  <div className="grid gap-3">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>יעדים למשחק</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
                     {selectedReport.actions.map((action, index) => (
                       <div
                         key={index}
                         className="border p-3 rounded-lg bg-muted/50"
                       >
-                        <p className="font-medium">{action.name}</p>
+                        <div className="font-medium">{action.name}</div>
                         {action.goal && (
-                          <p className="text-sm text-gray-500 mt-1">
+                          <div className="text-sm text-muted-foreground mt-1">
                             יעד: {action.goal}
-                          </p>
+                          </div>
                         )}
                       </div>
                     ))}
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               )}
 
-              <Separator />
-
               {selectedReport?.questions_answers && selectedReport.questions_answers.length > 0 && (
-                <div>
-                  <h3 className="font-semibold mb-2">תשובות לשאלות</h3>
-                  <div className="space-y-3">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>תשובות לשאלות</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
                     {selectedReport.questions_answers.map((qa, index) => (
                       <div
                         key={index}
                         className="border p-3 rounded-lg bg-muted/50"
                       >
-                        <p className="font-medium">{qa.question}</p>
-                        <p className="text-sm mt-1">{qa.answer}</p>
+                        <div className="font-medium">{qa.question}</div>
+                        <div className="text-sm mt-1">{qa.answer}</div>
                       </div>
                     ))}
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               )}
             </div>
 
