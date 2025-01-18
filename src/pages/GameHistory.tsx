@@ -51,11 +51,8 @@ const GameHistory = () => {
       if (error) throw error;
       
       // Transform the data to match GameHistoryItem type
-      const transformedData: GameHistoryItem[] = (data || []).map(item => ({
-        id: item.id,
-        match_date: item.match_date,
-        opponent: item.opponent,
-        pre_match_report: item.pre_match_report ? {
+      const transformedData: GameHistoryItem[] = (data || []).map(item => {
+        const preMatchReport = item.pre_match_report ? {
           actions: Array.isArray(item.pre_match_report.actions) 
             ? item.pre_match_report.actions.map((action: any) => ({
                 name: String(action.name || ''),
@@ -69,9 +66,16 @@ const GameHistory = () => {
               }))
             : [],
           havaya: item.pre_match_report.havaya
-        } : undefined,
-        match_actions: item.match_actions
-      }));
+        } : undefined;
+
+        return {
+          id: item.id,
+          match_date: item.match_date,
+          opponent: item.opponent,
+          pre_match_report: preMatchReport,
+          match_actions: item.match_actions
+        };
+      });
 
       setGames(transformedData);
     } catch (error) {

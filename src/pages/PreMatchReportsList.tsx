@@ -35,17 +35,33 @@ export const PreMatchReportsList = () => {
       if (error) throw error;
       
       // Transform the data to match our types
-      const transformedReports: PreMatchReport[] = (data || []).map(report => ({
-        ...report,
-        actions: Array.isArray(report.actions) ? report.actions.map(action => ({
-          name: String(action.name || ''),
-          goal: action.goal ? String(action.goal) : undefined
-        })) : [],
-        questions_answers: Array.isArray(report.questions_answers) ? report.questions_answers.map(qa => ({
-          question: String(qa.question || ''),
-          answer: String(qa.answer || '')
-        })) : []
-      }));
+      const transformedReports: PreMatchReport[] = (data || []).map(report => {
+        const actions = Array.isArray(report.actions) 
+          ? report.actions.map((action: any) => ({
+              name: String(action.name || ''),
+              goal: action.goal ? String(action.goal) : undefined
+            }))
+          : [];
+          
+        const questions_answers = Array.isArray(report.questions_answers)
+          ? report.questions_answers.map((qa: any) => ({
+              question: String(qa.question || ''),
+              answer: String(qa.answer || '')
+            }))
+          : [];
+
+        return {
+          id: report.id,
+          match_date: report.match_date,
+          opponent: report.opponent,
+          actions,
+          questions_answers,
+          havaya: report.havaya,
+          status: report.status,
+          created_at: report.created_at,
+          updated_at: report.updated_at
+        };
+      });
 
       setReports(transformedReports);
     } catch (error) {
