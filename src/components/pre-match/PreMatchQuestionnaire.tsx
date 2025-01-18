@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ExternalLink, Play } from "lucide-react";
+import { Play } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const FIXED_QUESTIONS = [
@@ -59,33 +59,44 @@ export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) 
   };
 
   return (
-    <Card className="w-full max-w-3xl mx-auto">
-      <CardHeader>
-        <CardTitle className="text-right text-2xl font-bold">שאלון טרום משחק</CardTitle>
+    <Card className="w-full max-w-3xl mx-auto bg-white shadow-sm">
+      <CardHeader className="border-b border-gray-100">
+        <CardTitle className="text-right text-2xl font-bold text-[#333333]">
+          שאלון טרום משחק
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-8">
+      <CardContent className="space-y-8 p-6">
         {/* Fixed Questions */}
         {FIXED_QUESTIONS.map((item, index) => (
-          <div key={index} className="space-y-4 p-4 rounded-lg border border-gray-100 bg-white shadow-sm">
-            <div className="flex flex-col gap-3">
+          <div 
+            key={index} 
+            className="p-6 rounded-lg border border-[#dddddd] bg-white shadow-sm space-y-4"
+          >
+            <div className="space-y-4">
               <div className="flex justify-between items-start gap-4 flex-wrap sm:flex-nowrap">
-                <Label className="flex-1 text-right text-lg font-medium">{item.question}</Label>
+                <Label 
+                  className="flex-1 text-right text-[22px] font-bold text-[#333333] leading-tight"
+                >
+                  {item.question}
+                </Label>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-2 hover:bg-primary/10 transition-colors whitespace-nowrap min-w-[180px]"
+                  className="flex items-center gap-2 hover:bg-[#0056b3]/10 transition-colors whitespace-nowrap min-w-[180px] text-[16px] border-[#dddddd]"
                   onClick={() => openExplanationVideo(item.videoUrl)}
                 >
                   <Play className="h-4 w-4" />
-                  <span className="text-sm">{item.buttonText}</span>
+                  <span>{item.buttonText}</span>
                 </Button>
               </div>
-              <p className="text-sm text-muted-foreground text-right">{item.guidance}</p>
+              <p className="text-[18px] text-[#666666] text-right">
+                {item.guidance}
+              </p>
             </div>
             <Textarea
               value={answers[item.question] || ""}
               onChange={(e) => handleAnswerChange(item.question, e.target.value)}
-              className="min-h-[100px] text-base w-full sm:w-[90%] mx-auto block"
+              className="min-h-[100px] text-[16px] w-full sm:w-[90%] mx-auto block bg-[#f2f2f2] border-[#dddddd] rounded-md p-4"
               placeholder="הקלד את תשובתך כאן..."
               dir="rtl"
             />
@@ -94,12 +105,19 @@ export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) 
 
         {/* Random Questions */}
         {randomQuestions.map((question, index) => (
-          <div key={index} className="space-y-3 p-4 rounded-lg border border-gray-100 bg-white shadow-sm">
-            <Label className="block text-right text-lg font-medium">{question}</Label>
+          <div 
+            key={index} 
+            className="p-6 rounded-lg border border-[#dddddd] bg-white shadow-sm space-y-4"
+          >
+            <Label 
+              className="block text-right text-[22px] font-bold text-[#333333] leading-tight"
+            >
+              {question}
+            </Label>
             <Textarea
               value={answers[question] || ""}
               onChange={(e) => handleAnswerChange(question, e.target.value)}
-              className="min-h-[100px] text-base w-full sm:w-[90%] mx-auto block"
+              className="min-h-[100px] text-[16px] w-full sm:w-[90%] mx-auto block bg-[#f2f2f2] border-[#dddddd] rounded-md p-4"
               placeholder="הקלד את תשובתך כאן..."
               dir="rtl"
             />
@@ -109,7 +127,7 @@ export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) 
         <div className="flex justify-end pt-6">
           <Button 
             onClick={handleSubmit}
-            className="px-8 py-2 text-lg bg-primary hover:bg-primary-hover transition-colors"
+            className="px-8 py-3 text-[16px] bg-[#0056b3] hover:bg-[#004494] transition-colors text-white rounded-md shadow-sm"
             size="lg"
           >
             המשך
