@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Define the fixed question separately with its video URL
 const FIXED_QUESTION = {
   question: 'מה המילה שמחזירה לך? (המילה שאתה אומר לעצמך ברגע שהביטחון מעט יורד)',
   videoUrl: 'https://did.li/lior-WORD1'
