@@ -916,6 +916,7 @@ export type Database = {
           profile_picture_url: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           roles: string[] | null
+          sport_branches: string[] | null
           team_year: number | null
           updated_at: string
         }
@@ -934,6 +935,7 @@ export type Database = {
           profile_picture_url?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           roles?: string[] | null
+          sport_branches?: string[] | null
           team_year?: number | null
           updated_at?: string
         }
@@ -952,6 +954,7 @@ export type Database = {
           profile_picture_url?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           roles?: string[] | null
+          sport_branches?: string[] | null
           team_year?: number | null
           updated_at?: string
         }
