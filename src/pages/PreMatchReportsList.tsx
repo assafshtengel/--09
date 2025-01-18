@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { PreMatchReport } from "@/components/game/history/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Camera, ExternalLink } from "lucide-react";
+import { Camera, ExternalLink, Target, MessageSquare, List } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
@@ -153,6 +153,18 @@ export const PreMatchReportsList = () => {
                   {formatDate(report.match_date)}
                 </span>
               </CardHeader>
+              <CardContent>
+                <div className="flex gap-2 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Target className="h-4 w-4" />
+                    {report.actions?.length || 0} יעדים
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <MessageSquare className="h-4 w-4" />
+                    {report.questions_answers?.length || 0} תשובות
+                  </span>
+                </div>
+              </CardContent>
             </Card>
           ))}
         </div>
@@ -174,10 +186,12 @@ export const PreMatchReportsList = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="border p-6 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50"
                 >
-                  <h3 className="text-lg font-semibold mb-4 text-right">הוויות נבחרות</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-right flex items-center gap-2 justify-end">
+                    <List className="h-5 w-5" />
+                    הוויות נבחרות
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {selectedReport.havaya.split(",").map((havaya, index) => {
-                      // Remove category prefix if it exists (e.g., "professional-", "mental-")
                       const cleanHavaya = havaya.trim().split('-').pop() || havaya.trim();
                       return (
                         <Badge 
@@ -199,7 +213,10 @@ export const PreMatchReportsList = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-4"
                 >
-                  <h3 className="text-lg font-semibold text-right">יעדים למשחק</h3>
+                  <h3 className="text-lg font-semibold text-right flex items-center gap-2 justify-end">
+                    <Target className="h-5 w-5" />
+                    יעדים למשחק
+                  </h3>
                   <div className="space-y-3">
                     {selectedReport.actions.map((action, index) => (
                       <motion.div
@@ -227,7 +244,10 @@ export const PreMatchReportsList = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-4"
                 >
-                  <h3 className="text-lg font-semibold text-right">תשובות לשאלות</h3>
+                  <h3 className="text-lg font-semibold text-right flex items-center gap-2 justify-end">
+                    <MessageSquare className="h-5 w-5" />
+                    תשובות לשאלות
+                  </h3>
                   <div className="space-y-4">
                     {selectedReport.questions_answers.map((qa, index) => (
                       <motion.div
