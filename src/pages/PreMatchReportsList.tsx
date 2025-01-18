@@ -44,6 +44,7 @@ export const PreMatchReportsList = () => {
       }
       
       const transformedReports: PreMatchReport[] = (data || []).map(report => {
+        // Parse actions array from jsonb
         const actions = Array.isArray(report.actions) 
           ? report.actions.map((action: any) => ({
               name: String(action.name || ""),
@@ -53,12 +54,16 @@ export const PreMatchReportsList = () => {
             }))
           : [];
           
+        // Parse questions_answers array from jsonb
         const questions_answers = Array.isArray(report.questions_answers)
           ? report.questions_answers.map((qa: any) => ({
               question: String(qa.question || ""),
               answer: String(qa.answer || "")
             }))
           : [];
+
+        console.log('Transformed report actions:', actions);
+        console.log('Transformed report Q&A:', questions_answers);
 
         return {
           id: report.id,
