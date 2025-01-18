@@ -8,6 +8,7 @@ export interface PlayerFormData {
   profilePicture?: File;
   ageCategory?: string;
   coachEmail?: string;
+  sportBranches?: string[];
 }
 
 export interface PlayerFormProps {

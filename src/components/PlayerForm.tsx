@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { FormField } from "./player-form/FormField";
 import { RoleSelector } from "./player-form/RoleSelector";
+import { SportBranchSelector } from "./player-form/SportBranchSelector";
 import { ProfilePictureUpload } from "./player-form/ProfilePictureUpload";
 import { ProfileUpdateService } from "./player-form/ProfileUpdateService";
 import type { PlayerFormData, PlayerFormProps } from "./player-form/types";
@@ -28,14 +29,17 @@ export const PlayerForm = ({ onSubmit, initialData }: PlayerFormProps) => {
     dateOfBirth: "",
     ageCategory: "",
     coachEmail: "",
+    sportBranches: [],
   });
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
       setSelectedRoles(initialData.roles);
+      setSelectedSports(initialData.sportBranches || []);
     }
   }, [initialData]);
 
@@ -64,11 +68,31 @@ export const PlayerForm = ({ onSubmit, initialData }: PlayerFormProps) => {
       return;
     }
 
+    // Validate sport selection based on role
+    const isPlayer = selectedRoles.includes("שחקן");
+    if (isPlayer && selectedSports.length !== 1) {
+      toast({
+        title: "שגיאה",
+        description: "שחקן חייב לבחור ענף ספורט אחד בדיוק",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isPlayer && selectedSports.length === 0) {
+      toast({
+        title: "שגיאה",
+        description: "מאמן חייב לבחור לפחות ענף ספורט אחד",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       await ProfileUpdateService.updateProfile(
-        { ...formData, roles: selectedRoles },
+        { ...formData, roles: selectedRoles, sportBranches: selectedSports },
         profilePictureUrl
       );
 
@@ -100,6 +124,27 @@ export const PlayerForm = ({ onSubmit, initialData }: PlayerFormProps) => {
         ? prev.filter(r => r !== role)
         : [...prev, role]
     );
+    
+    // Reset sports selection when changing roles
+    if (role === "שחקן") {
+      setSelectedSports([]);
+    }
+  };
+
+  const toggleSport = (sport: string) => {
+    const isPlayer = selectedRoles.includes("שחקן");
+    
+    if (isPlayer) {
+      // For players - only one sport can be selected
+      setSelectedSports([sport]);
+    } else {
+      // For coaches - toggle multiple sports
+      setSelectedSports(prev => 
+        prev.includes(sport)
+          ? prev.filter(s => s !== sport)
+          : [...prev, sport]
+      );
+    }
   };
 
   return (
@@ -116,6 +161,12 @@ export const PlayerForm = ({ onSubmit, initialData }: PlayerFormProps) => {
         <RoleSelector
           selectedRoles={selectedRoles}
           onToggleRole={toggleRole}
+        />
+
+        <SportBranchSelector
+          selectedSports={selectedSports}
+          onToggleSport={toggleSport}
+          isPlayer={selectedRoles.includes("שחקן")}
         />
 
         <FormField
