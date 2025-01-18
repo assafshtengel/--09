@@ -21,16 +21,11 @@ const FIXED_QUESTIONS = [
 ];
 
 const ADDITIONAL_QUESTIONS = [
-  "רשום את נקודות החוזקה שלך במשחק",
-  "רשום את נקודות התורפה שלך במשחק",
-  "מהו הדבר / הרגע האחד שהיה נקודת השיא שלך במשחק?",
-  "מה היה הדבר/הרגע שבו הרגשת בנקודת השפל במשחק?",
-  "מה הייתה המטרה העיקרית שלך במשחק?",
-  "מה הייתה המטרה העיקרית שלך במשחק והאם עמדת בה?",
-  "האם קיבלת כרטיס אדום / צהוב ואם כן - מה הסיבה שקיבלת?",
-  "האם הרגשת במהלך המשחק קושי גופני מסויים? נא תאר",
-  "האם הרגשת במהלך המשחק קושי מנטאלי? נא תאר",
-  "באיזה אופן ניתן היה לשפר את התרומה הטקטית שלך במשחק?"
+  "מה המטרות שלך למשחק הקרוב?",
+  "איך אתה מרגיש לקראת המשחק?",
+  "מה יעזור לך להצליח במשחק?",
+  "מה אתה הכי רוצה להשיג במשחק הזה?",
+  "איך אתה מתכונן למשחק מבחינה מנטלית?"
 ];
 
 interface PreMatchQuestionnaireProps {
@@ -82,7 +77,7 @@ export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) 
               </p>
               <Button
                 variant="outline"
-                size="sm"
+                size="lg"
                 className="w-full flex items-center justify-center gap-2 hover:bg-[#0056b3]/10 transition-colors text-[16px] border-[#dddddd] min-h-[44px] px-4"
                 onClick={() => openExplanationVideo(item.videoUrl)}
               >
