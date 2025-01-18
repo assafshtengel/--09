@@ -1,6 +1,7 @@
 import { Json } from "@/integrations/supabase/types";
 
 interface Action {
+  [key: string]: Json;
   name: string;
   goal?: string;
 }
