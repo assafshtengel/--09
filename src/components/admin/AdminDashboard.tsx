@@ -4,14 +4,26 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { Mail, MessageSquare, Search, Loader2, AlertCircle, Download, Filter } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Mail, MessageSquare, Search, Loader2, AlertCircle, Download, Filter, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -164,59 +176,36 @@ export const AdminDashboard = () => {
     }
   });
 
-  const { data: userGames, isLoading: isLoadingUserGames } = useQuery({
-    queryKey: ['userGames', selectedUser?.id],
-    enabled: !!selectedUser,
-    queryFn: async () => {
-      console.log('Fetching games for user:', selectedUser?.id);
-      
-      // First, get all matches for the user
-      const { data: games, error } = await supabase
-        .from('matches')
-        .select(`
-          id,
-          match_date,
-          opponent,
-          final_score,
-          status,
-          pre_match_report:pre_match_report_id (
-            id,
-            actions,
-            questions_answers,
-            havaya,
-            match_date,
-            match_time
-          ),
-          match_actions (
-            id,
-            action_id,
-            minute,
-            result,
-            note
-          ),
-          match_notes (
-            id,
-            minute,
-            note
-          )
-        `)
-        .eq('player_id', selectedUser.id)
-        .order('match_date', { ascending: false });
+  const [selectedGameIds, setSelectedGameIds] = useState<string[]>([]);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
 
-      if (error) {
-        console.error('Error fetching user games:', error);
-        throw error;
+  const handleGameSelect = (gameId: string) => {
+    setSelectedGameIds(prev => 
+      prev.includes(gameId) 
+        ? prev.filter(id => id !== gameId)
+        : [...prev, gameId]
+    );
+  };
+
+  const handleDeleteSelected = async () => {
+    try {
+      for (const gameId of selectedGameIds) {
+        const { error } = await supabase
+          .from('matches')
+          .delete()
+          .eq('id', gameId);
+
+        if (error) throw error;
       }
 
-      // Validate relationships and mark games with incomplete data
-      const gamesWithIssues = games?.map(game => ({
-        ...game,
-        hasIncompleteData: !game.pre_match_report || game.match_actions.length === 0
-      }));
-
-      return gamesWithIssues || [];
+      toast.success("המשחקים נמחקו בהצלחה");
+      setSelectedGameIds([]);
+      setShowDeleteConfirmDialog(false);
+    } catch (error) {
+      console.error('Error deleting games:', error);
+      toast.error("שגיאה במחיקת המשחקים");
     }
-  });
+  };
 
   const handleSendEmail = async (email: string) => {
     try {
@@ -273,49 +262,6 @@ export const AdminDashboard = () => {
   const formatGameDate = (date: string, time?: string) => {
     const formattedDate = format(new Date(date), 'dd/MM/yyyy');
     return time ? `${formattedDate} ${time}` : formattedDate;
-  };
-
-  const filteredUsers = users?.filter(user => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      user.full_name?.toLowerCase().includes(searchLower) ||
-      user.email?.toLowerCase().includes(searchLower) ||
-      user.phone_number?.includes(searchQuery)
-    );
-  });
-
-  const filteredGames = games?.filter(game => {
-    const matchesSearch = 
-      game.player_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.opponent?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    if (statusFilter === "all") return matchesSearch;
-    if (statusFilter === "missing_report" && !game.pre_match_report) return matchesSearch;
-    return game.status === statusFilter && matchesSearch;
-  });
-
-  const handleExportGames = () => {
-    if (!games) return;
-
-    const csvContent = games.map(game => ({
-      'Player Name': game.player_name,
-      'Opponent': game.opponent,
-      'Date': format(new Date(game.match_date), 'dd/MM/yyyy'),
-      'Status': game.status,
-      'Final Score': game.final_score || 'N/A',
-      'Minutes Played': game.played_minutes || 'N/A'
-    }));
-
-    const csvString = [
-      Object.keys(csvContent[0]).join(','),
-      ...csvContent.map(row => Object.values(row).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `games_export_${format(new Date(), 'dd_MM_yyyy')}.csv`;
-    link.click();
   };
 
   return (
@@ -474,10 +420,22 @@ export const AdminDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle>רשימת משחקים</CardTitle>
-              <Button variant="outline" onClick={handleExportGames}>
-                <Download className="h-4 w-4 ml-2" />
-                ייצוא לקובץ CSV
-              </Button>
+              <div className="flex gap-2">
+                {selectedGameIds.length > 0 && (
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => setShowDeleteConfirmDialog(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    מחק משחקים ({selectedGameIds.length})
+                  </Button>
+                )}
+                <Button variant="outline" onClick={handleExportGames}>
+                  <Download className="h-4 w-4 ml-2" />
+                  ייצוא לקובץ CSV
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="flex gap-4 mb-4">
@@ -518,14 +476,16 @@ export const AdminDashboard = () => {
                         className={`cursor-pointer hover:bg-gray-50 transition-colors ${
                           !game.pre_match_report ? 'border-yellow-400' : ''
                         }`}
-                        onClick={() => {
-                          setSelectedGame(game);
-                          setShowGamesDialog(true);
-                        }}
                       >
                         <CardContent className="p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
+                          <div className="flex items-start justify-between">
+                            <Checkbox
+                              checked={selectedGameIds.includes(game.id)}
+                              onCheckedChange={() => handleGameSelect(game.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="mt-1"
+                            />
+                            <div className="flex-1 mx-4">
                               <h3 className="font-semibold">{game.player_name}</h3>
                               <p className="text-sm text-gray-600">נגד {game.opponent || 'לא צוין'}</p>
                             </div>
@@ -550,6 +510,16 @@ export const AdminDashboard = () => {
                               <span>דקות משחק: {game.played_minutes || 'לא צוין'}</span>
                             </div>
                           )}
+                          <Button
+                            variant="outline"
+                            className="mt-2 w-full"
+                            onClick={() => {
+                              setSelectedGame(game);
+                              setShowGamesDialog(true);
+                            }}
+                          >
+                            הצג פרטים מלאים
+                          </Button>
                         </CardContent>
                       </Card>
                     ))
@@ -569,114 +539,126 @@ export const AdminDashboard = () => {
       <Dialog open={showGamesDialog} onOpenChange={setShowGamesDialog}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>פרטי משחק</DialogTitle>
+            <DialogTitle>פרטי משחק מלאים</DialogTitle>
             <DialogDescription>
               {selectedGame?.player_name} נגד {selectedGame?.opponent}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            {selectedGame && (
-              <>
+          {selectedGame && (
+            <div className="space-y-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-2">מידע כללי</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium">תאריך:</p>
+                    <p>{format(new Date(selectedGame.match_date), 'dd/MM/yyyy')}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">סטטוס:</p>
+                    <p>{selectedGame.status === 'preview' ? 'טרום משחק' :
+                        selectedGame.status === 'playing' ? 'במהלך משחק' : 'הסתיים'}</p>
+                  </div>
+                  {selectedGame.final_score && (
+                    <div>
+                      <p className="text-sm font-medium">תוצאה סופית:</p>
+                      <p>{selectedGame.final_score}</p>
+                    </div>
+                  )}
+                  {selectedGame.played_minutes && (
+                    <div>
+                      <p className="text-sm font-medium">דקות משחק:</p>
+                      <p>{selectedGame.played_minutes}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {selectedGame.pre_match_report && (
+                <>
+                  {selectedGame.pre_match_report.havaya && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="font-semibold mb-2">הוויות נבחרות</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedGame.pre_match_report.havaya.split(',').map((havaya, index) => (
+                          <Badge key={index} variant="secondary">
+                            {havaya.trim()}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {Array.isArray(selectedGame.pre_match_report.actions) && 
+                   selectedGame.pre_match_report.actions.length > 0 && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="font-semibold mb-2">יעדים ומטרות</h3>
+                      <div className="space-y-2">
+                        {selectedGame.pre_match_report.actions.map((action: any, index: number) => (
+                          <div key={index} className="border-b border-gray-200 pb-2">
+                            <p className="font-medium">{action.name}</p>
+                            {action.goal && (
+                              <p className="text-sm text-gray-600">יעד: {action.goal}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {Array.isArray(selectedGame.pre_match_report.questions_answers) && 
+                   selectedGame.pre_match_report.questions_answers.length > 0 && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="font-semibold mb-2">תשובות לשאלות</h3>
+                      <div className="space-y-4">
+                        {selectedGame.pre_match_report.questions_answers.map((qa: any, index: number) => (
+                          <div key={index}>
+                            <p className="font-medium">{qa.question}</p>
+                            <p className="text-sm text-gray-600 mt-1">{qa.answer}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {selectedGame.match_actions?.length > 0 && (
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">מידע כללי</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <p className="text-sm font-medium">תאריך:</p>
-                      <p className="text-sm">{format(new Date(selectedGame.match_date), 'dd/MM/yyyy')}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">סטטוס:</p>
-                      <p className="text-sm">
-                        {selectedGame.status === 'preview' ? 'טרום משחק' :
-                         selectedGame.status === 'playing' ? 'במהלך משחק' : 'הסתיים'}
-                      </p>
-                    </div>
-                    {selectedGame.status === 'ended' && (
-                      <>
-                        <div>
-                          <p className="text-sm font-medium">תוצאה סופית:</p>
-                          <p className="text-sm">{selectedGame.final_score || 'לא צוין'}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">דקות משחק:</p>
-                          <p className="text-sm">{selectedGame.played_minutes || 'לא צוין'}</p>
-                        </div>
-                      </>
-                    )}
+                  <h3 className="font-semibold mb-2">פעולות במשחק</h3>
+                  <div className="space-y-2">
+                    {selectedGame.match_actions.map((action: any) => (
+                      <div key={action.id} className="flex justify-between items-center border-b border-gray-200 pb-2">
+                        <span>דקה {action.minute}</span>
+                        <Badge variant={action.result === 'success' ? 'default' : 'destructive'}>
+                          {action.result === 'success' ? 'הצלחה' : 'כישלון'}
+                        </Badge>
+                      </div>
+                    ))}
                   </div>
                 </div>
-
-                {selectedGame.pre_match_report && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold mb-2">דוח טרום משחק</h3>
-                    {selectedGame.pre_match_report.havaya && (
-                      <div className="mb-2">
-                        <p className="text-sm font-medium">הוויות:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedGame.pre_match_report.havaya.split(',').map((havaya: string, index: number) => (
-                            <Badge key={index} variant="outline">
-                              {havaya.trim()}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {selectedGame.pre_match_report.actions && (
-                      <div>
-                        <p className="text-sm font-medium">יעדים:</p>
-                        <div className="space-y-1">
-                          {Array.isArray(selectedGame.pre_match_report.actions) &&
-                            selectedGame.pre_match_report.actions.map((action: any, index: number) => (
-                              <p key={index} className="text-sm">
-                                {action.name}: {action.goal || 'לא הוגדר יעד'}
-                              </p>
-                            ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {selectedGame.match_actions?.length > 0 && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold mb-2">פעולות במשחק</h3>
-                    <div className="space-y-2">
-                      {selectedGame.match_actions.map((action: any) => (
-                        <div key={action.id} className="border-b border-gray-200 pb-2">
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium">דקה {action.minute}</span>
-                            <Badge variant={action.result === 'success' ? 'default' : 'destructive'}>
-                              {action.result === 'success' ? 'הצלחה' : 'כישלון'}
-                            </Badge>
-                          </div>
-                          <p className="text-sm mt-1">{action.action_id}</p>
-                          {action.note && (
-                            <p className="text-sm text-gray-600 mt-1">{action.note}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {selectedGame.match_notes?.length > 0 && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold mb-2">הערות משחק</h3>
-                    <div className="space-y-2">
-                      {selectedGame.match_notes.map((note: any) => (
-                        <div key={note.id} className="text-sm">
-                          <span className="font-medium">דקה {note.minute}: </span>
-                          <span>{note.note}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirmDialog} onOpenChange={setShowDeleteConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>האם אתה בטוח שברצונך למחוק את המשחקים שנבחרו?</AlertDialogTitle>
+            <AlertDialogDescription>
+              פעולה זו תמחק {selectedGameIds.length} משחקים לצמיתות. לא ניתן לבטל פעולה זו.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteSelected}>
+              מחק משחקים
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={showActionsDialog} onOpenChange={setShowActionsDialog}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
@@ -902,4 +884,3 @@ export const AdminDashboard = () => {
     </div>
   );
 };
-
