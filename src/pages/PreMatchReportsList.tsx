@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { PreMatchReport } from "@/components/game/history/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Camera, ExternalLink, Target, MessageSquare, List, Clock, Lightbulb, AlertCircle } from "lucide-react";
+import { Camera, ExternalLink, Target, MessageSquare, List, Clock, Lightbulb } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
@@ -56,13 +56,15 @@ export const PreMatchReportsList = () => {
         return {
           id: report.id,
           match_date: report.match_date,
+          match_time: report.match_time,
           opponent: report.opponent,
           actions,
           questions_answers,
           havaya: report.havaya,
           status: report.status,
           created_at: report.created_at,
-          updated_at: report.updated_at
+          updated_at: report.updated_at,
+          ai_insights: report.ai_insights
         };
       });
 
