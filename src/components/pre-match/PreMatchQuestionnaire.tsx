@@ -40,7 +40,6 @@ interface PreMatchQuestionnaireProps {
 export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) => {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   
-  // Select 3 random questions
   const [randomQuestions] = useState(() => {
     const shuffled = [...ADDITIONAL_QUESTIONS].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, 3);
@@ -73,25 +72,23 @@ export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) 
             className="p-6 rounded-lg border border-[#dddddd] bg-white shadow-sm space-y-6"
           >
             <div className="space-y-4">
-              <div className="flex justify-between items-start gap-6">
-                <Label 
-                  className="flex-1 text-right text-[22px] font-bold text-[#333333] leading-tight"
-                >
-                  {item.question}
-                </Label>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 hover:bg-[#0056b3]/10 transition-colors whitespace-nowrap text-[16px] border-[#dddddd] min-h-[44px] px-4"
-                  onClick={() => openExplanationVideo(item.videoUrl)}
-                >
-                  <Play className="h-4 w-4" />
-                  <span>{item.buttonText}</span>
-                </Button>
-              </div>
+              <Label 
+                className="block text-right text-[22px] font-bold text-[#333333] leading-tight"
+              >
+                {item.question}
+              </Label>
               <p className="text-[18px] text-[#666666] text-right leading-relaxed">
                 {item.guidance}
               </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full flex items-center justify-center gap-2 hover:bg-[#0056b3]/10 transition-colors text-[16px] border-[#dddddd] min-h-[44px] px-4"
+                onClick={() => openExplanationVideo(item.videoUrl)}
+              >
+                <Play className="h-4 w-4" />
+                <span>{item.buttonText}</span>
+              </Button>
             </div>
             <Textarea
               value={answers[item.question] || ""}
