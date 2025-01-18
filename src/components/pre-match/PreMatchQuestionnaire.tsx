@@ -60,8 +60,8 @@ export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) 
 
   return (
     <Card className="w-full max-w-3xl mx-auto bg-white shadow-sm">
-      <CardHeader className="border-b border-gray-100">
-        <CardTitle className="text-right text-2xl font-bold text-[#333333]">
+      <CardHeader className="border-b border-[#dddddd] py-6">
+        <CardTitle className="text-right text-[22px] font-bold text-[#333333]">
           שאלון טרום משחק
         </CardTitle>
       </CardHeader>
@@ -70,10 +70,10 @@ export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) 
         {FIXED_QUESTIONS.map((item, index) => (
           <div 
             key={index} 
-            className="p-6 rounded-lg border border-[#dddddd] bg-white shadow-sm space-y-4"
+            className="p-6 rounded-lg border border-[#dddddd] bg-white shadow-sm space-y-6"
           >
             <div className="space-y-4">
-              <div className="flex justify-between items-start gap-4 flex-wrap sm:flex-nowrap">
+              <div className="flex justify-between items-start gap-6">
                 <Label 
                   className="flex-1 text-right text-[22px] font-bold text-[#333333] leading-tight"
                 >
@@ -82,21 +82,21 @@ export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) 
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-2 hover:bg-[#0056b3]/10 transition-colors whitespace-nowrap min-w-[180px] text-[16px] border-[#dddddd]"
+                  className="flex items-center gap-2 hover:bg-[#0056b3]/10 transition-colors whitespace-nowrap text-[16px] border-[#dddddd] min-h-[44px] px-4"
                   onClick={() => openExplanationVideo(item.videoUrl)}
                 >
                   <Play className="h-4 w-4" />
                   <span>{item.buttonText}</span>
                 </Button>
               </div>
-              <p className="text-[18px] text-[#666666] text-right">
+              <p className="text-[18px] text-[#666666] text-right leading-relaxed">
                 {item.guidance}
               </p>
             </div>
             <Textarea
               value={answers[item.question] || ""}
               onChange={(e) => handleAnswerChange(item.question, e.target.value)}
-              className="min-h-[100px] text-[16px] w-full sm:w-[90%] mx-auto block bg-[#f2f2f2] border-[#dddddd] rounded-md p-4"
+              className="min-h-[120px] text-[16px] w-full sm:w-[90%] mx-auto block bg-[#f2f2f2] border-[#dddddd] rounded-md p-4"
               placeholder="הקלד את תשובתך כאן..."
               dir="rtl"
             />
@@ -107,7 +107,7 @@ export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) 
         {randomQuestions.map((question, index) => (
           <div 
             key={index} 
-            className="p-6 rounded-lg border border-[#dddddd] bg-white shadow-sm space-y-4"
+            className="p-6 rounded-lg border border-[#dddddd] bg-white shadow-sm space-y-6"
           >
             <Label 
               className="block text-right text-[22px] font-bold text-[#333333] leading-tight"
@@ -117,7 +117,7 @@ export const PreMatchQuestionnaire = ({ onSubmit }: PreMatchQuestionnaireProps) 
             <Textarea
               value={answers[question] || ""}
               onChange={(e) => handleAnswerChange(question, e.target.value)}
-              className="min-h-[100px] text-[16px] w-full sm:w-[90%] mx-auto block bg-[#f2f2f2] border-[#dddddd] rounded-md p-4"
+              className="min-h-[120px] text-[16px] w-full sm:w-[90%] mx-auto block bg-[#f2f2f2] border-[#dddddd] rounded-md p-4"
               placeholder="הקלד את תשובתך כאן..."
               dir="rtl"
             />
