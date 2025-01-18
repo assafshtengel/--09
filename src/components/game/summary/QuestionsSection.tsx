@@ -12,11 +12,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Define the fixed question separately with its video URL
-const FIXED_QUESTION = {
-  question: 'מה המילה שמחזירה לך? (המילה שאתה אומר לעצמך ברגע שהביטחון מעט יורד)',
-  videoUrl: 'https://did.li/lior-WORD1'
-};
+// Define the fixed questions with their video URLs and guidance text
+const FIXED_QUESTIONS = [
+  {
+    question: 'מה המילה שמחזירה לך? (המילה שאתה אומר לעצמך ברגע שהביטחון מעט יורד)',
+    videoUrl: 'https://did.li/lior-WORD1',
+    guidance: 'זיהוי המילה האישית שלך יכול לעזור לך להתמודד טוב יותר עם רגעי לחץ',
+    buttonText: 'לסרטון הסבר לנושא - לחץ כאן'
+  },
+  {
+    question: 'איך אתה מתייחס ללחץ לפני משחק?',
+    videoUrl: 'https://did.li/videoai1',
+    guidance: 'הבנת היחס שלך ללחץ היא צעד חשוב בשיפור הביצועים שלך',
+    buttonText: 'לסרטון בנושא לחץ - לחץ כאן'
+  }
+];
 
 const OPEN_ENDED_QUESTIONS = [
   "רשום את נקודות החוזקה שלך במשחק",
@@ -70,10 +80,10 @@ export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => 
   const [selfRating, setSelfRating] = useState<string>("5");
   const [openEndedAnswers, setOpenEndedAnswers] = useState<Record<string, string>>({});
   
-  // Select 4 random questions (in addition to the fixed question)
+  // Select 3 random questions (in addition to the two fixed questions)
   const [selectedQuestions] = useState(() => {
     const shuffled = [...OPEN_ENDED_QUESTIONS].sort(() => 0.5 - Math.random());
-    return [FIXED_QUESTION.question, ...shuffled.slice(0, 4)];
+    return [...FIXED_QUESTIONS.map(q => q.question), ...shuffled.slice(0, 3)];
   });
 
   const handleAnswerChange = (question: string, answer: string) => {
@@ -108,8 +118,8 @@ export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => 
     });
   };
 
-  const openExplanationVideo = () => {
-    window.open(FIXED_QUESTION.videoUrl, '_blank', 'noopener,noreferrer');
+  const openExplanationVideo = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -159,30 +169,39 @@ export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => 
         </div>
 
         <div className="space-y-4">
-          {selectedQuestions.map((question, index) => (
-            <div key={index} className="space-y-2">
-              <div className="flex justify-between items-start gap-4">
-                <Label className="flex-1">{question}</Label>
-                {index === 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2 hover:bg-primary/10 transition-colors"
-                    onClick={openExplanationVideo}
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    <span>לסרטון הסבר לנושא - לחץ כאן</span>
-                  </Button>
-                )}
+          {selectedQuestions.map((question, index) => {
+            const fixedQuestion = FIXED_QUESTIONS.find(q => q.question === question);
+            
+            return (
+              <div key={index} className="space-y-2">
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-between items-start gap-4">
+                    <Label className="flex-1">{question}</Label>
+                    {fixedQuestion && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 hover:bg-primary/10 transition-colors"
+                        onClick={() => openExplanationVideo(fixedQuestion.videoUrl)}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        <span>{fixedQuestion.buttonText}</span>
+                      </Button>
+                    )}
+                  </div>
+                  {fixedQuestion && (
+                    <p className="text-sm text-muted-foreground">{fixedQuestion.guidance}</p>
+                  )}
+                </div>
+                <Textarea
+                  value={openEndedAnswers[question] || ""}
+                  onChange={(e) => handleAnswerChange(question, e.target.value)}
+                  className="mt-2"
+                  dir="rtl"
+                />
               </div>
-              <Textarea
-                value={openEndedAnswers[question] || ""}
-                onChange={(e) => handleAnswerChange(question, e.target.value)}
-                className="mt-2"
-                dir="rtl"
-              />
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>
