@@ -49,7 +49,21 @@ const GameHistory = () => {
         .order("match_date", { ascending: false });
 
       if (error) throw error;
-      setGames(data || []);
+      
+      // Transform the data to match GameHistoryItem type
+      const transformedData: GameHistoryItem[] = (data || []).map(item => ({
+        id: item.id,
+        match_date: item.match_date,
+        opponent: item.opponent,
+        pre_match_report: item.pre_match_report ? {
+          actions: item.pre_match_report.actions,
+          questions_answers: item.pre_match_report.questions_answers,
+          havaya: item.pre_match_report.havaya
+        } : undefined,
+        match_actions: item.match_actions
+      }));
+
+      setGames(transformedData);
     } catch (error) {
       console.error("Error fetching games:", error);
       toast.error("שגיאה בטעינת המשחקים");
