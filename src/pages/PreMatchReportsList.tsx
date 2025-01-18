@@ -151,7 +151,7 @@ export const PreMatchReportsList = () => {
                 <div>
                   <h3 className="font-semibold mb-2">יעדים למשחק</h3>
                   <div className="grid gap-3">
-                    {selectedReport.actions.map((action: any, index: number) => (
+                    {selectedReport.actions.map((action, index) => (
                       <div
                         key={index}
                         className="border p-3 rounded-lg bg-muted/50"
@@ -170,11 +170,11 @@ export const PreMatchReportsList = () => {
 
               <Separator />
 
-              {selectedReport?.questions_answers && (
+              {selectedReport?.questions_answers && selectedReport.questions_answers.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-2">תשובות לשאלות</h3>
                   <div className="space-y-3">
-                    {selectedReport.questions_answers.map((qa: any, index: number) => (
+                    {selectedReport.questions_answers.map((qa, index) => (
                       <div
                         key={index}
                         className="border p-3 rounded-lg bg-muted/50"

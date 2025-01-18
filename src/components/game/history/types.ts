@@ -1,12 +1,22 @@
 import { Json } from "@/integrations/supabase/types";
 
+interface Action {
+  name: string;
+  goal?: string;
+}
+
+interface QuestionAnswer {
+  question: string;
+  answer: string;
+}
+
 export interface GameHistoryItem {
   id: string;
   match_date: string;
   opponent: string | null;
   pre_match_report?: {
-    actions: Json;
-    questions_answers: Json;
+    actions: Action[];
+    questions_answers: QuestionAnswer[];
     havaya?: string;
   };
   match_actions?: {
@@ -23,8 +33,8 @@ export interface PreMatchReport {
   id: string;
   match_date: string;
   opponent: string | null;
-  actions: Json;
-  questions_answers: Json;
+  actions: Action[];
+  questions_answers: QuestionAnswer[];
   havaya?: string;
   status: 'draft' | 'completed';
   created_at?: string;
