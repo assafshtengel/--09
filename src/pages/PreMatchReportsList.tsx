@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { PreMatchReport } from "@/components/game/history/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Camera, ExternalLink, Target, MessageSquare, List } from "lucide-react";
+import { Camera, ExternalLink, Target, MessageSquare, List, Clock, Lightbulb, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
@@ -83,6 +83,25 @@ export const PreMatchReportsList = () => {
     });
   };
 
+  const formatTime = (time: string | null) => {
+    if (!time) return null;
+    return new Date(`2000-01-01T${time}`).toLocaleTimeString("he-IL", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'draft':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   const handleScreenshot = async () => {
     try {
       const element = document.getElementById("report-content");
@@ -146,12 +165,23 @@ export const PreMatchReportsList = () => {
               className="cursor-pointer hover:bg-gray-50 transition-all"
             >
               <CardHeader className="flex flex-row justify-between items-center">
-                <CardTitle className="text-lg">
-                  נגד: {report.opponent || "ללא יריב"}
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <span>נגד: {report.opponent || "ללא יריב"}</span>
+                  <Badge className={getStatusBadgeColor(report.status)}>
+                    {report.status === 'completed' ? 'הושלם' : 'טיוטה'}
+                  </Badge>
                 </CardTitle>
-                <span className="text-sm text-gray-500">
-                  {formatDate(report.match_date)}
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-sm text-gray-500">
+                    {formatDate(report.match_date)}
+                  </span>
+                  {report.match_time && (
+                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {formatTime(report.match_time)}
+                    </span>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-2 text-sm text-muted-foreground">
@@ -163,6 +193,12 @@ export const PreMatchReportsList = () => {
                     <MessageSquare className="h-4 w-4" />
                     {report.questions_answers?.length || 0} תשובות
                   </span>
+                  {report.ai_insights && report.ai_insights.length > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Lightbulb className="h-4 w-4" />
+                      {report.ai_insights.length} תובנות
+                    </span>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -173,13 +209,24 @@ export const PreMatchReportsList = () => {
       <Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">
-              דוח טרום משחק - {selectedReport?.opponent || "ללא יריב"}
+            <DialogTitle className="text-xl font-bold flex items-center justify-between">
+              <span>דוח טרום משחק - {selectedReport?.opponent || "ללא יריב"}</span>
+              <Badge className={selectedReport ? getStatusBadgeColor(selectedReport.status) : ''}>
+                {selectedReport?.status === 'completed' ? 'הושלם' : 'טיוטה'}
+              </Badge>
             </DialogTitle>
           </DialogHeader>
 
           <ScrollArea className="max-h-[80vh]">
             <div id="report-content" className="space-y-6 p-4">
+              <div className="flex justify-between items-center text-sm text-gray-500">
+                <span className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  {selectedReport?.match_time ? formatTime(selectedReport.match_time) : 'שעה לא צוינה'}
+                </span>
+                <span>{selectedReport?.match_date ? formatDate(selectedReport.match_date) : ''}</span>
+              </div>
+
               {selectedReport?.havaya && (
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
@@ -259,6 +306,32 @@ export const PreMatchReportsList = () => {
                       >
                         <p className="font-medium text-right mb-2">{qa.question}</p>
                         <p className="text-gray-600 text-right">{qa.answer}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {selectedReport?.ai_insights && selectedReport.ai_insights.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4"
+                >
+                  <h3 className="text-lg font-semibold text-right flex items-center gap-2 justify-end">
+                    <Lightbulb className="h-5 w-5" />
+                    תובנות AI
+                  </h3>
+                  <div className="space-y-3">
+                    {selectedReport.ai_insights.map((insight, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="border p-4 rounded-lg bg-blue-50/50"
+                      >
+                        <p className="text-gray-700 text-right">{insight}</p>
                       </motion.div>
                     ))}
                   </div>
