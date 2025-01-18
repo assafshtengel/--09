@@ -34,6 +34,7 @@ export interface GameHistoryItem {
 export interface PreMatchReport {
   id: string;
   match_date: string;
+  match_time?: string | null;
   opponent: string | null;
   actions: Action[];
   questions_answers: QuestionAnswer[];
@@ -41,4 +42,5 @@ export interface PreMatchReport {
   status: 'draft' | 'completed';
   created_at?: string;
   updated_at?: string;
+  ai_insights?: string[] | null;
 }
