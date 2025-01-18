@@ -7,6 +7,7 @@ interface Action {
 }
 
 interface QuestionAnswer {
+  [key: string]: Json;
   question: string;
   answer: string;
 }
