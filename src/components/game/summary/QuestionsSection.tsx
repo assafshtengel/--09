@@ -2,8 +2,6 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { ExternalLink } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -12,22 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Define the fixed questions with their video URLs and guidance text
-const FIXED_QUESTIONS = [
-  {
-    question: 'מה המילה שמחזירה לך? (המילה שאתה אומר לעצמך ברגע שהביטחון מעט יורד)',
-    videoUrl: 'https://did.li/lior-WORD1',
-    guidance: 'זיהוי המילה האישית שלך יכול לעזור לך להתמודד טוב יותר עם רגעי לחץ',
-    buttonText: 'לסרטון הסבר לנושא - לחץ כאן'
-  },
-  {
-    question: 'איך אתה מתייחס ללחץ לפני משחק?',
-    videoUrl: 'https://did.li/videoai1',
-    guidance: 'הבנת היחס שלך ללחץ היא צעד חשוב בשיפור הביצועים שלך',
-    buttonText: 'לסרטון בנושא לחץ - לחץ כאן'
-  }
-];
-
+// Define the fixed questions without the two that were moved
 const OPEN_ENDED_QUESTIONS = [
   "רשום את נקודות החוזקה שלך במשחק",
   "רשום את נקודות התורפה שלך במשחק",
@@ -83,7 +66,7 @@ export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => 
   // Select 3 random questions (in addition to the two fixed questions)
   const [selectedQuestions] = useState(() => {
     const shuffled = [...OPEN_ENDED_QUESTIONS].sort(() => 0.5 - Math.random());
-    return [...FIXED_QUESTIONS.map(q => q.question), ...shuffled.slice(0, 3)];
+    return [...shuffled.slice(0, 3)];
   });
 
   const handleAnswerChange = (question: string, answer: string) => {
@@ -116,10 +99,6 @@ export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => 
       selfRating: parseInt(value),
       openEndedAnswers
     });
-  };
-
-  const openExplanationVideo = (url: string) => {
-    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -169,39 +148,17 @@ export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => 
         </div>
 
         <div className="space-y-4">
-          {selectedQuestions.map((question, index) => {
-            const fixedQuestion = FIXED_QUESTIONS.find(q => q.question === question);
-            
-            return (
-              <div key={index} className="space-y-2">
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between items-start gap-4">
-                    <Label className="flex-1">{question}</Label>
-                    {fixedQuestion && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-2 hover:bg-primary/10 transition-colors"
-                        onClick={() => openExplanationVideo(fixedQuestion.videoUrl)}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        <span>{fixedQuestion.buttonText}</span>
-                      </Button>
-                    )}
-                  </div>
-                  {fixedQuestion && (
-                    <p className="text-sm text-muted-foreground">{fixedQuestion.guidance}</p>
-                  )}
-                </div>
-                <Textarea
-                  value={openEndedAnswers[question] || ""}
-                  onChange={(e) => handleAnswerChange(question, e.target.value)}
-                  className="mt-2"
-                  dir="rtl"
-                />
-              </div>
-            );
-          })}
+          {selectedQuestions.map((question, index) => (
+            <div key={index} className="space-y-2">
+              <Label>{question}</Label>
+              <Textarea
+                value={openEndedAnswers[question] || ""}
+                onChange={(e) => handleAnswerChange(question, e.target.value)}
+                className="mt-2"
+                dir="rtl"
+              />
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>
