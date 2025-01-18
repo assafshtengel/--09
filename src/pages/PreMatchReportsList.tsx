@@ -22,6 +22,7 @@ export const PreMatchReportsList = () => {
   const [reports, setReports] = useState<PreMatchReport[]>([]);
   const [selectedReport, setSelectedReport] = useState<PreMatchReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchReports();
@@ -29,12 +30,18 @@ export const PreMatchReportsList = () => {
 
   const fetchReports = async () => {
     try {
-      const { data, error } = await supabase
+      setError(null);
+      const { data, error: supabaseError } = await supabase
         .from("pre_match_reports")
         .select("*, profiles(full_name)")
         .order("match_date", { ascending: false });
 
-      if (error) throw error;
+      if (supabaseError) {
+        console.error("Error fetching reports:", supabaseError);
+        setError("שגיאה בטעינת הדוחות");
+        toast.error("שגיאה בטעינת הדוחות");
+        return;
+      }
       
       const transformedReports: PreMatchReport[] = (data || []).map(report => {
         const actions = Array.isArray(report.actions) 
@@ -70,7 +77,8 @@ export const PreMatchReportsList = () => {
 
       setReports(transformedReports);
     } catch (error) {
-      console.error("Error fetching reports:", error);
+      console.error("Error processing reports:", error);
+      setError("שגיאה בעיבוד הדוחות");
       toast.error("שגיאה בטעינת הדוחות");
     } finally {
       setIsLoading(false);
@@ -138,6 +146,15 @@ export const PreMatchReportsList = () => {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-pulse">טוען...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <p className="text-red-500">{error}</p>
+        <Button onClick={fetchReports}>נסה שוב</Button>
       </div>
     );
   }
