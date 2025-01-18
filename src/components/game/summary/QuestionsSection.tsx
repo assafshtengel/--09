@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { ExternalLink } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -9,6 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const FIXED_QUESTION = {
+  question: 'מה המילה שמחזירה לך? (המילה שאתה אומר לעצמך ברגע שהביטחון מעט יורד)',
+  videoUrl: 'https://did.li/lior-WORD1'
+};
 
 const OPEN_ENDED_QUESTIONS = [
   "רשום את נקודות החוזקה שלך במשחק",
@@ -62,10 +69,10 @@ export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => 
   const [selfRating, setSelfRating] = useState<string>("5");
   const [openEndedAnswers, setOpenEndedAnswers] = useState<Record<string, string>>({});
   
-  // Select 3 random questions
+  // Select 4 random questions (in addition to the fixed question)
   const [selectedQuestions] = useState(() => {
     const shuffled = [...OPEN_ENDED_QUESTIONS].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 3);
+    return [FIXED_QUESTION.question, ...shuffled.slice(0, 4)];
   });
 
   const handleAnswerChange = (question: string, answer: string) => {
@@ -98,6 +105,10 @@ export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => 
       selfRating: parseInt(value),
       openEndedAnswers
     });
+  };
+
+  const openExplanationVideo = () => {
+    window.open(FIXED_QUESTION.videoUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -148,8 +159,21 @@ export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => 
 
         <div className="space-y-4">
           {selectedQuestions.map((question, index) => (
-            <div key={index}>
-              <Label>{question}</Label>
+            <div key={index} className="space-y-2">
+              <div className="flex justify-between items-start gap-4">
+                <Label className="flex-1">{question}</Label>
+                {index === 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2 hover:bg-primary/10 transition-colors"
+                    onClick={openExplanationVideo}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    <span>לסרטון הסבר לנושא - לחץ כאן</span>
+                  </Button>
+                )}
+              </div>
               <Textarea
                 value={openEndedAnswers[question] || ""}
                 onChange={(e) => handleAnswerChange(question, e.target.value)}
