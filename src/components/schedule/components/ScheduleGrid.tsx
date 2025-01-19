@@ -95,7 +95,8 @@ export const ScheduleGrid = ({
     console.log(`Filtered activities for ${day}:`, dayActivities.map(a => ({
       title: a.title,
       type: a.activity_type,
-      time: `${a.start_time}-${a.end_time}`
+      time: `${a.start_time}-${a.end_time}`,
+      day_of_week: a.day_of_week
     })));
 
     const isWeekend = dayIndex >= 5;
@@ -117,12 +118,13 @@ export const ScheduleGrid = ({
             console.log(`Rendering activity for ${day}:`, {
               title: activity.title,
               type: activity.activity_type,
-              time: `${activity.start_time}-${activity.end_time}`
+              time: `${activity.start_time}-${activity.end_time}`,
+              day_of_week: activity.day_of_week
             });
             
             return (
               <ActivityBlock
-                key={`${activity.day_of_week}-${activity.start_time}-${activity.activity_type}-${activity.title}`}
+                key={`${dayIndex}-${activity.start_time}-${activity.activity_type}-${activity.title}`}
                 activity={activity}
                 style={getActivityStyle(activity)}
                 colorClass={colorClass}
