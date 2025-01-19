@@ -92,6 +92,7 @@ export const ScheduleGrid = ({
       if (isMobile) {
         return activity.day_of_week === selectedDay;
       }
+      // For desktop view, use the actual day index from the current iteration
       return activity.day_of_week === dayIndex;
     });
 
@@ -113,7 +114,7 @@ export const ScheduleGrid = ({
             const { colorClass, icon } = getActivityProps(activity);
             return (
               <ActivityBlock
-                key={activity.id}
+                key={`${activity.day_of_week}-${activity.start_time}-${activity.activity_type}`}
                 activity={activity}
                 style={getActivityStyle(activity)}
                 colorClass={colorClass}
