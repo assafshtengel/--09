@@ -7,6 +7,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileText } from "lucide-react";
 import { GameHistoryItem } from "./types";
+import { motion } from "framer-motion";
 
 interface GameDetailsDialogProps {
   isOpen: boolean;
@@ -42,6 +43,31 @@ export const GameDetailsDialog = ({ isOpen, onClose, game }: GameDetailsDialogPr
                         ))}
                     </ul>
                   </div>
+
+                  {Array.isArray(game.pre_match_report.questions_answers) && 
+                   game.pre_match_report.questions_answers.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-6"
+                    >
+                      <h4 className="text-sm font-medium mb-3">תשובות לשאלון טרום משחק</h4>
+                      <div className="space-y-4">
+                        {game.pre_match_report.questions_answers.map((qa: any, index: number) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="border p-4 rounded-lg bg-gray-50/50"
+                          >
+                            <p className="font-medium text-right mb-2">{qa.question}</p>
+                            <p className="text-gray-600 text-right">{qa.answer}</p>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
               </div>
             )}
