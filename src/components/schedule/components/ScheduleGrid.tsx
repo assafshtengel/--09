@@ -84,10 +84,12 @@ export const ScheduleGrid = ({
 
       return (
         <div key={day} className="flex-1 min-w-[120px] max-w-[120px]">
-          <div className="h-12 border-b px-2 font-medium text-center">{day}</div>
+          <div className="h-12 border-b px-2 font-medium text-center bg-gray-50">
+            <div className="text-sm text-gray-600">{day}</div>
+          </div>
           <div className="relative">
             {hours.map((hour) => (
-              <div key={hour} className="h-16 border-b border-r" />
+              <div key={hour} className="h-16 border-b border-r border-gray-100 bg-white" />
             ))}
             {dayActivities.map((activity) => {
               const { colorClass, icon } = getActivityProps(activity);
@@ -114,16 +116,16 @@ export const ScheduleGrid = ({
     );
 
     return (
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-hidden shadow-sm">
         <div className="relative">
           {renderTimeColumn()}
           <div className="flex-1 min-w-[120px] max-w-[120px]">
-            <div className="h-12 border-b px-2 font-medium text-center">
+            <div className="h-12 border-b px-2 font-medium text-center bg-gray-50">
               {days[selectedDay]}
             </div>
             <div className="relative">
               {hours.map((hour) => (
-                <div key={hour} className="h-16 border-b border-r" />
+                <div key={hour} className="h-16 border-b border-r border-gray-100 bg-white" />
               ))}
               {dayActivities.map((activity) => {
                 const { colorClass, icon } = getActivityProps(activity);
@@ -186,7 +188,7 @@ export const ScheduleGrid = ({
       </div>
       
       {/* Regular view */}
-      <ScrollArea className="border rounded-lg hidden print:hidden">
+      <ScrollArea className="border rounded-lg shadow-sm hidden print:hidden">
         <div className="flex">
           {renderTimeColumn()}
           {renderDayColumns(getCurrentDays(), getActualDayIndex(0))}
@@ -194,7 +196,7 @@ export const ScheduleGrid = ({
       </ScrollArea>
 
       {/* Print view - shows all days */}
-      <div className="hidden print:block border rounded-lg">
+      <div className="hidden print:block border rounded-lg shadow-sm">
         <div className="flex">
           {renderTimeColumn()}
           {renderDayColumns(days, 0)}
@@ -223,27 +225,27 @@ const getActivityProps = (activity: Activity) => {
   switch (activity.activity_type) {
     case 'school':
       return {
-        colorClass: 'bg-blue-100',
+        colorClass: 'bg-blue-100 hover:bg-blue-200',
         icon: '🏫'
       };
     case 'team_training':
       return {
-        colorClass: 'bg-green-100',
+        colorClass: 'bg-green-100 hover:bg-green-200',
         icon: '⚽'
       };
     case 'personal_training':
       return {
-        colorClass: 'bg-purple-100',
+        colorClass: 'bg-purple-100 hover:bg-purple-200',
         icon: '🏃'
       };
     case 'sleep':
       return {
-        colorClass: 'bg-gray-100',
+        colorClass: 'bg-gray-100 hover:bg-gray-200',
         icon: '😴'
       };
     default:
       return {
-        colorClass: 'bg-yellow-100',
+        colorClass: 'bg-yellow-100 hover:bg-yellow-200',
         icon: '📅'
       };
   }

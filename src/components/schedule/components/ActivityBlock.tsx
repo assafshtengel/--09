@@ -17,7 +17,7 @@ interface ActivityBlockProps {
 export const ActivityBlock = ({ activity, style, colorClass, icon, onDelete }: ActivityBlockProps) => {
   return (
     <div
-      className={`${colorClass} absolute w-[95%] p-2 rounded-md border text-sm overflow-hidden transition-all hover:shadow-md group print:hover:shadow-none`}
+      className={`${colorClass} absolute w-[95%] p-2 rounded-md border border-transparent transition-all hover:shadow-md hover:border-gray-200 group print:hover:shadow-none`}
       style={style}
     >
       <Button
