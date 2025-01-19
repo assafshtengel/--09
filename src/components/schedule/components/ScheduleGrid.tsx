@@ -90,13 +90,9 @@ export const ScheduleGrid = ({
 
   const renderDayColumn = (day: string, dayIndex: number) => {
     // Filter activities for the current day
-    const dayActivities = activities.filter(activity => {
-      console.log(`Filtering for day ${dayIndex}, activity day: ${activity.day_of_week}`); // Debug log
-      if (isMobile) {
-        return activity.day_of_week === selectedDay;
-      }
-      return activity.day_of_week === dayIndex;
-    });
+    const dayActivities = isMobile 
+      ? activities.filter(activity => activity.day_of_week === selectedDay)
+      : activities.filter(activity => activity.day_of_week === dayIndex);
 
     console.log(`Activities for day ${dayIndex}:`, dayActivities); // Debug log
 
@@ -118,7 +114,7 @@ export const ScheduleGrid = ({
             const { colorClass, icon } = getActivityProps(activity);
             return (
               <ActivityBlock
-                key={`${activity.day_of_week}-${activity.start_time}-${activity.activity_type}`}
+                key={`${activity.day_of_week}-${activity.start_time}-${activity.activity_type}-${activity.title}`}
                 activity={activity}
                 style={getActivityStyle(activity)}
                 colorClass={colorClass}
