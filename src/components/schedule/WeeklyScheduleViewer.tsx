@@ -42,7 +42,6 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
 
       if (error) throw error;
       toast.success("הפעילות נמחקה בהצלחה");
-      // Refresh the page to update the schedule
       window.location.reload();
     } catch (error) {
       console.error("Error deleting activity:", error);
@@ -51,14 +50,12 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
   };
 
   return (
-    <Card className="p-4 overflow-x-auto">
+    <Card className="p-4">
       <ScheduleHeader onPrint={window.print} onCopyLastWeek={async () => {
         try {
-          // Get the current user's ID
           const { data: { user } } = await supabase.auth.getUser();
           if (!user) throw new Error("No authenticated user");
 
-          // Get the last week's schedule
           const { data: lastWeekSchedule, error: scheduleError } = await supabase
             .from('weekly_schedules')
             .select('id')
@@ -74,7 +71,6 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
             return;
           }
 
-          // Get the activities from the last week
           const { data: lastWeekActivities, error: activitiesError } = await supabase
             .from('schedule_activities')
             .select('*')
@@ -87,7 +83,6 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
             return;
           }
 
-          // Create a new schedule for this week
           const { data: newSchedule, error: newScheduleError } = await supabase
             .from('weekly_schedules')
             .insert({
@@ -99,13 +94,12 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
 
           if (newScheduleError) throw newScheduleError;
 
-          // Copy all activities to the new schedule
           const { error: copyError } = await supabase
             .from('schedule_activities')
             .insert(
               lastWeekActivities.map(activity => ({
                 ...activity,
-                id: undefined, // Remove the old ID to generate a new one
+                id: undefined,
                 schedule_id: newSchedule.id,
               }))
             );
@@ -113,7 +107,6 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
           if (copyError) throw copyError;
 
           toast.success("לוח הזמנים הועתק בהצלחה");
-          // Refresh the page to show the new schedule
           window.location.reload();
         } catch (error) {
           console.error("Error copying last week's schedule:", error);
@@ -121,10 +114,10 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
         }
       }} />
       
-      <div id="weekly-schedule" className="print:p-4">
+      <div id="weekly-schedule" className="mt-6 print:p-4">
         {isMobile ? (
           <div className="space-y-4">
-            <div className="flex items-center justify-between px-4 print:hidden">
+            <div className="flex items-center justify-between px-4">
               <Button variant="outline" size="icon" onClick={() => setSelectedDay((prev) => (prev > 0 ? prev - 1 : 6))}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -144,14 +137,16 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
             />
           </div>
         ) : (
-          <ScheduleGrid
-            activities={activities}
-            days={days}
-            hours={hours}
-            isMobile={isMobile}
-            selectedDay={selectedDay}
-            onDeleteActivity={handleDeleteActivity}
-          />
+          <div className="overflow-hidden rounded-lg border bg-card">
+            <ScheduleGrid
+              activities={activities}
+              days={days}
+              hours={hours}
+              isMobile={isMobile}
+              selectedDay={selectedDay}
+              onDeleteActivity={handleDeleteActivity}
+            />
+          </div>
         )}
       </div>
 
@@ -185,13 +180,6 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
-          .bg-blue-100 { background-color: #dbeafe !important; }
-          .bg-green-100 { background-color: #dcfce7 !important; }
-          .bg-red-100 { background-color: #fee2e2 !important; }
-          .bg-purple-100 { background-color: #f3e8ff !important; }
-          .bg-yellow-100 { background-color: #fef9c3 !important; }
-          .bg-gray-100 { background-color: #f3f4f6 !important; }
-          .bg-orange-100 { background-color: #ffedd5 !important; }
         }
       `}</style>
     </Card>
