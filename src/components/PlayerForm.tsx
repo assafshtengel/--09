@@ -88,16 +88,22 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <FormField
+        id="fullName"
         label="שם מלא"
         type="text"
         value={formData.fullName}
-        onChange={(e) => handleInputChange("fullName", e.target.value)}
+        onChange={(value) => handleInputChange("fullName", value)}
         required
       />
 
       <RoleSelector
-        value={formData.roles}
-        onChange={(value) => handleInputChange("roles", value)}
+        selectedRoles={formData.roles}
+        onToggleRole={(role) => {
+          const newRoles = formData.roles.includes(role)
+            ? formData.roles.filter(r => r !== role)
+            : [...formData.roles, role];
+          handleInputChange("roles", newRoles);
+        }}
       />
 
       <SportBranchSelector
@@ -107,46 +113,52 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       />
 
       <FormField
+        id="phoneNumber"
         label="מספר טלפון"
         type="tel"
         value={formData.phoneNumber}
-        onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+        onChange={(value) => handleInputChange("phoneNumber", value)}
         required
       />
 
       <FormField
+        id="club"
         label="מועדון"
         type="text"
         value={formData.club}
-        onChange={(e) => handleInputChange("club", e.target.value)}
+        onChange={(value) => handleInputChange("club", value)}
       />
 
       <FormField
+        id="teamYear"
         label="שנתון"
         type="number"
         value={formData.teamYear}
-        onChange={(e) => handleInputChange("teamYear", e.target.value)}
+        onChange={(value) => handleInputChange("teamYear", value)}
       />
 
       <FormField
+        id="dateOfBirth"
         label="תאריך לידה"
         type="date"
         value={formData.dateOfBirth}
-        onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+        onChange={(value) => handleInputChange("dateOfBirth", value)}
       />
 
       <FormField
+        id="ageCategory"
         label="קטגוריית גיל"
         type="text"
         value={formData.ageCategory}
-        onChange={(e) => handleInputChange("ageCategory", e.target.value)}
+        onChange={(value) => handleInputChange("ageCategory", value)}
       />
 
       <FormField
+        id="coachEmail"
         label="אימייל מאמן"
         type="email"
         value={formData.coachEmail}
-        onChange={(e) => handleInputChange("coachEmail", e.target.value)}
+        onChange={(value) => handleInputChange("coachEmail", value)}
       />
 
       <Button type="submit" disabled={isLoading}>

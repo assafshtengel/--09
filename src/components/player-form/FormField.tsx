@@ -9,6 +9,7 @@ interface FormFieldProps {
   type?: string;
   placeholder?: string;
   accept?: string;
+  required?: boolean;
   onFileChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -20,6 +21,7 @@ export const FormField = ({
   type = "text",
   placeholder,
   accept,
+  required,
   onFileChange
 }: FormFieldProps) => {
   return (
@@ -33,6 +35,7 @@ export const FormField = ({
         className="text-right"
         placeholder={placeholder}
         accept={accept}
+        required={required}
       />
     </div>
   );

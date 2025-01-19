@@ -14,7 +14,6 @@ const Profile = () => {
   useEffect(() => {
     const checkSessionAndLoadProfile = async () => {
       try {
-        // First refresh the session
         const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
         
         if (refreshError) {
@@ -29,7 +28,6 @@ const Profile = () => {
           return;
         }
 
-        // Now fetch profile data with fresh session
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("*")
@@ -51,6 +49,7 @@ const Profile = () => {
             dateOfBirth: profile.date_of_birth || "",
             ageCategory: profile.age_category || "",
             coachEmail: profile.coach_email || "",
+            sportBranches: profile.sport_branches || [],
           });
         }
       } catch (error) {
@@ -66,7 +65,6 @@ const Profile = () => {
       }
     };
 
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
         navigate('/auth');
@@ -75,7 +73,6 @@ const Profile = () => {
       }
     });
 
-    // Initial load
     checkSessionAndLoadProfile();
 
     return () => subscription.unsubscribe();
