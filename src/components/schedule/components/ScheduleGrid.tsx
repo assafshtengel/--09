@@ -87,15 +87,19 @@ export const ScheduleGrid = ({
   );
 
   const renderDayColumn = (day: string, dayIndex: number) => {
-    const dayActivities = activities.filter(
-      (activity) => activity.day_of_week === dayIndex
-    );
+    // Filter activities for the current day
+    const dayActivities = activities.filter(activity => {
+      if (isMobile) {
+        return activity.day_of_week === selectedDay;
+      }
+      return activity.day_of_week === dayIndex;
+    });
 
     const isWeekend = dayIndex >= 5;
 
     return (
       <div key={day} className={cn(
-        "flex-1 min-w-[90px] max-w-[120px] transition-colors", // Updated width values here (reduced by 40%)
+        "flex-1 min-w-[90px] max-w-[120px] transition-colors",
         isWeekend && "bg-gray-50/50"
       )}>
         <div className="h-12 border-b px-2 font-medium text-center sticky top-0 bg-background">
@@ -124,10 +128,6 @@ export const ScheduleGrid = ({
   };
 
   if (isMobile) {
-    const dayActivities = activities.filter(
-      (activity) => activity.day_of_week === selectedDay
-    );
-
     return (
       <div className="border rounded-lg overflow-hidden">
         <div className="relative">
@@ -140,7 +140,7 @@ export const ScheduleGrid = ({
 
   return (
     <ScrollArea className="border rounded-lg">
-      <div className="flex min-w-[720px]"> {/* Updated minimum width here (reduced by 40%) */}
+      <div className="flex min-w-[720px]">
         {renderTimeColumn()}
         {days.map((day, index) => renderDayColumn(day, index))}
       </div>
