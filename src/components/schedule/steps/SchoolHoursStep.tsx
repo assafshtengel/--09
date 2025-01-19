@@ -24,7 +24,6 @@ export const SchoolHoursStep = ({ onAddActivity }: SchoolHoursStepProps) => {
   ];
 
   const formatTimeForDatabase = (timeString: string): string => {
-    // Ensure the time is in HH:mm format
     return timeString.split(':').slice(0, 2).join(':');
   };
 
@@ -34,46 +33,14 @@ export const SchoolHoursStep = ({ onAddActivity }: SchoolHoursStepProps) => {
       return;
     }
 
-    const activities = [];
-
     selectedDays.forEach((day) => {
-      // Add wake up time 1.5 hours before school
-      const wakeUpTime = new Date(`2000-01-01T${startTime}`);
-      wakeUpTime.setHours(wakeUpTime.getHours() - 1);
-      wakeUpTime.setMinutes(wakeUpTime.getMinutes() - 30);
-      const formattedWakeUpTime = formatTimeForDatabase(wakeUpTime.toTimeString());
-      
-      activities.push({
-        day_of_week: day,
-        start_time: formattedWakeUpTime,
-        end_time: formattedWakeUpTime,
-        activity_type: "wake_up",
-        title: "השכמה",
-        priority: 1
-      });
-
-      // Add departure time 30 minutes before school
-      const departureTime = new Date(`2000-01-01T${startTime}`);
-      departureTime.setMinutes(departureTime.getMinutes() - 30);
-      const formattedDepartureTime = formatTimeForDatabase(departureTime.toTimeString());
-      
-      activities.push({
-        day_of_week: day,
-        start_time: formattedDepartureTime,
-        end_time: formattedDepartureTime,
-        activity_type: "departure",
-        title: "יציאה לבית ספר",
-        priority: 2
-      });
-
       // Add school hours
-      activities.push({
+      onAddActivity({
         day_of_week: day,
         start_time: formatTimeForDatabase(startTime),
         end_time: formatTimeForDatabase(endTime),
         activity_type: "school",
         title: "בית ספר",
-        priority: 3
       });
 
       // Add lunch break in the middle of the school day
@@ -85,19 +52,13 @@ export const SchoolHoursStep = ({ onAddActivity }: SchoolHoursStepProps) => {
         new Date(middleTime.getTime() + 30 * 60000).toTimeString()
       );
       
-      activities.push({
+      onAddActivity({
         day_of_week: day,
         start_time: formattedLunchTime,
         end_time: formattedLunchEndTime,
         activity_type: "lunch",
         title: "ארוחת צהריים",
-        priority: 4
       });
-    });
-
-    // Add all activities at once
-    activities.forEach(activity => {
-      onAddActivity(activity);
     });
 
     toast.success(`נוספו שעות בית ספר ל-${selectedDays.length} ימים`);
