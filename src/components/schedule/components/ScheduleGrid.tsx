@@ -75,6 +75,8 @@ export const ScheduleGrid = ({
   selectedDay,
   onDeleteActivity
 }: ScheduleGridProps) => {
+  console.log("Received activities:", activities); // Debug log
+
   const renderTimeColumn = () => (
     <div className="sticky right-0 bg-background z-10 border-l">
       <div className="h-12 border-b" />
@@ -89,12 +91,14 @@ export const ScheduleGrid = ({
   const renderDayColumn = (day: string, dayIndex: number) => {
     // Filter activities for the current day
     const dayActivities = activities.filter(activity => {
+      console.log(`Filtering for day ${dayIndex}, activity day: ${activity.day_of_week}`); // Debug log
       if (isMobile) {
         return activity.day_of_week === selectedDay;
       }
-      // For desktop view, use the actual day index from the current iteration
       return activity.day_of_week === dayIndex;
     });
+
+    console.log(`Activities for day ${dayIndex}:`, dayActivities); // Debug log
 
     const isWeekend = dayIndex >= 5;
 
