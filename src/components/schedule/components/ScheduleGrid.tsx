@@ -75,26 +75,28 @@ export const ScheduleGrid = ({
   selectedDay,
   onDeleteActivity
 }: ScheduleGridProps) => {
-  console.log("Received activities:", activities); // Debug log
-
-  const renderTimeColumn = () => (
-    <div className="sticky right-0 bg-background z-10 border-l">
-      <div className="h-12 border-b" />
-      {hours.map((hour) => (
-        <div key={hour} className="h-16 border-b px-2 text-sm text-muted-foreground">
-          {hour}
-        </div>
-      ))}
-    </div>
-  );
+  console.log("All received activities:", activities.map(a => ({
+    day: a.day_of_week,
+    title: a.title,
+    type: a.activity_type,
+    time: `${a.start_time}-${a.end_time}`
+  })));
 
   const renderDayColumn = (day: string, dayIndex: number) => {
+    console.log(`Rendering column for day ${day} (index: ${dayIndex})`);
+    console.log(`Current mode: ${isMobile ? 'Mobile' : 'Desktop'}`);
+    console.log(`Selected day: ${selectedDay}`);
+    
     // Filter activities for the current day
     const dayActivities = isMobile 
       ? activities.filter(activity => activity.day_of_week === selectedDay)
       : activities.filter(activity => activity.day_of_week === dayIndex);
 
-    console.log(`Activities for day ${dayIndex}:`, dayActivities); // Debug log
+    console.log(`Filtered activities for ${day}:`, dayActivities.map(a => ({
+      title: a.title,
+      type: a.activity_type,
+      time: `${a.start_time}-${a.end_time}`
+    })));
 
     const isWeekend = dayIndex >= 5;
 
@@ -112,6 +114,12 @@ export const ScheduleGrid = ({
           ))}
           {dayActivities.map((activity) => {
             const { colorClass, icon } = getActivityProps(activity);
+            console.log(`Rendering activity for ${day}:`, {
+              title: activity.title,
+              type: activity.activity_type,
+              time: `${activity.start_time}-${activity.end_time}`
+            });
+            
             return (
               <ActivityBlock
                 key={`${activity.day_of_week}-${activity.start_time}-${activity.activity_type}-${activity.title}`}
@@ -132,7 +140,14 @@ export const ScheduleGrid = ({
     return (
       <div className="border rounded-lg overflow-hidden">
         <div className="relative">
-          {renderTimeColumn()}
+          <div className="sticky right-0 bg-background z-10 border-l">
+            <div className="h-12 border-b" />
+            {hours.map((hour) => (
+              <div key={hour} className="h-16 border-b px-2 text-sm text-muted-foreground">
+                {hour}
+              </div>
+            ))}
+          </div>
           {renderDayColumn(days[selectedDay], selectedDay)}
         </div>
       </div>
@@ -142,7 +157,14 @@ export const ScheduleGrid = ({
   return (
     <ScrollArea className="border rounded-lg">
       <div className="flex min-w-[720px]">
-        {renderTimeColumn()}
+        <div className="sticky right-0 bg-background z-10 border-l">
+          <div className="h-12 border-b" />
+          {hours.map((hour) => (
+            <div key={hour} className="h-16 border-b px-2 text-sm text-muted-foreground">
+              {hour}
+            </div>
+          ))}
+        </div>
         {days.map((day, index) => renderDayColumn(day, index))}
       </div>
     </ScrollArea>
