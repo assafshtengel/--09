@@ -77,7 +77,7 @@ export const ScheduleGrid = ({
 }: ScheduleGridProps) => {
   const renderTimeColumn = () => (
     <div className="sticky right-0 bg-background z-10 border-l">
-      <div className="h-12 border-b" /> {/* Header spacer */}
+      <div className="h-12 border-b" />
       {hours.map((hour) => (
         <div key={hour} className="h-16 border-b px-2 text-sm text-muted-foreground">
           {hour}
@@ -91,11 +91,11 @@ export const ScheduleGrid = ({
       (activity) => activity.day_of_week === dayIndex
     );
 
-    const isWeekend = dayIndex >= 5; // Friday and Saturday
+    const isWeekend = dayIndex >= 5;
 
     return (
       <div key={day} className={cn(
-        "flex-1 min-w-[150px] max-w-[200px] transition-colors",
+        "flex-1 min-w-[90px] max-w-[120px] transition-colors", // Updated width values here (reduced by 40%)
         isWeekend && "bg-gray-50/50"
       )}>
         <div className="h-12 border-b px-2 font-medium text-center sticky top-0 bg-background">
@@ -140,7 +140,7 @@ export const ScheduleGrid = ({
 
   return (
     <ScrollArea className="border rounded-lg">
-      <div className="flex min-w-[1200px]">
+      <div className="flex min-w-[720px]"> {/* Updated minimum width here (reduced by 40%) */}
         {renderTimeColumn()}
         {days.map((day, index) => renderDayColumn(day, index))}
       </div>
