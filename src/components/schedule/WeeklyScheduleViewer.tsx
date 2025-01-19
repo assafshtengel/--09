@@ -24,8 +24,6 @@ interface WeeklyScheduleViewerProps {
 export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) => {
   const isMobile = useIsMobile();
   const [selectedDay, setSelectedDay] = useState(0);
-  const [startDayIndex, setStartDayIndex] = useState(0);
-  const daysToShow = 3; // Number of days to show at once on desktop
   
   const days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
   const hours = Array.from({ length: 18 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
@@ -44,6 +42,7 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
 
       if (error) throw error;
       toast.success("הפעילות נמחקה בהצלחה");
+      // Refresh the page to update the schedule
       window.location.reload();
     } catch (error) {
       console.error("Error deleting activity:", error);
@@ -51,32 +50,15 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
     }
   };
 
-  const handleNext = () => {
-    if (!isMobile) {
-      setStartDayIndex(prev => Math.min(prev + daysToShow, days.length - daysToShow));
-    } else {
-      setSelectedDay((prev) => (prev < 6 ? prev + 1 : 0));
-    }
-  };
-
-  const handlePrevious = () => {
-    if (!isMobile) {
-      setStartDayIndex(prev => Math.max(prev - daysToShow, 0));
-    } else {
-      setSelectedDay((prev) => (prev > 0 ? prev - 1 : 6));
-    }
-  };
-
-  const canGoNext = !isMobile ? startDayIndex < days.length - daysToShow : selectedDay < 6;
-  const canGoPrevious = !isMobile ? startDayIndex > 0 : selectedDay > 0;
-
   return (
-    <Card className="p-4">
+    <Card className="p-4 overflow-x-auto">
       <ScheduleHeader onPrint={window.print} onCopyLastWeek={async () => {
         try {
+          // Get the current user's ID
           const { data: { user } } = await supabase.auth.getUser();
           if (!user) throw new Error("No authenticated user");
 
+          // Get the last week's schedule
           const { data: lastWeekSchedule, error: scheduleError } = await supabase
             .from('weekly_schedules')
             .select('id')
@@ -92,6 +74,7 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
             return;
           }
 
+          // Get the activities from the last week
           const { data: lastWeekActivities, error: activitiesError } = await supabase
             .from('schedule_activities')
             .select('*')
@@ -104,6 +87,7 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
             return;
           }
 
+          // Create a new schedule for this week
           const { data: newSchedule, error: newScheduleError } = await supabase
             .from('weekly_schedules')
             .insert({
@@ -115,12 +99,13 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
 
           if (newScheduleError) throw newScheduleError;
 
+          // Copy all activities to the new schedule
           const { error: copyError } = await supabase
             .from('schedule_activities')
             .insert(
               lastWeekActivities.map(activity => ({
                 ...activity,
-                id: undefined,
+                id: undefined, // Remove the old ID to generate a new one
                 schedule_id: newSchedule.id,
               }))
             );
@@ -128,6 +113,7 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
           if (copyError) throw copyError;
 
           toast.success("לוח הזמנים הועתק בהצלחה");
+          // Refresh the page to show the new schedule
           window.location.reload();
         } catch (error) {
           console.error("Error copying last week's schedule:", error);
@@ -135,86 +121,37 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
         }
       }} />
       
-      <div id="weekly-schedule" className="mt-6 print:p-4">
-        <div className="flex items-center justify-between mb-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handlePrevious}
-            disabled={!canGoPrevious}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          
-          <div className="flex-1 text-center">
-            {!isMobile ? (
-              <span className="font-medium">
-                {days[startDayIndex]} - {days[Math.min(startDayIndex + daysToShow - 1, days.length - 1)]}
-              </span>
-            ) : (
-              <span className="font-medium">{days[selectedDay]}</span>
-            )}
-          </div>
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleNext}
-            disabled={!canGoNext}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-        </div>
-
+      <div id="weekly-schedule" className="print:p-4">
         {isMobile ? (
-          <div className="border rounded-lg overflow-hidden">
-            <div className="relative">
-              <div className="sticky right-0 bg-background z-10 border-l">
-                <div className="h-12 border-b" />
-                {hours.map((hour) => (
-                  <div key={hour} className="h-16 border-b px-2 text-sm text-muted-foreground">
-                    {hour}
-                  </div>
-                ))}
-              </div>
-              <ScheduleGrid
-                activities={activities}
-                days={days}
-                hours={hours}
-                isMobile={isMobile}
-                selectedDay={selectedDay}
-                onDeleteActivity={handleDeleteActivity}
-              />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-4 print:hidden">
+              <Button variant="outline" size="icon" onClick={() => setSelectedDay((prev) => (prev > 0 ? prev - 1 : 6))}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <h4 className="text-lg font-semibold">{days[selectedDay]}</h4>
+              <Button variant="outline" size="icon" onClick={() => setSelectedDay((prev) => (prev < 6 ? prev + 1 : 0))}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
             </div>
+            
+            <ScheduleGrid
+              activities={activities}
+              days={days}
+              hours={hours}
+              isMobile={isMobile}
+              selectedDay={selectedDay}
+              onDeleteActivity={handleDeleteActivity}
+            />
           </div>
         ) : (
-          <div className="overflow-hidden rounded-lg border bg-card">
-            <div className="flex">
-              <div className="sticky right-0 bg-background z-10 border-l">
-                <div className="h-12 border-b" />
-                {hours.map((hour) => (
-                  <div key={hour} className="h-16 border-b px-2 text-sm text-muted-foreground">
-                    {hour}
-                  </div>
-                ))}
-              </div>
-              <div className="flex-1 overflow-x-auto">
-                <div className="flex min-w-[600px]">
-                  {days.slice(startDayIndex, startDayIndex + daysToShow).map((day, index) => (
-                    <ScheduleGrid
-                      key={startDayIndex + index}
-                      activities={activities.filter(a => a.day_of_week === startDayIndex + index)}
-                      days={[day]}
-                      hours={hours}
-                      isMobile={false}
-                      selectedDay={startDayIndex + index}
-                      onDeleteActivity={handleDeleteActivity}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <ScheduleGrid
+            activities={activities}
+            days={days}
+            hours={hours}
+            isMobile={isMobile}
+            selectedDay={selectedDay}
+            onDeleteActivity={handleDeleteActivity}
+          />
         )}
       </div>
 
@@ -248,6 +185,13 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
+          .bg-blue-100 { background-color: #dbeafe !important; }
+          .bg-green-100 { background-color: #dcfce7 !important; }
+          .bg-red-100 { background-color: #fee2e2 !important; }
+          .bg-purple-100 { background-color: #f3e8ff !important; }
+          .bg-yellow-100 { background-color: #fef9c3 !important; }
+          .bg-gray-100 { background-color: #f3f4f6 !important; }
+          .bg-orange-100 { background-color: #ffedd5 !important; }
         }
       `}</style>
     </Card>

@@ -61,7 +61,7 @@ export const DailyRoutineStep = ({ onAddActivity }: DailyRoutineStepProps) => {
         day_of_week: day,
         start_time: formatTimeForDatabase(bedTime),
         end_time: "23:59",
-        activity_type: "sleep",
+        activity_type: "wake_up",
         title: "זמן שינה",
         priority: 1
       });
@@ -72,9 +72,8 @@ export const DailyRoutineStep = ({ onAddActivity }: DailyRoutineStepProps) => {
         day_of_week: day,
         start_time: formatTimeForDatabase(breakfastTime),
         end_time: formatTimeForDatabase(breakfastEndTime),
-        activity_type: "meal",
+        activity_type: "lunch",
         title: "ארוחת בוקר",
-        meal_type: "breakfast",
         priority: 2
       });
 
@@ -84,9 +83,8 @@ export const DailyRoutineStep = ({ onAddActivity }: DailyRoutineStepProps) => {
         day_of_week: day,
         start_time: formatTimeForDatabase(lunchTime),
         end_time: formatTimeForDatabase(lunchEndTime),
-        activity_type: "meal",
+        activity_type: "lunch",
         title: "ארוחת צהריים",
-        meal_type: "lunch",
         priority: 3
       });
 
@@ -96,10 +94,26 @@ export const DailyRoutineStep = ({ onAddActivity }: DailyRoutineStepProps) => {
         day_of_week: day,
         start_time: formatTimeForDatabase(dinnerTime),
         end_time: formatTimeForDatabase(dinnerEndTime),
-        activity_type: "meal",
+        activity_type: "lunch",
         title: "ארוחת ערב",
-        meal_type: "dinner",
         priority: 4
+      });
+
+      // Free time blocks
+      const freeTimeBlocks = [
+        { start: "16:00", end: "18:00", title: "זמן חופשי" },
+        { start: dinnerEndTime, end: bedTime, title: "זמן חופשי לפני השינה" }
+      ];
+
+      freeTimeBlocks.forEach((block, index) => {
+        onAddActivity({
+          day_of_week: day,
+          start_time: formatTimeForDatabase(block.start),
+          end_time: formatTimeForDatabase(block.end),
+          activity_type: "free_time",
+          title: block.title,
+          priority: 5 + index
+        });
       });
     });
 
