@@ -23,51 +23,6 @@ interface ScheduleGridProps {
   onDeleteActivity: (activityId?: string) => void;
 }
 
-const getActivityStyle = (activity: Activity) => {
-  const startHour = parseInt(activity.start_time.split(':')[0]);
-  const startMinute = parseInt(activity.start_time.split(':')[1]);
-  const endHour = parseInt(activity.end_time.split(':')[0]);
-  const endMinute = parseInt(activity.end_time.split(':')[1]);
-  
-  const top = ((startHour - 6) * 64) + (startMinute / 60 * 64);
-  const height = ((endHour - startHour) * 64) + ((endMinute - startMinute) / 60 * 64);
-  
-  return {
-    top: `${top}px`,
-    height: `${height}px`
-  };
-};
-
-const getActivityProps = (activity: Activity) => {
-  switch (activity.activity_type) {
-    case 'school':
-      return {
-        colorClass: 'bg-blue-100',
-        icon: '🏫'
-      };
-    case 'team_training':
-      return {
-        colorClass: 'bg-green-100',
-        icon: '⚽'
-      };
-    case 'personal_training':
-      return {
-        colorClass: 'bg-purple-100',
-        icon: '🏃'
-      };
-    case 'sleep':
-      return {
-        colorClass: 'bg-gray-100',
-        icon: '😴'
-      };
-    default:
-      return {
-        colorClass: 'bg-yellow-100',
-        icon: '📅'
-      };
-  }
-};
-
 export const ScheduleGrid = ({
   activities,
   days,
@@ -120,11 +75,9 @@ export const ScheduleGrid = ({
     </div>
   );
 
-  const renderDayColumns = () => {
-    const currentDays = getCurrentDays();
-    
-    return currentDays.map((day, dayIndex) => {
-      const actualDayIndex = getActualDayIndex(dayIndex);
+  const renderDayColumns = (daysToRender: string[], startIndex: number = 0) => {
+    return daysToRender.map((day, dayIndex) => {
+      const actualDayIndex = startIndex + dayIndex;
       const dayActivities = activities.filter(
         (activity) => activity.day_of_week === actualDayIndex
       );
@@ -232,12 +185,66 @@ export const ScheduleGrid = ({
         </Button>
       </div>
       
-      <ScrollArea className="border rounded-lg">
+      {/* Regular view */}
+      <ScrollArea className="border rounded-lg hidden print:hidden">
         <div className="flex">
           {renderTimeColumn()}
-          {renderDayColumns()}
+          {renderDayColumns(getCurrentDays(), getActualDayIndex(0))}
         </div>
       </ScrollArea>
+
+      {/* Print view - shows all days */}
+      <div className="hidden print:block border rounded-lg">
+        <div className="flex">
+          {renderTimeColumn()}
+          {renderDayColumns(days, 0)}
+        </div>
+      </div>
     </div>
   );
+};
+
+const getActivityStyle = (activity: Activity) => {
+  const startHour = parseInt(activity.start_time.split(':')[0]);
+  const startMinute = parseInt(activity.start_time.split(':')[1]);
+  const endHour = parseInt(activity.end_time.split(':')[0]);
+  const endMinute = parseInt(activity.end_time.split(':')[1]);
+  
+  const top = ((startHour - 6) * 64) + (startMinute / 60 * 64);
+  const height = ((endHour - startHour) * 64) + ((endMinute - startMinute) / 60 * 64);
+  
+  return {
+    top: `${top}px`,
+    height: `${height}px`
+  };
+};
+
+const getActivityProps = (activity: Activity) => {
+  switch (activity.activity_type) {
+    case 'school':
+      return {
+        colorClass: 'bg-blue-100',
+        icon: '🏫'
+      };
+    case 'team_training':
+      return {
+        colorClass: 'bg-green-100',
+        icon: '⚽'
+      };
+    case 'personal_training':
+      return {
+        colorClass: 'bg-purple-100',
+        icon: '🏃'
+      };
+    case 'sleep':
+      return {
+        colorClass: 'bg-gray-100',
+        icon: '😴'
+      };
+    default:
+      return {
+        colorClass: 'bg-yellow-100',
+        icon: '📅'
+      };
+  }
 };
