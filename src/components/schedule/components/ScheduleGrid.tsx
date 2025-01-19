@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ActivityBlock } from "./ActivityBlock";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Activity {
   id?: string;
@@ -101,7 +102,7 @@ export const ScheduleGrid = ({
       );
 
       return (
-        <div key={day} className="flex-1 min-w-[200px]">
+        <div key={day} className="flex-1 min-w-[120px] max-w-[120px]"> {/* Reduced width by 40% from 200px */}
           <div className="h-12 border-b px-2 font-medium text-center">{day}</div>
           <div className="relative">
             {hours.map((hour, hourIndex) => (
@@ -111,7 +112,7 @@ export const ScheduleGrid = ({
               const { colorClass, icon } = getActivityProps(activity);
               return (
                 <ActivityBlock
-                  key={activity.id}
+                  key={`${activity.id}-${actualDayIndex}`}
                   activity={activity}
                   style={getActivityStyle(activity)}
                   colorClass={colorClass}
@@ -135,7 +136,7 @@ export const ScheduleGrid = ({
       <div className="border rounded-lg overflow-hidden">
         <div className="relative">
           {renderTimeColumn()}
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-[120px] max-w-[120px]"> {/* Reduced width by 40% from 200px */}
             <div className="h-12 border-b px-2 font-medium text-center">
               {days[selectedDay]}
             </div>
@@ -147,7 +148,7 @@ export const ScheduleGrid = ({
                 const { colorClass, icon } = getActivityProps(activity);
                 return (
                   <ActivityBlock
-                    key={activity.id}
+                    key={`${activity.id}-${selectedDay}`}
                     activity={activity}
                     style={getActivityStyle(activity)}
                     colorClass={colorClass}
@@ -165,20 +166,30 @@ export const ScheduleGrid = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end gap-2 print:hidden">
+      <div className="flex justify-between items-center print:hidden">
         <Button
-          variant={activeSection === 'first' ? 'default' : 'outline'}
-          onClick={() => setActiveSection('first')}
+          variant="outline"
           size="sm"
+          onClick={() => setActiveSection('first')}
+          className={cn(
+            "gap-2",
+            activeSection === 'first' && "bg-primary text-primary-foreground hover:bg-primary/90"
+          )}
         >
+          <ChevronRight className="h-4 w-4" />
           ראשון - רביעי
         </Button>
         <Button
-          variant={activeSection === 'second' ? 'default' : 'outline'}
-          onClick={() => setActiveSection('second')}
+          variant="outline"
           size="sm"
+          onClick={() => setActiveSection('second')}
+          className={cn(
+            "gap-2",
+            activeSection === 'second' && "bg-primary text-primary-foreground hover:bg-primary/90"
+          )}
         >
           חמישי - שבת
+          <ChevronLeft className="h-4 w-4" />
         </Button>
       </div>
       
