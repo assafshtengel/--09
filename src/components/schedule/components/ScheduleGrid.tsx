@@ -83,13 +83,13 @@ export const ScheduleGrid = ({
       );
 
       return (
-        <div key={day} className="flex-1 min-w-[120px] max-w-[120px]">
+        <div key={`${day}-${actualDayIndex}`} className="flex-1 min-w-[120px] max-w-[120px]">
           <div className="h-12 border-b px-2 font-medium text-center bg-gray-50">
             <div className="text-sm text-gray-600">{day}</div>
           </div>
           <div className="relative">
             {hours.map((hour) => (
-              <div key={hour} className="h-16 border-b border-r border-gray-100 bg-white" />
+              <div key={`${day}-${hour}`} className="h-16 border-b border-r border-gray-100 bg-white" />
             ))}
             {dayActivities.map((activity) => {
               const { colorClass, icon } = getActivityProps(activity);
@@ -110,11 +110,52 @@ export const ScheduleGrid = ({
     });
   };
 
-  if (isMobile) {
-    const dayActivities = activities.filter(
-      (activity) => activity.day_of_week === selectedDay
-    );
+  const getActivityStyle = (activity: Activity) => {
+    const startHour = parseInt(activity.start_time.split(':')[0]);
+    const startMinute = parseInt(activity.start_time.split(':')[1]);
+    const endHour = parseInt(activity.end_time.split(':')[0]);
+    const endMinute = parseInt(activity.end_time.split(':')[1]);
+    
+    const top = ((startHour - 6) * 64) + (startMinute / 60 * 64);
+    const height = ((endHour - startHour) * 64) + ((endMinute - startMinute) / 60 * 64);
+    
+    return {
+      top: `${top}px`,
+      height: `${height}px`
+    };
+  };
 
+  const getActivityProps = (activity: Activity) => {
+    switch (activity.activity_type) {
+      case 'school':
+        return {
+          colorClass: 'bg-blue-100 hover:bg-blue-200',
+          icon: '🏫'
+        };
+      case 'team_training':
+        return {
+          colorClass: 'bg-green-100 hover:bg-green-200',
+          icon: '⚽'
+        };
+      case 'personal_training':
+        return {
+          colorClass: 'bg-purple-100 hover:bg-purple-200',
+          icon: '🏃'
+        };
+      case 'sleep':
+        return {
+          colorClass: 'bg-gray-100 hover:bg-gray-200',
+          icon: '😴'
+        };
+      default:
+        return {
+          colorClass: 'bg-yellow-100 hover:bg-yellow-200',
+          icon: '📅'
+        };
+    }
+  };
+
+  if (isMobile) {
     return (
       <div className="border rounded-lg overflow-hidden shadow-sm">
         <div className="relative">
@@ -125,21 +166,23 @@ export const ScheduleGrid = ({
             </div>
             <div className="relative">
               {hours.map((hour) => (
-                <div key={hour} className="h-16 border-b border-r border-gray-100 bg-white" />
+                <div key={`${days[selectedDay]}-${hour}`} className="h-16 border-b border-r border-gray-100 bg-white" />
               ))}
-              {dayActivities.map((activity) => {
-                const { colorClass, icon } = getActivityProps(activity);
-                return (
-                  <ActivityBlock
-                    key={`${activity.id}-${selectedDay}`}
-                    activity={activity}
-                    style={getActivityStyle(activity)}
-                    colorClass={colorClass}
-                    icon={icon}
-                    onDelete={() => onDeleteActivity(activity.id)}
-                  />
-                );
-              })}
+              {activities
+                .filter((activity) => activity.day_of_week === selectedDay)
+                .map((activity) => {
+                  const { colorClass, icon } = getActivityProps(activity);
+                  return (
+                    <ActivityBlock
+                      key={`${activity.id}-${selectedDay}`}
+                      activity={activity}
+                      style={getActivityStyle(activity)}
+                      colorClass={colorClass}
+                      icon={icon}
+                      onDelete={() => onDeleteActivity(activity.id)}
+                    />
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -204,49 +247,4 @@ export const ScheduleGrid = ({
       </div>
     </div>
   );
-};
-
-const getActivityStyle = (activity: Activity) => {
-  const startHour = parseInt(activity.start_time.split(':')[0]);
-  const startMinute = parseInt(activity.start_time.split(':')[1]);
-  const endHour = parseInt(activity.end_time.split(':')[0]);
-  const endMinute = parseInt(activity.end_time.split(':')[1]);
-  
-  const top = ((startHour - 6) * 64) + (startMinute / 60 * 64);
-  const height = ((endHour - startHour) * 64) + ((endMinute - startMinute) / 60 * 64);
-  
-  return {
-    top: `${top}px`,
-    height: `${height}px`
-  };
-};
-
-const getActivityProps = (activity: Activity) => {
-  switch (activity.activity_type) {
-    case 'school':
-      return {
-        colorClass: 'bg-blue-100 hover:bg-blue-200',
-        icon: '🏫'
-      };
-    case 'team_training':
-      return {
-        colorClass: 'bg-green-100 hover:bg-green-200',
-        icon: '⚽'
-      };
-    case 'personal_training':
-      return {
-        colorClass: 'bg-purple-100 hover:bg-purple-200',
-        icon: '🏃'
-      };
-    case 'sleep':
-      return {
-        colorClass: 'bg-gray-100 hover:bg-gray-200',
-        icon: '😴'
-      };
-    default:
-      return {
-        colorClass: 'bg-yellow-100 hover:bg-yellow-200',
-        icon: '📅'
-      };
-  }
 };
