@@ -78,16 +78,16 @@ export const ScheduleGrid = ({
 }: ScheduleGridProps) => {
   const [activeSection, setActiveSection] = useState<'first' | 'second'>('first');
   
-  const firstHalf = days.slice(0, 4); // Sunday to Wednesday
-  const secondHalf = days.slice(4); // Thursday to Saturday
+  const firstHalf = days.slice(0, 4);
+  const secondHalf = days.slice(4);
   
   const currentDays = activeSection === 'first' ? firstHalf : secondHalf;
 
   const renderTimeColumn = () => (
-    <div className="sticky right-0 bg-background z-10 min-w-[60px] max-w-[60px]">
-      <div className="h-12 border-b" /> {/* Header spacer */}
+    <div className="sticky right-0 bg-background z-10 min-w-[50px] max-w-[50px] print:min-w-[40px] print:max-w-[40px]">
+      <div className="h-10 border-b print:h-8" />
       {hours.map((hour) => (
-        <div key={hour} className="h-16 border-b px-2 text-sm text-muted-foreground">
+        <div key={hour} className="h-14 border-b px-1 text-xs text-muted-foreground print:h-12 print:text-[10px]">
           {hour}
         </div>
       ))}
@@ -102,13 +102,13 @@ export const ScheduleGrid = ({
       );
 
       return (
-        <div key={day} className="flex-1 min-w-[80px] max-w-[80px]">
-          <div className="h-12 border-b px-2 font-medium text-center truncate">
+        <div key={day} className="flex-1 min-w-[70px] max-w-[70px] print:min-w-[60px] print:max-w-[60px]">
+          <div className="h-10 border-b px-1 font-medium text-center text-sm truncate print:h-8 print:text-xs">
             {day}
           </div>
           <div className="relative">
             {hours.map((hour) => (
-              <div key={hour} className="h-16 border-b border-r" />
+              <div key={hour} className="h-14 border-b border-r print:h-12" />
             ))}
             {dayActivities.map((activity) => {
               const { colorClass, icon } = getActivityProps(activity);
@@ -138,13 +138,13 @@ export const ScheduleGrid = ({
       <div className="border rounded-lg overflow-hidden">
         <div className="flex">
           {renderTimeColumn()}
-          <div className="flex-1 min-w-[80px] max-w-[80px]">
-            <div className="h-12 border-b px-2 font-medium text-center">
+          <div className="flex-1 min-w-[70px] max-w-[70px]">
+            <div className="h-10 border-b px-1 font-medium text-center text-sm">
               {days[selectedDay]}
             </div>
             <div className="relative">
               {hours.map((hour) => (
-                <div key={hour} className="h-16 border-b border-r" />
+                <div key={hour} className="h-14 border-b border-r" />
               ))}
               {dayActivities.map((activity) => {
                 const { colorClass, icon } = getActivityProps(activity);
@@ -195,10 +195,10 @@ export const ScheduleGrid = ({
         </Button>
       </div>
       
-      <ScrollArea className="border rounded-lg">
-        <div className="flex">
+      <ScrollArea className="border rounded-lg print:border-none">
+        <div className="flex print:scale-90 print:transform-origin-top-right">
           {renderTimeColumn()}
-          <div className="flex flex-1 overflow-x-auto">
+          <div className="flex flex-1 overflow-x-auto print:overflow-visible">
             {renderDayColumns()}
           </div>
         </div>
