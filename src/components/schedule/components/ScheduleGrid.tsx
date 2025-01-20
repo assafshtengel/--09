@@ -79,6 +79,12 @@ export const ScheduleGrid = ({
 }: ScheduleGridProps) => {
   const [activeSection, setActiveSection] = useState<'first' | 'second'>('first');
   
+  // For mobile, show 3 days at a time
+  const getMobileDays = () => {
+    const startIdx = Math.floor(selectedDay / 3) * 3;
+    return days.slice(startIdx, startIdx + 3);
+  };
+  
   const firstHalf = days.slice(0, 4);
   const secondHalf = days.slice(4);
   
@@ -108,22 +114,25 @@ export const ScheduleGrid = ({
 
       if (error) throw error;
       
-      // Refresh the activities list (you'll need to implement this)
-      // This could be done through a callback prop or by refetching the data
+      // Refresh the activities list
+      window.location.reload();
     } catch (error) {
       console.error('Error updating activity:', error);
     }
   };
 
-  const renderDayColumns = () => (
-    currentDays.map((day, dayIndex) => {
-      const actualDayIndex = activeSection === 'first' ? dayIndex : dayIndex + 4;
+  const renderDayColumns = (daysToRender: string[]) => (
+    daysToRender.map((day, dayIndex) => {
+      const actualDayIndex = isMobile 
+        ? (Math.floor(selectedDay / 3) * 3) + dayIndex
+        : activeSection === 'first' ? dayIndex : dayIndex + 4;
+        
       const dayActivities = activities.filter(
         (activity) => activity.day_of_week === actualDayIndex
       );
 
       return (
-        <div key={day} className={cn(
+        <div key={`${day}-${actualDayIndex}`} className={cn(
           "flex-1 border-r",
           isMobile ? "min-w-[60px] max-w-[60px]" : "min-w-[90px] max-w-[90px]",
           "print:min-w-[80px] print:max-w-[80px]"
@@ -156,40 +165,14 @@ export const ScheduleGrid = ({
   );
 
   if (isMobile) {
-    const dayActivities = activities.filter(
-      (activity) => activity.day_of_week === selectedDay
-    );
-
+    const mobileDays = getMobileDays();
+    
     return (
       <div className="border rounded-lg overflow-hidden">
         <div className="flex">
           {renderTimeColumn()}
-          <div className={cn(
-            "flex-1 border-r",
-            "min-w-[60px] max-w-[60px]"
-          )}>
-            <div className="h-12 border-b px-1 font-medium text-center text-sm break-words hyphens-auto">
-              {days[selectedDay]}
-            </div>
-            <div className="relative">
-              {hours.map((hour) => (
-                <div key={hour} className="h-16 border-b" />
-              ))}
-              {dayActivities.map((activity) => {
-                const { colorClass, icon } = getActivityProps(activity);
-                return (
-                  <ActivityBlock
-                    key={`${activity.id}-${selectedDay}`}
-                    activity={activity}
-                    style={getActivityStyle(activity)}
-                    colorClass={colorClass}
-                    icon={icon}
-                    onDelete={() => onDeleteActivity(activity.id)}
-                    onEdit={(updatedActivity) => handleEditActivity(activity.id!, updatedActivity)}
-                  />
-                );
-              })}
-            </div>
+          <div className="flex flex-1 overflow-x-auto">
+            {renderDayColumns(mobileDays)}
           </div>
         </div>
       </div>
@@ -229,7 +212,7 @@ export const ScheduleGrid = ({
         <div className="flex print:scale-95 print:transform-origin-top-right">
           {renderTimeColumn()}
           <div className="flex flex-1 overflow-x-auto print:overflow-visible">
-            {renderDayColumns()}
+            {renderDayColumns(currentDays)}
           </div>
         </div>
       </ScrollArea>
