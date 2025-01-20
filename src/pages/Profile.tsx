@@ -45,9 +45,7 @@ const Profile = () => {
             roles: profile.roles || [],
             phoneNumber: profile.phone_number || "",
             club: profile.club || "",
-            teamYear: profile.team_year?.toString() || "",
             dateOfBirth: profile.date_of_birth || "",
-            ageCategory: profile.age_category || "",
             coachEmail: profile.coach_email || "",
             sportBranches: profile.sport_branches || [],
           });
