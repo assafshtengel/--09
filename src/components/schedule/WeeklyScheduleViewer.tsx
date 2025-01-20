@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ScheduleHeader } from "./components/ScheduleHeader";
 import { ScheduleGrid } from "./components/ScheduleGrid";
+import { format } from "date-fns";
+import { he } from "date-fns/locale";
 
 interface Activity {
   id?: string;
@@ -24,9 +26,24 @@ interface WeeklyScheduleViewerProps {
 export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) => {
   const isMobile = useIsMobile();
   const [selectedDay, setSelectedDay] = useState(0);
+  const [currentDate, setCurrentDate] = useState(new Date());
   
   const days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
   const hours = Array.from({ length: 18 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
+
+  // Update date every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      if (now.getDate() !== currentDate.getDate()) {
+        setCurrentDate(now);
+        // Optional: refresh activities data here if needed
+        window.location.reload();
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(timer);
+  }, [currentDate]);
 
   const handleDeleteActivity = async (activityId?: string) => {
     if (!activityId) {
@@ -42,7 +59,6 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
 
       if (error) throw error;
       toast.success("הפעילות נמחקה בהצלחה");
-      // Refresh the page to update the schedule
       window.location.reload();
     } catch (error) {
       console.error("Error deleting activity:", error);
@@ -50,8 +66,14 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
     }
   };
 
+  const formattedDate = format(currentDate, "EEEE, dd/MM/yyyy", { locale: he });
+
   return (
     <Card className="p-4 overflow-x-auto">
+      <div className="mb-4 text-center">
+        <h2 className="text-xl font-semibold text-primary">{formattedDate}</h2>
+      </div>
+      
       <ScheduleHeader onPrint={window.print} onCopyLastWeek={async () => {
         try {
           // Get the current user's ID
