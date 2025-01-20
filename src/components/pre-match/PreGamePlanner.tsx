@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Copy, Share2, Edit, Save, Mail } from "lucide-react";
-import { format, formatDistanceToNow, parse, isValid } from "date-fns";
+import { format, formatDistanceToNow, parse, isValid, addDays } from "date-fns";
 import { he } from "date-fns/locale";
 import { useLocation } from "react-router-dom";
 import {
@@ -38,7 +38,6 @@ export const PreGamePlanner = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    // Check if we have match details in the location state (coming from pre-match report)
     if (location.state?.fromPreMatchReport) {
       const { matchDate, matchTime } = location.state;
       if (matchDate) {
@@ -140,11 +139,7 @@ export const PreGamePlanner = () => {
         }
       });
 
-      if (error) {
-        console.error("Supabase function error:", error);
-        throw error;
-      }
-
+      if (error) throw error;
       if (!data || !data.schedule) {
         throw new Error("Invalid response format from schedule generator");
       }
@@ -152,10 +147,6 @@ export const PreGamePlanner = () => {
       setSchedule(data.schedule);
       
       const baseDate = new Date(`${currentDate}T${currentTime}`);
-      if (isNaN(baseDate.getTime())) {
-        throw new Error("Invalid base date");
-      }
-
       const items = data.schedule
         .split("\n")
         .map((line: string) => {
@@ -174,21 +165,18 @@ export const PreGamePlanner = () => {
             console.warn(`Could not create date for time: ${time}`);
             return null;
           }
-          
-          // If the time is earlier than current time, it must be for the next day
+
           if (itemDateTime < baseDate) {
-            itemDateTime.setDate(itemDateTime.getDate() + 1);
+            itemDateTime = addDays(itemDateTime, 1);
           }
 
-          // If we're still before the game date and the game is more than a day away,
-          // keep adding days until we reach the correct date
           while (
             itemDateTime < gameDateTime && 
             format(itemDateTime, "yyyy-MM-dd") !== gameDate
           ) {
-            itemDateTime.setDate(itemDateTime.getDate() + 1);
+            itemDateTime = addDays(itemDateTime, 1);
           }
-          
+
           return {
             date: itemDateTime,
             time,
@@ -196,7 +184,7 @@ export const PreGamePlanner = () => {
           };
         })
         .filter((item): item is ScheduleItem => item !== null);
-      
+
       setScheduleItems(items);
       toast.success("סדר היום נוצר בהצלחה!");
     } catch (error) {
