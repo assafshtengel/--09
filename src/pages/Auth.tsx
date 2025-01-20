@@ -23,6 +23,11 @@ const Auth = () => {
           if (error.message.includes("Email rate limit exceeded")) {
             return "נשלחו יותר מדי בקשות לאיפוס סיסמה. אנא נסה שוב מאוחר יותר.";
           }
+          if (error.message.includes("refresh_token_not_found")) {
+            // Clear any existing session data and redirect to auth
+            supabase.auth.signOut();
+            return "פג תוקף החיבור, אנא התחבר מחדש.";
+          }
           return "אירעה שגיאה בתהליך ההתחברות. אנא נסה שוב.";
         case 401:
           if (error.message.includes("Invalid API key")) {
@@ -40,50 +45,41 @@ const Auth = () => {
   };
 
   useEffect(() => {
-    // Check for password reset parameters in URL
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const type = hashParams.get("type");
-    const access_token = hashParams.get("access_token");
-    
-    if (type === "recovery" && access_token) {
-      // We're in a password reset flow
-      console.log("Password reset flow detected");
-      toast({
-        title: "איפוס סיסמה",
-        description: "אנא הזן את הסיסמה החדשה שלך",
-      });
-    }
+    // Initial session check
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Session check error:", error);
+        if (error.message.includes("refresh_token_not_found")) {
+          await supabase.auth.signOut();
+        }
+        return;
+      }
+      if (session) {
+        navigate("/");
+      }
+    };
 
+    checkSession();
+
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
       
       if (event === "SIGNED_IN" && session) {
         navigate("/");
-      } else if (event === "PASSWORD_RECOVERY") {
-        toast({
-          title: "איפוס סיסמה",
-          description: "הזן את הסיסמה החדשה שלך",
-        });
-      } else if (event === "USER_UPDATED") {
-        const { error } = await supabase.auth.getSession();
-        if (error) {
-          toast({
-            title: "שגיאה",
-            description: getErrorMessage(error),
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "הצלחה",
-            description: "הסיסמה עודכנה בהצלחה",
-          });
+      } else if (event === "SIGNED_OUT") {
+        // Clear any local session data
+        localStorage.removeItem('supabase.auth.token');
+      } else if (event === "TOKEN_REFRESHED") {
+        if (session) {
           navigate("/");
         }
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, toast]);
+  }, [navigate]);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-md min-h-screen flex items-center justify-center">
