@@ -42,6 +42,7 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
 
       if (error) throw error;
       toast.success("הפעילות נמחקה בהצלחה");
+      // Refresh the page to update the schedule
       window.location.reload();
     } catch (error) {
       console.error("Error deleting activity:", error);
@@ -51,71 +52,74 @@ export const WeeklyScheduleViewer = ({ activities }: WeeklyScheduleViewerProps) 
 
   return (
     <Card className="p-4 overflow-x-auto">
-      <ScheduleHeader 
-        onPrint={window.print} 
-        onCopyLastWeek={async () => {
-          try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("No authenticated user");
+      <ScheduleHeader onPrint={window.print} onCopyLastWeek={async () => {
+        try {
+          // Get the current user's ID
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) throw new Error("No authenticated user");
 
-            const { data: lastWeekSchedule, error: scheduleError } = await supabase
-              .from('weekly_schedules')
-              .select('id')
-              .eq('player_id', user.id)
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .single();
+          // Get the last week's schedule
+          const { data: lastWeekSchedule, error: scheduleError } = await supabase
+            .from('weekly_schedules')
+            .select('id')
+            .eq('player_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
 
-            if (scheduleError) throw scheduleError;
+          if (scheduleError) throw scheduleError;
 
-            if (!lastWeekSchedule) {
-              toast.error("לא נמצא לוח זמנים קודם");
-              return;
-            }
-
-            const { data: lastWeekActivities, error: activitiesError } = await supabase
-              .from('schedule_activities')
-              .select('*')
-              .eq('schedule_id', lastWeekSchedule.id);
-
-            if (activitiesError) throw activitiesError;
-
-            if (!lastWeekActivities || lastWeekActivities.length === 0) {
-              toast.error("לא נמצאו פעילויות בלוח הזמנים הקודם");
-              return;
-            }
-
-            const { data: newSchedule, error: newScheduleError } = await supabase
-              .from('weekly_schedules')
-              .insert({
-                player_id: user.id,
-                start_date: new Date().toISOString(),
-              })
-              .select()
-              .single();
-
-            if (newScheduleError) throw newScheduleError;
-
-            const { error: copyError } = await supabase
-              .from('schedule_activities')
-              .insert(
-                lastWeekActivities.map(activity => ({
-                  ...activity,
-                  id: undefined,
-                  schedule_id: newSchedule.id,
-                }))
-              );
-
-            if (copyError) throw copyError;
-
-            toast.success("לוח הזמנים הועתק בהצלחה");
-            window.location.reload();
-          } catch (error) {
-            console.error("Error copying last week's schedule:", error);
-            toast.error("שגיאה בהעתקת לוח הזמנים");
+          if (!lastWeekSchedule) {
+            toast.error("לא נמצא לוח זמנים קודם");
+            return;
           }
-        }} 
-      />
+
+          // Get the activities from the last week
+          const { data: lastWeekActivities, error: activitiesError } = await supabase
+            .from('schedule_activities')
+            .select('*')
+            .eq('schedule_id', lastWeekSchedule.id);
+
+          if (activitiesError) throw activitiesError;
+
+          if (!lastWeekActivities || lastWeekActivities.length === 0) {
+            toast.error("לא נמצאו פעילויות בלוח הזמנים הקודם");
+            return;
+          }
+
+          // Create a new schedule for this week
+          const { data: newSchedule, error: newScheduleError } = await supabase
+            .from('weekly_schedules')
+            .insert({
+              player_id: user.id,
+              start_date: new Date().toISOString(),
+            })
+            .select()
+            .single();
+
+          if (newScheduleError) throw newScheduleError;
+
+          // Copy all activities to the new schedule
+          const { error: copyError } = await supabase
+            .from('schedule_activities')
+            .insert(
+              lastWeekActivities.map(activity => ({
+                ...activity,
+                id: undefined, // Remove the old ID to generate a new one
+                schedule_id: newSchedule.id,
+              }))
+            );
+
+          if (copyError) throw copyError;
+
+          toast.success("לוח הזמנים הועתק בהצלחה");
+          // Refresh the page to show the new schedule
+          window.location.reload();
+        } catch (error) {
+          console.error("Error copying last week's schedule:", error);
+          toast.error("שגיאה בהעתקת לוח הזמנים");
+        }
+      }} />
       
       <div id="weekly-schedule" className="print:p-4">
         {isMobile ? (
