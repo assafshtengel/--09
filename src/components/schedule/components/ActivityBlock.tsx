@@ -17,7 +17,7 @@ interface ActivityBlockProps {
 export const ActivityBlock = ({ activity, style, colorClass, icon, onDelete }: ActivityBlockProps) => {
   return (
     <div
-      className={`${colorClass} absolute w-[95%] p-1.5 rounded-md border text-xs overflow-hidden transition-all hover:shadow-md group print:hover:shadow-none print:text-[9px] print:p-1`}
+      className={`${colorClass} absolute w-[95%] p-2 rounded-md border overflow-hidden transition-all hover:shadow-md group print:hover:shadow-none`}
       style={style}
     >
       <Button
@@ -31,12 +31,16 @@ export const ActivityBlock = ({ activity, style, colorClass, icon, onDelete }: A
       >
         <X className="h-3 w-3" />
       </Button>
-      <div className="flex items-center gap-0.5 font-medium">
-        <span className="print:text-[8px]">{icon}</span>
-        <span className="truncate">{activity.title}</span>
-      </div>
-      <div className="text-[10px] text-gray-600 mt-0.5 print:text-[8px]">
-        {activity.start_time} - {activity.end_time}
+      <div className="flex items-start gap-1">
+        <span className="text-base print:text-xs shrink-0">{icon}</span>
+        <div className="min-w-0 flex-1">
+          <div className="font-medium text-sm print:text-xs break-words hyphens-auto">
+            {activity.title}
+          </div>
+          <div className="text-xs text-gray-600 mt-0.5 print:text-[8px] whitespace-nowrap">
+            {activity.start_time} - {activity.end_time}
+          </div>
+        </div>
       </div>
     </div>
   );
