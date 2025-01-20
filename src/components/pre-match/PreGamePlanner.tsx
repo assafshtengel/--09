@@ -385,12 +385,19 @@ export const PreGamePlanner = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {Object.entries(groupedScheduleItems).map(([dateKey, items]) => {
+                      {Object.entries(groupedScheduleItems).map(([dateKey, items], groupIndex) => {
                         const formattedDate = formatDateWithDay(new Date(dateKey));
                         return items.map((item, index) => (
-                          <TableRow key={`${dateKey}-${index}`}>
+                          <TableRow 
+                            key={`${dateKey}-${index}`}
+                            className={index === 0 && groupIndex > 0 ? "border-t-4 border-gray-200" : ""}
+                          >
                             <TableCell className="font-medium text-right">
-                              {index === 0 ? formattedDate : ""}
+                              {index === 0 ? (
+                                <div className="py-2">
+                                  <span className="text-primary font-bold">{formattedDate}</span>
+                                </div>
+                              ) : ""}
                             </TableCell>
                             <TableCell className="font-medium text-right">{item.time}</TableCell>
                             <TableCell className="text-right">{item.activity}</TableCell>
