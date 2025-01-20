@@ -14,7 +14,7 @@ import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { MentalCoachingChat } from "@/components/dashboard/MentalCoachingChat";
 import { MotivationalPopup } from "@/components/dashboard/MotivationalPopup";
-import { GoalsSection } from "@/components/dashboard/GoalsSection"; // Import the new GoalsSection component
+import { GoalsSection } from "@/components/dashboard/GoalsSection";
 import { motion } from "framer-motion";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -236,57 +236,70 @@ const Dashboard = () => {
         <p className="text-muted-foreground text-lg">בחר באפשרות כדי להתחיל</p>
       </motion.div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {quickActions.map((action, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <Card
+              className={`cursor-pointer transform transition-all duration-200 hover:scale-105 hover:shadow-lg bg-gradient-to-br ${action.gradient} text-white`}
+              onClick={action.onClick}
+            >
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  {action.icon}
+                  {action.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm opacity-90">{action.description}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="space-y-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
       >
-        <div className="flex justify-between items-center mb-6">
-          <div className="h-0.5 flex-grow bg-gradient-to-r from-transparent to-gray-200"></div>
-          <h2 className="text-2xl font-bold px-4">היעדים שלי</h2>
-          <div className="h-0.5 flex-grow bg-gradient-to-l from-transparent to-gray-200"></div>
-        </div>
-
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          <GoalsSection />
-        </motion.div>
-
-        <div className="flex justify-between items-center mb-6">
-          <div className="h-0.5 flex-grow bg-gradient-to-r from-transparent to-gray-200"></div>
-          <h2 className="text-2xl font-bold px-4">סטטיסטיקות וביצועים</h2>
-          <div className="h-0.5 flex-grow bg-gradient-to-l from-transparent to-gray-200"></div>
-        </div>
-
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          <StatsOverview />
-        </motion.div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <PerformanceChart />
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <GoalsProgress />
-          </motion.div>
-        </div>
+        <GoalsSection />
       </motion.div>
+
+      <div className="flex justify-between items-center mb-6">
+        <div className="h-0.5 flex-grow bg-gradient-to-r from-transparent to-gray-200"></div>
+        <h2 className="text-2xl font-bold px-4">סטטיסטיקות וביצועים</h2>
+        <div className="h-0.5 flex-grow bg-gradient-to-l from-transparent to-gray-200"></div>
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        <StatsOverview />
+      </motion.div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <PerformanceChart />
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <GoalsProgress />
+        </motion.div>
+      </div>
     </div>
   );
 };
