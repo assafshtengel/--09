@@ -85,7 +85,7 @@ export const ScheduleGrid = ({
   const currentDays = activeSection === 'first' ? firstHalf : secondHalf;
 
   const renderTimeColumn = () => (
-    <div className="sticky right-0 bg-background z-10 min-w-[60px] max-w-[60px] print:min-w-[45px] print:max-w-[45px]">
+    <div className="sticky right-0 bg-background z-10 min-w-[45px] max-w-[45px] print:min-w-[45px] print:max-w-[45px]">
       <div className="h-12 border-b print:h-10" />
       {hours.map((hour) => (
         <div key={hour} className="h-16 border-b px-2 text-xs text-muted-foreground print:h-14 print:text-[8px] print:px-1">
@@ -123,13 +123,17 @@ export const ScheduleGrid = ({
       );
 
       return (
-        <div key={day} className="flex-1 min-w-[90px] max-w-[90px] print:min-w-[80px] print:max-w-[80px]">
-          <div className="h-12 border-b px-2 font-medium text-center text-sm print:h-10 print:text-xs break-words hyphens-auto">
+        <div key={day} className={cn(
+          "flex-1 border-r",
+          isMobile ? "min-w-[60px] max-w-[60px]" : "min-w-[90px] max-w-[90px]",
+          "print:min-w-[80px] print:max-w-[80px]"
+        )}>
+          <div className="h-12 border-b px-1 font-medium text-center text-sm print:h-10 print:text-xs break-words hyphens-auto">
             {day}
           </div>
           <div className="relative">
             {hours.map((hour) => (
-              <div key={hour} className="h-16 border-b border-r print:h-14" />
+              <div key={hour} className="h-16 border-b print:h-14" />
             ))}
             {dayActivities.map((activity) => {
               const { colorClass, icon } = getActivityProps(activity);
@@ -160,13 +164,16 @@ export const ScheduleGrid = ({
       <div className="border rounded-lg overflow-hidden">
         <div className="flex">
           {renderTimeColumn()}
-          <div className="flex-1 min-w-[90px] max-w-[90px]">
-            <div className="h-12 border-b px-2 font-medium text-center text-sm break-words hyphens-auto">
+          <div className={cn(
+            "flex-1 border-r",
+            "min-w-[60px] max-w-[60px]"
+          )}>
+            <div className="h-12 border-b px-1 font-medium text-center text-sm break-words hyphens-auto">
               {days[selectedDay]}
             </div>
             <div className="relative">
               {hours.map((hour) => (
-                <div key={hour} className="h-16 border-b border-r" />
+                <div key={hour} className="h-16 border-b" />
               ))}
               {dayActivities.map((activity) => {
                 const { colorClass, icon } = getActivityProps(activity);
