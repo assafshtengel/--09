@@ -39,6 +39,35 @@ const getMealPlan = (gameHour: number) => {
   }
 };
 
+const getWakeUpTime = (commitments: string) => {
+  // Check if there's school mentioned in commitments
+  const schoolMatch = commitments.match(/בית ספר.*?(\d{1,2}:\d{2})/);
+  
+  if (schoolMatch) {
+    const schoolTime = schoolMatch[1];
+    const [hours, minutes] = schoolTime.split(':').map(Number);
+    
+    // Calculate wake up time 1 hour and 15 minutes before school
+    let wakeUpHours = hours - 1;
+    let wakeUpMinutes = minutes - 15;
+    
+    if (wakeUpMinutes < 0) {
+      wakeUpHours--;
+      wakeUpMinutes += 60;
+    }
+    
+    // Ensure wake up time is not before 6:00
+    if (wakeUpHours < 6 || (wakeUpHours === 6 && wakeUpMinutes < 0)) {
+      return "06:00";
+    }
+    
+    return `${wakeUpHours.toString().padStart(2, '0')}:${wakeUpMinutes.toString().padStart(2, '0')}`;
+  }
+  
+  // Default wake up time if no school info
+  return "06:45";
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -53,6 +82,7 @@ serve(async (req) => {
 
     const gameHour = parseInt(gameTime.split(':')[0]);
     const mealPlan = getMealPlan(gameHour);
+    const wakeUpTime = getWakeUpTime(commitments);
 
     const prompt = `
     אני שחקן כדורגל וצריך סדר יום מפורט מהתאריך ${currentDate} בשעה ${currentTime} ועד למשחק שמתחיל בתאריך ${gameDate} בשעה ${gameTime}.
@@ -62,19 +92,24 @@ serve(async (req) => {
     תוכנית הארוחות המומלצת:
     ${mealPlan}
     
+    זמן התעוררות: ${wakeUpTime}
+    
     אנא צור לי סדר יום מפורט עם הדגשים הבאים:
-    1. תכנון של 9 שעות שינה בכל לילה
-    2. הגעה למגרש שעה וחצי לפני תחילת המשחק
-    3. זמני ארוחות מדויקים לפי התוכנית שצוינה למעלה
-    4. זמן מוגדר למתיחות וחימום
-    5. זמן לקריאת דוח טרום משחק והכנה מנטלית
-    6. הגבלת זמן מסכים (טלפון, טלוויזיה, מחשב)
-    7. התייחסות למחויבויות שציינתי
+    1. זמן התעוררות לפי הזמן שחושב למעלה (${wakeUpTime})
+    2. תכנון של 9 שעות שינה בכל לילה
+    3. הגעה למגרש שעה וחצי לפני תחילת המשחק
+    4. זמני ארוחות מדויקים לפי התוכנית שצוינה למעלה
+    5. זמן מוגדר למתיחות וחימום
+    6. זמן לקריאת דוח טרום משחק והכנה מנטלית
+    7. הגבלת זמן מסכים (טלפון, טלוויזיה, מחשב)
+    8. התייחסות למחויבויות שציינתי
+    9. ציון מעבר יום בצורה ברורה כשיש פעילות לילה
     
     חשוב:
     - השעות הן בפורמט של 24 שעות (למשל, 10:00 היא עשר בבוקר)
     - יש לכלול את כל הארוחות לפי התוכנית שצוינה
     - יש להקפיד על זמני מנוחה בין פעילויות
+    - אם יש פעילות לילה, יש לציין את היום הבא בצורה ברורה
     
     אנא הצג את התשובה בפורמט הבא:
     [שעה] - [פעילות/ארוחה + פירוט]
