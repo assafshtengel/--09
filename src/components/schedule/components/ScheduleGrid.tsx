@@ -21,6 +21,7 @@ interface ScheduleGridProps {
   selectedDay: number;
   onDeleteActivity: (id: string) => void;
   onActivityUpdated?: () => void;
+  isMobile: boolean; // Added this prop
 }
 
 export const ScheduleGrid = ({
@@ -29,10 +30,10 @@ export const ScheduleGrid = ({
   activities,
   selectedDay,
   onDeleteActivity,
-  onActivityUpdated
+  onActivityUpdated,
+  isMobile
 }: ScheduleGridProps) => {
   const [activeSection, setActiveSection] = useState<'first' | 'second'>('first');
-  const isMobile = useIsMobile();
   
   // For mobile, show 3 days at a time
   const getMobileDays = () => {
