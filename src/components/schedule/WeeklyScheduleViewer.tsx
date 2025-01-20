@@ -13,7 +13,7 @@ interface Activity {
   day_of_week: number;
   start_time: string;
   end_time: string;
-  activity_type: string;
+  activity_type: "other" | "school" | "team_training" | "personal_training" | "mental_training" | "free_time" | "lunch" | "wake_up" | "departure" | "team_game" | "exam_prep" | "social_event" | "meal" | "travel";
   title?: string;
 }
 

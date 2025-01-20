@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ActivityBlock } from "./ActivityBlock";
 import { supabase } from "@/integrations/supabase/client";
-import { useMediaQuery } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Activity {
   id?: string;
@@ -11,7 +11,7 @@ interface Activity {
   start_time: string;
   end_time: string;
   title?: string;
-  activity_type: 'school' | 'training' | 'match' | 'social' | 'exam' | 'meal';
+  activity_type: "other" | "school" | "team_training" | "personal_training" | "mental_training" | "free_time" | "lunch" | "wake_up" | "departure" | "team_game" | "exam_prep" | "social_event" | "meal" | "travel";
 }
 
 interface ScheduleGridProps {
@@ -20,7 +20,7 @@ interface ScheduleGridProps {
   activities: Activity[];
   selectedDay: number;
   onDeleteActivity: (id: string) => void;
-  onActivityUpdated?: () => void; // New callback prop
+  onActivityUpdated?: () => void;
 }
 
 export const ScheduleGrid = ({
@@ -32,7 +32,7 @@ export const ScheduleGrid = ({
   onActivityUpdated
 }: ScheduleGridProps) => {
   const [activeSection, setActiveSection] = useState<'first' | 'second'>('first');
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useIsMobile();
   
   // For mobile, show 3 days at a time
   const getMobileDays = () => {
@@ -62,11 +62,19 @@ export const ScheduleGrid = ({
   const getActivityProps = (activity: Activity) => {
     const typeToProps = {
       school: { colorClass: "bg-blue-100 border-blue-300", icon: "🏫" },
-      training: { colorClass: "bg-green-100 border-green-300", icon: "⚽" },
-      match: { colorClass: "bg-purple-100 border-purple-300", icon: "🏆" },
-      social: { colorClass: "bg-yellow-100 border-yellow-300", icon: "👥" },
-      exam: { colorClass: "bg-red-100 border-red-300", icon: "📝" },
-      meal: { colorClass: "bg-orange-100 border-orange-300", icon: "🍽️" }
+      team_training: { colorClass: "bg-green-100 border-green-300", icon: "⚽" },
+      team_game: { colorClass: "bg-purple-100 border-purple-300", icon: "🏆" },
+      social_event: { colorClass: "bg-yellow-100 border-yellow-300", icon: "👥" },
+      exam_prep: { colorClass: "bg-red-100 border-red-300", icon: "📝" },
+      meal: { colorClass: "bg-orange-100 border-orange-300", icon: "🍽️" },
+      personal_training: { colorClass: "bg-green-100 border-green-300", icon: "🎯" },
+      mental_training: { colorClass: "bg-purple-100 border-purple-300", icon: "🧠" },
+      free_time: { colorClass: "bg-yellow-100 border-yellow-300", icon: "🎮" },
+      lunch: { colorClass: "bg-orange-100 border-orange-300", icon: "🍽️" },
+      wake_up: { colorClass: "bg-blue-100 border-blue-300", icon: "⏰" },
+      departure: { colorClass: "bg-gray-100 border-gray-300", icon: "🚶" },
+      travel: { colorClass: "bg-gray-100 border-gray-300", icon: "🚗" },
+      other: { colorClass: "bg-gray-100 border-gray-300", icon: "📅" }
     };
     
     return typeToProps[activity.activity_type] || { colorClass: "bg-gray-100", icon: "📅" };
