@@ -207,6 +207,10 @@ export const PreGamePlanner = () => {
     }
   };
 
+  const formatDateWithDay = (date: Date) => {
+    return format(date, "EEEE, dd/MM/yyyy", { locale: he });
+  };
+
   const groupedScheduleItems = scheduleItems.reduce((groups: { [key: string]: ScheduleItem[] }, item) => {
     try {
       const dateKey = format(item.date, "yyyy-MM-dd");
@@ -387,23 +391,24 @@ export const PreGamePlanner = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-right">תאריך</TableHead>
+                        <TableHead className="text-right">יום ותאריך</TableHead>
                         <TableHead className="text-right">שעה</TableHead>
                         <TableHead className="text-right">פעילות</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {Object.entries(groupedScheduleItems).map(([dateKey, items]) => (
-                        items.map((item, index) => (
+                      {Object.entries(groupedScheduleItems).map(([dateKey, items]) => {
+                        const formattedDate = formatDateWithDay(new Date(dateKey));
+                        return items.map((item, index) => (
                           <TableRow key={`${dateKey}-${index}`}>
                             <TableCell className="font-medium text-right">
-                              {format(item.date, "dd/MM/yyyy", { locale: he })}
+                              {index === 0 ? formattedDate : ""}
                             </TableCell>
                             <TableCell className="font-medium text-right">{item.time}</TableCell>
                             <TableCell className="text-right">{item.activity}</TableCell>
                           </TableRow>
-                        ))
-                      ))}
+                        ));
+                      })}
                     </TableBody>
                   </Table>
                 </div>
