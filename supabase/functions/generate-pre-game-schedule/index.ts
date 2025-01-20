@@ -4,6 +4,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS'
 }
 
 const getMealPlan = (gameHour: number) => {
@@ -39,14 +40,16 @@ const getMealPlan = (gameHour: number) => {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    console.log('Received request to generate pre-game schedule')
     const { currentDate, currentTime, gameDate, gameTime, commitments, timeRemaining } = await req.json()
 
-    console.log('Received request with params:', { currentDate, currentTime, gameDate, gameTime, commitments, timeRemaining })
+    console.log('Request parameters:', { currentDate, currentTime, gameDate, gameTime, commitments, timeRemaining })
 
     const gameHour = parseInt(gameTime.split(':')[0]);
     const mealPlan = getMealPlan(gameHour);
@@ -77,7 +80,7 @@ serve(async (req) => {
     [שעה] - [פעילות/ארוחה + פירוט]
     `
 
-    console.log('Sending request to OpenAI with prompt:', prompt)
+    console.log('Sending request to OpenAI with prompt')
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
