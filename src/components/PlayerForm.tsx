@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Ensure these match exactly with the database constraint
 const AGE_CATEGORIES = [
   { value: 'ילדים', label: 'ילדים' },
   { value: 'נערים', label: 'נערים' },
@@ -79,6 +80,11 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
         throw new Error("מאמן חייב לבחור לפחות ענף ספורט אחד");
       }
 
+      // Validate age category
+      if (formData.ageCategory && !AGE_CATEGORIES.some(cat => cat.value === formData.ageCategory)) {
+        throw new Error("קטגוריית גיל לא חוקית");
+      }
+
       await ProfileUpdateService.updateProfile({
         ...formData,
         id: user.id,
@@ -92,9 +98,18 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       onSubmit?.();
     } catch (error: any) {
       console.error("Error updating profile:", error);
+      let errorMessage = "אירעה שגיאה בעדכון הפרופיל";
+      
+      // Handle specific database constraint violation
+      if (error.message?.includes("profiles_age_category_check")) {
+        errorMessage = "קטגוריית גיל לא חוקית";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       toast({
         title: "שגיאה",
-        description: error.message || "אירעה שגיאה בעדכון הפרופיל",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
