@@ -152,7 +152,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <div dir="rtl" className="min-h-screen bg-gray-50">
-        <div className="max-w-md mx-auto min-h-screen bg-white">
+        <div className="w-full mx-auto bg-white">
           <Toaster />
           <Sonner />
           <BrowserRouter basename="/">

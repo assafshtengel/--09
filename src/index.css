@@ -16,6 +16,13 @@ html, body {
   margin: 0;
   padding: 0;
   overscroll-behavior: none;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 @layer base {
@@ -53,7 +60,7 @@ html, body {
   /* Mobile optimizations */
   input, textarea, select, button {
     @apply text-base;
-    font-size: 16px; /* Prevents zoom on iOS */
+    font-size: 16px;
   }
 
   /* Improve touch targets */
@@ -83,5 +90,22 @@ html, body {
   /* Better tap highlights */
   a:active, button:active {
     @apply bg-primary/5;
+  }
+
+  /* Responsive text scaling */
+  h1 {
+    @apply text-2xl md:text-3xl lg:text-4xl;
+  }
+
+  h2 {
+    @apply text-xl md:text-2xl lg:text-3xl;
+  }
+
+  h3 {
+    @apply text-lg md:text-xl lg:text-2xl;
+  }
+
+  p {
+    @apply text-base md:text-lg;
   }
 }
