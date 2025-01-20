@@ -1,83 +1,38 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { ActivityBlock } from "./ActivityBlock";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ActivityBlock } from "./ActivityBlock";
 import { supabase } from "@/integrations/supabase/client";
+import { useMediaQuery } from "@/hooks/use-mobile";
 
 interface Activity {
   id?: string;
   day_of_week: number;
   start_time: string;
   end_time: string;
-  activity_type: string;
   title?: string;
+  activity_type: 'school' | 'training' | 'match' | 'social' | 'exam' | 'meal';
 }
 
 interface ScheduleGridProps {
-  activities: Activity[];
   days: string[];
   hours: string[];
-  isMobile: boolean;
+  activities: Activity[];
   selectedDay: number;
-  onDeleteActivity: (activityId?: string) => void;
+  onDeleteActivity: (id: string) => void;
+  onActivityUpdated?: () => void; // New callback prop
 }
 
-const getActivityStyle = (activity: Activity) => {
-  const startHour = parseInt(activity.start_time.split(':')[0]);
-  const startMinute = parseInt(activity.start_time.split(':')[1]);
-  const endHour = parseInt(activity.end_time.split(':')[0]);
-  const endMinute = parseInt(activity.end_time.split(':')[1]);
-  
-  const top = ((startHour - 6) * 64) + (startMinute / 60 * 64);
-  const height = ((endHour - startHour) * 64) + ((endMinute - startMinute) / 60 * 64);
-  
-  return {
-    top: `${top}px`,
-    height: `${height}px`
-  };
-};
-
-const getActivityProps = (activity: Activity) => {
-  switch (activity.activity_type) {
-    case 'school':
-      return {
-        colorClass: 'bg-blue-100',
-        icon: '🏫'
-      };
-    case 'team_training':
-      return {
-        colorClass: 'bg-green-100',
-        icon: '⚽'
-      };
-    case 'personal_training':
-      return {
-        colorClass: 'bg-purple-100',
-        icon: '🏃'
-      };
-    case 'sleep':
-      return {
-        colorClass: 'bg-gray-100',
-        icon: '😴'
-      };
-    default:
-      return {
-        colorClass: 'bg-yellow-100',
-        icon: '📅'
-      };
-  }
-};
-
 export const ScheduleGrid = ({
-  activities,
   days,
   hours,
-  isMobile,
+  activities,
   selectedDay,
-  onDeleteActivity
+  onDeleteActivity,
+  onActivityUpdated
 }: ScheduleGridProps) => {
   const [activeSection, setActiveSection] = useState<'first' | 'second'>('first');
+  const isMobile = useMediaQuery("(max-width: 768px)");
   
   // For mobile, show 3 days at a time
   const getMobileDays = () => {
@@ -87,39 +42,68 @@ export const ScheduleGrid = ({
   
   const firstHalf = days.slice(0, 4);
   const secondHalf = days.slice(4);
-  
   const currentDays = activeSection === 'first' ? firstHalf : secondHalf;
 
-  const renderTimeColumn = () => (
-    <div className="sticky right-0 bg-background z-10 min-w-[45px] max-w-[45px] print:min-w-[45px] print:max-w-[45px]">
-      <div className="h-12 border-b print:h-10" />
-      {hours.map((hour) => (
-        <div key={hour} className="h-16 border-b px-2 text-xs text-muted-foreground print:h-14 print:text-[8px] print:px-1">
-          {hour}
-        </div>
-      ))}
-    </div>
-  );
+  const getActivityStyle = (activity: Activity) => {
+    const startHour = parseInt(activity.start_time.split(':')[0]);
+    const startMinute = parseInt(activity.start_time.split(':')[1]);
+    const endHour = parseInt(activity.end_time.split(':')[0]);
+    const endMinute = parseInt(activity.end_time.split(':')[1]);
+    
+    const top = (startHour - 6) * 64 + (startMinute / 60) * 64;
+    const height = ((endHour - startHour) * 64) + ((endMinute - startMinute) / 60) * 64;
+    
+    return {
+      top: `${top}px`,
+      height: `${height}px`
+    };
+  };
 
-  const handleEditActivity = async (activityId: string, updatedActivity: { title?: string; start_time: string; end_time: string }) => {
+  const getActivityProps = (activity: Activity) => {
+    const typeToProps = {
+      school: { colorClass: "bg-blue-100 border-blue-300", icon: "🏫" },
+      training: { colorClass: "bg-green-100 border-green-300", icon: "⚽" },
+      match: { colorClass: "bg-purple-100 border-purple-300", icon: "🏆" },
+      social: { colorClass: "bg-yellow-100 border-yellow-300", icon: "👥" },
+      exam: { colorClass: "bg-red-100 border-red-300", icon: "📝" },
+      meal: { colorClass: "bg-orange-100 border-orange-300", icon: "🍽️" }
+    };
+    
+    return typeToProps[activity.activity_type] || { colorClass: "bg-gray-100", icon: "📅" };
+  };
+
+  const handleEditActivity = async (activityId: string, updatedActivity: Partial<Activity>) => {
     try {
       const { error } = await supabase
         .from('schedule_activities')
-        .update({
-          title: updatedActivity.title,
-          start_time: updatedActivity.start_time,
-          end_time: updatedActivity.end_time
-        })
+        .update(updatedActivity)
         .eq('id', activityId);
-
+      
       if (error) throw error;
       
-      // Refresh the activities list
-      window.location.reload();
+      // Call the callback to refresh activities
+      if (onActivityUpdated) {
+        onActivityUpdated();
+      }
     } catch (error) {
       console.error('Error updating activity:', error);
     }
   };
+
+  const renderTimeColumn = () => (
+    <div className="min-w-[60px] border-r">
+      <div className="h-12 border-b" />
+      <div className="relative">
+        {hours.map((hour) => (
+          <div key={hour} className="h-16 border-b">
+            <span className="absolute -translate-y-1/2 right-2 text-sm text-gray-500">
+              {hour}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   const renderDayColumns = (daysToRender: string[]) => (
     daysToRender.map((day, dayIndex) => {
@@ -137,12 +121,12 @@ export const ScheduleGrid = ({
           isMobile ? "min-w-[60px] max-w-[60px]" : "min-w-[90px] max-w-[90px]",
           "print:min-w-[80px] print:max-w-[80px]"
         )}>
-          <div className="h-12 border-b px-1 font-medium text-center text-sm print:h-10 print:text-xs break-words hyphens-auto">
+          <div className="h-12 border-b px-1 font-medium text-center text-sm break-words hyphens-auto">
             {day}
           </div>
           <div className="relative">
             {hours.map((hour) => (
-              <div key={hour} className="h-16 border-b print:h-14" />
+              <div key={hour} className="h-16 border-b" />
             ))}
             {dayActivities.map((activity) => {
               const { colorClass, icon } = getActivityProps(activity);
@@ -153,7 +137,7 @@ export const ScheduleGrid = ({
                   style={getActivityStyle(activity)}
                   colorClass={colorClass}
                   icon={icon}
-                  onDelete={() => onDeleteActivity(activity.id)}
+                  onDelete={() => onDeleteActivity(activity.id!)}
                   onEdit={(updatedActivity) => handleEditActivity(activity.id!, updatedActivity)}
                 />
               );
@@ -180,32 +164,30 @@ export const ScheduleGrid = ({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center print:hidden">
-        <Button
-          variant="outline"
-          size="sm"
+    <div>
+      <div className="flex gap-2 mb-4 print:hidden">
+        <button
           onClick={() => setActiveSection('first')}
           className={cn(
-            "gap-2",
-            activeSection === 'first' && "bg-primary text-primary-foreground hover:bg-primary/90"
+            "px-4 py-2 rounded text-sm",
+            activeSection === 'first'
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted"
           )}
         >
-          <ChevronRight className="h-4 w-4" />
-          ראשון - רביעי
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
+          ימים ראשונים
+        </button>
+        <button
           onClick={() => setActiveSection('second')}
           className={cn(
-            "gap-2",
-            activeSection === 'second' && "bg-primary text-primary-foreground hover:bg-primary/90"
+            "px-4 py-2 rounded text-sm",
+            activeSection === 'second'
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted"
           )}
         >
-          חמישי - שבת
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+          ימים אחרונים
+        </button>
       </div>
       
       <ScrollArea className="border rounded-lg print:border-none">
