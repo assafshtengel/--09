@@ -7,6 +7,20 @@ import { RoleSelector } from "./player-form/RoleSelector";
 import { ProfileUpdateService } from "./player-form/ProfileUpdateService";
 import type { PlayerFormData } from "./player-form/types";
 import { SportBranchSelector } from "./player-form/SportBranchSelector";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const AGE_CATEGORIES = [
+  { value: 'ילדים', label: 'ילדים' },
+  { value: 'נערים', label: 'נערים' },
+  { value: 'נוער', label: 'נוער' },
+  { value: 'בוגרים', label: 'בוגרים' },
+];
 
 interface PlayerFormProps {
   initialData?: PlayerFormData | null;
@@ -155,13 +169,24 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
         onChange={(value) => handleInputChange("dateOfBirth", value)}
       />
 
-      <FormField
-        id="ageCategory"
-        label="קטגוריית גיל"
-        type="text"
-        value={formData.ageCategory}
-        onChange={(value) => handleInputChange("ageCategory", value)}
-      />
+      <div>
+        <label htmlFor="ageCategory" className="block text-right mb-2">קטגוריית גיל</label>
+        <Select
+          value={formData.ageCategory}
+          onValueChange={(value) => handleInputChange("ageCategory", value)}
+        >
+          <SelectTrigger className="w-full text-right">
+            <SelectValue placeholder="בחר קטגוריית גיל" />
+          </SelectTrigger>
+          <SelectContent>
+            {AGE_CATEGORIES.map((category) => (
+              <SelectItem key={category.value} value={category.value}>
+                {category.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <FormField
         id="coachEmail"
