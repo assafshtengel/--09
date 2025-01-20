@@ -49,9 +49,24 @@ export const GoalsSection = () => {
   };
 
   const handleSaveGoal = async (goal: Goal) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({
+        title: "שגיאה",
+        description: "משתמש לא מחובר",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const goalWithUserId = {
+      ...goal,
+      player_id: user.id,
+    };
+
     const { data, error } = await supabase
       .from('player_goals')
-      .upsert([goal])
+      .upsert(goalWithUserId)
       .select()
       .single();
 
