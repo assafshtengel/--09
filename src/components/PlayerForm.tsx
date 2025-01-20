@@ -41,15 +41,27 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error("No authenticated user found");
+        throw new Error("משתמש לא מחובר");
+      }
+
+      // Validate required fields
+      if (!formData.fullName) {
+        throw new Error("שם מלא הוא שדה חובה");
+      }
+
+      if (formData.roles.length === 0) {
+        throw new Error("יש לבחור לפחות תפקיד אחד");
       }
 
       // Validate sport branches based on role
       const isPlayer = formData.roles.includes("player");
+      const hasCoachRole = formData.roles.includes("מאמן");
+
       if (isPlayer && formData.sportBranches.length !== 1) {
         throw new Error("שחקן חייב לבחור ענף ספורט אחד בדיוק");
       }
-      if (!isPlayer && formData.sportBranches.length === 0) {
+
+      if (hasCoachRole && formData.sportBranches.length === 0) {
         throw new Error("מאמן חייב לבחור לפחות ענף ספורט אחד");
       }
 
@@ -64,7 +76,7 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       });
 
       onSubmit?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating profile:", error);
       toast({
         title: "שגיאה",
@@ -82,8 +94,6 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       [field]: value,
     }));
   };
-
-  const isPlayer = formData.roles.includes("player");
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -109,7 +119,7 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       <SportBranchSelector
         value={formData.sportBranches}
         onChange={(value) => handleInputChange("sportBranches", value)}
-        isPlayer={isPlayer}
+        isPlayer={formData.roles.includes("player")}
       />
 
       <FormField
@@ -161,7 +171,7 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
         onChange={(value) => handleInputChange("coachEmail", value)}
       />
 
-      <Button type="submit" disabled={isLoading}>
+      <Button type="submit" disabled={isLoading} className="w-full">
         {isLoading ? "שומר..." : "שמור"}
       </Button>
     </form>
