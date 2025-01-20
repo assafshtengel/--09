@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ActivityBlock } from "./ActivityBlock";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Activity {
   id?: string;
@@ -94,6 +95,26 @@ export const ScheduleGrid = ({
     </div>
   );
 
+  const handleEditActivity = async (activityId: string, updatedActivity: { title?: string; start_time: string; end_time: string }) => {
+    try {
+      const { error } = await supabase
+        .from('schedule_activities')
+        .update({
+          title: updatedActivity.title,
+          start_time: updatedActivity.start_time,
+          end_time: updatedActivity.end_time
+        })
+        .eq('id', activityId);
+
+      if (error) throw error;
+      
+      // Refresh the activities list (you'll need to implement this)
+      // This could be done through a callback prop or by refetching the data
+    } catch (error) {
+      console.error('Error updating activity:', error);
+    }
+  };
+
   const renderDayColumns = () => (
     currentDays.map((day, dayIndex) => {
       const actualDayIndex = activeSection === 'first' ? dayIndex : dayIndex + 4;
@@ -120,6 +141,7 @@ export const ScheduleGrid = ({
                   colorClass={colorClass}
                   icon={icon}
                   onDelete={() => onDeleteActivity(activity.id)}
+                  onEdit={(updatedActivity) => handleEditActivity(activity.id!, updatedActivity)}
                 />
               );
             })}
@@ -156,6 +178,7 @@ export const ScheduleGrid = ({
                     colorClass={colorClass}
                     icon={icon}
                     onDelete={() => onDeleteActivity(activity.id)}
+                    onEdit={(updatedActivity) => handleEditActivity(activity.id!, updatedActivity)}
                   />
                 );
               })}
