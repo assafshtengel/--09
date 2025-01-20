@@ -13,20 +13,24 @@ export const HavayotDisplay = ({ havayot }: HavayotDisplayProps) => {
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 shadow-sm border border-primary/20"
+      className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6 shadow-lg"
     >
-      <h3 className="text-xl font-semibold text-center mb-4 text-primary">ההוויות שבחרת למשחק</h3>
+      <h3 className="text-2xl font-bold text-center mb-6 text-primary">
+        ההוויות שבחרת למשחק
+      </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {nonEmptyHavayot.map(([category, value]) => (
           <motion.div
             key={category}
             whileHover={{ scale: 1.02 }}
-            className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 border border-primary/10"
+            className="relative overflow-hidden"
           >
-            <div className="flex items-center justify-end">
-              <span className="text-lg font-medium px-4 py-2 rounded-lg bg-primary/5 text-primary hover:bg-primary/10 transition-colors w-full text-center">
-                {value}
-              </span>
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-5 shadow-md border-2 border-primary/20 hover:border-primary/30 transition-all duration-300">
+              <div className="flex items-center justify-center">
+                <span className="text-xl font-semibold px-6 py-3 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 text-primary w-full text-center">
+                  {value}
+                </span>
+              </div>
             </div>
           </motion.div>
         ))}
