@@ -10,9 +10,7 @@ export class ProfileUpdateService {
         roles: data.roles,
         phone_number: data.phoneNumber,
         club: data.club,
-        team_year: data.teamYear ? parseInt(data.teamYear) : null,
         date_of_birth: data.dateOfBirth || null,
-        age_category: data.ageCategory,
         coach_email: data.coachEmail,
         sport_branches: data.sportBranches,
       })
@@ -43,9 +41,7 @@ export class ProfileUpdateService {
       roles: data.roles || [],
       phoneNumber: data.phone_number || "",
       club: data.club || "",
-      teamYear: data.team_year?.toString() || "",
       dateOfBirth: data.date_of_birth || "",
-      ageCategory: data.age_category || "",
       coachEmail: data.coach_email || "",
       sportBranches: data.sport_branches || [],
     };

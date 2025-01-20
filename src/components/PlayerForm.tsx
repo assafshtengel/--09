@@ -7,21 +7,6 @@ import { RoleSelector } from "./player-form/RoleSelector";
 import { ProfileUpdateService } from "./player-form/ProfileUpdateService";
 import type { PlayerFormData } from "./player-form/types";
 import { SportBranchSelector } from "./player-form/SportBranchSelector";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-// These values must match exactly with the database constraint
-const AGE_CATEGORIES = [
-  { value: 'ילדים', label: 'ילדים' },
-  { value: 'נערים', label: 'נערים' },
-  { value: 'נוער', label: 'נוער' },
-  { value: 'בוגרים', label: 'בוגרים' },
-];
 
 interface PlayerFormProps {
   initialData?: PlayerFormData | null;
@@ -36,9 +21,7 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
     roles: [],
     phoneNumber: "",
     club: "",
-    teamYear: "",
     dateOfBirth: "",
-    ageCategory: "",
     coachEmail: "",
     sportBranches: [],
   });
@@ -80,19 +63,10 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
         throw new Error("מאמן חייב לבחור לפחות ענף ספורט אחד");
       }
 
-      // Validate age category
-      if (formData.ageCategory && !AGE_CATEGORIES.some(cat => cat.value === formData.ageCategory)) {
-        throw new Error("קטגוריית גיל לא חוקית");
-      }
-
-      // Clean up the data before sending
-      const dataToUpdate = {
+      await ProfileUpdateService.updateProfile({
         ...formData,
         id: user.id,
-        ageCategory: formData.ageCategory || null // Send null if empty to avoid constraint violation
-      };
-
-      await ProfileUpdateService.updateProfile(dataToUpdate);
+      });
 
       toast({
         title: "הצלחה",
@@ -102,17 +76,9 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       onSubmit?.();
     } catch (error: any) {
       console.error("Error updating profile:", error);
-      let errorMessage = "אירעה שגיאה בעדכון הפרופיל";
-      
-      if (error.message?.includes("profiles_age_category_check")) {
-        errorMessage = "קטגוריית גיל לא חוקית. אנא בחר מהרשימה המוצעת";
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
       toast({
         title: "שגיאה",
-        description: errorMessage,
+        description: error.message || "אירעה שגיאה בעדכון הפרופיל",
         variant: "destructive",
       });
     } finally {
@@ -172,39 +138,12 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       />
 
       <FormField
-        id="teamYear"
-        label="שנתון"
-        type="number"
-        value={formData.teamYear}
-        onChange={(value) => handleInputChange("teamYear", value)}
-      />
-
-      <FormField
         id="dateOfBirth"
         label="תאריך לידה"
         type="date"
         value={formData.dateOfBirth}
         onChange={(value) => handleInputChange("dateOfBirth", value)}
       />
-
-      <div>
-        <label htmlFor="ageCategory" className="block text-right mb-2">קטגוריית גיל</label>
-        <Select
-          value={formData.ageCategory}
-          onValueChange={(value) => handleInputChange("ageCategory", value)}
-        >
-          <SelectTrigger className="w-full text-right">
-            <SelectValue placeholder="בחר קטגוריית גיל" />
-          </SelectTrigger>
-          <SelectContent>
-            {AGE_CATEGORIES.map((category) => (
-              <SelectItem key={category.value} value={category.value}>
-                {category.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
 
       <FormField
         id="coachEmail"

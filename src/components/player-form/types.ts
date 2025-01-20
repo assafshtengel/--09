@@ -3,9 +3,7 @@ export interface PlayerFormData {
   roles: string[];
   phoneNumber: string;
   club: string;
-  teamYear: string;
   dateOfBirth: string;
-  ageCategory: string;
   coachEmail: string;
   sportBranches: string[];
 }
