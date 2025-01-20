@@ -84,7 +84,7 @@ export const ScheduleGrid = ({
   const currentDays = activeSection === 'first' ? firstHalf : secondHalf;
 
   const renderTimeColumn = () => (
-    <div className="sticky right-0 bg-background z-10">
+    <div className="sticky right-0 bg-background z-10 min-w-[60px] max-w-[60px]">
       <div className="h-12 border-b" /> {/* Header spacer */}
       {hours.map((hour) => (
         <div key={hour} className="h-16 border-b px-2 text-sm text-muted-foreground">
@@ -102,10 +102,12 @@ export const ScheduleGrid = ({
       );
 
       return (
-        <div key={day} className="flex-1 min-w-[120px] max-w-[120px]"> {/* Reduced width by 40% from 200px */}
-          <div className="h-12 border-b px-2 font-medium text-center">{day}</div>
+        <div key={day} className="flex-1 min-w-[80px] max-w-[80px]">
+          <div className="h-12 border-b px-2 font-medium text-center truncate">
+            {day}
+          </div>
           <div className="relative">
-            {hours.map((hour, hourIndex) => (
+            {hours.map((hour) => (
               <div key={hour} className="h-16 border-b border-r" />
             ))}
             {dayActivities.map((activity) => {
@@ -134,9 +136,9 @@ export const ScheduleGrid = ({
 
     return (
       <div className="border rounded-lg overflow-hidden">
-        <div className="relative">
+        <div className="flex">
           {renderTimeColumn()}
-          <div className="flex-1 min-w-[120px] max-w-[120px]"> {/* Reduced width by 40% from 200px */}
+          <div className="flex-1 min-w-[80px] max-w-[80px]">
             <div className="h-12 border-b px-2 font-medium text-center">
               {days[selectedDay]}
             </div>
@@ -196,7 +198,9 @@ export const ScheduleGrid = ({
       <ScrollArea className="border rounded-lg">
         <div className="flex">
           {renderTimeColumn()}
-          {renderDayColumns()}
+          <div className="flex flex-1 overflow-x-auto">
+            {renderDayColumns()}
+          </div>
         </div>
       </ScrollArea>
     </div>
