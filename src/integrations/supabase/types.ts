@@ -586,6 +586,56 @@ export type Database = {
           },
         ]
       }
+      player_goals: {
+        Row: {
+          created_at: string
+          goal_type: Database["public"]["Enums"]["goal_type"]
+          id: string
+          inspiration: string | null
+          motivation: string | null
+          player_id: string
+          required_skills: string | null
+          short_term_action: string | null
+          target_position: string | null
+          target_team: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          goal_type: Database["public"]["Enums"]["goal_type"]
+          id?: string
+          inspiration?: string | null
+          motivation?: string | null
+          player_id: string
+          required_skills?: string | null
+          short_term_action?: string | null
+          target_position?: string | null
+          target_team?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          goal_type?: Database["public"]["Enums"]["goal_type"]
+          id?: string
+          inspiration?: string | null
+          motivation?: string | null
+          player_id?: string
+          required_skills?: string | null
+          short_term_action?: string | null
+          target_position?: string | null
+          target_team?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_goals_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       player_media: {
         Row: {
           created_at: string
@@ -1344,6 +1394,7 @@ export type Database = {
         | "study_time"
         | "travel"
       admin_role: "super_admin" | "admin"
+      goal_type: "long_term" | "short_term"
       message_type: "incoming" | "outgoing"
       notification_type: "pre_match" | "weekly" | "mental_tip" | "custom"
       report_status: "draft" | "completed"
