@@ -109,6 +109,8 @@ export const SharingSection = ({
     setSaveTimer(30);
     
     try {
+      console.log('Starting data save process...'); // Debug log
+
       // First validate the data
       const errors = await validateData();
       if (errors.length > 0) {
@@ -130,7 +132,12 @@ export const SharingSection = ({
         .update({ status: 'completed' })
         .eq('id', matchId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating match status:', updateError);
+        throw updateError;
+      }
+
+      console.log('Match status updated successfully'); // Debug log
 
       setIsDataSaved(true);
       toast({
