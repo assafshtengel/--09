@@ -86,9 +86,9 @@ export const SharingSection = ({
     }
 
     const typedFeedback = feedback as PostGameFeedback;
-    console.log('Validating feedback data:', typedFeedback); // Debug log
+    console.log('Validating feedback data:', typedFeedback);
 
-    // Check match stats
+    // Check match stats - these remain required
     if (!typedFeedback?.match_stats?.finalScore) {
       errors.push("יש למלא את תוצאת המשחק");
     }
@@ -97,10 +97,7 @@ export const SharingSection = ({
       errors.push("יש לציין את הקבוצה המנצחת");
     }
 
-    // Check goal progress
-    if (!typedFeedback?.goal_progress?.progressRating) {
-      errors.push("יש לדרג את ההתקדמות ביעד האישי");
-    }
+    // Removed the validation for goal progress rating since it's now optional
 
     return errors;
   };
