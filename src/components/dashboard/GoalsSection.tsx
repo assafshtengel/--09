@@ -59,24 +59,34 @@ export const GoalsSection = () => {
     if (!longTermGoal) return;
 
     try {
-      const response = await fetch('/api/generate-motivational-text', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('generate-motivational-text', {
+        body: {
           position: longTermGoal.target_position,
           team: longTermGoal.target_team,
           skills: longTermGoal.required_skills,
-        }),
+        },
       });
 
-      if (response.ok) {
-        const { text } = await response.json();
-        setMotivationalText(text);
+      if (error) {
+        console.error('Error generating motivational text:', error);
+        toast({
+          title: "שגיאה",
+          description: "לא הצלחנו ליצור טקסט מוטיבציוני. אנא נסה שוב מאוחר יותר.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data?.text) {
+        setMotivationalText(data.text);
       }
     } catch (error) {
       console.error('Error generating motivational text:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא הצלחנו ליצור טקסט מוטיבציוני. אנא נסה שוב מאוחר יותר.",
+        variant: "destructive",
+      });
     }
   };
 
