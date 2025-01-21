@@ -5,13 +5,21 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PostGameFeedback {
-  match_stats: {
+  match_stats?: {
     finalScore?: string;
     winner?: string;
+    goalsScored?: number;
+    assists?: number;
   };
-  goal_progress: {
+  goal_progress?: {
     progressRating?: number;
+    shortTermGoal?: string;
+    actionsPerformed?: number;
+    progressNotes?: string;
   };
+  performance_ratings?: Record<string, number>;
+  questions_answers?: Record<string, any>;
+  havaya_ratings?: Record<string, number>;
 }
 
 interface SharingSectionProps {
@@ -68,9 +76,9 @@ export const SharingSection = ({
     // Check if post game feedback exists
     const { data: feedback, error } = await supabase
       .from('post_game_feedback')
-      .select('*')
+      .select('match_stats, goal_progress')
       .eq('match_id', matchId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error fetching feedback:', error);
@@ -78,7 +86,9 @@ export const SharingSection = ({
     }
 
     const typedFeedback = feedback as PostGameFeedback;
+    console.log('Validating feedback data:', typedFeedback); // Debug log
 
+    // Check match stats
     if (!typedFeedback?.match_stats?.finalScore) {
       errors.push("יש למלא את תוצאת המשחק");
     }
@@ -87,6 +97,7 @@ export const SharingSection = ({
       errors.push("יש לציין את הקבוצה המנצחת");
     }
 
+    // Check goal progress
     if (!typedFeedback?.goal_progress?.progressRating) {
       errors.push("יש לדרג את ההתקדמות ביעד האישי");
     }
