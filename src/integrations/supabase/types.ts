@@ -740,6 +740,7 @@ export type Database = {
         Row: {
           created_at: string
           goal_progress: Json | null
+          havaya_ratings: Json | null
           id: string
           match_id: string
           match_stats: Json | null
@@ -750,6 +751,7 @@ export type Database = {
         Insert: {
           created_at?: string
           goal_progress?: Json | null
+          havaya_ratings?: Json | null
           id?: string
           match_id: string
           match_stats?: Json | null
@@ -760,6 +762,7 @@ export type Database = {
         Update: {
           created_at?: string
           goal_progress?: Json | null
+          havaya_ratings?: Json | null
           id?: string
           match_id?: string
           match_stats?: Json | null

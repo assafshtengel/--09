@@ -14,6 +14,7 @@ import { NotesSection } from "./summary/NotesSection";
 import { GoalsComparison } from "./summary/GoalsComparison";
 import { AchievementsSection } from "./summary/AchievementsSection";
 import { generateEmailContent } from "./summary/EmailTemplate";
+import { HavayaRatings } from "./summary/HavayaRatings";
 
 interface GameSummaryProps {
   actions: any[];
@@ -45,6 +46,7 @@ export const GameSummary = ({
   const [performanceRatings, setPerformanceRatings] = useState<Record<string, number>>({});
   const [additionalAnswers, setAdditionalAnswers] = useState<Record<string, any>>({});
   const [showCaptionPopup, setShowCaptionPopup] = useState(false);
+  const [havayaRatings, setHavayaRatings] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const loadInsights = async () => {
@@ -75,15 +77,19 @@ export const GameSummary = ({
 
   const handleRatingsChange = async (ratings: Record<string, number>) => {
     setPerformanceRatings(ratings);
-    await saveToDatabase(ratings, additionalAnswers);
+    await saveToDatabase(ratings, additionalAnswers, havayaRatings);
   };
 
   const handleAnswersChange = async (answers: Record<string, any>) => {
     setAdditionalAnswers(answers);
-    await saveToDatabase(performanceRatings, answers);
+    await saveToDatabase(performanceRatings, answers, havayaRatings);
   };
 
-  const saveToDatabase = async (ratings: Record<string, number>, answers: Record<string, any>) => {
+  const saveToDatabase = async (
+    ratings: Record<string, number>,
+    answers: Record<string, any>,
+    havayaRatings: Record<string, number>
+  ) => {
     if (!matchId) return;
 
     try {
@@ -94,7 +100,8 @@ export const GameSummary = ({
         performance_ratings: ratings,
         questions_answers: {
           additionalQuestions: answers
-        }
+        },
+        havaya_ratings: havayaRatings
       };
 
       const { data: existingFeedback } = await supabase
@@ -186,7 +193,6 @@ export const GameSummary = ({
   };
 
   const handleAchievementsSave = (achievementsData: any) => {
-    // You can use this data to update the email content or other summaries
     console.log('Achievements saved:', achievementsData);
   };
 
@@ -202,10 +208,16 @@ export const GameSummary = ({
             />
 
             {gamePhase === "ended" && (
-              <AchievementsSection
-                matchId={matchId}
-                onSave={handleAchievementsSave}
-              />
+              <>
+                <AchievementsSection
+                  matchId={matchId}
+                  onSave={handleAchievementsSave}
+                />
+                <HavayaRatings
+                  matchId={matchId}
+                  onRatingsChange={handleHavayaRatingsChange}
+                />
+              </>
             )}
 
             <StatisticsSection
