@@ -17,6 +17,10 @@ export const Navigation = () => {
         
         if (sessionError) {
           console.error("Session error:", sessionError);
+          if (sessionError.message?.includes("refresh_token_not_found")) {
+            await handleSignOut();
+            return;
+          }
           return;
         }
 
@@ -41,17 +45,23 @@ export const Navigation = () => {
 
         console.log("Profile data:", profile);
         setIsAdmin(profile?.role === "admin");
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error in checkAdminStatus:", error);
+        if (error.message?.includes("refresh_token_not_found")) {
+          await handleSignOut();
+        }
       }
     };
 
     // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         checkAdminStatus();
       } else if (event === 'SIGNED_OUT') {
         setIsAdmin(false);
+      } else if (event === 'TOKEN_REFRESH_FAILED') {
+        console.log("Token refresh failed, signing out...");
+        await handleSignOut();
       }
     });
 
@@ -75,11 +85,15 @@ export const Navigation = () => {
       navigate("/auth");
     } catch (error) {
       console.error("Error signing out:", error);
+      // Clear any remaining session data
+      localStorage.removeItem('supabase.auth.token');
       toast({
         title: "שגיאה",
         description: "אירעה שגיאה בהתנתקות",
         variant: "destructive",
       });
+      // Still redirect to auth page
+      navigate("/auth");
     }
   };
 
