@@ -12,6 +12,7 @@ import { PerformanceRatings } from "./summary/PerformanceRatings";
 import { ActionsLogSection } from "./summary/ActionsLogSection";
 import { NotesSection } from "./summary/NotesSection";
 import { GoalsComparison } from "./summary/GoalsComparison";
+import { AchievementsSection } from "./summary/AchievementsSection";
 import { generateEmailContent } from "./summary/EmailTemplate";
 
 interface GameSummaryProps {
@@ -184,6 +185,11 @@ export const GameSummary = ({
     }
   };
 
+  const handleAchievementsSave = (achievementsData: any) => {
+    // You can use this data to update the email content or other summaries
+    console.log('Achievements saved:', achievementsData);
+  };
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-4xl mx-auto h-[90vh]">
@@ -194,6 +200,13 @@ export const GameSummary = ({
               matchId={matchId}
               opponent={opponent}
             />
+
+            {gamePhase === "ended" && (
+              <AchievementsSection
+                matchId={matchId}
+                onSave={handleAchievementsSave}
+              />
+            )}
 
             <StatisticsSection
               actions={actions}
