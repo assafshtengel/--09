@@ -109,3 +109,21 @@ html, body {
     @apply text-base md:text-lg;
   }
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  #goals-section,
+  #goals-section * {
+    visibility: visible;
+  }
+  
+  #goals-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

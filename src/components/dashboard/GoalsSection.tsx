@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Target, Send, Printer, Mail } from "lucide-react";
+import { Target, Send, Printer } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface Goal {
@@ -25,11 +25,18 @@ export const GoalsSection = () => {
   const [shortTermGoal, setShortTermGoal] = useState<Goal | null>(null);
   const [isLongTermDialogOpen, setIsLongTermDialogOpen] = useState(false);
   const [isShortTermDialogOpen, setIsShortTermDialogOpen] = useState(false);
+  const [motivationalText, setMotivationalText] = useState<string>("");
   const { toast } = useToast();
 
   useEffect(() => {
     fetchGoals();
   }, []);
+
+  useEffect(() => {
+    if (longTermGoal) {
+      generateMotivationalText();
+    }
+  }, [longTermGoal]);
 
   const fetchGoals = async () => {
     const { data: goals, error } = await supabase
@@ -46,6 +53,31 @@ export const GoalsSection = () => {
 
     if (longTerm) setLongTermGoal(longTerm);
     if (shortTerm) setShortTermGoal(shortTerm);
+  };
+
+  const generateMotivationalText = async () => {
+    if (!longTermGoal) return;
+
+    try {
+      const response = await fetch('/api/generate-motivational-text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          position: longTermGoal.target_position,
+          team: longTermGoal.target_team,
+          skills: longTermGoal.required_skills,
+        }),
+      });
+
+      if (response.ok) {
+        const { text } = await response.json();
+        setMotivationalText(text);
+      }
+    } catch (error) {
+      console.error('Error generating motivational text:', error);
+    }
   };
 
   const handleSaveGoal = async (goal: Goal) => {
@@ -94,60 +126,42 @@ export const GoalsSection = () => {
   };
 
   const handlePrint = () => {
-    window.print();
-  };
-
-  const handleEmail = async () => {
-    try {
-      const response = await fetch('/api/send-goals-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          longTermGoal,
-          shortTermGoal,
-        }),
-      });
-
-      if (response.ok) {
-        toast({
-          title: "היעדים נשלחו בהצלחה",
-          description: "בדוק את תיבת הדואר שלך",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "שגיאה בשליחת הדואר",
-        description: "אנא נסה שנית מאוחר יותר",
-        variant: "destructive",
-      });
+    const printContent = document.getElementById('goals-section');
+    if (printContent) {
+      const originalDisplay = document.body.style.display;
+      const originalOverflow = document.body.style.overflow;
+      
+      // Hide everything except goals section
+      document.body.style.display = 'none';
+      printContent.style.display = 'block';
+      
+      window.print();
+      
+      // Restore original styles
+      document.body.style.display = originalDisplay;
+      document.body.style.overflow = originalOverflow;
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end space-x-4">
+      <div className="flex justify-end">
         <Button variant="outline" onClick={handlePrint}>
           <Printer className="h-4 w-4 ml-2" />
           הדפס יעדים
         </Button>
-        <Button variant="outline" onClick={handleEmail}>
-          <Mail className="h-4 w-4 ml-2" />
-          שלח במייל
-        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div id="goals-section" className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Long Term Goals Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Card>
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-primary">
                 <Target className="h-6 w-6" />
                 יעד ארוך טווח
               </CardTitle>
@@ -155,29 +169,37 @@ export const GoalsSection = () => {
             <CardContent>
               {longTermGoal ? (
                 <div className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold mb-1">תפקיד מבוקש</h4>
+                  <div className="bg-white/80 dark:bg-gray-800/80 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-1 text-primary">תפקיד מבוקש</h4>
                     <p>{longTermGoal.target_position}</p>
                   </div>
-                  <div>
-                    <h4 className="font-semibold mb-1">קבוצת יעד</h4>
+                  <div className="bg-white/80 dark:bg-gray-800/80 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-1 text-primary">קבוצת יעד</h4>
                     <p>{longTermGoal.target_team}</p>
                   </div>
-                  <div>
-                    <h4 className="font-semibold mb-1">השראה</h4>
+                  <div className="bg-white/80 dark:bg-gray-800/80 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-1 text-primary">השראה</h4>
                     <p>{longTermGoal.inspiration}</p>
                   </div>
-                  <div>
-                    <h4 className="font-semibold mb-1">כישורים נדרשים</h4>
+                  <div className="bg-white/80 dark:bg-gray-800/80 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-1 text-primary">כישורים נדרשים</h4>
                     <p>{longTermGoal.required_skills}</p>
                   </div>
-                  <div>
-                    <h4 className="font-semibold mb-1">מוטיבציה</h4>
+                  <div className="bg-white/80 dark:bg-gray-800/80 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-1 text-primary">מוטיבציה</h4>
                     <p>{longTermGoal.motivation}</p>
                   </div>
+                  {motivationalText && (
+                    <div className="mt-6 p-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl">
+                      <p className="text-lg leading-relaxed text-gray-800 dark:text-gray-200">
+                        {motivationalText}
+                      </p>
+                    </div>
+                  )}
                   <Button 
                     variant="outline" 
                     onClick={() => setIsLongTermDialogOpen(true)}
+                    className="w-full mt-4"
                   >
                     ערוך יעד
                   </Button>
@@ -185,7 +207,7 @@ export const GoalsSection = () => {
               ) : (
                 <Dialog open={isLongTermDialogOpen} onOpenChange={setIsLongTermDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button>הגדר יעד ארוך טווח</Button>
+                    <Button className="w-full">הגדר יעד ארוך טווח</Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
@@ -205,9 +227,9 @@ export const GoalsSection = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <Card>
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-secondary">
                 <Send className="h-6 w-6" />
                 יעד קצר טווח
               </CardTitle>
@@ -215,13 +237,14 @@ export const GoalsSection = () => {
             <CardContent>
               {shortTermGoal ? (
                 <div className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold mb-1">פעולה לשיפור</h4>
+                  <div className="bg-white/80 dark:bg-gray-800/80 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-1 text-secondary">פעולה לשיפור</h4>
                     <p>{shortTermGoal.short_term_action}</p>
                   </div>
                   <Button 
                     variant="outline" 
                     onClick={() => setIsShortTermDialogOpen(true)}
+                    className="w-full mt-4"
                   >
                     ערוך יעד
                   </Button>
@@ -229,7 +252,7 @@ export const GoalsSection = () => {
               ) : (
                 <Dialog open={isShortTermDialogOpen} onOpenChange={setIsShortTermDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button>הגדר יעד קצר טווח</Button>
+                    <Button className="w-full">הגדר יעד קצר טווח</Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
