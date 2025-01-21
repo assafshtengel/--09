@@ -12,15 +12,11 @@ export const Navigation = () => {
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        // First check if we have an authenticated session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
           console.error("Session error:", sessionError);
-          if (sessionError.message?.includes("refresh_token_not_found")) {
-            await handleSignOut();
-            return;
-          }
+          await handleSignOut();
           return;
         }
 
@@ -29,8 +25,6 @@ export const Navigation = () => {
           navigate("/auth");
           return;
         }
-
-        console.log("Checking admin status for user:", session.user.id);
 
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
@@ -43,33 +37,32 @@ export const Navigation = () => {
           return;
         }
 
-        console.log("Profile data:", profile);
         setIsAdmin(profile?.role === "admin");
       } catch (error: any) {
         console.error("Error in checkAdminStatus:", error);
-        if (error.message?.includes("refresh_token_not_found")) {
+        const message = error?.message || "";
+        if (message.includes("refresh_token_not_found")) {
+          localStorage.removeItem('supabase.auth.token');
           await handleSignOut();
         }
       }
     };
 
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        checkAdminStatus();
+      console.log("Auth state changed:", event);
+      
+      if (event === 'SIGNED_IN') {
+        await checkAdminStatus();
       } else if (event === 'SIGNED_OUT') {
         setIsAdmin(false);
+        navigate("/auth");
       } else if (event === 'USER_UPDATED' && !session) {
-        // Handle token refresh failure by checking if session is null
-        console.log("Session invalid, signing out...");
+        console.log("Session invalid after user update");
         await handleSignOut();
       }
     });
 
-    // Initial check
     checkAdminStatus();
-
-    // Cleanup subscription
     return () => subscription.unsubscribe();
   }, [navigate]);
 
@@ -78,6 +71,7 @@ export const Navigation = () => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
+      localStorage.removeItem('supabase.auth.token');
       toast({
         title: "התנתקת בהצלחה",
         description: "להתראות!",
@@ -86,14 +80,12 @@ export const Navigation = () => {
       navigate("/auth");
     } catch (error) {
       console.error("Error signing out:", error);
-      // Clear any remaining session data
       localStorage.removeItem('supabase.auth.token');
       toast({
         title: "שגיאה",
         description: "אירעה שגיאה בהתנתקות",
         variant: "destructive",
       });
-      // Still redirect to auth page
       navigate("/auth");
     }
   };
