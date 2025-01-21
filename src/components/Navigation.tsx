@@ -16,6 +16,10 @@ export const Navigation = () => {
         
         if (sessionError) {
           console.error("Session error:", sessionError);
+          const message = sessionError?.message || "";
+          if (message.includes("refresh_token_not_found")) {
+            localStorage.removeItem('supabase.auth.token');
+          }
           await handleSignOut();
           return;
         }
@@ -56,9 +60,13 @@ export const Navigation = () => {
       } else if (event === 'SIGNED_OUT') {
         setIsAdmin(false);
         navigate("/auth");
-      } else if (event === 'USER_UPDATED' && !session) {
-        console.log("Session invalid after user update");
-        await handleSignOut();
+      } else if (event === 'USER_UPDATED') {
+        if (!session) {
+          console.log("Session invalid after user update");
+          await handleSignOut();
+        } else {
+          await checkAdminStatus();
+        }
       }
     });
 
