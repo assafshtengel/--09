@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,6 +22,7 @@ export const AchievementsSection = ({ matchId, onSave }: AchievementsSectionProp
   const [finalScore, setFinalScore] = useState<string>("");
   const [winner, setWinner] = useState<string>("");
   const [shortTermGoal, setShortTermGoal] = useState<string>("");
+  const [goalProgressNotes, setGoalProgressNotes] = useState<string>("");
 
   const loadShortTermGoal = async () => {
     try {
@@ -39,6 +41,10 @@ export const AchievementsSection = ({ matchId, onSave }: AchievementsSectionProp
     }
   };
 
+  useEffect(() => {
+    loadShortTermGoal();
+  }, []);
+
   const handleSave = async () => {
     try {
       const achievementsData = {
@@ -51,7 +57,8 @@ export const AchievementsSection = ({ matchId, onSave }: AchievementsSectionProp
         goal_progress: {
           shortTermGoal,
           progressRating: goalProgress,
-          actionsPerformed
+          actionsPerformed,
+          progressNotes: goalProgressNotes
         }
       };
 
@@ -84,38 +91,40 @@ export const AchievementsSection = ({ matchId, onSave }: AchievementsSectionProp
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle>הישגים ומדדים</CardTitle>
+        <CardTitle className="text-right">הישגים ומדדים</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <div>
-            <Label>כמה שערים כבשת?</Label>
+            <Label className="text-right block">כמה שערים כבשת?</Label>
             <Input
               type="number"
               min="0"
               value={goalsScored}
               onChange={(e) => setGoalsScored(parseInt(e.target.value) || 0)}
-              className="mt-1"
+              className="mt-1 text-right"
+              dir="rtl"
             />
           </div>
 
           <div>
-            <Label>כמה בישולים נתת?</Label>
+            <Label className="text-right block">כמה בישולים נתת?</Label>
             <Input
               type="number"
               min="0"
               value={assists}
               onChange={(e) => setAssists(parseInt(e.target.value) || 0)}
-              className="mt-1"
+              className="mt-1 text-right"
+              dir="rtl"
             />
           </div>
 
           {shortTermGoal && (
             <div className="space-y-2">
-              <Label>התקדמות ליעד קצר טווח: {shortTermGoal}</Label>
+              <Label className="text-right block">היעד לטווח קצר שלך: {shortTermGoal}</Label>
               <div className="space-y-4">
                 <div>
-                  <Label className="text-sm text-muted-foreground">דרג את ההתקדמות שלך (1-10)</Label>
+                  <Label className="text-right block text-sm text-muted-foreground">דרג את ההתקדמות שלך (1-10)</Label>
                   <Slider
                     value={[goalProgress]}
                     onValueChange={(value) => setGoalProgress(value[0])}
@@ -130,13 +139,25 @@ export const AchievementsSection = ({ matchId, onSave }: AchievementsSectionProp
                 </div>
 
                 <div>
-                  <Label>כמה פעולות ביצעת הקשורות ליעד זה?</Label>
+                  <Label className="text-right block">כמה פעולות ביצעת הקשורות ליעד זה?</Label>
                   <Input
                     type="number"
                     min="0"
                     value={actionsPerformed}
                     onChange={(e) => setActionsPerformed(parseInt(e.target.value) || 0)}
-                    className="mt-1"
+                    className="mt-1 text-right"
+                    dir="rtl"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-right block">מה עשית במשחק כדי להתקדם ליעד זה?</Label>
+                  <Textarea
+                    value={goalProgressNotes}
+                    onChange={(e) => setGoalProgressNotes(e.target.value)}
+                    className="mt-1 text-right"
+                    dir="rtl"
+                    placeholder="תאר את הפעולות שביצעת..."
                   />
                 </div>
               </div>
@@ -144,22 +165,24 @@ export const AchievementsSection = ({ matchId, onSave }: AchievementsSectionProp
           )}
 
           <div>
-            <Label>תוצאה סופית</Label>
+            <Label className="text-right block">תוצאה סופית</Label>
             <Input
               value={finalScore}
               onChange={(e) => setFinalScore(e.target.value)}
               placeholder="לדוגמה: 2-1"
-              className="mt-1"
+              className="mt-1 text-right"
+              dir="rtl"
             />
           </div>
 
           <div>
-            <Label>איזו קבוצה ניצחה?</Label>
+            <Label className="text-right block">איזו קבוצה ניצחה?</Label>
             <Input
               value={winner}
               onChange={(e) => setWinner(e.target.value)}
               placeholder="שם הקבוצה המנצחת"
-              className="mt-1"
+              className="mt-1 text-right"
+              dir="rtl"
             />
           </div>
         </div>
