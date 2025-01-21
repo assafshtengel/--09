@@ -13,17 +13,17 @@ export const Navigation = () => {
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        console.log("Checking admin status...");
+        console.log("Starting admin status check...");
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
-          console.error("Session error:", sessionError);
+          console.error("Session error in checkAdminStatus:", sessionError);
           const message = sessionError?.message || "";
-          if (message.includes("refresh_token_not_found")) {
-            console.log("Refresh token not found, cleaning up local storage");
+          if (message.includes("refresh_token_not_found") || message.includes("JWT expired")) {
+            console.log("Token error detected, cleaning up session");
             localStorage.removeItem('supabase.auth.token');
+            await handleSignOut();
           }
-          await handleSignOut();
           return;
         }
 
@@ -34,7 +34,7 @@ export const Navigation = () => {
           return;
         }
 
-        console.log("Session found, checking profile...");
+        console.log("Valid session found, checking profile...");
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("role")
@@ -42,40 +42,42 @@ export const Navigation = () => {
           .maybeSingle();
 
         if (profileError) {
-          console.error("Error fetching profile:", profileError);
+          console.error("Profile fetch error:", profileError);
           if (profileError.message?.includes('JWT expired')) {
-            console.log("JWT expired, signing out");
+            console.log("JWT expired during profile check, signing out");
             await handleSignOut();
             return;
           }
-          return;
+          throw profileError;
         }
 
+        console.log("Profile check complete, role:", profile?.role);
         setIsAdmin(profile?.role === "admin");
         setIsLoading(false);
       } catch (error: any) {
-        console.error("Error in checkAdminStatus:", error);
-        const message = error?.message || "";
-        if (message.includes("refresh_token_not_found") || message.includes("JWT expired")) {
-          console.log("Token error detected, cleaning up");
-          localStorage.removeItem('supabase.auth.token');
-          await handleSignOut();
-        }
+        console.error("Unexpected error in checkAdminStatus:", error);
+        toast({
+          title: "שגיאה",
+          description: "אירעה שגיאה בטעינת הפרופיל",
+          variant: "destructive",
+        });
         setIsLoading(false);
       }
     };
 
     let retryCount = 0;
     const maxRetries = 3;
-    const retryDelay = 1000; // 1 second
+    const retryDelay = 1000;
 
     const retryCheckAdminStatus = async () => {
       try {
+        console.log(`Attempt ${retryCount + 1} to check admin status`);
         await checkAdminStatus();
       } catch (error) {
         console.error(`Attempt ${retryCount + 1} failed:`, error);
         if (retryCount < maxRetries) {
           retryCount++;
+          console.log(`Retrying in ${retryDelay}ms...`);
           setTimeout(retryCheckAdminStatus, retryDelay);
         } else {
           console.error("Max retries reached, redirecting to auth");
@@ -95,23 +97,20 @@ export const Navigation = () => {
         setIsAdmin(false);
         setIsLoading(false);
         navigate("/auth");
-      } else if (event === 'USER_UPDATED') {
-        console.log("User updated event received");
-        if (!session) {
-          console.log("Session invalid after user update");
-          await handleSignOut();
-        } else {
-          await checkAdminStatus();
-        }
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log("Token refreshed, rechecking admin status");
+        await checkAdminStatus();
       }
     });
 
+    console.log("Initial admin status check starting...");
     retryCheckAdminStatus();
+
     return () => {
       console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleSignOut = async () => {
     try {
@@ -120,6 +119,7 @@ export const Navigation = () => {
       if (error) throw error;
       
       localStorage.removeItem('supabase.auth.token');
+      console.log("Sign out successful");
       toast({
         title: "התנתקת בהצלחה",
         description: "להתראות!",
