@@ -140,11 +140,15 @@ export const SharingSection = ({
       }
 
       if (existingFeedback) {
-        // Update existing feedback
+        // Update existing feedback with current data
         const { error: updateError } = await supabase
           .from('post_game_feedback')
           .update({
-            updated_at: new Date().toISOString()
+            match_stats: existingFeedback.match_stats,
+            performance_ratings: existingFeedback.performance_ratings,
+            questions_answers: existingFeedback.questions_answers,
+            goal_progress: existingFeedback.goal_progress,
+            havaya_ratings: existingFeedback.havaya_ratings
           })
           .eq('match_id', matchId);
 
@@ -158,6 +162,9 @@ export const SharingSection = ({
             player_id: user.id,
             questions_answers: {},
             performance_ratings: {},
+            match_stats: {},
+            goal_progress: {},
+            havaya_ratings: {}
           });
 
         if (insertError) throw insertError;
