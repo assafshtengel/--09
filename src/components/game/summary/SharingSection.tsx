@@ -126,35 +126,39 @@ export const SharingSection = ({
         return;
       }
 
-      // First try to get existing feedback
-      const { data: existingFeedback } = await supabase
-        .from('post_game_feedback')
-        .select('*')
-        .eq('match_id', matchId)
-        .maybeSingle();
-
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.id) {
         throw new Error('User not authenticated');
       }
 
+      // First try to get existing feedback
+      const { data: existingFeedback, error: fetchError } = await supabase
+        .from('post_game_feedback')
+        .select('*')
+        .eq('match_id', matchId)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+
       if (existingFeedback) {
-        // Update existing feedback with current data
+        console.log('Updating existing feedback:', existingFeedback.id);
         const { error: updateError } = await supabase
           .from('post_game_feedback')
-          .update({
-            match_stats: existingFeedback.match_stats,
-            performance_ratings: existingFeedback.performance_ratings,
-            questions_answers: existingFeedback.questions_answers,
-            goal_progress: existingFeedback.goal_progress,
-            havaya_ratings: existingFeedback.havaya_ratings
-          })
-          .eq('match_id', matchId);
+          .upsert({
+            id: existingFeedback.id,
+            match_id: matchId,
+            player_id: user.id,
+            match_stats: existingFeedback.match_stats || {},
+            performance_ratings: existingFeedback.performance_ratings || {},
+            questions_answers: existingFeedback.questions_answers || {},
+            goal_progress: existingFeedback.goal_progress || {},
+            havaya_ratings: existingFeedback.havaya_ratings || {}
+          });
 
         if (updateError) throw updateError;
       } else {
-        // Insert new feedback
+        console.log('Creating new feedback');
         const { error: insertError } = await supabase
           .from('post_game_feedback')
           .insert({
