@@ -73,33 +73,34 @@ export const SharingSection = ({
       return errors;
     }
 
-    // Check if post game feedback exists
-    const { data: feedback, error } = await supabase
-      .from('post_game_feedback')
-      .select('match_stats, goal_progress')
-      .eq('match_id', matchId)
-      .maybeSingle();
+    try {
+      const { data: feedback, error } = await supabase
+        .from('post_game_feedback')
+        .select('match_stats')
+        .eq('match_id', matchId)
+        .maybeSingle();
 
-    if (error) {
-      console.error('Error fetching feedback:', error);
-      return ['שגיאה בטעינת נתוני המשחק'];
+      if (error) {
+        console.error('Error fetching feedback:', error);
+        return ['שגיאה בטעינת נתוני המשחק'];
+      }
+
+      const typedFeedback = feedback as PostGameFeedback;
+      console.log('Validating feedback data:', typedFeedback);
+
+      if (!typedFeedback?.match_stats?.finalScore) {
+        errors.push("יש למלא את תוצאת המשחק");
+      }
+
+      if (!typedFeedback?.match_stats?.winner) {
+        errors.push("יש לציין את הקבוצה המנצחת");
+      }
+
+      return errors;
+    } catch (error) {
+      console.error('Error in validation:', error);
+      return ['שגיאה בתהליך האימות'];
     }
-
-    const typedFeedback = feedback as PostGameFeedback;
-    console.log('Validating feedback data:', typedFeedback);
-
-    // Check match stats - these remain required
-    if (!typedFeedback?.match_stats?.finalScore) {
-      errors.push("יש למלא את תוצאת המשחק");
-    }
-
-    if (!typedFeedback?.match_stats?.winner) {
-      errors.push("יש לציין את הקבוצה המנצחת");
-    }
-
-    // Removed the validation for goal progress rating since it's now optional
-
-    return errors;
   };
 
   const handleSaveData = async () => {
@@ -109,9 +110,8 @@ export const SharingSection = ({
     setSaveTimer(30);
     
     try {
-      console.log('Starting data save process...'); // Debug log
+      console.log('Starting data save process...'); 
 
-      // First validate the data
       const errors = await validateData();
       if (errors.length > 0) {
         setValidationErrors(errors);
@@ -126,7 +126,6 @@ export const SharingSection = ({
         return;
       }
 
-      // Update match status to indicate data has been saved
       const { error: updateError } = await supabase
         .from('matches')
         .update({ status: 'completed' })
@@ -137,7 +136,7 @@ export const SharingSection = ({
         throw updateError;
       }
 
-      console.log('Match status updated successfully'); // Debug log
+      console.log('Match status updated successfully');
 
       setIsDataSaved(true);
       toast({
