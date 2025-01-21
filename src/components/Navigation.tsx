@@ -59,8 +59,9 @@ export const Navigation = () => {
         checkAdminStatus();
       } else if (event === 'SIGNED_OUT') {
         setIsAdmin(false);
-      } else if (event === 'TOKEN_REFRESH_FAILED') {
-        console.log("Token refresh failed, signing out...");
+      } else if (event === 'USER_UPDATED' && !session) {
+        // Handle token refresh failure by checking if session is null
+        console.log("Session invalid, signing out...");
         await handleSignOut();
       }
     });
