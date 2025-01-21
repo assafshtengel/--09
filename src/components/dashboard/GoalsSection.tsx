@@ -128,24 +128,70 @@ export const GoalsSection = () => {
   const handlePrint = () => {
     const printContent = document.getElementById('goals-section');
     if (printContent) {
-      const originalDisplay = document.body.style.display;
-      const originalOverflow = document.body.style.overflow;
-      
-      // Hide everything except goals section
-      document.body.style.display = 'none';
-      printContent.style.display = 'block';
-      
-      window.print();
-      
-      // Restore original styles
-      document.body.style.display = originalDisplay;
-      document.body.style.overflow = originalOverflow;
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(`
+          <html dir="rtl">
+            <head>
+              <title>היעדים שלי</title>
+              <style>
+                body {
+                  font-family: 'Heebo', sans-serif;
+                  padding: 20px;
+                  direction: rtl;
+                }
+                .goal-card {
+                  border: 1px solid #e2e8f0;
+                  border-radius: 8px;
+                  padding: 16px;
+                  margin-bottom: 16px;
+                }
+                .goal-title {
+                  font-size: 1.5rem;
+                  font-weight: bold;
+                  margin-bottom: 12px;
+                  color: #0043CE;
+                }
+                .goal-section {
+                  background: #f8fafc;
+                  padding: 12px;
+                  margin-bottom: 8px;
+                  border-radius: 6px;
+                }
+                .goal-label {
+                  font-weight: bold;
+                  margin-bottom: 4px;
+                }
+                .motivational-text {
+                  margin-top: 16px;
+                  padding: 16px;
+                  background: #f0f7ff;
+                  border-radius: 8px;
+                  line-height: 1.6;
+                }
+                @media print {
+                  .no-print {
+                    display: none;
+                  }
+                }
+              </style>
+            </head>
+            <body>
+              ${printContent.innerHTML}
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      }
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-end no-print">
         <Button variant="outline" onClick={handlePrint}>
           <Printer className="h-4 w-4 ml-2" />
           הדפס יעדים
@@ -199,7 +245,7 @@ export const GoalsSection = () => {
                   <Button 
                     variant="outline" 
                     onClick={() => setIsLongTermDialogOpen(true)}
-                    className="w-full mt-4"
+                    className="w-full mt-4 no-print"
                   >
                     ערוך יעד
                   </Button>
@@ -207,7 +253,7 @@ export const GoalsSection = () => {
               ) : (
                 <Dialog open={isLongTermDialogOpen} onOpenChange={setIsLongTermDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="w-full">הגדר יעד ארוך טווח</Button>
+                    <Button className="w-full no-print">הגדר יעד ארוך טווח</Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
@@ -244,7 +290,7 @@ export const GoalsSection = () => {
                   <Button 
                     variant="outline" 
                     onClick={() => setIsShortTermDialogOpen(true)}
-                    className="w-full mt-4"
+                    className="w-full mt-4 no-print"
                   >
                     ערוך יעד
                   </Button>
@@ -252,7 +298,7 @@ export const GoalsSection = () => {
               ) : (
                 <Dialog open={isShortTermDialogOpen} onOpenChange={setIsShortTermDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="w-full">הגדר יעד קצר טווח</Button>
+                    <Button className="w-full no-print">הגדר יעד קצר טווח</Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
