@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Share2, Mail, Instagram, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -32,12 +32,73 @@ export const SharingSection = ({
   const { toast } = useToast();
   const [isDataSaved, setIsDataSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveTimer, setSaveTimer] = useState(30);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isSaving && saveTimer > 0) {
+      interval = setInterval(() => {
+        setSaveTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isSaving, saveTimer]);
+
+  const validateData = async () => {
+    const errors: string[] = [];
+    
+    if (!matchId) {
+      errors.push("לא נמצא מזהה משחק");
+      return errors;
+    }
+
+    // Check if post game feedback exists
+    const { data: feedback } = await supabase
+      .from('post_game_feedback')
+      .select('*')
+      .eq('match_id', matchId)
+      .single();
+
+    if (!feedback?.match_stats?.finalScore) {
+      errors.push("יש למלא את תוצאת המשחק");
+    }
+
+    if (!feedback?.match_stats?.winner) {
+      errors.push("יש לציין את הקבוצה המנצחת");
+    }
+
+    if (!feedback?.goal_progress?.progressRating) {
+      errors.push("יש לדרג את ההתקדמות ביעד האישי");
+    }
+
+    return errors;
+  };
 
   const handleSaveData = async () => {
     if (!matchId) return;
     
     setIsSaving(true);
+    setSaveTimer(30);
+    
     try {
+      // First validate the data
+      const errors = await validateData();
+      if (errors.length > 0) {
+        setValidationErrors(errors);
+        errors.forEach(error => {
+          toast({
+            title: "שגיאה בשמירת נתונים",
+            description: error,
+            variant: "destructive",
+          });
+        });
+        setIsSaving(false);
+        return;
+      }
+
       // Update match status to indicate data has been saved
       const { error: updateError } = await supabase
         .from('matches')
@@ -60,20 +121,28 @@ export const SharingSection = ({
       });
     } finally {
       setIsSaving(false);
+      setSaveTimer(30);
     }
   };
 
   return (
     <div className="space-y-4 mt-6 border-t pt-4">
       {!isDataSaved ? (
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-4">
+          {validationErrors.length > 0 && (
+            <div className="text-red-500 text-right w-full space-y-1">
+              {validationErrors.map((error, index) => (
+                <p key={index}>{error}</p>
+              ))}
+            </div>
+          )}
           <Button
             onClick={handleSaveData}
             className="w-48 gap-2 text-lg"
             disabled={isSaving}
           >
             <Save className="h-5 w-5" />
-            {isSaving ? "שומר..." : "שמור נתונים"}
+            {isSaving ? `שומר... (${saveTimer}s)` : "שמור נתונים"}
           </Button>
         </div>
       ) : (
