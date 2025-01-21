@@ -106,6 +106,12 @@ export const GoalsSection = () => {
       player_id: user.id,
     };
 
+    // If editing an existing goal, include its ID
+    if ((goal.goal_type === 'long_term' && longTermGoal?.id) || 
+        (goal.goal_type === 'short_term' && shortTermGoal?.id)) {
+      goalWithUserId.id = goal.goal_type === 'long_term' ? longTermGoal?.id : shortTermGoal?.id;
+    }
+
     const { data, error } = await supabase
       .from('player_goals')
       .upsert(goalWithUserId)
@@ -183,7 +189,9 @@ export const GoalsSection = () => {
                   )}
                   <Button 
                     variant="outline" 
-                    onClick={() => setIsLongTermDialogOpen(true)}
+                    onClick={() => {
+                      setIsLongTermDialogOpen(true);
+                    }}
                     className="w-full mt-4"
                   >
                     ערוך יעד
@@ -198,7 +206,7 @@ export const GoalsSection = () => {
                     <DialogHeader>
                       <DialogTitle>הגדרת יעד ארוך טווח</DialogTitle>
                     </DialogHeader>
-                    <LongTermGoalForm onSave={handleSaveGoal} />
+                    <LongTermGoalForm onSave={handleSaveGoal} initialData={longTermGoal} />
                   </DialogContent>
                 </Dialog>
               )}
@@ -228,7 +236,9 @@ export const GoalsSection = () => {
                   </div>
                   <Button 
                     variant="outline" 
-                    onClick={() => setIsShortTermDialogOpen(true)}
+                    onClick={() => {
+                      setIsShortTermDialogOpen(true);
+                    }}
                     className="w-full mt-4"
                   >
                     ערוך יעד
@@ -243,7 +253,7 @@ export const GoalsSection = () => {
                     <DialogHeader>
                       <DialogTitle>הגדרת יעד קצר טווח</DialogTitle>
                     </DialogHeader>
-                    <ShortTermGoalForm onSave={handleSaveGoal} />
+                    <ShortTermGoalForm onSave={handleSaveGoal} initialData={shortTermGoal} />
                   </DialogContent>
                 </Dialog>
               )}
@@ -255,14 +265,14 @@ export const GoalsSection = () => {
   );
 };
 
-const LongTermGoalForm = ({ onSave }: { onSave: (goal: Goal) => void }) => {
+const LongTermGoalForm = ({ onSave, initialData }: { onSave: (goal: Goal) => void, initialData?: Goal | null }) => {
   const [formData, setFormData] = useState<Goal>({
     goal_type: 'long_term',
-    target_position: '',
-    target_team: '',
-    inspiration: '',
-    required_skills: '',
-    motivation: '',
+    target_position: initialData?.target_position || '',
+    target_team: initialData?.target_team || '',
+    inspiration: initialData?.inspiration || '',
+    required_skills: initialData?.required_skills || '',
+    motivation: initialData?.motivation || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -317,10 +327,10 @@ const LongTermGoalForm = ({ onSave }: { onSave: (goal: Goal) => void }) => {
   );
 };
 
-const ShortTermGoalForm = ({ onSave }: { onSave: (goal: Goal) => void }) => {
+const ShortTermGoalForm = ({ onSave, initialData }: { onSave: (goal: Goal) => void, initialData?: Goal | null }) => {
   const [formData, setFormData] = useState<Goal>({
     goal_type: 'short_term',
-    short_term_action: '',
+    short_term_action: initialData?.short_term_action || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
