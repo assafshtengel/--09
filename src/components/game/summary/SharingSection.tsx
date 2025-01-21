@@ -4,6 +4,16 @@ import { Share2, Mail, Instagram, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface PostGameFeedback {
+  match_stats: {
+    finalScore?: string;
+    winner?: string;
+  };
+  goal_progress: {
+    progressRating?: number;
+  };
+}
+
 interface SharingSectionProps {
   onEmailSend: (type: 'user' | 'coach') => void;
   onShareSocial: (platform: 'facebook' | 'instagram') => void;
@@ -56,21 +66,28 @@ export const SharingSection = ({
     }
 
     // Check if post game feedback exists
-    const { data: feedback } = await supabase
+    const { data: feedback, error } = await supabase
       .from('post_game_feedback')
       .select('*')
       .eq('match_id', matchId)
       .single();
 
-    if (!feedback?.match_stats?.finalScore) {
+    if (error) {
+      console.error('Error fetching feedback:', error);
+      return ['שגיאה בטעינת נתוני המשחק'];
+    }
+
+    const typedFeedback = feedback as PostGameFeedback;
+
+    if (!typedFeedback?.match_stats?.finalScore) {
       errors.push("יש למלא את תוצאת המשחק");
     }
 
-    if (!feedback?.match_stats?.winner) {
+    if (!typedFeedback?.match_stats?.winner) {
       errors.push("יש לציין את הקבוצה המנצחת");
     }
 
-    if (!feedback?.goal_progress?.progressRating) {
+    if (!typedFeedback?.goal_progress?.progressRating) {
       errors.push("יש לדרג את ההתקדמות ביעד האישי");
     }
 
