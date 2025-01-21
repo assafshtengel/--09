@@ -19,10 +19,9 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
     professional: "",
     mental: "",
     emotional: "",
-    social: "" // Added social category
+    social: ""
   });
 
-  // Use all categories including social
   const categoryKeys = Object.keys(havayotCategories)
     .map(key => key as keyof typeof havayotCategories);
 
@@ -34,13 +33,15 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
   const handleInputChange = (category: string, value: string) => {
     console.log('Saving havaya for category:', category, 'value:', value);
     
-    // Update the havayot inputs
     const updatedHavayot = {
       ...havayotInputs,
       [category]: value
     };
     
     setHavayotInputs(updatedHavayot);
+
+    // Close any open popups
+    setOpenCategory(null);
 
     if (currentCategoryIndex < categoryKeys.length - 1) {
       setIsTransitioning(true);
@@ -73,6 +74,12 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
 
   const currentCategory = getCurrentCategory();
 
+  // Prevent showing both dialogs at the same time
+  const shouldShowHavayaQuestion = currentCategoryIndex >= 0 && 
+                                 !isTransitioning && 
+                                 !openCategory && 
+                                 !showExplanation;
+
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
       <HavayotExplanationDialog
@@ -81,9 +88,9 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
         onContinue={handleExplanationContinue}
       />
 
-      {currentCategory && (
+      {currentCategory && shouldShowHavayaQuestion && (
         <HavayaQuestionDialog
-          isOpen={currentCategoryIndex >= 0 && !isTransitioning}
+          isOpen={true}
           onClose={() => {}}
           category={currentCategory}
           value={havayotInputs[currentCategory.key]}
@@ -94,14 +101,13 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
         />
       )}
 
-      {Object.entries(havayotCategories).map(([key, category]) => (
+      {openCategory && (
         <HavayotPopup
-          key={key}
-          isOpen={openCategory === key}
+          isOpen={true}
           onClose={() => setOpenCategory(null)}
-          category={category}
+          category={havayotCategories[openCategory]}
         />
-      ))}
+      )}
     </div>
   );
 };
