@@ -9,32 +9,42 @@ export const Navigation = () => {
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [retryAttempt, setRetryAttempt] = useState(0);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        console.log("Starting admin status check...");
+        console.log(`[Navigation] Starting admin status check (attempt ${retryAttempt + 1})`);
+        
+        // First check if we have a valid session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
-          console.error("Session error in checkAdminStatus:", sessionError);
-          const message = sessionError?.message || "";
-          if (message.includes("refresh_token_not_found") || message.includes("JWT expired")) {
-            console.log("Token error detected, cleaning up session");
+          console.error("[Navigation] Session error:", sessionError);
+          if (sessionError.message?.includes('JWT expired') || 
+              sessionError.message?.includes('refresh_token_not_found') ||
+              sessionError.message?.includes('invalid token')) {
+            console.log("[Navigation] Invalid or expired token detected, cleaning up...");
             localStorage.removeItem('supabase.auth.token');
-            await handleSignOut();
+            await supabase.auth.signOut();
+            navigate("/auth");
+            return;
           }
-          return;
+          throw sessionError;
         }
 
         if (!session) {
-          console.log("No active session found, redirecting to auth");
+          console.log("[Navigation] No active session found");
           setIsLoading(false);
           navigate("/auth");
           return;
         }
 
-        console.log("Valid session found, checking profile...");
+        console.log("[Navigation] Valid session found, checking profile...");
+        
+        // Add a small delay before making the profile request
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("role")
@@ -42,92 +52,90 @@ export const Navigation = () => {
           .maybeSingle();
 
         if (profileError) {
-          console.error("Profile fetch error:", profileError);
+          console.error("[Navigation] Profile fetch error:", profileError);
+          // Check for specific error types
           if (profileError.message?.includes('JWT expired')) {
-            console.log("JWT expired during profile check, signing out");
+            console.log("[Navigation] JWT expired during profile check");
             await handleSignOut();
             return;
+          }
+          if (profileError.code === '429') {
+            console.log("[Navigation] Rate limit hit, will retry...");
+            throw new Error('rate_limit');
+          }
+          if (profileError.code === '403') {
+            console.log("[Navigation] Authorization error, will retry...");
+            throw new Error('auth_error');
           }
           throw profileError;
         }
 
-        console.log("Profile check complete, role:", profile?.role);
+        console.log("[Navigation] Profile check complete, role:", profile?.role);
         setIsAdmin(profile?.role === "admin");
         setIsLoading(false);
+        setRetryAttempt(0); // Reset retry counter on success
       } catch (error: any) {
-        console.error("Unexpected error in checkAdminStatus:", error);
-        toast({
-          title: "שגיאה",
-          description: "אירעה שגיאה בטעינת הפרופיל",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-      }
-    };
-
-    let retryCount = 0;
-    const maxRetries = 3;
-    const retryDelay = 1000;
-
-    const retryCheckAdminStatus = async () => {
-      try {
-        console.log(`Attempt ${retryCount + 1} to check admin status`);
-        await checkAdminStatus();
-      } catch (error) {
-        console.error(`Attempt ${retryCount + 1} failed:`, error);
-        if (retryCount < maxRetries) {
-          retryCount++;
-          console.log(`Retrying in ${retryDelay}ms...`);
-          setTimeout(retryCheckAdminStatus, retryDelay);
+        console.error("[Navigation] Error in checkAdminStatus:", error);
+        
+        if (retryAttempt < 3) {
+          console.log(`[Navigation] Will retry in ${(retryAttempt + 1) * 1000}ms...`);
+          setTimeout(() => {
+            setRetryAttempt(prev => prev + 1);
+          }, (retryAttempt + 1) * 1000);
         } else {
-          console.error("Max retries reached, redirecting to auth");
+          console.error("[Navigation] Max retries reached");
+          toast({
+            title: "שגיאה",
+            description: "אירעה שגיאה בטעינת הפרופיל. אנא נסה להתחבר מחדש.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
           navigate("/auth");
         }
       }
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session?.user?.id);
+      console.log("[Navigation] Auth state changed:", event);
       
       if (event === 'SIGNED_IN') {
-        console.log("User signed in, checking admin status");
+        console.log("[Navigation] User signed in, checking admin status");
+        setRetryAttempt(0);
         await checkAdminStatus();
       } else if (event === 'SIGNED_OUT') {
-        console.log("User signed out, resetting state");
+        console.log("[Navigation] User signed out, resetting state");
         setIsAdmin(false);
         setIsLoading(false);
         navigate("/auth");
       } else if (event === 'TOKEN_REFRESHED') {
-        console.log("Token refreshed, rechecking admin status");
+        console.log("[Navigation] Token refreshed, rechecking admin status");
+        setRetryAttempt(0);
         await checkAdminStatus();
       }
     });
 
-    console.log("Initial admin status check starting...");
-    retryCheckAdminStatus();
+    // Initial check
+    checkAdminStatus();
 
     return () => {
-      console.log("Cleaning up auth subscription");
+      console.log("[Navigation] Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, [navigate, toast, retryAttempt]);
 
   const handleSignOut = async () => {
     try {
-      console.log("Signing out...");
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
+      console.log("[Navigation] Signing out...");
+      await supabase.auth.signOut();
       localStorage.removeItem('supabase.auth.token');
-      console.log("Sign out successful");
+      console.log("[Navigation] Sign out successful");
       toast({
         title: "התנתקת בהצלחה",
         description: "להתראות!",
       });
-      
       navigate("/auth");
     } catch (error) {
-      console.error("Error signing out:", error);
+      console.error("[Navigation] Error signing out:", error);
       localStorage.removeItem('supabase.auth.token');
       toast({
         title: "שגיאה",
