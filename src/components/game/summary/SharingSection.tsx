@@ -126,13 +126,50 @@ export const SharingSection = ({
         return;
       }
 
+      // First try to get existing feedback
+      const { data: existingFeedback } = await supabase
+        .from('post_game_feedback')
+        .select('*')
+        .eq('match_id', matchId)
+        .maybeSingle();
+
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      if (existingFeedback) {
+        // Update existing feedback
+        const { error: updateError } = await supabase
+          .from('post_game_feedback')
+          .update({
+            updated_at: new Date().toISOString()
+          })
+          .eq('match_id', matchId);
+
+        if (updateError) throw updateError;
+      } else {
+        // Insert new feedback
+        const { error: insertError } = await supabase
+          .from('post_game_feedback')
+          .insert({
+            match_id: matchId,
+            player_id: user.id,
+            questions_answers: {},
+            performance_ratings: {},
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      // Update match status
       const { error: updateError } = await supabase
         .from('matches')
         .update({ status: 'completed' })
         .eq('id', matchId);
 
       if (updateError) {
-        console.error('Error updating match status:', updateError);
         throw updateError;
       }
 
