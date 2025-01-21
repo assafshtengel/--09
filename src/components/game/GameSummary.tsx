@@ -196,6 +196,11 @@ export const GameSummary = ({
     console.log('Achievements saved:', achievementsData);
   };
 
+  const handleHavayaRatingsChange = async (ratings: Record<string, number>) => {
+    setHavayaRatings(ratings);
+    await saveToDatabase(performanceRatings, additionalAnswers, ratings);
+  };
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-4xl mx-auto h-[90vh]">
