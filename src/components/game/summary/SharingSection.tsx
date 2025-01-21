@@ -141,38 +141,26 @@ export const SharingSection = ({
 
       if (fetchError) throw fetchError;
 
-      if (existingFeedback) {
-        console.log('Updating existing feedback:', existingFeedback.id);
-        const { error: updateError } = await supabase
-          .from('post_game_feedback')
-          .upsert({
-            id: existingFeedback.id,
-            match_id: matchId,
-            player_id: user.id,
-            match_stats: existingFeedback.match_stats || {},
-            performance_ratings: existingFeedback.performance_ratings || {},
-            questions_answers: existingFeedback.questions_answers || {},
-            goal_progress: existingFeedback.goal_progress || {},
-            havaya_ratings: existingFeedback.havaya_ratings || {}
-          });
+      const feedbackData = {
+        match_id: matchId,
+        player_id: user.id,
+        match_stats: existingFeedback?.match_stats || {},
+        performance_ratings: existingFeedback?.performance_ratings || {},
+        questions_answers: existingFeedback?.questions_answers || {},
+        goal_progress: existingFeedback?.goal_progress || {},
+        havaya_ratings: existingFeedback?.havaya_ratings || {}
+      };
 
-        if (updateError) throw updateError;
-      } else {
-        console.log('Creating new feedback');
-        const { error: insertError } = await supabase
-          .from('post_game_feedback')
-          .insert({
-            match_id: matchId,
-            player_id: user.id,
-            questions_answers: {},
-            performance_ratings: {},
-            match_stats: {},
-            goal_progress: {},
-            havaya_ratings: {}
-          });
+      const { error: upsertError } = await supabase
+        .from('post_game_feedback')
+        .upsert(feedbackData, {
+          onConflict: 'match_id',
+          ignoreDuplicates: false
+        });
 
-        if (insertError) throw insertError;
-      }
+      if (upsertError) throw upsertError;
+
+      console.log('Feedback saved successfully');
 
       // Update match status
       const { error: updateError } = await supabase
