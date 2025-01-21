@@ -20,7 +20,37 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-// Add a request interceptor to log auth issues
+// Add request interceptor to log auth issues
 supabase.auth.onAuthStateChange((event, session) => {
   console.log('[Supabase Client] Auth state changed:', event, session?.user?.id);
+  
+  if (event === 'SIGNED_IN') {
+    console.log('[Supabase Client] User signed in, session:', {
+      accessToken: session?.access_token?.slice(0, 10) + '...',
+      userId: session?.user?.id,
+      email: session?.user?.email,
+    });
+  } else if (event === 'TOKEN_REFRESHED') {
+    console.log('[Supabase Client] Token refreshed');
+  } else if (event === 'SIGNED_OUT') {
+    console.log('[Supabase Client] User signed out');
+    localStorage.removeItem('supabase.auth.token');
+  }
 });
+
+// Add debug logging for requests
+const originalAuthRequest = supabase.auth.getSession.bind(supabase.auth);
+supabase.auth.getSession = async () => {
+  console.log('[Supabase Client] Getting session...');
+  try {
+    const response = await originalAuthRequest();
+    console.log('[Supabase Client] Session response:', {
+      hasSession: !!response.data.session,
+      error: response.error,
+    });
+    return response;
+  } catch (error) {
+    console.error('[Supabase Client] Error getting session:', error);
+    throw error;
+  }
+};
