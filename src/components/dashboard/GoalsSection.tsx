@@ -25,18 +25,11 @@ export const GoalsSection = () => {
   const [shortTermGoal, setShortTermGoal] = useState<Goal | null>(null);
   const [isLongTermDialogOpen, setIsLongTermDialogOpen] = useState(false);
   const [isShortTermDialogOpen, setIsShortTermDialogOpen] = useState(false);
-  const [motivationalText, setMotivationalText] = useState<string>("");
   const { toast } = useToast();
 
   useEffect(() => {
     fetchGoals();
   }, []);
-
-  useEffect(() => {
-    if (longTermGoal) {
-      generateMotivationalText();
-    }
-  }, [longTermGoal]);
 
   const fetchGoals = async () => {
     const { data: goals, error } = await supabase
@@ -55,41 +48,6 @@ export const GoalsSection = () => {
     if (shortTerm) setShortTermGoal(shortTerm);
   };
 
-  const generateMotivationalText = async () => {
-    if (!longTermGoal) return;
-
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-motivational-text', {
-        body: {
-          position: longTermGoal.target_position,
-          team: longTermGoal.target_team,
-          skills: longTermGoal.required_skills,
-        },
-      });
-
-      if (error) {
-        console.error('Error generating motivational text:', error);
-        toast({
-          title: "שגיאה",
-          description: "לא הצלחנו ליצור טקסט מוטיבציוני. אנא נסה שוב מאוחר יותר.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (data?.text) {
-        setMotivationalText(data.text);
-      }
-    } catch (error) {
-      console.error('Error generating motivational text:', error);
-      toast({
-        title: "שגיאה",
-        description: "לא הצלחנו ליצור טקסט מוטיבציוני. אנא נסה שוב מאוחר יותר.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleSaveGoal = async (goal: Goal) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -105,12 +63,6 @@ export const GoalsSection = () => {
       ...goal,
       player_id: user.id,
     };
-
-    // If editing an existing goal, include its ID
-    if ((goal.goal_type === 'long_term' && longTermGoal?.id) || 
-        (goal.goal_type === 'short_term' && shortTermGoal?.id)) {
-      goalWithUserId.id = goal.goal_type === 'long_term' ? longTermGoal?.id : shortTermGoal?.id;
-    }
 
     const { data, error } = await supabase
       .from('player_goals')
@@ -180,22 +132,6 @@ export const GoalsSection = () => {
                     <h4 className="font-semibold mb-1 text-primary">מוטיבציה</h4>
                     <p>{longTermGoal.motivation}</p>
                   </div>
-                  {motivationalText && (
-                    <div className="mt-6 p-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl">
-                      <p className="text-lg leading-relaxed text-gray-800 dark:text-gray-200">
-                        {motivationalText}
-                      </p>
-                    </div>
-                  )}
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setIsLongTermDialogOpen(true);
-                    }}
-                    className="w-full mt-4"
-                  >
-                    ערוך יעד
-                  </Button>
                 </div>
               ) : (
                 <Dialog open={isLongTermDialogOpen} onOpenChange={setIsLongTermDialogOpen}>
@@ -206,7 +142,7 @@ export const GoalsSection = () => {
                     <DialogHeader>
                       <DialogTitle>הגדרת יעד ארוך טווח</DialogTitle>
                     </DialogHeader>
-                    <LongTermGoalForm onSave={handleSaveGoal} initialData={longTermGoal} />
+                    <LongTermGoalForm onSave={handleSaveGoal} />
                   </DialogContent>
                 </Dialog>
               )}
@@ -234,15 +170,6 @@ export const GoalsSection = () => {
                     <h4 className="font-semibold mb-1 text-secondary">פעולה לשיפור</h4>
                     <p>{shortTermGoal.short_term_action}</p>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setIsShortTermDialogOpen(true);
-                    }}
-                    className="w-full mt-4"
-                  >
-                    ערוך יעד
-                  </Button>
                 </div>
               ) : (
                 <Dialog open={isShortTermDialogOpen} onOpenChange={setIsShortTermDialogOpen}>
@@ -253,7 +180,7 @@ export const GoalsSection = () => {
                     <DialogHeader>
                       <DialogTitle>הגדרת יעד קצר טווח</DialogTitle>
                     </DialogHeader>
-                    <ShortTermGoalForm onSave={handleSaveGoal} initialData={shortTermGoal} />
+                    <ShortTermGoalForm onSave={handleSaveGoal} />
                   </DialogContent>
                 </Dialog>
               )}
@@ -265,14 +192,14 @@ export const GoalsSection = () => {
   );
 };
 
-const LongTermGoalForm = ({ onSave, initialData }: { onSave: (goal: Goal) => void, initialData?: Goal | null }) => {
+const LongTermGoalForm = ({ onSave }: { onSave: (goal: Goal) => void }) => {
   const [formData, setFormData] = useState<Goal>({
     goal_type: 'long_term',
-    target_position: initialData?.target_position || '',
-    target_team: initialData?.target_team || '',
-    inspiration: initialData?.inspiration || '',
-    required_skills: initialData?.required_skills || '',
-    motivation: initialData?.motivation || '',
+    target_position: '',
+    target_team: '',
+    inspiration: '',
+    required_skills: '',
+    motivation: '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -327,10 +254,10 @@ const LongTermGoalForm = ({ onSave, initialData }: { onSave: (goal: Goal) => voi
   );
 };
 
-const ShortTermGoalForm = ({ onSave, initialData }: { onSave: (goal: Goal) => void, initialData?: Goal | null }) => {
+const ShortTermGoalForm = ({ onSave }: { onSave: (goal: Goal) => void }) => {
   const [formData, setFormData] = useState<Goal>({
     goal_type: 'short_term',
-    short_term_action: initialData?.short_term_action || '',
+    short_term_action: '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
