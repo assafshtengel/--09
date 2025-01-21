@@ -739,24 +739,30 @@ export type Database = {
       post_game_feedback: {
         Row: {
           created_at: string
+          goal_progress: Json | null
           id: string
           match_id: string
+          match_stats: Json | null
           performance_ratings: Json
           player_id: string
           questions_answers: Json
         }
         Insert: {
           created_at?: string
+          goal_progress?: Json | null
           id?: string
           match_id: string
+          match_stats?: Json | null
           performance_ratings?: Json
           player_id: string
           questions_answers?: Json
         }
         Update: {
           created_at?: string
+          goal_progress?: Json | null
           id?: string
           match_id?: string
+          match_stats?: Json | null
           performance_ratings?: Json
           player_id?: string
           questions_answers?: Json

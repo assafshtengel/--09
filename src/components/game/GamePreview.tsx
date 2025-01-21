@@ -31,7 +31,8 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
         });
 
         if (response.error) throw response.error;
-        setInsights(response.data.insights);
+        // Ensure insights is a string
+        setInsights(response.data?.insights || "");
       } catch (error) {
         console.error('Error loading insights:', error);
         toast({
@@ -94,7 +95,7 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
           <h2 className="text-xl font-bold text-right mb-4">רגע לפני...</h2>
           <ScrollArea className="h-[200px] w-full">
             <div className="text-right space-y-4 px-4">
-              {insights.split('\n\n').map((insight, index) => (
+              {typeof insights === 'string' && insights.split('\n\n').map((insight, index) => (
                 <p key={index} className="text-lg leading-relaxed">
                   {insight}
                 </p>
