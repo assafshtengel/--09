@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useAuthState } from "@/hooks/use-auth-state";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
+import { useAuthState } from "@/hooks/use-auth-state";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { motion } from "framer-motion";
 import { 
   Trophy, Timer, FileText, Calendar, Activity, History, 
   Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, 
   Target, Settings, Moon, MessageCircle, Clock, ClipboardList,
-  BarChart2, ListTodo, Book
+  BarChart2, ListTodo, Book, Edit, FileSpreadsheet
 } from "lucide-react";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
@@ -17,8 +19,6 @@ import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { MentalCoachingChat } from "@/components/dashboard/MentalCoachingChat";
 import { MotivationalPopup } from "@/components/dashboard/MotivationalPopup";
 import { GoalsSection } from "@/components/dashboard/GoalsSection";
-import { motion } from "framer-motion";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const chatOptions = [
   {
@@ -65,6 +65,20 @@ const Dashboard = () => {
   const { toast } = useToast();
 
   const quickActions = [
+    {
+      title: "דוח טרום משחק",
+      description: "הכנת דוח לפני המשחק",
+      icon: <Edit className="h-6 w-6" />,
+      gradient: "from-indigo-500 to-indigo-600",
+      onClick: () => navigate("/pre-match-report"),
+    },
+    {
+      title: "סיכום משחק",
+      description: "צפייה וניתוח משחקים",
+      icon: <FileSpreadsheet className="h-6 w-6" />,
+      gradient: "from-cyan-500 to-cyan-600",
+      onClick: () => navigate("/game-selection"),
+    },
     {
       title: "תכנון משחק",
       description: "הכנה למשחק הבא",
