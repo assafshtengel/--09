@@ -1,18 +1,19 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { havayotCategories } from "@/data/havayotCategories";
+
+interface CategoryType {
+  name: string;
+  description: string;
+  havayot: Array<{
+    name: string;
+    description: string;
+  }>;
+}
 
 interface HavayotPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  category: {
-    name: string;
-    description: string;
-    havayot: Array<{
-      name: string;
-      description: string;
-    }>;
-  };
+  category: CategoryType;
 }
 
 export const HavayotPopup = ({ isOpen, onClose, category }: HavayotPopupProps) => {

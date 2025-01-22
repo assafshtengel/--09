@@ -92,14 +92,6 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
                                  !openCategory && 
                                  !showExplanation;
 
-  console.log("[HavayotTextInput] Current state:", {
-    currentCategoryIndex,
-    isTransitioning,
-    openCategory,
-    showExplanation,
-    shouldShowHavayaQuestion
-  });
-
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
       <HavayotExplanationDialog
