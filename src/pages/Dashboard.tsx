@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useAuthState } from "@/hooks/use-auth-state";
 import { 
   Trophy, Timer, FileText, Calendar, Activity, History, 
   Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, 
   Target, Settings, Moon, MessageCircle, Clock, ClipboardList,
-  BarChart2, ListTodo, Book
+  BarChart2, ListTodo, Book, Loader2
 } from "lucide-react";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
@@ -17,6 +18,7 @@ import { MotivationalPopup } from "@/components/dashboard/MotivationalPopup";
 import { GoalsSection } from "@/components/dashboard/GoalsSection";
 import { motion } from "framer-motion";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { toast } from "@/hooks/use-toast";
 
 const chatOptions = [
   {
@@ -53,11 +55,71 @@ const chatOptions = [
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { isLoading: isAuthLoading } = useAuthState();
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [selectedChatType, setSelectedChatType] = useState<string | null>(null);
   const [showMotivationalPopup, setShowMotivationalPopup] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
+
+  useEffect(() => {
+    const loadProfileData = async () => {
+      try {
+        console.log("[Dashboard] Loading profile data...");
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.log("[Dashboard] No session found");
+          return;
+        }
+
+        setUserEmail(session.user.email);
+
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("[Dashboard] Profile fetch error:", profileError);
+          if (retryCount < 3) {
+            console.log(`[Dashboard] Retrying profile fetch... (${retryCount + 1}/3)`);
+            setRetryCount(prev => prev + 1);
+            setTimeout(loadProfileData, 1000 * (retryCount + 1));
+            return;
+          }
+          throw profileError;
+        }
+
+        console.log("[Dashboard] Profile data loaded successfully");
+        setProfile(profileData);
+      } catch (error) {
+        console.error("[Dashboard] Error loading profile:", error);
+        toast({
+          title: "שגיאה",
+          description: "לא ניתן לטעון את הפרופיל",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (!isAuthLoading) {
+      loadProfileData();
+    }
+  }, [isAuthLoading, retryCount]);
+
+  if (isAuthLoading || isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-lg text-muted-foreground">טוען...</p>
+      </div>
+    );
+  }
 
   const quickActions = [
     {
