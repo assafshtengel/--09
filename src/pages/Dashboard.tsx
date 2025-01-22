@@ -4,11 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuthState } from "@/hooks/use-auth-state";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Trophy, Timer, FileText, Calendar, Activity, History, 
   Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, 
   Target, Settings, Moon, MessageCircle, Clock, ClipboardList,
-  BarChart2, ListTodo, Book, Loader2
+  BarChart2, ListTodo, Book
 } from "lucide-react";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
@@ -18,7 +19,6 @@ import { MotivationalPopup } from "@/components/dashboard/MotivationalPopup";
 import { GoalsSection } from "@/components/dashboard/GoalsSection";
 import { motion } from "framer-motion";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { toast } from "@/hooks/use-toast";
 
 const chatOptions = [
   {
@@ -62,15 +62,22 @@ const Dashboard = () => {
   const [selectedChatType, setSelectedChatType] = useState<string | null>(null);
   const [showMotivationalPopup, setShowMotivationalPopup] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
+  const { toast } = useToast();
 
+  // Single useEffect for authentication and profile loading
   useEffect(() => {
+    let isMounted = true;
+
     const loadProfileData = async () => {
       try {
         console.log("[Dashboard] Loading profile data...");
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (!session) {
+        if (!session || !isMounted) {
           console.log("[Dashboard] No session found");
+          if (isMounted) {
+            navigate("/login");
+          }
           return;
         }
 
@@ -80,12 +87,11 @@ const Dashboard = () => {
           .from("profiles")
           .select("*")
           .eq("id", session.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) {
           console.error("[Dashboard] Profile fetch error:", profileError);
-          if (retryCount < 3) {
-            console.log(`[Dashboard] Retrying profile fetch... (${retryCount + 1}/3)`);
+          if (retryCount < 3 && isMounted) {
             setRetryCount(prev => prev + 1);
             setTimeout(loadProfileData, 1000 * (retryCount + 1));
             return;
@@ -93,134 +99,32 @@ const Dashboard = () => {
           throw profileError;
         }
 
-        console.log("[Dashboard] Profile data loaded successfully");
-        setProfile(profileData);
+        if (isMounted) {
+          console.log("[Dashboard] Profile data loaded successfully");
+          setProfile(profileData);
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error("[Dashboard] Error loading profile:", error);
-        toast({
-          title: "שגיאה",
-          description: "לא ניתן לטעון את הפרופיל",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          toast({
+            title: "שגיאה",
+            description: "לא ניתן לטעון את הפרופיל",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+        }
       }
     };
 
     if (!isAuthLoading) {
       loadProfileData();
     }
-  }, [isAuthLoading, retryCount]);
 
-  if (isAuthLoading || isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-lg text-muted-foreground">טוען...</p>
-      </div>
-    );
-  }
-
-  const quickActions = [
-    {
-      title: "מעקב משחק",
-      description: "עקוב אחר משחקים בזמן אמת",
-      icon: <PlayCircle className="h-6 w-6" />,
-      gradient: "from-indigo-500 to-indigo-600",
-      onClick: () => navigate("/game-selection")
-    },
-    {
-      title: "תכנון 24 שעות",
-      description: "כלל המטלות המומלצות להכנה למשחק",
-      icon: <Clock className="h-6 w-6" />,
-      gradient: "from-purple-500 to-purple-600",
-      onClick: () => navigate("/pre-game-planner")
-    },
-    {
-      title: "דוח טרום משחק",
-      description: "הכן דוח לפני המשחק הבא",
-      icon: <ClipboardList className="h-6 w-6" />,
-      gradient: "from-blue-500 to-blue-600",
-      onClick: () => navigate("/pre-match-report")
-    },
-    {
-      title: "היסטוריית משחקים",
-      description: "צפה בהיסטוריית המשחקים שלך",
-      icon: <History className="h-6 w-6" />,
-      gradient: "from-orange-500 to-orange-600",
-      onClick: () => navigate("/game-history")
-    },
-    {
-      title: "סיכום אימון",
-      description: "סכם את האימון האחרון שלך",
-      icon: <BarChart2 className="h-6 w-6" />,
-      gradient: "from-purple-500 to-purple-600",
-      onClick: () => navigate("/training-summary")
-    },
-    {
-      title: "לוח זמנים שבועי",
-      description: "נהל את הפעילויות השבועיות שלך",
-      icon: <Calendar className="h-6 w-6" />,
-      gradient: "from-green-500 to-green-600",
-      onClick: () => navigate("/schedule")
-    },
-    {
-      title: "שגרה יומית",
-      description: "עקוב אחר השגרה היומית שלך",
-      icon: <Timer className="h-6 w-6" />,
-      gradient: "from-red-500 to-red-600",
-      onClick: () => navigate("/daily-routine")
-    },
-    {
-      title: "שעות הישגים",
-      description: "צפה בהישגים שלך",
-      icon: <Trophy className="h-6 w-6" />,
-      gradient: "from-yellow-500 to-yellow-600",
-      onClick: () => navigate("/portfolio")
-    },
-    {
-      title: "דוחות טרום משחק",
-      description: "צפה בכל דוחות טרום המשחק שלך",
-      icon: <FileText className="h-6 w-6" />,
-      gradient: "from-teal-500 to-teal-600",
-      onClick: () => navigate("/pre-match-reports-list")
-    }
-  ];
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          navigate("/login");
-          return;
-        }
-
-        setUserEmail(session.user.email);
-
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-
-        if (!profileData) {
-          navigate("/player");
-          return;
-        }
-
-        setProfile(profileData);
-      } catch (error) {
-        console.error("Error checking auth:", error);
-        navigate("/login");
-      } finally {
-        setIsLoading(false);
-      }
+    return () => {
+      isMounted = false;
     };
-
-    checkAuth();
-  }, [navigate]);
+  }, [isAuthLoading, navigate, retryCount, toast]);
 
   if (isLoading) {
     return (
