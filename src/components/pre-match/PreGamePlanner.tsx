@@ -127,7 +127,15 @@ export const PreGamePlanner = () => {
 
     setIsLoading(true);
     try {
-      const timeRemaining = calculateTimeRemaining();
+      console.log('Sending request with:', {
+        currentDate,
+        currentTime,
+        gameDate,
+        gameTime,
+        commitments: commitments || "אין מחויבויות נוספות",
+        timeRemaining: calculateTimeRemaining()
+      });
+
       const { data, error } = await supabase.functions.invoke('generate-pre-game-schedule', {
         body: {
           currentDate,
@@ -135,12 +143,17 @@ export const PreGamePlanner = () => {
           gameDate,
           gameTime,
           commitments: commitments || "אין מחויבויות נוספות",
-          timeRemaining
+          timeRemaining: calculateTimeRemaining()
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+      
       if (!data || !data.schedule) {
+        console.error('Invalid response format:', data);
         throw new Error("Invalid response format from schedule generator");
       }
       
