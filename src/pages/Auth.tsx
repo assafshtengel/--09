@@ -12,7 +12,7 @@ const Auth = () => {
   const { toast } = useToast();
 
   const getErrorMessage = (error: AuthError) => {
-    console.error("Auth error details:", error);
+    console.error("[Auth] Error details:", error);
     
     if (error instanceof AuthApiError) {
       switch (error.status) {
@@ -24,16 +24,11 @@ const Auth = () => {
             return "נשלחו יותר מדי בקשות לאיפוס סיסמה. אנא נסה שוב מאוחר יותר.";
           }
           if (error.message.includes("refresh_token_not_found")) {
-            // Clear any existing session data and redirect to auth
             supabase.auth.signOut();
             return "פג תוקף החיבור, אנא התחבר מחדש.";
           }
           return "אירעה שגיאה בתהליך ההתחברות. אנא נסה שוב.";
         case 401:
-          if (error.message.includes("Invalid API key")) {
-            console.error("Invalid API key error. Please check Supabase configuration.");
-            return "אירעה שגיאה בהתחברות למערכת. אנא פנה למנהל המערכת.";
-          }
           return "אירעה שגיאה בהתחברות למערכת. אנא נסה שוב.";
         case 422:
           return "אנא וודא שהזנת את כל הפרטים הנדרשים.";
@@ -45,40 +40,55 @@ const Auth = () => {
   };
 
   useEffect(() => {
-    // Initial session check
+    console.log("[Auth] Component mounted");
+    
     const checkSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error("Session check error:", error);
-        if (error.message.includes("refresh_token_not_found")) {
-          await supabase.auth.signOut();
+      console.log("[Auth] Checking session...");
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("[Auth] Session check error:", error);
+          if (error.message.includes("refresh_token_not_found")) {
+            await supabase.auth.signOut();
+          }
+          return;
         }
-        return;
-      }
-      if (session) {
-        navigate("/");
+
+        if (session) {
+          console.log("[Auth] Valid session found, redirecting to dashboard");
+          navigate("/");
+        } else {
+          console.log("[Auth] No active session");
+        }
+      } catch (error) {
+        console.error("[Auth] Unexpected error during session check:", error);
       }
     };
 
-    checkSession();
-
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session);
+      console.log("[Auth] Auth state changed:", event, session?.user?.id);
       
       if (event === "SIGNED_IN" && session) {
+        console.log("[Auth] User signed in, redirecting to dashboard");
         navigate("/");
       } else if (event === "SIGNED_OUT") {
-        // Clear any local session data
+        console.log("[Auth] User signed out, clearing session data");
         localStorage.removeItem('supabase.auth.token');
       } else if (event === "TOKEN_REFRESHED") {
+        console.log("[Auth] Token refreshed");
         if (session) {
           navigate("/");
         }
       }
     });
 
-    return () => subscription.unsubscribe();
+    checkSession();
+
+    return () => {
+      console.log("[Auth] Cleaning up auth subscription");
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   return (
