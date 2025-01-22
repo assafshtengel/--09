@@ -117,7 +117,10 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
         <HavayotPopup
           isOpen={true}
           onClose={() => setOpenCategory(null)}
-          category={havayotCategories[openCategory]}
+          category={{
+            ...havayotCategories[openCategory],
+            key: openCategory
+          }}
         />
       )}
     </div>
