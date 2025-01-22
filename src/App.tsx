@@ -33,45 +33,104 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [hasProfile, setHasProfile] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    let authSubscription: { data: { subscription: { unsubscribe: () => void } } };
+
     const checkAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log("[ProtectedRoute] Checking authentication...");
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("[ProtectedRoute] Session error:", sessionError);
+          throw sessionError;
+        }
+
+        if (!isMounted) return;
+
         setIsAuthenticated(!!session);
         setUserEmail(session?.user?.email || null);
 
         if (session?.user) {
-          const { data: profile } = await supabase
+          console.log("[ProtectedRoute] Fetching profile for user:", session.user.id);
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('roles')
             .eq('id', session.user.id)
             .maybeSingle();
 
+          if (profileError) {
+            console.error("[ProtectedRoute] Profile fetch error:", profileError);
+            throw profileError;
+          }
+
+          if (!isMounted) return;
           setHasProfile(!!profile?.roles?.length);
         }
+
+        setIsLoading(false);
+        setError(null);
       } catch (error) {
-        console.error("Auth check error:", error);
+        console.error("[ProtectedRoute] Auth check error:", error);
+        if (!isMounted) return;
+        setError(error.message);
         setIsAuthenticated(false);
         setHasProfile(false);
+        setIsLoading(false);
       }
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-      setUserEmail(session?.user?.email || null);
-      if (session?.user) {
-        checkAuth();
-      }
-    });
+    const setupAuthListener = async () => {
+      authSubscription = await supabase.auth.onAuthStateChange((event, session) => {
+        console.log("[ProtectedRoute] Auth state changed:", event);
+        if (!isMounted) return;
+        
+        setIsAuthenticated(!!session);
+        setUserEmail(session?.user?.email || null);
+        
+        if (session?.user) {
+          checkAuth();
+        } else {
+          setIsLoading(false);
+        }
+      });
+    };
 
+    setupAuthListener();
     checkAuth();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      if (authSubscription) {
+        authSubscription.data.subscription.unsubscribe();
+      }
+    };
   }, []);
 
-  if (isAuthenticated === null || hasProfile === null) {
-    return <div>טוען...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">טוען...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <p className="text-destructive">שגיאה בטעינת הנתונים</p>
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </div>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
