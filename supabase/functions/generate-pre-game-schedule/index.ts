@@ -5,8 +5,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const TIMEOUT_MS = 8000; // 8 seconds timeout
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -29,32 +30,61 @@ serve(async (req) => {
       timeRemaining
     })
 
-    let schedule = ''
-    const timeDiff = matchDateTime.getTime() - currentDateTime.getTime()
-    const hoursDiff = Math.floor(timeDiff / (1000 * 60 * 60))
+    // Create a promise that resolves with the schedule generation
+    const schedulePromise = new Promise((resolve, reject) => {
+      const timeDiff = matchDateTime.getTime() - currentDateTime.getTime()
+      const hoursDiff = Math.floor(timeDiff / (1000 * 60 * 60))
 
-    // Generate schedule based on time until match
-    if (hoursDiff <= 4) {
-      // Same day schedule
-      schedule = generateSameDaySchedule(currentDateTime, matchDateTime)
-    } else if (hoursDiff <= 24) {
-      // Next day schedule
-      schedule = generateNextDaySchedule(currentDateTime, matchDateTime)
-    } else {
-      // Multiple days schedule
-      schedule = generateMultipleDaySchedule(currentDateTime, matchDateTime)
-    }
+      let schedule = ''
+      try {
+        if (hoursDiff <= 4) {
+          schedule = generateSameDaySchedule(currentDateTime, matchDateTime, commitments)
+        } else if (hoursDiff <= 24) {
+          schedule = generateNextDaySchedule(currentDateTime, matchDateTime, commitments)
+        } else {
+          schedule = generateMultipleDaySchedule(currentDateTime, matchDateTime, commitments)
+        }
+        resolve(schedule)
+      } catch (error) {
+        reject(error)
+      }
+    })
+
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('TIMEOUT'))
+      }, TIMEOUT_MS)
+    })
+
+    // Race between schedule generation and timeout
+    const schedule = await Promise.race([schedulePromise, timeoutPromise])
 
     return new Response(
-      JSON.stringify({ schedule }),
+      JSON.stringify({ schedule, status: 'success' }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
     )
   } catch (error) {
     console.error('Error generating schedule:', error)
+    
+    if (error.message === 'TIMEOUT') {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Schedule generation timeout', 
+          status: 'timeout',
+          redirectUrl: 'https://did.li/Kld6q'
+        }),
+        { 
+          status: 408,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
+    }
+
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message, status: 'error' }),
       { 
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -63,53 +93,116 @@ serve(async (req) => {
   }
 })
 
-function generateSameDaySchedule(currentDateTime: Date, matchDateTime: Date): string {
-  const schedule = []
-  const matchHour = matchDateTime.getHours()
+function parseCommitments(commitments: string) {
+  if (!commitments) return []
   
-  // Add preparation activities
-  schedule.push(`${formatTime(new Date(matchDateTime.getTime() - 120 * 60000))} - הגעה למגרש והתחלת חימום`)
-  schedule.push(`${formatTime(new Date(matchDateTime.getTime() - 60 * 60000))} - סיום חימום והכנה אחרונה`)
-  schedule.push(`${formatTime(matchDateTime)} - תחילת משחק`)
-  
-  return schedule.join('\n')
+  // Split commitments by newline and parse times
+  return commitments.split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .map(line => {
+      const timeMatch = line.match(/(\d{1,2}:\d{2})/)
+      if (timeMatch) {
+        return {
+          time: timeMatch[1],
+          activity: line
+        }
+      }
+      return null
+    })
+    .filter(item => item !== null)
 }
 
-function generateNextDaySchedule(currentDateTime: Date, matchDateTime: Date): string {
+function generateSameDaySchedule(currentDateTime: Date, matchDateTime: Date, commitments: string): string {
+  const userCommitments = parseCommitments(commitments)
   const schedule = []
   
-  // Evening before
-  schedule.push(`20:00 - ארוחת ערב קלה`)
-  schedule.push(`22:00 - שינה מוקדמת`)
+  // Add preparation activities considering commitments
+  const commitmentTimes = new Set(userCommitments.map(c => c.time))
   
-  // Match day
-  schedule.push(`${formatTime(new Date(matchDateTime.getTime() - 240 * 60000))} - השכמה והתארגנות`)
-  schedule.push(`${formatTime(new Date(matchDateTime.getTime() - 210 * 60000))} - ארוחת בוקר קלה`)
-  schedule.push(`${formatTime(new Date(matchDateTime.getTime() - 120 * 60000))} - הגעה למגרש`)
-  schedule.push(`${formatTime(new Date(matchDateTime.getTime() - 90 * 60000))} - התחלת חימום`)
-  schedule.push(`${formatTime(new Date(matchDateTime.getTime() - 30 * 60000))} - סיום חימום והכנה אחרונה`)
-  schedule.push(`${formatTime(matchDateTime)} - תחילת משחק`)
+  // Add user commitments first
+  userCommitments.forEach(commitment => {
+    schedule.push(`${commitment.time} - ${commitment.activity}`)
+  })
+
+  // Add match preparation activities if they don't conflict with commitments
+  const matchPrep = [
+    { time: new Date(matchDateTime.getTime() - 120 * 60000), activity: 'הגעה למגרש והתחלת חימום' },
+    { time: new Date(matchDateTime.getTime() - 60 * 60000), activity: 'סיום חימום והכנה אחרונה' },
+    { time: matchDateTime, activity: 'תחילת משחק' }
+  ]
+
+  matchPrep.forEach(prep => {
+    const timeStr = formatTime(prep.time)
+    if (!commitmentTimes.has(timeStr)) {
+      schedule.push(`${timeStr} - ${prep.activity}`)
+    }
+  })
   
-  return schedule.join('\n')
+  return schedule.sort().join('\n')
 }
 
-function generateMultipleDaySchedule(currentDateTime: Date, matchDateTime: Date): string {
+function generateNextDaySchedule(currentDateTime: Date, matchDateTime: Date, commitments: string): string {
+  const userCommitments = parseCommitments(commitments)
   const schedule = []
   
-  // Day before match
-  schedule.push(`16:00 - אימון קל`)
-  schedule.push(`19:00 - ארוחת ערב מאוזנת`)
-  schedule.push(`22:00 - שינה מוקדמת`)
+  // Add user commitments
+  userCommitments.forEach(commitment => {
+    schedule.push(`${commitment.time} - ${commitment.activity}`)
+  })
+
+  // Add standard schedule items that don't conflict with commitments
+  const commitmentTimes = new Set(userCommitments.map(c => c.time))
+  const standardItems = [
+    { time: '20:00', activity: 'ארוחת ערב קלה' },
+    { time: '22:00', activity: 'שינה מוקדמת' },
+    { time: formatTime(new Date(matchDateTime.getTime() - 240 * 60000)), activity: 'השכמה והתארגנות' },
+    { time: formatTime(new Date(matchDateTime.getTime() - 210 * 60000)), activity: 'ארוחת בוקר קלה' },
+    { time: formatTime(new Date(matchDateTime.getTime() - 120 * 60000)), activity: 'הגעה למגרש' },
+    { time: formatTime(new Date(matchDateTime.getTime() - 90 * 60000)), activity: 'התחלת חימום' },
+    { time: formatTime(new Date(matchDateTime.getTime() - 30 * 60000)), activity: 'סיום חימום והכנה אחרונה' },
+    { time: formatTime(matchDateTime), activity: 'תחילת משחק' }
+  ]
+
+  standardItems.forEach(item => {
+    if (!commitmentTimes.has(item.time)) {
+      schedule.push(`${item.time} - ${item.activity}`)
+    }
+  })
   
-  // Match day
-  schedule.push(`${formatTime(new Date(matchDateTime.getTime() - 240 * 60000))} - השכמה והתארגנות`)
-  schedule.push(`${formatTime(new Date(matchDateTime.getTime() - 210 * 60000))} - ארוחת בוקר עשירה בפחמימות`)
-  schedule.push(`${formatTime(new Date(matchDateTime.getTime() - 120 * 60000))} - הגעה למגרש`)
-  schedule.push(`${formatTime(new Date(matchDateTime.getTime() - 90 * 60000))} - התחלת חימום`)
-  schedule.push(`${formatTime(new Date(matchDateTime.getTime() - 30 * 60000))} - סיום חימום והכנה אחרונה`)
-  schedule.push(`${formatTime(matchDateTime)} - תחילת משחק`)
+  return schedule.sort().join('\n')
+}
+
+function generateMultipleDaySchedule(currentDateTime: Date, matchDateTime: Date, commitments: string): string {
+  const userCommitments = parseCommitments(commitments)
+  const schedule = []
   
-  return schedule.join('\n')
+  // Add user commitments
+  userCommitments.forEach(commitment => {
+    schedule.push(`${commitment.time} - ${commitment.activity}`)
+  })
+
+  // Add standard schedule items that don't conflict with commitments
+  const commitmentTimes = new Set(userCommitments.map(c => c.time))
+  const standardItems = [
+    { time: '16:00', activity: 'אימון קל' },
+    { time: '19:00', activity: 'ארוחת ערב מאוזנת' },
+    { time: '22:00', activity: 'שינה מוקדמת' },
+    { time: formatTime(new Date(matchDateTime.getTime() - 240 * 60000)), activity: 'השכמה והתארגנות' },
+    { time: formatTime(new Date(matchDateTime.getTime() - 210 * 60000)), activity: 'ארוחת בוקר עשירה בפחמימות' },
+    { time: formatTime(new Date(matchDateTime.getTime() - 120 * 60000)), activity: 'הגעה למגרש' },
+    { time: formatTime(new Date(matchDateTime.getTime() - 90 * 60000)), activity: 'התחלת חימום' },
+    { time: formatTime(new Date(matchDateTime.getTime() - 30 * 60000)), activity: 'סיום חימום והכנה אחרונה' },
+    { time: formatTime(matchDateTime), activity: 'תחילת משחק' }
+  ]
+
+  standardItems.forEach(item => {
+    if (!commitmentTimes.has(item.time)) {
+      schedule.push(`${item.time} - ${item.activity}`)
+    }
+  })
+  
+  return schedule.sort().join('\n')
 }
 
 function formatTime(date: Date): string {

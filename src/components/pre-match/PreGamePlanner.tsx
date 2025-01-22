@@ -6,8 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Share2, Edit, Save, Mail } from "lucide-react";
-import { format, formatDistanceToNow, parse, isValid, addDays } from "date-fns";
+import { Copy, Share2, Edit, Save, Mail, Loader2 } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
 import { he } from "date-fns/locale";
 import { useLocation } from "react-router-dom";
 import {
@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Progress } from "@/components/ui/progress";
 
 interface ScheduleItem {
   date: Date;
@@ -36,6 +37,8 @@ export const PreGamePlanner = () => {
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
     if (location.state?.fromPreMatchReport) {
@@ -126,6 +129,19 @@ export const PreGamePlanner = () => {
     }
 
     setIsLoading(true);
+    setProgress(0);
+
+    // Start progress animation
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 95) {
+          clearInterval(progressInterval);
+          return prev;
+        }
+        return prev + 5;
+      });
+    }, 400);
+
     try {
       console.log('Sending request with:', {
         currentDate,
@@ -147,9 +163,21 @@ export const PreGamePlanner = () => {
         }
       });
 
+      clearInterval(progressInterval);
+      setProgress(100);
+
       if (error) {
         console.error('Supabase function error:', error);
         throw error;
+      }
+
+      if (data.status === 'timeout') {
+        setIsRedirecting(true);
+        toast.info("מעביר אותך למערכת חיצונית ליצירת סדר יום...");
+        setTimeout(() => {
+          window.location.href = data.redirectUrl;
+        }, 2000);
+        return;
       }
       
       if (!data || !data.schedule) {
@@ -205,6 +233,7 @@ export const PreGamePlanner = () => {
       toast.error("שגיאה ביצירת סדר היום");
     } finally {
       setIsLoading(false);
+      setTimeout(() => setProgress(0), 1000);
     }
   };
 
@@ -359,11 +388,27 @@ export const PreGamePlanner = () => {
 
           <Button 
             onClick={generateSchedule} 
-            className="w-full"
+            className="w-full relative"
             disabled={isLoading}
           >
-            {isLoading ? "מייצר סדר יום..." : "תן לי סדר יום"}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isRedirecting ? "מעביר למערכת חיצונית..." : "מייצר סדר יום..."}
+              </>
+            ) : (
+              "תן לי סדר יום"
+            )}
           </Button>
+
+          {progress > 0 && (
+            <div className="w-full space-y-2">
+              <Progress value={progress} className="w-full" />
+              <p className="text-sm text-muted-foreground text-center">
+                {progress < 100 ? "מייצר סדר יום..." : "הושלם!"}
+              </p>
+            </div>
+          )}
 
           {schedule && (
             <div className="space-y-6">
