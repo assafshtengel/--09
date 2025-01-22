@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { FormField } from "./player-form/FormField";
-import { RoleSelector } from "./player-form/RoleSelector";
 import { ProfileUpdateService } from "./player-form/ProfileUpdateService";
 import type { PlayerFormData } from "./player-form/types";
-import { SportBranchSelector } from "./player-form/SportBranchSelector";
+import { PersonalInfoSection } from "./player-form/sections/PersonalInfoSection";
+import { ClubInfoSection } from "./player-form/sections/ClubInfoSection";
+import { RoleAndSportSection } from "./player-form/sections/RoleAndSportSection";
 
 interface PlayerFormProps {
   initialData?: PlayerFormData | null;
@@ -95,62 +95,19 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <FormField
-        id="fullName"
-        label="שם מלא"
-        type="text"
-        value={formData.fullName}
-        onChange={(value) => handleInputChange("fullName", value)}
-        required
+      <PersonalInfoSection 
+        formData={formData}
+        onInputChange={handleInputChange}
       />
-
-      <RoleSelector
-        selectedRoles={formData.roles}
-        onToggleRole={(role) => {
-          const newRoles = formData.roles.includes(role)
-            ? formData.roles.filter(r => r !== role)
-            : [...formData.roles, role];
-          handleInputChange("roles", newRoles);
-        }}
+      
+      <RoleAndSportSection
+        formData={formData}
+        onInputChange={handleInputChange}
       />
-
-      <SportBranchSelector
-        value={formData.sportBranches}
-        onChange={(value) => handleInputChange("sportBranches", value)}
-        isPlayer={formData.roles.includes("player")}
-      />
-
-      <FormField
-        id="phoneNumber"
-        label="מספר טלפון"
-        type="tel"
-        value={formData.phoneNumber}
-        onChange={(value) => handleInputChange("phoneNumber", value)}
-        required
-      />
-
-      <FormField
-        id="club"
-        label="מועדון"
-        type="text"
-        value={formData.club}
-        onChange={(value) => handleInputChange("club", value)}
-      />
-
-      <FormField
-        id="dateOfBirth"
-        label="תאריך לידה"
-        type="date"
-        value={formData.dateOfBirth}
-        onChange={(value) => handleInputChange("dateOfBirth", value)}
-      />
-
-      <FormField
-        id="coachEmail"
-        label="אימייל מאמן"
-        type="email"
-        value={formData.coachEmail}
-        onChange={(value) => handleInputChange("coachEmail", value)}
+      
+      <ClubInfoSection
+        formData={formData}
+        onInputChange={handleInputChange}
       />
 
       <Button type="submit" disabled={isLoading} className="w-full">
