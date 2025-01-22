@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Copy, Share2, Edit, Save, Mail, Loader2 } from "lucide-react";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, addDays } from "date-fns";
 import { he } from "date-fns/locale";
 import { useLocation } from "react-router-dom";
 import {
