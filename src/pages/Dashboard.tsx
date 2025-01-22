@@ -53,6 +53,51 @@ const chatOptions = [
   },
 ];
 
+const quickActions = [
+  {
+    title: "תכנון משחק",
+    description: "הכנה למשחק הבא",
+    icon: <PlayCircle className="h-6 w-6" />,
+    gradient: "from-blue-500 to-blue-600",
+    onClick: () => navigate("/pre-game-planner"),
+  },
+  {
+    title: "סיכום אימון",
+    description: "תיעוד ומעקב אחר אימונים",
+    icon: <ClipboardList className="h-6 w-6" />,
+    gradient: "from-green-500 to-green-600",
+    onClick: () => navigate("/training-summary"),
+  },
+  {
+    title: "לוח זמנים שבועי",
+    description: "ניהול הזמן השבועי שלך",
+    icon: <Calendar className="h-6 w-6" />,
+    gradient: "from-purple-500 to-purple-600",
+    onClick: () => navigate("/weekly-schedule"),
+  },
+  {
+    title: "היסטוריית משחקים",
+    description: "צפייה במשחקים קודמים",
+    icon: <History className="h-6 w-6" />,
+    gradient: "from-orange-500 to-orange-600",
+    onClick: () => navigate("/game-history"),
+  },
+  {
+    title: "מעקב יומי",
+    description: "תיעוד שגרה יומית",
+    icon: <Clock className="h-6 w-6" />,
+    gradient: "from-pink-500 to-pink-600",
+    onClick: () => navigate("/daily-routine"),
+  },
+  {
+    title: "למידה מנטאלית",
+    description: "משאבי למידה והדרכה",
+    icon: <Book className="h-6 w-6" />,
+    gradient: "from-yellow-500 to-yellow-600",
+    onClick: () => navigate("/mental-learning"),
+  },
+];
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { isLoading: isAuthLoading } = useAuthState();
@@ -159,9 +204,6 @@ const Dashboard = () => {
       )}
 
       <div className="bg-[#F7FBFF] rounded-lg p-6 shadow-sm">
-        <h2 className="text-center text-lg font-medium text-gray-700 mb-4">
-          לחץ כדי לשוחח בצ'אט עם מאמן
-        </h2>
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
