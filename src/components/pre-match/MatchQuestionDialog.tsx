@@ -39,10 +39,12 @@ export const MatchQuestionDialog = ({
 }: MatchQuestionDialogProps) => {
   const [inputValue, setInputValue] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
   useEffect(() => {
     setInputValue("");
     setShowCalendar(false);
+    setSelectedOption(null);
   }, [question.id]);
 
   const handleSubmit = (e?: React.FormEvent) => {
@@ -82,6 +84,18 @@ export const MatchQuestionDialog = ({
         return <Award className="w-5 h-5" />;
       default:
         return null;
+    }
+  };
+
+  const handleOptionSelect = (optionValue: string) => {
+    setSelectedOption(optionValue);
+    setInputValue(optionValue);
+    
+    // If this is the position selection question, submit immediately
+    if (question.id === "position") {
+      setTimeout(() => {
+        onSubmit(optionValue);
+      }, 100);
     }
   };
 
@@ -148,12 +162,9 @@ export const MatchQuestionDialog = ({
         {question.options?.map((option) => (
           <Button
             key={option.value}
-            onClick={() => {
-              setInputValue(option.value);
-              setTimeout(() => handleSubmit(), 100);
-            }}
+            onClick={() => handleOptionSelect(option.value)}
             className={`h-14 relative flex items-center justify-between px-4 ${
-              inputValue === option.value
+              selectedOption === option.value
                 ? "bg-primary text-white"
                 : "bg-primary/10 hover:bg-primary/20 text-primary"
             }`}
@@ -162,11 +173,22 @@ export const MatchQuestionDialog = ({
               {getMatchTypeIcon(option.value)}
               {option.label}
             </span>
-            {inputValue === option.value && (
+            {selectedOption === option.value && (
               <span className="text-white">✓</span>
             )}
           </Button>
         ))}
+        
+        {/* Show continue button only for position selection and when an option is selected */}
+        {question.id === "position" && selectedOption && (
+          <Button
+            onClick={() => handleSubmit()}
+            className="w-full mt-4 bg-primary hover:bg-primary/90"
+          >
+            המשך
+            <ChevronLeft className="w-4 h-4 mr-2" />
+          </Button>
+        )}
       </div>
     );
   };
@@ -216,7 +238,6 @@ export const MatchQuestionDialog = ({
               <Button
                 type="submit"
                 className="w-full bg-primary hover:bg-primary/90 text-white"
-                onClick={() => handleSubmit()}
               >
                 המשך
                 <ChevronLeft className="w-4 h-4" />
