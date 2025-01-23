@@ -1,125 +1,62 @@
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { HavayotPopup } from "@/components/havayot/HavayotPopup";
-import { havayotCategories } from "@/data/havayotCategories";
-import { Save } from "lucide-react";
-import { HavayotExplanationDialog } from "./HavayotExplanationDialog";
-import { HavayaQuestionDialog } from "./HavayaQuestionDialog";
-import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { ChevronLeft } from "lucide-react";
 
 interface HavayotTextInputProps {
   onSubmit: (havayot: Record<string, string>) => void;
 }
 
 export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
-  const [showExplanation, setShowExplanation] = useState(true);
-  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(-1);
-  const [openCategory, setOpenCategory] = useState<keyof typeof havayotCategories | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [havayotInputs, setHavayotInputs] = useState<Record<string, string>>({
-    professional: "",
-    mental: "",
-    emotional: "",
-    social: ""
-  });
-  const [showTraitsList, setShowTraitsList] = useState(false);
+  const [professionalHavaya, setProfessionalHavaya] = useState("");
 
-  useEffect(() => {
-    console.log("[HavayotTextInput] Component mounted");
-    return () => {
-      console.log("[HavayotTextInput] Component unmounting");
-    };
-  }, []);
-
-  const handleExplanationContinue = () => {
-    console.log("[HavayotTextInput] Explanation dialog completed");
-    setShowExplanation(false);
-    setCurrentCategoryIndex(0);
-  };
-
-  const handleInputChange = (category: string, value: string) => {
-    console.log(`[HavayotTextInput] Saving havaya for category: ${category}`, value);
-    
-    try {
-      const updatedHavayot = {
-        ...havayotInputs,
-        [category]: value
-      };
-      
-      setHavayotInputs(updatedHavayot);
-      setOpenCategory(null);
-
-      if (currentCategoryIndex < categoryKeys.length - 1) {
-        setIsTransitioning(true);
-        setTimeout(() => {
-          setCurrentCategoryIndex(prev => prev + 1);
-          setIsTransitioning(false);
-        }, 100);
-      } else {
-        console.log("[HavayotTextInput] All havayot completed, submitting");
-        const havayotArray = Object.values(updatedHavayot).filter(h => h.trim().length > 0);
-        console.log('Final havayot:', havayotArray);
-        onSubmit(updatedHavayot);
-        toast.success("ההוויות נשמרו בהצלחה");
-      }
-    } catch (error) {
-      console.error("[HavayotTextInput] Error saving havaya:", error);
-      toast.error("אירעה שגיאה בשמירת ההוויה");
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (professionalHavaya.trim()) {
+      onSubmit({ professional: professionalHavaya });
     }
   };
-
-  const categoryKeys = Object.keys(havayotCategories)
-    .map(key => key as keyof typeof havayotCategories);
-
-  const handleBack = () => {
-    console.log("[HavayotTextInput] Moving back to previous category");
-    if (currentCategoryIndex > 0) {
-      setCurrentCategoryIndex(prev => prev - 1);
-    }
-  };
-
-  const getCurrentCategory = () => {
-    if (currentCategoryIndex < 0 || currentCategoryIndex >= categoryKeys.length) return null;
-    const currentKey = categoryKeys[currentCategoryIndex];
-    return {
-      key: currentKey,
-      ...havayotCategories[currentKey]
-    };
-  };
-
-  const currentCategory = getCurrentCategory();
-  const shouldShowHavayaQuestion = currentCategoryIndex >= 0 && 
-                                 !isTransitioning && 
-                                 !openCategory && 
-                                 !showExplanation;
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4">
-      <HavayotExplanationDialog
-        isOpen={showExplanation}
-        onClose={() => setShowExplanation(false)}
-        onContinue={handleExplanationContinue}
-      />
+    <div className="space-y-6">
+      <div className="text-center space-y-4">
+        <h2 className="text-xl font-semibold">מקצועי (טכני/טקטי)</h2>
+        <p className="text-gray-600">
+          איך אתה מרגיש מבחינה מקצועית לקראת המשחק?
+        </p>
+      </div>
 
-      {currentCategory && shouldShowHavayaQuestion && (
-        <HavayaQuestionDialog
-          open={true}
-          onOpenChange={() => {}}
-          category={currentCategory.name}
-          onViewTraits={() => setShowTraitsList(true)}
-        />
-      )}
+      <div className="bg-blue-50/50 p-4 rounded-lg space-y-3">
+        <div className="flex items-start gap-2">
+          <div className="bg-blue-500 text-white p-1 rounded-full h-6 w-6 flex items-center justify-center text-sm mt-0.5">
+            ℹ️
+          </div>
+          <div className="text-sm text-blue-800">
+            <p>התהליך הוכיח כי כאשר שחקן כותב את ההוויה בעצמו, ולא רק בוחר מתוך אפשרויות קיימות, המחויבות שלו למימוש עולה משמעותית. הכתיבה</p>
+            <p>האישית מחזקת את המחויבות והחיבור לרגשי לחוויה.</p>
+          </div>
+        </div>
+      </div>
 
-      {showTraitsList && currentCategory && (
-        <HavayotPopup
-          isOpen={true}
-          onClose={() => setShowTraitsList(false)}
-          category={{
-            ...currentCategory,
-            key: currentCategory.key
-          }}
-        />
-      )}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2">
+          <Input
+            value={professionalHavaya}
+            onChange={(e) => setProfessionalHavaya(e.target.value)}
+            placeholder="רשום את ההוויה שאיתה אתה מגיע למשחק בתחום המקצועי (טכני/טקטי)"
+            className="h-14 text-right"
+          />
+        </div>
+
+        <Button 
+          type="submit" 
+          className="w-full bg-primary hover:bg-primary/90"
+          disabled={!professionalHavaya.trim()}
+        >
+          המשך
+          <ChevronLeft className="mr-2 h-4 w-4" />
+        </Button>
+      </form>
     </div>
   );
 };
