@@ -93,10 +93,17 @@ export const GameSummary = ({
     if (!matchId) return;
 
     try {
+      console.log('Starting feedback save process...');
+      
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) return;
+      if (!user?.id) {
+        console.error('No user ID found');
+        return;
+      }
 
       const feedbackData = {
+        match_id: matchId,
+        player_id: user.id,
         performance_ratings: ratings,
         questions_answers: {
           additionalQuestions: answers
@@ -104,28 +111,42 @@ export const GameSummary = ({
         havaya_ratings: havayaRatings
       };
 
-      const { data: existingFeedback } = await supabase
+      console.log('Checking for existing feedback...');
+      const { data: existingFeedback, error: fetchError } = await supabase
         .from('post_game_feedback')
         .select('*')
         .eq('match_id', matchId)
         .maybeSingle();
 
+      if (fetchError) {
+        console.error('Error checking existing feedback:', fetchError);
+        throw fetchError;
+      }
+
+      let error;
       if (existingFeedback) {
-        await supabase
+        console.log('Updating existing feedback...');
+        const { error: updateError } = await supabase
           .from('post_game_feedback')
           .update(feedbackData)
           .eq('match_id', matchId);
+        error = updateError;
       } else {
-        await supabase
+        console.log('Inserting new feedback...');
+        const { error: insertError } = await supabase
           .from('post_game_feedback')
-          .insert({
-            match_id: matchId,
-            player_id: user.id,
-            ...feedbackData
-          });
+          .insert([feedbackData]); // Wrap in array for insert
+        error = insertError;
       }
+
+      if (error) {
+        console.error('Error saving feedback:', error);
+        throw error;
+      }
+
+      console.log('Feedback saved successfully');
     } catch (error) {
-      console.error('Error saving feedback:', error);
+      console.error('Error in saveToDatabase:', error);
       toast({
         title: "שגיאה",
         description: "לא ניתן לשמור את המשוב",
