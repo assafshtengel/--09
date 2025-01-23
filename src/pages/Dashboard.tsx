@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense, lazy } from "react";
 import { useAuthState } from "@/hooks/use-auth-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -13,12 +13,21 @@ import {
   Target, Settings, Moon, MessageCircle, Clock, ClipboardList,
   BarChart2, ListTodo, Book, Edit, FileSpreadsheet
 } from "lucide-react";
-import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
-import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
-import { StatsOverview } from "@/components/dashboard/StatsOverview";
-import { MentalCoachingChat } from "@/components/dashboard/MentalCoachingChat";
-import { MotivationalPopup } from "@/components/dashboard/MotivationalPopup";
-import { GoalsSection } from "@/components/dashboard/GoalsSection";
+
+// Lazy load components that are not immediately visible
+const PerformanceChart = lazy(() => import("@/components/dashboard/PerformanceChart"));
+const GoalsProgress = lazy(() => import("@/components/dashboard/GoalsProgress"));
+const StatsOverview = lazy(() => import("@/components/dashboard/StatsOverview"));
+const MentalCoachingChat = lazy(() => import("@/components/dashboard/MentalCoachingChat"));
+const MotivationalPopup = lazy(() => import("@/components/dashboard/MotivationalPopup"));
+const GoalsSection = lazy(() => import("@/components/dashboard/GoalsSection"));
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="flex justify-center items-center p-8">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
 
 const chatOptions = [
   {
@@ -53,6 +62,65 @@ const chatOptions = [
   },
 ];
 
+const quickActions = [
+  {
+    title: "דוח טרום משחק",
+    description: "הכנת דוח לפני המשחק",
+    icon: <Edit className="h-6 w-6" />,
+    gradient: "from-indigo-500 to-indigo-600",
+    onClick: () => navigate("/pre-match-report"),
+  },
+  {
+    title: "סיכום משחק",
+    description: "צפייה וניתוח משחקים",
+    icon: <FileSpreadsheet className="h-6 w-6" />,
+    gradient: "from-cyan-500 to-cyan-600",
+    onClick: () => navigate("/game-selection"),
+  },
+  {
+    title: "תכנון משחק",
+    description: "הכנה למשחק הבא",
+    icon: <PlayCircle className="h-6 w-6" />,
+    gradient: "from-blue-500 to-blue-600",
+    onClick: () => navigate("/pre-game-planner"),
+  },
+  {
+    title: "סיכום אימון",
+    description: "תיעוד ומעקב אחר אימונים",
+    icon: <ClipboardList className="h-6 w-6" />,
+    gradient: "from-green-500 to-green-600",
+    onClick: () => navigate("/training-summary"),
+  },
+  {
+    title: "לוח זמנים שבועי",
+    description: "ניהול הזמן השבועי שלך",
+    icon: <Calendar className="h-6 w-6" />,
+    gradient: "from-purple-500 to-purple-600",
+    onClick: () => navigate("/weekly-schedule"),
+  },
+  {
+    title: "היסטוריית משחקים",
+    description: "צפייה במשחקים קודמים",
+    icon: <History className="h-6 w-6" />,
+    gradient: "from-orange-500 to-orange-600",
+    onClick: () => navigate("/game-history"),
+  },
+  {
+    title: "מעקב יומי",
+    description: "תיעוד שגרה יומית",
+    icon: <Clock className="h-6 w-6" />,
+    gradient: "from-pink-500 to-pink-600",
+    onClick: () => navigate("/daily-routine"),
+  },
+  {
+    title: "למידה מנטאלית",
+    description: "משאבי למידה והדרכה",
+    icon: <Book className="h-6 w-6" />,
+    gradient: "from-yellow-500 to-yellow-600",
+    onClick: () => navigate("/mental-learning"),
+  },
+];
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { isLoading: isAuthLoading } = useAuthState();
@@ -64,67 +132,9 @@ const Dashboard = () => {
   const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
 
-  const quickActions = [
-    {
-      title: "דוח טרום משחק",
-      description: "הכנת דוח לפני המשחק",
-      icon: <Edit className="h-6 w-6" />,
-      gradient: "from-indigo-500 to-indigo-600",
-      onClick: () => navigate("/pre-match-report"),
-    },
-    {
-      title: "סיכום משחק",
-      description: "צפייה וניתוח משחקים",
-      icon: <FileSpreadsheet className="h-6 w-6" />,
-      gradient: "from-cyan-500 to-cyan-600",
-      onClick: () => navigate("/game-selection"),
-    },
-    {
-      title: "תכנון משחק",
-      description: "הכנה למשחק הבא",
-      icon: <PlayCircle className="h-6 w-6" />,
-      gradient: "from-blue-500 to-blue-600",
-      onClick: () => navigate("/pre-game-planner"),
-    },
-    {
-      title: "סיכום אימון",
-      description: "תיעוד ומעקב אחר אימונים",
-      icon: <ClipboardList className="h-6 w-6" />,
-      gradient: "from-green-500 to-green-600",
-      onClick: () => navigate("/training-summary"),
-    },
-    {
-      title: "לוח זמנים שבועי",
-      description: "ניהול הזמן השבועי שלך",
-      icon: <Calendar className="h-6 w-6" />,
-      gradient: "from-purple-500 to-purple-600",
-      onClick: () => navigate("/weekly-schedule"),
-    },
-    {
-      title: "היסטוריית משחקים",
-      description: "צפייה במשחקים קודמים",
-      icon: <History className="h-6 w-6" />,
-      gradient: "from-orange-500 to-orange-600",
-      onClick: () => navigate("/game-history"),
-    },
-    {
-      title: "מעקב יומי",
-      description: "תיעוד שגרה יומית",
-      icon: <Clock className="h-6 w-6" />,
-      gradient: "from-pink-500 to-pink-600",
-      onClick: () => navigate("/daily-routine"),
-    },
-    {
-      title: "למידה מנטאלית",
-      description: "משאבי למידה והדרכה",
-      icon: <Book className="h-6 w-6" />,
-      gradient: "from-yellow-500 to-yellow-600",
-      onClick: () => navigate("/mental-learning"),
-    },
-  ];
-
   useEffect(() => {
     let isMounted = true;
+    let timeoutId: NodeJS.Timeout;
 
     const loadProfileData = async () => {
       try {
@@ -139,27 +149,28 @@ const Dashboard = () => {
           return;
         }
 
-        setUserEmail(session.user.email);
+        // Use Promise.all to fetch data in parallel
+        const [profileData] = await Promise.all([
+          supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .maybeSingle()
+        ]);
 
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error("[Dashboard] Profile fetch error:", profileError);
+        if (profileData.error) {
+          console.error("[Dashboard] Profile fetch error:", profileData.error);
           if (retryCount < 3 && isMounted) {
             setRetryCount(prev => prev + 1);
-            setTimeout(loadProfileData, 1000 * (retryCount + 1));
+            timeoutId = setTimeout(loadProfileData, 1000 * (retryCount + 1));
             return;
           }
-          throw profileError;
+          throw profileData.error;
         }
 
         if (isMounted) {
-          console.log("[Dashboard] Profile data loaded successfully");
-          setProfile(profileData);
+          setUserEmail(session.user.email);
+          setProfile(profileData.data);
           setIsLoading(false);
         }
       } catch (error) {
@@ -181,6 +192,9 @@ const Dashboard = () => {
 
     return () => {
       isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
   }, [isAuthLoading, navigate, retryCount, toast]);
 
@@ -194,10 +208,12 @@ const Dashboard = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-8 min-h-screen bg-gradient-to-b from-background to-background/80">
-      <MotivationalPopup 
-        isOpen={showMotivationalPopup} 
-        onClose={() => setShowMotivationalPopup(false)} 
-      />
+      <Suspense fallback={<LoadingFallback />}>
+        <MotivationalPopup 
+          isOpen={showMotivationalPopup} 
+          onClose={() => setShowMotivationalPopup(false)} 
+        />
+      </Suspense>
       
       {userEmail === "socr.co.il@gmail.com" && (
         <Card 
@@ -240,7 +256,9 @@ const Dashboard = () => {
                 </motion.button>
               </SheetTrigger>
               <SheetContent side="left" className="w-full sm:w-[400px]">
-                <MentalCoachingChat chatType={option.type} />
+                <Suspense fallback={<LoadingFallback />}>
+                  <MentalCoachingChat chatType={option.type} />
+                </Suspense>
               </SheetContent>
             </Sheet>
           ))}
@@ -283,13 +301,15 @@ const Dashboard = () => {
         ))}
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-      >
-        <GoalsSection />
-      </motion.div>
+      <Suspense fallback={<LoadingFallback />}>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+        >
+          <GoalsSection />
+        </motion.div>
+      </Suspense>
 
       <div className="flex justify-between items-center mb-6">
         <div className="h-0.5 flex-grow bg-gradient-to-r from-transparent to-gray-200"></div>
@@ -297,29 +317,35 @@ const Dashboard = () => {
         <div className="h-0.5 flex-grow bg-gradient-to-l from-transparent to-gray-200"></div>
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-      >
-        <StatsOverview />
-      </motion.div>
+      <Suspense fallback={<LoadingFallback />}>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+        >
+          <StatsOverview />
+        </motion.div>
+      </Suspense>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <PerformanceChart />
-        </motion.div>
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <GoalsProgress />
-        </motion.div>
+        <Suspense fallback={<LoadingFallback />}>
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <PerformanceChart />
+          </motion.div>
+        </Suspense>
+        <Suspense fallback={<LoadingFallback />}>
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <GoalsProgress />
+          </motion.div>
+        </Suspense>
       </div>
     </div>
   );
