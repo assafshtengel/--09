@@ -1,5 +1,6 @@
 export const havayotCategories = {
   professional: {
+    key: "professional",
     name: "מקצועי (טכני/טקטי)",
     description: "איך אתה מרגיש מבחינה מקצועית לקראת המשחק?",
     havayot: [
@@ -21,6 +22,7 @@ export const havayotCategories = {
     ]
   },
   mental: {
+    key: "mental",
     name: "מנטלי (גישה וחשיבה)",
     description: "איך אתה מרגיש מבחינה מנטלית לקראת המשחק?",
     havayot: [
@@ -42,6 +44,7 @@ export const havayotCategories = {
     ]
   },
   emotional: {
+    key: "emotional",
     name: "רגשי (אנרגיה ותשוקה)",
     description: "איך אתה מרגיש מבחינה רגשית לקראת המשחק?",
     havayot: [
@@ -63,6 +66,7 @@ export const havayotCategories = {
     ]
   },
   social: {
+    key: "social",
     name: "חברתי-תקשורתי (אינטראקציה קבוצתית)",
     description: "איך אתה מרגיש מבחינה חברתית לקראת המשחק?",
     havayot: [
