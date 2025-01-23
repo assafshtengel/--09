@@ -249,15 +249,40 @@ export const GameTracker = () => {
     if (!matchId) return;
 
     try {
+      console.log("Updating match status to:", status);
+      
+      // Map GamePhase to valid database status values
+      const dbStatus = (() => {
+        switch(status) {
+          case "preview":
+            return "preview";
+          case "playing":
+            return "in_progress";
+          case "halftime":
+            return "halftime";
+          case "secondHalf":
+            return "second_half";
+          case "ended":
+            return "completed";
+          default:
+            return "preview";
+        }
+      })();
+
       const { error } = await supabase
         .from('matches')
         .update({ 
-          status,
+          status: dbStatus,
           observer_type: matchDetails.observer_type 
         })
         .eq('id', matchId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating match status:", error);
+        throw error;
+      }
+
+      console.log("Successfully updated match status to:", dbStatus);
     } catch (error) {
       console.error('Error updating match status:', error);
       toast({
