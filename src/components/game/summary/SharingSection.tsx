@@ -51,7 +51,6 @@ export const SharingSection = ({
   const [isDataSaved, setIsDataSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveTimer, setSaveTimer] = useState(30);
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -65,44 +64,6 @@ export const SharingSection = ({
     };
   }, [isSaving, saveTimer]);
 
-  const validateData = async () => {
-    const errors: string[] = [];
-    
-    if (!matchId) {
-      errors.push("לא נמצא מזהה משחק");
-      return errors;
-    }
-
-    try {
-      const { data: feedback, error } = await supabase
-        .from('post_game_feedback')
-        .select('match_stats')
-        .eq('match_id', matchId)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching feedback:', error);
-        return ['שגיאה בטעינת נתוני המשחק'];
-      }
-
-      const typedFeedback = feedback as PostGameFeedback;
-      console.log('Validating feedback data:', typedFeedback);
-
-      if (!typedFeedback?.match_stats?.finalScore) {
-        errors.push("יש למלא את תוצאת המשחק");
-      }
-
-      if (!typedFeedback?.match_stats?.winner) {
-        errors.push("יש לציין את הקבוצה המנצחת");
-      }
-
-      return errors;
-    } catch (error) {
-      console.error('Error in validation:', error);
-      return ['שגיאה בתהליך האימות'];
-    }
-  };
-
   const handleSaveData = async () => {
     if (!matchId) return;
     
@@ -111,20 +72,6 @@ export const SharingSection = ({
     
     try {
       console.log('Starting data save process...'); 
-
-      const errors = await validateData();
-      if (errors.length > 0) {
-        setValidationErrors(errors);
-        errors.forEach(error => {
-          toast({
-            title: "שגיאה בשמירת נתונים",
-            description: error,
-            variant: "destructive",
-          });
-        });
-        setIsSaving(false);
-        return;
-      }
 
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
@@ -196,13 +143,6 @@ export const SharingSection = ({
     <div className="space-y-4 mt-6 border-t pt-4">
       {!isDataSaved ? (
         <div className="flex flex-col items-center gap-4">
-          {validationErrors.length > 0 && (
-            <div className="text-red-500 text-right w-full space-y-1">
-              {validationErrors.map((error, index) => (
-                <p key={index}>{error}</p>
-              ))}
-            </div>
-          )}
           <Button
             onClick={handleSaveData}
             className="w-48 gap-2 text-lg"
