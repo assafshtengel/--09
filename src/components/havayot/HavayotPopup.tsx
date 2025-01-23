@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface CategoryType {
   name: string;
   description: string;
-  key?: "professional" | "mental" | "emotional" | "social";
+  key: "professional" | "mental" | "emotional" | "social";
   havayot: Array<{
     name: string;
     description: string;
