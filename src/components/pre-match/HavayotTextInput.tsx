@@ -22,6 +22,7 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
     emotional: "",
     social: ""
   });
+  const [showTraitsList, setShowTraitsList] = useState(false);
 
   useEffect(() => {
     console.log("[HavayotTextInput] Component mounted");
@@ -105,17 +106,17 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
           open={true}
           onOpenChange={() => {}}
           category={currentCategory.name}
-          examples={currentCategory.havayot.map(h => h.name)}
+          onViewTraits={() => setShowTraitsList(true)}
         />
       )}
 
-      {openCategory && (
+      {showTraitsList && currentCategory && (
         <HavayotPopup
           isOpen={true}
-          onClose={() => setOpenCategory(null)}
+          onClose={() => setShowTraitsList(false)}
           category={{
-            ...havayotCategories[openCategory],
-            key: openCategory
+            ...currentCategory,
+            key: currentCategory.key
           }}
         />
       )}

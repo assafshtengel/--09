@@ -1,5 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 interface CategoryType {
   name: string;
@@ -21,7 +23,15 @@ export const HavayotPopup = ({ isOpen, onClose, category }: HavayotPopupProps) =
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
+        <DialogHeader className="flex justify-between items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="absolute right-4 top-4"
+          >
+            <X className="h-4 w-4" />
+          </Button>
           <DialogTitle className="text-right">{category.name}</DialogTitle>
         </DialogHeader>
         
@@ -42,6 +52,12 @@ export const HavayotPopup = ({ isOpen, onClose, category }: HavayotPopupProps) =
             </div>
           </div>
         </ScrollArea>
+        
+        <div className="mt-4 flex justify-center">
+          <Button onClick={onClose} variant="outline">
+            סגור
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
