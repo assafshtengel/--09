@@ -265,9 +265,11 @@ export const GameTracker = () => {
           case "ended":
             return "completed";
           default:
-            return "preview";
+            throw new Error(`Invalid game phase: ${gamePhase}`);
         }
       })();
+
+      console.log("Mapped status value:", dbStatus);
 
       const { error } = await supabase
         .from('matches')
