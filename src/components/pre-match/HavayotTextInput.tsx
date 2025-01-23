@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft } from "lucide-react";
-import { havayotCategories } from "@/data/havayotCategories";
+import { havayotCategories, CategoryKeyType } from "@/data/havayotCategories";
 import { HavayotPopup } from "@/components/havayot/HavayotPopup";
 
 interface HavayotTextInputProps {
@@ -10,7 +10,7 @@ interface HavayotTextInputProps {
 }
 
 export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
-  const [currentCategory, setCurrentCategory] = useState<keyof typeof havayotCategories>("professional");
+  const [currentCategory, setCurrentCategory] = useState<CategoryKeyType>("professional");
   const [havayot, setHavayot] = useState<Record<string, string>>({
     professional: "",
     mental: "",
@@ -33,10 +33,10 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
     }
   };
 
-  const getNextCategory = (current: keyof typeof havayotCategories) => {
-    const categories: (keyof typeof havayotCategories)[] = ["professional", "mental", "emotional", "social"];
+  const getNextCategory = (current: CategoryKeyType): CategoryKeyType | null => {
+    const categories: CategoryKeyType[] = ["professional", "mental", "emotional", "social"];
     const currentIndex = categories.indexOf(current);
-    return categories[currentIndex + 1];
+    return categories[currentIndex + 1] || null;
   };
 
   const currentCategoryData = havayotCategories[currentCategory];

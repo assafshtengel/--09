@@ -1,4 +1,18 @@
-export const havayotCategories = {
+type HavayaType = {
+  name: string;
+  description: string;
+};
+
+type CategoryKeyType = "professional" | "mental" | "emotional" | "social";
+
+type CategoryType = {
+  key: CategoryKeyType;
+  name: string;
+  description: string;
+  havayot: HavayaType[];
+};
+
+export const havayotCategories: Record<CategoryKeyType, CategoryType> = {
   professional: {
     key: "professional",
     name: "מקצועי (טכני/טקטי)",
@@ -88,3 +102,5 @@ export const havayotCategories = {
     ]
   }
 };
+
+export type { CategoryKeyType, CategoryType, HavayaType };
