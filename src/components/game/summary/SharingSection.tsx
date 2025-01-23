@@ -100,10 +100,7 @@ export const SharingSection = ({
 
       const { error: upsertError } = await supabase
         .from('post_game_feedback')
-        .upsert(feedbackData, {
-          onConflict: 'match_id',
-          ignoreDuplicates: false
-        });
+        .upsert(feedbackData);
 
       if (upsertError) throw upsertError;
 
