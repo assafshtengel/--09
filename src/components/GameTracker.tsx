@@ -272,10 +272,10 @@ export const GameTracker = () => {
       const { error } = await supabase
         .from('matches')
         .update({ 
-          status: dbStatus,
-          observer_type: matchDetails.observer_type 
+          status: dbStatus 
         })
-        .eq('id', matchId);
+        .eq('id', matchId)
+        .select();
 
       if (error) {
         console.error("Error updating match status:", error);
