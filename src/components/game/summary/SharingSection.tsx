@@ -79,14 +79,16 @@ export const SharingSection = ({
         throw new Error('User not authenticated');
       }
 
-      // First try to get existing feedback
+      // First check if feedback exists
       const { data: existingFeedback, error: fetchError } = await supabase
         .from('post_game_feedback')
         .select('*')
         .eq('match_id', matchId)
-        .maybeSingle();
+        .single();
 
-      if (fetchError) throw fetchError;
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows returned
+        throw fetchError;
+      }
 
       const feedbackData = {
         match_id: matchId,
@@ -98,13 +100,23 @@ export const SharingSection = ({
         havaya_ratings: existingFeedback?.havaya_ratings || {}
       };
 
-      const { error: upsertError } = await supabase
-        .from('post_game_feedback')
-        .upsert(feedbackData, {
-          onConflict: 'match_id'
-        });
+      let error;
+      if (existingFeedback) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('post_game_feedback')
+          .update(feedbackData)
+          .eq('match_id', matchId);
+        error = updateError;
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from('post_game_feedback')
+          .insert(feedbackData);
+        error = insertError;
+      }
 
-      if (upsertError) throw upsertError;
+      if (error) throw error;
 
       console.log('Feedback saved successfully');
 
