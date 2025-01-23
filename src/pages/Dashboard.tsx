@@ -14,13 +14,13 @@ import {
   BarChart2, ListTodo, Book, Edit, FileSpreadsheet
 } from "lucide-react";
 
-// Lazy load components that are not immediately visible
-const PerformanceChart = lazy(() => import("@/components/dashboard/PerformanceChart"));
-const GoalsProgress = lazy(() => import("@/components/dashboard/GoalsProgress"));
-const StatsOverview = lazy(() => import("@/components/dashboard/StatsOverview"));
-const MentalCoachingChat = lazy(() => import("@/components/dashboard/MentalCoachingChat"));
-const MotivationalPopup = lazy(() => import("@/components/dashboard/MotivationalPopup"));
-const GoalsSection = lazy(() => import("@/components/dashboard/GoalsSection"));
+// Lazy load components with proper default exports
+const PerformanceChart = lazy(() => import("@/components/dashboard/PerformanceChart").then(module => ({ default: module.PerformanceChart })));
+const GoalsProgress = lazy(() => import("@/components/dashboard/GoalsProgress").then(module => ({ default: module.GoalsProgress })));
+const StatsOverview = lazy(() => import("@/components/dashboard/StatsOverview").then(module => ({ default: module.StatsOverview })));
+const MentalCoachingChat = lazy(() => import("@/components/dashboard/MentalCoachingChat").then(module => ({ default: module.MentalCoachingChat })));
+const MotivationalPopup = lazy(() => import("@/components/dashboard/MotivationalPopup").then(module => ({ default: module.MotivationalPopup })));
+const GoalsSection = lazy(() => import("@/components/dashboard/GoalsSection").then(module => ({ default: module.GoalsSection })));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -68,56 +68,56 @@ const quickActions = [
     description: "הכנת דוח לפני המשחק",
     icon: <Edit className="h-6 w-6" />,
     gradient: "from-indigo-500 to-indigo-600",
-    onClick: () => navigate("/pre-match-report"),
+    path: "/pre-match-report",
   },
   {
     title: "סיכום משחק",
     description: "צפייה וניתוח משחקים",
     icon: <FileSpreadsheet className="h-6 w-6" />,
     gradient: "from-cyan-500 to-cyan-600",
-    onClick: () => navigate("/game-selection"),
+    path: "/game-selection",
   },
   {
     title: "תכנון משחק",
     description: "הכנה למשחק הבא",
     icon: <PlayCircle className="h-6 w-6" />,
     gradient: "from-blue-500 to-blue-600",
-    onClick: () => navigate("/pre-game-planner"),
+    path: "/pre-game-planner",
   },
   {
     title: "סיכום אימון",
     description: "תיעוד ומעקב אחר אימונים",
     icon: <ClipboardList className="h-6 w-6" />,
     gradient: "from-green-500 to-green-600",
-    onClick: () => navigate("/training-summary"),
+    path: "/training-summary",
   },
   {
     title: "לוח זמנים שבועי",
     description: "ניהול הזמן השבועי שלך",
     icon: <Calendar className="h-6 w-6" />,
     gradient: "from-purple-500 to-purple-600",
-    onClick: () => navigate("/weekly-schedule"),
+    path: "/weekly-schedule",
   },
   {
     title: "היסטוריית משחקים",
     description: "צפייה במשחקים קודמים",
     icon: <History className="h-6 w-6" />,
     gradient: "from-orange-500 to-orange-600",
-    onClick: () => navigate("/game-history"),
+    path: "/game-history",
   },
   {
     title: "מעקב יומי",
     description: "תיעוד שגרה יומית",
     icon: <Clock className="h-6 w-6" />,
     gradient: "from-pink-500 to-pink-600",
-    onClick: () => navigate("/daily-routine"),
+    path: "/daily-routine",
   },
   {
     title: "למידה מנטאלית",
     description: "משאבי למידה והדרכה",
     icon: <Book className="h-6 w-6" />,
     gradient: "from-yellow-500 to-yellow-600",
-    onClick: () => navigate("/mental-learning"),
+    path: "/mental-learning",
   },
 ];
 
@@ -285,7 +285,7 @@ const Dashboard = () => {
           >
             <Card
               className={`cursor-pointer transform transition-all duration-200 hover:scale-105 hover:shadow-lg bg-gradient-to-br ${action.gradient} text-white`}
-              onClick={action.onClick}
+              onClick={() => navigate(action.path)}
             >
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-lg">
