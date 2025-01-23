@@ -245,15 +245,15 @@ export const GameTracker = () => {
     }
   };
 
-  const updateMatchStatus = async (status: GamePhase) => {
+  const updateMatchStatus = async (gamePhase: GamePhase) => {
     if (!matchId) return;
 
     try {
-      console.log("Updating match status to:", status);
+      console.log("Updating match status to:", gamePhase);
       
       // Map GamePhase to valid database status values
       const dbStatus = (() => {
-        switch(status) {
+        switch(gamePhase) {
           case "preview":
             return "preview";
           case "playing":
@@ -274,8 +274,7 @@ export const GameTracker = () => {
         .update({ 
           status: dbStatus 
         })
-        .eq('id', matchId)
-        .select();
+        .eq('id', matchId);
 
       if (error) {
         console.error("Error updating match status:", error);
