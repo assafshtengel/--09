@@ -273,13 +273,18 @@ export const GameTracker = () => {
 
       const { error } = await supabase
         .from('matches')
-        .update({ 
-          status: dbStatus 
-        })
-        .eq('id', matchId);
+        .update({ status: dbStatus })
+        .eq('id', matchId)
+        .select()
+        .single();
 
       if (error) {
         console.error("Error updating match status:", error);
+        // Revert the UI state if the update fails
+        setGamePhase(prevPhase => {
+          console.log("Reverting game phase to:", prevPhase);
+          return prevPhase;
+        });
         throw error;
       }
 
