@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { format, addDays } from "date-fns";
 import { he } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface MatchQuestionDialogProps {
   isOpen: boolean;
@@ -40,19 +41,29 @@ export const MatchQuestionDialog = ({
   const [inputValue, setInputValue] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setInputValue("");
     setShowCalendar(false);
     setSelectedOption(null);
+    setError(null);
   }, [question.id]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
     }
-    if (inputValue.trim()) {
-      onSubmit(inputValue);
+
+    if (question.type === "select" && !selectedOption) {
+      setError("אנא בחר תפקיד לפני שתמשיך");
+      toast.error("אנא בחר תפקיד לפני שתמשיך");
+      return;
+    }
+
+    if (inputValue.trim() || selectedOption) {
+      onSubmit(selectedOption || inputValue);
+      setError(null);
     }
   };
 
@@ -90,6 +101,7 @@ export const MatchQuestionDialog = ({
   const handleOptionSelect = (optionValue: string) => {
     setSelectedOption(optionValue);
     setInputValue(optionValue);
+    setError(null);
     
     // If this is the position selection question, submit immediately
     if (question.id === "position") {
@@ -180,14 +192,21 @@ export const MatchQuestionDialog = ({
         ))}
         
         {/* Show continue button only for position selection and when an option is selected */}
-        {question.id === "position" && selectedOption && (
+        {question.id === "position" && (
           <Button
             onClick={() => handleSubmit()}
             className="w-full mt-4 bg-primary hover:bg-primary/90"
+            disabled={!selectedOption}
           >
             המשך
             <ChevronLeft className="w-4 h-4 mr-2" />
           </Button>
+        )}
+
+        {error && (
+          <p className="text-destructive text-sm mt-2 text-center">
+            {error}
+          </p>
         )}
       </div>
     );
