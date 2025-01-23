@@ -84,9 +84,9 @@ export const SharingSection = ({
         .from('post_game_feedback')
         .select('*')
         .eq('match_id', matchId)
-        .single();
+        .maybeSingle();
 
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows returned
+      if (fetchError) {
         throw fetchError;
       }
 
@@ -112,7 +112,7 @@ export const SharingSection = ({
         // Insert new record
         const { error: insertError } = await supabase
           .from('post_game_feedback')
-          .insert(feedbackData);
+          .insert([feedbackData]);
         error = insertError;
       }
 
