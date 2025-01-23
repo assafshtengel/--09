@@ -17,7 +17,7 @@ interface HavayaQuestionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   category: string;
-  examples: string[];
+  examples?: string[]; // Make examples optional
 }
 
 const traitDescriptions = {
@@ -61,7 +61,7 @@ export const HavayaQuestionDialog = ({
   open,
   onOpenChange,
   category,
-  examples,
+  examples = [], // Provide default empty array
 }: HavayaQuestionDialogProps) => {
   const handleClose = () => {
     onOpenChange(false);
