@@ -2,7 +2,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { SummaryHeader } from "./summary/SummaryHeader";
 import { StatisticsSection } from "./summary/StatisticsSection";
 import { InsightsSection } from "./summary/InsightsSection";
@@ -15,6 +15,7 @@ import { GoalsComparison } from "./summary/GoalsComparison";
 import { AchievementsSection } from "./summary/AchievementsSection";
 import { generateEmailContent } from "./summary/EmailTemplate";
 import { HavayaRatings } from "./summary/HavayaRatings";
+import debounce from 'lodash/debounce';
 
 interface GameSummaryProps {
   actions: any[];
@@ -47,6 +48,7 @@ export const GameSummary = ({
   const [additionalAnswers, setAdditionalAnswers] = useState<Record<string, any>>({});
   const [showCaptionPopup, setShowCaptionPopup] = useState(false);
   const [havayaRatings, setHavayaRatings] = useState<Record<string, number>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const loadInsights = async () => {
@@ -75,84 +77,78 @@ export const GameSummary = ({
     loadInsights();
   }, [matchId]);
 
-  const handleRatingsChange = async (ratings: Record<string, number>) => {
-    setPerformanceRatings(ratings);
-    await saveToDatabase(ratings, additionalAnswers, havayaRatings);
-  };
+  // Debounced save function to prevent multiple rapid saves
+  const debouncedSave = useCallback(
+    debounce(async (
+      ratings: Record<string, number>,
+      answers: Record<string, any>,
+      havayaRatings: Record<string, number>
+    ) => {
+      if (!matchId || isSaving) return;
 
-  const handleAnswersChange = async (answers: Record<string, any>) => {
-    setAdditionalAnswers(answers);
-    await saveToDatabase(performanceRatings, answers, havayaRatings);
-  };
+      setIsSaving(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user?.id) {
+          throw new Error('No authenticated user found');
+        }
 
-  const saveToDatabase = async (
-    ratings: Record<string, number>,
-    answers: Record<string, any>,
-    havayaRatings: Record<string, number>
-  ) => {
-    if (!matchId) return;
+        const feedbackData = {
+          match_id: matchId,
+          player_id: user.id,
+          performance_ratings: ratings,
+          questions_answers: {
+            additionalQuestions: answers
+          },
+          havaya_ratings: havayaRatings
+        };
 
-    try {
-      console.log('Starting feedback save process...');
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) {
-        console.error('No user ID found');
-        return;
-      }
-
-      const feedbackData = {
-        match_id: matchId,
-        player_id: user.id,
-        performance_ratings: ratings,
-        questions_answers: {
-          additionalQuestions: answers
-        },
-        havaya_ratings: havayaRatings
-      };
-
-      console.log('Checking for existing feedback...');
-      const { data: existingFeedback, error: fetchError } = await supabase
-        .from('post_game_feedback')
-        .select('*')
-        .eq('match_id', matchId)
-        .maybeSingle();
-
-      if (fetchError) {
-        console.error('Error checking existing feedback:', fetchError);
-        throw fetchError;
-      }
-
-      let error;
-      if (existingFeedback) {
-        console.log('Updating existing feedback...');
+        // First try to update
         const { error: updateError } = await supabase
           .from('post_game_feedback')
           .update(feedbackData)
           .eq('match_id', matchId);
-        error = updateError;
-      } else {
-        console.log('Inserting new feedback...');
-        const { error: insertError } = await supabase
-          .from('post_game_feedback')
-          .insert([feedbackData]); // Wrap in array for insert
-        error = insertError;
-      }
 
-      if (error) {
-        console.error('Error saving feedback:', error);
-        throw error;
-      }
+        // If update fails (no existing record), then insert
+        if (updateError) {
+          const { error: insertError } = await supabase
+            .from('post_game_feedback')
+            .insert([feedbackData]);
 
-      console.log('Feedback saved successfully');
-    } catch (error) {
-      console.error('Error in saveToDatabase:', error);
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לשמור את המשוב",
-        variant: "destructive",
-      });
-    }
+          if (insertError) throw insertError;
+        }
+
+        toast({
+          title: "נשמר בהצלחה",
+          description: "המשוב נשמר במערכת",
+        });
+      } catch (error) {
+        console.error('Error in saveToDatabase:', error);
+        toast({
+          title: "שגיאה",
+          description: "לא ניתן לשמור את המשוב",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSaving(false);
+      }
+    }, 1000),
+    [matchId, isSaving]
+  );
+
+  const handleRatingsChange = (ratings: Record<string, number>) => {
+    setPerformanceRatings(ratings);
+    debouncedSave(ratings, additionalAnswers, havayaRatings);
+  };
+
+  const handleAnswersChange = (answers: Record<string, any>) => {
+    setAdditionalAnswers(answers);
+    debouncedSave(performanceRatings, answers, havayaRatings);
+  };
+
+  const handleHavayaRatingsChange = (ratings: Record<string, number>) => {
+    setHavayaRatings(ratings);
+    debouncedSave(performanceRatings, additionalAnswers, ratings);
   };
 
   const handleEmailSend = async (recipientType: 'user' | 'coach') => {
@@ -213,15 +209,6 @@ export const GameSummary = ({
     }
   };
 
-  const handleAchievementsSave = (achievementsData: any) => {
-    console.log('Achievements saved:', achievementsData);
-  };
-
-  const handleHavayaRatingsChange = async (ratings: Record<string, number>) => {
-    setHavayaRatings(ratings);
-    await saveToDatabase(performanceRatings, additionalAnswers, ratings);
-  };
-
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-4xl mx-auto h-[90vh]">
@@ -237,7 +224,7 @@ export const GameSummary = ({
               <>
                 <AchievementsSection
                   matchId={matchId}
-                  onSave={handleAchievementsSave}
+                  onSave={() => {}}
                 />
                 <HavayaRatings
                   matchId={matchId}
