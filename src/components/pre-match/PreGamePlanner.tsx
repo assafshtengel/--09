@@ -10,6 +10,7 @@ import { Copy, Share2, Edit, Save, Mail, Loader2 } from "lucide-react";
 import { format, formatDistanceToNow, addDays } from "date-fns";
 import { he } from "date-fns/locale";
 import { useLocation } from "react-router-dom";
+import { TimeoutDialog } from "./TimeoutDialog";
 import {
   Table,
   TableBody,
@@ -38,7 +39,8 @@ export const PreGamePlanner = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [showTimeoutDialog, setShowTimeoutDialog] = useState(false);
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (location.state?.fromPreMatchReport) {
@@ -131,6 +133,15 @@ export const PreGamePlanner = () => {
     setIsLoading(true);
     setProgress(0);
 
+    // Set timeout for 8 seconds
+    const timeout = setTimeout(() => {
+      setShowTimeoutDialog(true);
+      setIsLoading(false);
+      setProgress(0);
+    }, 8000);
+
+    setTimeoutId(timeout);
+
     // Start progress animation
     const progressInterval = setInterval(() => {
       setProgress(prev => {
@@ -143,15 +154,6 @@ export const PreGamePlanner = () => {
     }, 400);
 
     try {
-      console.log('Sending request with:', {
-        currentDate,
-        currentTime,
-        gameDate,
-        gameTime,
-        commitments: commitments || "אין מחויבויות נוספות",
-        timeRemaining: calculateTimeRemaining()
-      });
-
       const { data, error } = await supabase.functions.invoke('generate-pre-game-schedule', {
         body: {
           currentDate,
@@ -163,28 +165,21 @@ export const PreGamePlanner = () => {
         }
       });
 
+      // Clear the timeout since we got a response
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        setTimeoutId(null);
+      }
+
       clearInterval(progressInterval);
       setProgress(100);
 
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      if (data.status === 'timeout') {
-        setIsRedirecting(true);
-        toast.info("מעביר אותך למערכת חיצונית ליצירת סדר יום...");
-        setTimeout(() => {
-          window.location.href = data.redirectUrl;
-        }, 2000);
-        return;
-      }
-      
       if (!data || !data.schedule) {
-        console.error('Invalid response format:', data);
         throw new Error("Invalid response format from schedule generator");
       }
-      
+
       setSchedule(data.schedule);
       
       const baseDate = new Date(`${currentDate}T${currentTime}`);
@@ -233,6 +228,10 @@ export const PreGamePlanner = () => {
       toast.error("שגיאה ביצירת סדר היום");
     } finally {
       setIsLoading(false);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        setTimeoutId(null);
+      }
       setTimeout(() => setProgress(0), 1000);
     }
   };
@@ -394,7 +393,7 @@ export const PreGamePlanner = () => {
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {isRedirecting ? "מעביר למערכת חיצונית..." : "מייצר סדר יום..."}
+                "מייצר סדר יום..."
               </>
             ) : (
               "תן לי סדר יום"
@@ -470,6 +469,11 @@ export const PreGamePlanner = () => {
           )}
         </div>
       </Card>
+
+      <TimeoutDialog 
+        isOpen={showTimeoutDialog} 
+        onClose={() => setShowTimeoutDialog(false)} 
+      />
     </div>
   );
 };
