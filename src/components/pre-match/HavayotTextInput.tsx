@@ -102,14 +102,10 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
 
       {currentCategory && shouldShowHavayaQuestion && (
         <HavayaQuestionDialog
-          isOpen={true}
-          onClose={() => {}}
-          category={currentCategory}
-          value={havayotInputs[currentCategory.key]}
-          onSubmit={(value) => handleInputChange(currentCategory.key, value)}
-          onShowHavayot={() => setOpenCategory(currentCategory.key)}
-          onBack={handleBack}
-          isFirstQuestion={currentCategoryIndex === 0}
+          open={true}
+          onOpenChange={() => {}}
+          category={currentCategory.name}
+          examples={currentCategory.havayot.map(h => h.name)}
         />
       )}
 

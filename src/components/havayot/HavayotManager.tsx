@@ -57,7 +57,10 @@ export const HavayotManager = () => {
           key={key}
           isOpen={openCategory === key}
           onClose={() => setOpenCategory(null)}
-          category={category}
+          category={{
+            ...category,
+            key: key as "professional" | "mental" | "emotional" | "social"
+          }}
         />
       ))}
     </div>
