@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/Navigation";
+import { AdminRoute } from "@/components/AdminRoute";
 import HomePage from "./pages/HomePage";
 import Auth from "./pages/Auth";
 import Player from "./pages/Player";
