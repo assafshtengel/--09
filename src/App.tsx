@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/Navigation";
-import Index from "./pages/Index";
+import HomePage from "./pages/HomePage";
 import Auth from "./pages/Auth";
 import Player from "./pages/Player";
 import Profile from "./pages/Profile";
@@ -145,68 +145,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const HomeRoute = () => {
-  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const checkProfile = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('roles')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          setHasProfile(!!profile?.roles?.length);
-        }
-      } catch (error) {
-        console.error("Profile check error:", error);
-        setHasProfile(false);
-      }
-    };
-
-    checkProfile();
-  }, []);
-
-  if (hasProfile === null) {
-    return <div>טוען...</div>;
-  }
-
-  return hasProfile ? <Navigate to="/dashboard" replace /> : <Index />;
-};
-
-const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const checkAdminAccess = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setUserEmail(session?.user?.email || null);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Admin check error:", error);
-        setIsLoading(false);
-      }
-    };
-
-    checkAdminAccess();
-  }, []);
-
-  if (isLoading) {
-    return <div>טוען...</div>;
-  }
-
-  if (userEmail !== "socr.co.il@gmail.com") {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return <>{children}</>;
-};
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -219,9 +157,13 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route
                 path="/"
+                element={<HomePage />}
+              />
+              <Route
+                path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <HomeRoute />
+                    <Dashboard />
                   </ProtectedRoute>
                 }
               />
@@ -256,14 +198,6 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
                   </ProtectedRoute>
                 }
               />
