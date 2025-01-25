@@ -24,16 +24,16 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (havayot[currentCategory].trim()) {
+      // Move to next category or submit if all categories are filled
+      const categories: CategoryKeyType[] = ["professional", "mental", "emotional", "social"];
+      const currentIndex = categories.indexOf(currentCategory);
+      
       if (currentCategory === "social") {
-        // Only submit all havayot when we're on the last category
         const allHavayotFilled = Object.values(havayot).every(v => v.trim());
         if (allHavayotFilled) {
           onSubmit(havayot);
         }
       } else {
-        // Move to next category
-        const categories: CategoryKeyType[] = ["professional", "mental", "emotional", "social"];
-        const currentIndex = categories.indexOf(currentCategory);
         setCurrentCategory(categories[currentIndex + 1]);
       }
     }
@@ -58,6 +58,15 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
         return "כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה חברתית-תקשורתית במשחק?";
       default:
         return "";
+    }
+  };
+
+  const handleFinish = () => {
+    if (havayot[currentCategory].trim()) {
+      const allHavayotFilled = Object.values(havayot).every(v => v.trim());
+      if (allHavayotFilled) {
+        onSubmit(havayot);
+      }
     }
   };
 
@@ -103,14 +112,26 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
           </Button>
         </div>
 
-        <Button 
-          type="submit" 
-          className="w-full bg-primary hover:bg-primary/90"
-          disabled={!havayot[currentCategory].trim()}
-        >
-          {currentCategory === "social" ? "סיים" : "המשך"}
-          <ChevronLeft className="mr-2 h-4 w-4" />
-        </Button>
+        {currentCategory === "social" ? (
+          <Button 
+            type="button"
+            onClick={handleFinish}
+            className="w-full bg-primary hover:bg-primary/90"
+            disabled={!havayot[currentCategory].trim()}
+          >
+            סיים
+            <ChevronLeft className="mr-2 h-4 w-4" />
+          </Button>
+        ) : (
+          <Button 
+            type="submit" 
+            className="w-full bg-primary hover:bg-primary/90"
+            disabled={!havayot[currentCategory].trim()}
+          >
+            המשך
+            <ChevronLeft className="mr-2 h-4 w-4" />
+          </Button>
+        )}
       </form>
 
       <HavayotPopup
