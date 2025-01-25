@@ -14,11 +14,12 @@ import { Progress } from "@/components/ui/progress";
 import { ChevronRight, ChevronLeft, Link, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const PreMatchReport = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<
-    "dashboard" | "details" | "havayot" | "actions" | "questions" | "summary"
+    "dashboard" | "details" | "intro" | "havayot" | "actions" | "questions" | "summary"
   >("dashboard");
   const [matchDetails, setMatchDetails] = useState({
     date: new Date().toISOString().split("T")[0],
@@ -34,6 +35,7 @@ export const PreMatchReport = () => {
   const steps = [
     { id: "dashboard", label: "התחלה" },
     { id: "details", label: "פרטי משחק" },
+    { id: "intro", label: "הקדמה" },
     { id: "havayot", label: "הוויות" },
     { id: "actions", label: "יעדים" },
     { id: "questions", label: "שאלון" },
@@ -81,7 +83,7 @@ export const PreMatchReport = () => {
       setReportId(report.id);
       setMatchDetails(details);
       setObserverToken(match.observer_token);
-      setCurrentStep("havayot");
+      setCurrentStep("intro");
       
       toast.success("פרטי המשחק נשמרו");
     } catch (error) {
@@ -235,9 +237,55 @@ export const PreMatchReport = () => {
         {currentStep === "details" && (
           <motion.div {...commonProps} key="details">
             <MatchDetailsForm
-              onSubmit={handleMatchDetailsSubmit}
+              onSubmit={(details) => {
+                handleMatchDetailsSubmit(details);
+                setCurrentStep("intro");
+              }}
               initialData={matchDetails}
             />
+          </motion.div>
+        )}
+
+        {currentStep === "intro" && (
+          <motion.div {...commonProps} key="intro">
+            <div className="space-y-8">
+              <Card className="shadow-lg">
+                <CardContent className="p-8 space-y-8">
+                  <motion.h1 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-3xl font-bold text-center text-primary"
+                  >
+                    חשיבות ההוויות למשחק שלך
+                  </motion.h1>
+                  
+                  <motion.p 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-lg text-gray-700 text-center leading-relaxed"
+                  >
+                    הוויות הן הבסיס להכנה מנטלית ומקצועית מוצלחת. מחקרים מראים שכתיבת ההוויות מעלה את המחויבות והמוטיבציה, ומשפרת את הביצועים שלך על המגרש.
+                  </motion.p>
+
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                    className="flex justify-center"
+                  >
+                    <Button 
+                      onClick={() => setCurrentStep("havayot")}
+                      size="lg"
+                      className="text-lg px-8 py-6"
+                    >
+                      הבנתי, בוא נתחיל
+                    </Button>
+                  </motion.div>
+                </CardContent>
+              </Card>
+            </div>
           </motion.div>
         )}
 
