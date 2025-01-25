@@ -10,7 +10,7 @@ interface HavayotTextInputProps {
 }
 
 export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
-  const [currentCategory, setCurrentCategory] = useState<CategoryKeyType>("social");
+  const [currentCategory, setCurrentCategory] = useState<CategoryKeyType>("professional");
   const [havayot, setHavayot] = useState<Record<string, string>>({
     professional: "",
     mental: "",
@@ -22,14 +22,21 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (havayot[currentCategory].trim()) {
-      onSubmit(havayot);
+      if (currentCategory === "social") {
+        onSubmit(havayot);
+      } else {
+        // Move to next category
+        const categories: CategoryKeyType[] = ["professional", "mental", "emotional", "social"];
+        const currentIndex = categories.indexOf(currentCategory);
+        setCurrentCategory(categories[currentIndex + 1]);
+      }
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && havayot[currentCategory].trim()) {
       e.preventDefault();
-      onSubmit(havayot);
+      handleSubmit(e);
     }
   };
 
@@ -39,7 +46,10 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
     <div className="space-y-6">
       <div className="text-center space-y-4">
         <h2 className="text-xl font-semibold">
-          כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה חברתית-תקשורתית במשחק?
+          {currentCategory === "professional" && "כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה מקצועית במשחק?"}
+          {currentCategory === "mental" && "כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה מנטלית במשחק?"}
+          {currentCategory === "emotional" && "כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה רגשית במשחק?"}
+          {currentCategory === "social" && "כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה חברתית-תקשורתית במשחק?"}
         </h2>
         <p className="text-gray-600">
           המחקר מוכיח שכאשר שחקן כותב את המטרות והדגשים שלו בעצמו, המחויבות שלו לביצוע עולה משמעותית. הכתיבה האישית מחזקת את המוטיבציה והחיבור הרגשי למטרות.
@@ -52,7 +62,7 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
             ℹ️
           </div>
           <div className="text-sm text-blue-800">
-            <p>מוזמן לראות דוגמאות להוויות חברתיות-תקשורתיות בלחיצה על הכפתור.</p>
+            <p>מוזמן לראות דוגמאות להוויות {currentCategoryData.name} בלחיצה על הכפתור.</p>
           </div>
         </div>
       </div>
@@ -82,7 +92,7 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
           className="w-full bg-primary hover:bg-primary/90"
           disabled={!havayot[currentCategory].trim()}
         >
-          סיים
+          {currentCategory === "social" ? "סיים" : "המשך"}
           <ChevronLeft className="mr-2 h-4 w-4" />
         </Button>
       </form>
