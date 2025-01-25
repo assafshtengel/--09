@@ -40,9 +40,15 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && havayot[currentCategory].trim()) {
+    if (e.key === 'Enter') {
       e.preventDefault();
-      handleSubmit(e);
+      if (havayot[currentCategory].trim()) {
+        if (currentCategory === "social") {
+          handleFinish();
+        } else {
+          handleSubmit(e);
+        }
+      }
     }
   };
 
