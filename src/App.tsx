@@ -26,6 +26,7 @@ import PreGamePlanner from "./pages/PreGamePlanner";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import HavayotCategories from "./pages/HavayotCategories";
 import PreMatchReportsList from "./pages/PreMatchReportsList";
+import { HavayotIntroPage } from "@/components/pre-match/HavayotIntroPage";
 
 const queryClient = new QueryClient();
 
@@ -272,6 +273,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <MentalLearning />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/pre-match-intro"
+                element={
+                  <ProtectedRoute>
+                    <HavayotIntroPage />
                   </ProtectedRoute>
                 }
               />
