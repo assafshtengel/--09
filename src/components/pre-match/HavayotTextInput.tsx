@@ -19,11 +19,17 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
   });
   const [showExamples, setShowExamples] = useState(false);
 
+  const currentCategoryData = havayotCategories[currentCategory];
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (havayot[currentCategory].trim()) {
       if (currentCategory === "social") {
-        onSubmit(havayot);
+        // Only submit all havayot when we're on the last category
+        const allHavayotFilled = Object.values(havayot).every(v => v.trim());
+        if (allHavayotFilled) {
+          onSubmit(havayot);
+        }
       } else {
         // Move to next category
         const categories: CategoryKeyType[] = ["professional", "mental", "emotional", "social"];
@@ -40,16 +46,26 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
     }
   };
 
-  const currentCategoryData = havayotCategories[currentCategory];
+  const getCategoryTitle = () => {
+    switch (currentCategory) {
+      case "professional":
+        return "כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה מקצועית במשחק?";
+      case "mental":
+        return "כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה מנטלית במשחק?";
+      case "emotional":
+        return "כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה רגשית במשחק?";
+      case "social":
+        return "כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה חברתית-תקשורתית במשחק?";
+      default:
+        return "";
+    }
+  };
 
   return (
     <div className="space-y-6">
       <div className="text-center space-y-4">
         <h2 className="text-xl font-semibold">
-          {currentCategory === "professional" && "כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה מקצועית במשחק?"}
-          {currentCategory === "mental" && "כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה מנטלית במשחק?"}
-          {currentCategory === "emotional" && "כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה רגשית במשחק?"}
-          {currentCategory === "social" && "כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה חברתית-תקשורתית במשחק?"}
+          {getCategoryTitle()}
         </h2>
         <p className="text-gray-600">
           המחקר מוכיח שכאשר שחקן כותב את המטרות והדגשים שלו בעצמו, המחויבות שלו לביצוע עולה משמעותית. הכתיבה האישית מחזקת את המוטיבציה והחיבור הרגשי למטרות.
