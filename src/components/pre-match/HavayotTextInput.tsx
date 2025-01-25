@@ -26,10 +26,11 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
     }
   };
 
-  const getNextCategory = (current: CategoryKeyType): CategoryKeyType | null => {
-    const categories: CategoryKeyType[] = ["professional", "mental", "emotional", "social"];
-    const currentIndex = categories.indexOf(current);
-    return categories[currentIndex + 1] || null;
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && havayot[currentCategory].trim()) {
+      e.preventDefault();
+      onSubmit(havayot);
+    }
   };
 
   const currentCategoryData = havayotCategories[currentCategory];
@@ -61,6 +62,7 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
           <Input
             value={havayot[currentCategory]}
             onChange={(e) => setHavayot({ ...havayot, [currentCategory]: e.target.value })}
+            onKeyPress={handleKeyPress}
             placeholder={`רשום את ההוויה שאיתה אתה מגיע למשחק בתחום ה${currentCategoryData.name}`}
             className="h-14 text-right"
           />
