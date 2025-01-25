@@ -22,14 +22,7 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (havayot[currentCategory].trim()) {
-      if (currentCategory === "social") {
-        onSubmit(havayot);
-      } else {
-        const nextCategory = getNextCategory(currentCategory);
-        if (nextCategory) {
-          setCurrentCategory(nextCategory);
-        }
-      }
+      onSubmit(havayot);
     }
   };
 
@@ -87,7 +80,7 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
           className="w-full bg-primary hover:bg-primary/90"
           disabled={!havayot[currentCategory].trim()}
         >
-          {currentCategory === "social" ? "סיים" : "המשך"}
+          סיים
           <ChevronLeft className="mr-2 h-4 w-4" />
         </Button>
       </form>
