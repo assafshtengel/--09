@@ -127,6 +127,30 @@ export type Database = {
           },
         ]
       }
+      jotform_submissions: {
+        Row: {
+          answers: Json
+          created_at: string
+          form_id: string
+          id: string
+          submission_id: string
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          form_id: string
+          id?: string
+          submission_id: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          form_id?: string
+          id?: string
+          submission_id?: string
+        }
+        Relationships: []
+      }
       learning_resources: {
         Row: {
           created_at: string

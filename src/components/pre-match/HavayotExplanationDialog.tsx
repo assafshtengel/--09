@@ -24,7 +24,7 @@ export const HavayotExplanationDialog = ({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl text-center mb-4">
-            הוויות למשחק
+            כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה מקצועית במשחק?
           </DialogTitle>
         </DialogHeader>
         <motion.div
@@ -33,16 +33,10 @@ export const HavayotExplanationDialog = ({
           className="space-y-4 text-right leading-relaxed"
         >
           <p>
-            שחקני העל מחליטים איך הם יישחקו עוד לפני שהמשחק מתחיל והמטרה מושגת,
-            עוד הרבה לפני שריקת הפתיחה למשחק.
+            המחקר מוכיח שכאשר שחקן כותב את המטרות והדגשים שלו בעצמו, המחויבות שלו לביצוע עולה משמעותית. הכתיבה האישית מחזקת את המוטיבציה והחיבור הרגשי למטרות.
           </p>
-          <p>
-            כאשר הם עושים זאת, הם לא נותנים לתוצאות ולדברים שקורים במהלך המשחק
-            להשפיע על האנרגיות, מצב הרוח וסגנון המשחק שלהם.
-          </p>
-          <p>
-            כעת זה הרגע שלך לנצח את המשחק לפני שריקת הפתיחה ולבחור את ההוויות
-            שיובילו אותך להצלחה.
+          <p className="text-sm text-blue-600">
+            מוזמן לראות דוגמאות להוויות מקצועיות בלחיצה על הכפתור.
           </p>
         </motion.div>
         <div className="mt-6 flex justify-center">
