@@ -6,7 +6,7 @@ import { PostMatchReport } from "@/components/post-match/PostMatchReport";
 import { MatchHistory } from "@/components/game/history/MatchHistory";
 import { MatchDetails } from "@/components/game/history/MatchDetails";
 import { HavayotIntroPage } from "@/components/pre-match/HavayotIntroPage";
-import { Sonner } from "sonner";
+import { toast } from "sonner";
 
 const App = () => {
   return (
@@ -20,7 +20,7 @@ const App = () => {
         <Route path="/match/:matchId" element={<MatchDetails />} />
       </Routes>
       <Toaster />
-      <Sonner />
+      {/* Using toast provider instead of Sonner component */}
     </Router>
   );
 };
