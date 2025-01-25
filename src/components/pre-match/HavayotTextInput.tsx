@@ -44,9 +44,11 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
   return (
     <div className="space-y-6">
       <div className="text-center space-y-4">
-        <h2 className="text-xl font-semibold">{currentCategoryData.name}</h2>
+        <h2 className="text-xl font-semibold">
+          כיצד אתה רוצה להיראות ועל מה לשים דגש מבחינה מקצועית במשחק?
+        </h2>
         <p className="text-gray-600">
-          {currentCategoryData.description}
+          המחקר מוכיח שכאשר שחקן כותב את המטרות והדגשים שלו בעצמו, המחויבות שלו לביצוע עולה משמעותית. הכתיבה האישית מחזקת את המוטיבציה והחיבור הרגשי למטרות.
         </p>
       </div>
 
@@ -56,8 +58,7 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
             ℹ️
           </div>
           <div className="text-sm text-blue-800">
-            <p>התהליך הוכיח כי כאשר שחקן כותב את ההוויה בעצמו, ולא רק בוחר מתוך אפשרויות קיימות, המחויבות שלו למימוש עולה משמעותית.</p>
-            <p>הכתיבה האישית מחזקת את המחויבות והחיבור הרגשי לחוויה.</p>
+            <p>מוזמן לראות דוגמאות להוויות מקצועיות בלחיצה על הכפתור.</p>
           </div>
         </div>
       </div>
