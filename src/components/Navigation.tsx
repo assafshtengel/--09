@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
+import { Home, LayoutDashboard, LogOut, FileText } from "lucide-react";
 
 export const Navigation = () => {
   const navigate = useNavigate();
@@ -151,29 +152,81 @@ export const Navigation = () => {
   }
 
   return (
-    <nav className="bg-white shadow-sm p-4 mb-6">
-      <div className="max-w-md mx-auto flex justify-between items-center">
-        <Button variant="ghost" onClick={handleSignOut}>
-          התנתק
-        </Button>
-        <div className="flex gap-4">
-          <Button variant="ghost" onClick={() => navigate("/")}>
-            בית
-          </Button>
-          <Button variant="ghost" onClick={() => navigate("/profile")}>
-            פרופיל
-          </Button>
-          <Button variant="ghost" onClick={() => navigate("/portfolio")}>
-            תיק שחקן
-          </Button>
-          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
-            לוח בקרה
-          </Button>
-          {isAdmin && (
-            <Button variant="ghost" onClick={() => navigate("/admin")}>
-              ניהול
+    <nav className="bg-white shadow-md border-b">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 hover:bg-gray-100"
+              onClick={() => navigate("/")}
+            >
+              <Home className="h-4 w-4" />
+              בית
             </Button>
-          )}
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 hover:bg-gray-100"
+              onClick={() => navigate("/dashboard")}
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              לוח בקרה
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 hover:bg-gray-100"
+              onClick={() => navigate("/pre-match-report")}
+            >
+              <FileText className="h-4 w-4" />
+              הכנה למשחק
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-2 hover:bg-gray-100"
+                onClick={() => navigate("/admin")}
+              >
+                ניהול
+              </Button>
+            )}
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 hover:bg-gray-100"
+              onClick={() => navigate("/profile")}
+            >
+              פרופיל
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 hover:bg-gray-100"
+              onClick={() => navigate("/portfolio")}
+            >
+              תיק שחקן
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 text-red-600 hover:bg-red-50 hover:text-red-700"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-4 w-4" />
+              התנתק
+            </Button>
+          </div>
         </div>
       </div>
     </nav>
