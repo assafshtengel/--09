@@ -1,20 +1,20 @@
+import { useEffect, useState, Suspense, lazy } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState, Suspense, lazy } from "react";
-import { useAuthState } from "@/hooks/use-auth-state";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { 
   Trophy, Timer, FileText, Calendar, Activity, History, 
-  Share2, PlayCircle, Eye, Brain, Dumbbell, Apple, 
+  Share2, PlayCircle, Eye, Brain, Apple, Dumbbell, 
   Target, Settings, Moon, MessageCircle, Clock, ClipboardList,
   BarChart2, ListTodo, Book, Edit, FileSpreadsheet
 } from "lucide-react";
 
-// Lazy load components with proper default exports
+// Lazy load components
 const PerformanceChart = lazy(() => import("@/components/dashboard/PerformanceChart").then(module => ({ default: module.PerformanceChart })));
 const GoalsProgress = lazy(() => import("@/components/dashboard/GoalsProgress").then(module => ({ default: module.GoalsProgress })));
 const StatsOverview = lazy(() => import("@/components/dashboard/StatsOverview").then(module => ({ default: module.StatsOverview })));
@@ -22,188 +22,46 @@ const MentalCoachingChat = lazy(() => import("@/components/dashboard/MentalCoach
 const MotivationalPopup = lazy(() => import("@/components/dashboard/MotivationalPopup").then(module => ({ default: module.MotivationalPopup })));
 const GoalsSection = lazy(() => import("@/components/dashboard/GoalsSection").then(module => ({ default: module.GoalsSection })));
 
-// Loading fallback component
+// Loading fallback
 const LoadingFallback = () => (
   <div className="flex justify-center items-center p-8">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
   </div>
 );
 
-const chatOptions = [
-  {
-    type: "mental",
-    title: "מנטלי",
-    icon: <Brain className="h-4 w-4" />,
-  },
-  {
-    type: "nutrition",
-    title: "תזונה",
-    icon: <Apple className="h-4 w-4" />,
-  },
-  {
-    type: "physical",
-    title: "פיזי",
-    icon: <Dumbbell className="h-4 w-4" />,
-  },
-  {
-    type: "technical",
-    title: "טכני",
-    icon: <Settings className="h-4 w-4" />,
-  },
-  {
-    type: "tactical",
-    title: "טקטי",
-    icon: <Target className="h-4 w-4" />,
-  },
-  {
-    type: "sleep",
-    title: "שינה",
-    icon: <Moon className="h-4 w-4" />,
-  },
-];
-
-const quickActions = [
-  {
-    title: "דוח טרום משחק",
-    description: "הכנת דוח לפני המשחק",
-    icon: <Edit className="h-6 w-6" />,
-    gradient: "from-indigo-500 to-indigo-600",
-    path: "/pre-match-report",
-  },
-  {
-    title: "סיכום משחק",
-    description: "צפייה וניתוח משחקים",
-    icon: <FileSpreadsheet className="h-6 w-6" />,
-    gradient: "from-cyan-500 to-cyan-600",
-    path: "/game-selection",
-  },
-  {
-    title: "תכנון משחק",
-    description: "הכנה למשחק הבא",
-    icon: <PlayCircle className="h-6 w-6" />,
-    gradient: "from-blue-500 to-blue-600",
-    path: "/pre-game-planner",
-  },
-  {
-    title: "סיכום אימון",
-    description: "תיעוד ומעקב אחר אימונים",
-    icon: <ClipboardList className="h-6 w-6" />,
-    gradient: "from-green-500 to-green-600",
-    path: "/training-summary",
-  },
-  {
-    title: "לוח זמנים שבועי",
-    description: "ניהול הזמן השבועי שלך",
-    icon: <Calendar className="h-6 w-6" />,
-    gradient: "from-purple-500 to-purple-600",
-    path: "/weekly-schedule",
-  },
-  {
-    title: "היסטוריית משחקים",
-    description: "צפייה במשחקים קודמים",
-    icon: <History className="h-6 w-6" />,
-    gradient: "from-orange-500 to-orange-600",
-    path: "/game-history",
-  },
-  {
-    title: "מעקב יומי",
-    description: "תיעוד שגרה יומית",
-    icon: <Clock className="h-6 w-6" />,
-    gradient: "from-pink-500 to-pink-600",
-    path: "/daily-routine",
-  },
-  {
-    title: "למידה מנטאלית",
-    description: "משאבי למידה והדרכה",
-    icon: <Book className="h-6 w-6" />,
-    gradient: "from-yellow-500 to-yellow-600",
-    path: "/mental-learning",
-  },
-];
-
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { isLoading: isAuthLoading } = useAuthState();
-  const [isLoading, setIsLoading] = useState(true);
-  const [profile, setProfile] = useState<any>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [selectedChatType, setSelectedChatType] = useState<string | null>(null);
   const [showMotivationalPopup, setShowMotivationalPopup] = useState(true);
-  const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
 
-  useEffect(() => {
-    let isMounted = true;
-    let timeoutId: NodeJS.Timeout;
-
-    const loadProfileData = async () => {
-      try {
-        console.log("[Dashboard] Loading profile data...");
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session || !isMounted) {
-          console.log("[Dashboard] No session found");
-          if (isMounted) {
-            navigate("/login");
-          }
-          return;
-        }
-
-        // Use Promise.all to fetch data in parallel
-        const [profileData] = await Promise.all([
-          supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .maybeSingle()
-        ]);
-
-        if (profileData.error) {
-          console.error("[Dashboard] Profile fetch error:", profileData.error);
-          if (retryCount < 3 && isMounted) {
-            setRetryCount(prev => prev + 1);
-            timeoutId = setTimeout(loadProfileData, 1000 * (retryCount + 1));
-            return;
-          }
-          throw profileData.error;
-        }
-
-        if (isMounted) {
-          setUserEmail(session.user.email);
-          setProfile(profileData.data);
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error("[Dashboard] Error loading profile:", error);
-        if (isMounted) {
-          toast({
-            title: "שגיאה",
-            description: "לא ניתן לטעון את הפרופיל",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-        }
+  // Optimized data fetching with React Query
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        navigate("/login");
+        return null;
       }
-    };
+      
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .maybeSingle();
 
-    if (!isAuthLoading) {
-      loadProfileData();
-    }
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 30 * 60 * 1000, // 30 minutes
+  });
 
-    return () => {
-      isMounted = false;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [isAuthLoading, navigate, retryCount, toast]);
+  const isAdmin = profile?.email === "socr.co.il@gmail.com";
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-pulse text-lg">טוען...</div>
-      </div>
-    );
+  if (isProfileLoading) {
+    return <LoadingFallback />;
   }
 
   return (
@@ -215,7 +73,7 @@ const Dashboard = () => {
         />
       </Suspense>
       
-      {userEmail === "socr.co.il@gmail.com" && (
+      {isAdmin && (
         <Card 
           className="bg-gradient-to-br from-purple-600 to-purple-700 text-white cursor-pointer transform transition-all duration-200 hover:scale-105 hover:shadow-lg" 
           onClick={() => navigate("/admin/dashboard")}

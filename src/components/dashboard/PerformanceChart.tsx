@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   LineChart,
@@ -16,68 +16,57 @@ interface PerformanceData {
   successRate: number;
 }
 
-interface MatchAction {
-  result: string;
-  matches: {
-    match_date: string;
-  };
-}
-
-interface ProcessedData {
-  [key: string]: {
-    success: number;
-    total: number;
-  };
-}
-
 export const PerformanceChart = () => {
-  const [data, setData] = useState<PerformanceData[]>([]);
+  const { data = [], isLoading } = useQuery({
+    queryKey: ['matchActions'],
+    queryFn: async () => {
+      const { data: matchActions, error } = await supabase
+        .from("match_actions")
+        .select(`
+          *,
+          matches (
+            match_date
+          )
+        `)
+        .order('match_date', { foreignTable: 'matches', ascending: true });
 
-  useEffect(() => {
-    const fetchPerformanceData = async () => {
-      try {
-        const { data: matchActions, error } = await supabase
-          .from("match_actions")
-          .select(`
-            *,
-            matches (
-              match_date
-            )
-          `)
-          .order('match_date', { foreignTable: 'matches', ascending: true });
+      if (error) throw error;
 
-        if (error) {
-          console.error("Error fetching match actions:", error);
-          return;
+      const processedData = matchActions.reduce((acc: Record<string, { success: number, total: number }>, action: any) => {
+        const date = new Date(action.matches.match_date).toLocaleDateString();
+        if (!acc[date]) {
+          acc[date] = { success: 0, total: 0 };
         }
+        acc[date].total += 1;
+        if (action.result === "success") {
+          acc[date].success += 1;
+        }
+        return acc;
+      }, {});
 
-        // Process the data to calculate success rates by date
-        const processedData = (matchActions as MatchAction[]).reduce((acc: ProcessedData, action) => {
-          const date = new Date(action.matches.match_date).toLocaleDateString();
-          if (!acc[date]) {
-            acc[date] = { success: 0, total: 0 };
-          }
-          acc[date].total += 1;
-          if (action.result === "success") {
-            acc[date].success += 1;
-          }
-          return acc;
-        }, {});
+      return Object.entries(processedData).map(([date, stats]) => ({
+        date,
+        successRate: Math.round((stats.success / stats.total) * 100),
+      }));
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 30 * 60 * 1000, // 30 minutes
+  });
 
-        // Convert to array format for the chart
-        const chartData = Object.entries(processedData).map(([date, stats]) => ({
-          date,
-          successRate: Math.round((stats.success / stats.total) * 100),
-        }));
-
-        setData(chartData);
-      } catch (error) {
-        console.error("Error processing performance data:", error);
-      }
-    };
-
-    fetchPerformanceData();
-  }, []);
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>ביצועים לאורך זמן</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px] flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -92,7 +81,14 @@ export const PerformanceChart = () => {
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
-              <Line type="monotone" dataKey="successRate" stroke="#ea384c" name="אחוז הצלחה" />
+              <Line 
+                type="monotone" 
+                dataKey="successRate" 
+                stroke="#ea384c" 
+                name="אחוז הצלחה"
+                strokeWidth={2}
+                dot={{ strokeWidth: 2 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
