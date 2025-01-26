@@ -29,6 +29,48 @@ const LoadingFallback = () => (
   </div>
 );
 
+const chatOptions = [
+  {
+    type: 'mental',
+    title: 'שיחה מנטלית',
+    icon: <Brain className="h-4 w-4" />,
+  },
+  {
+    type: 'physical',
+    title: 'שיחה פיזית',
+    icon: <Activity className="h-4 w-4" />,
+  },
+  {
+    type: 'tactical',
+    title: 'שיחה טקטית',
+    icon: <Target className="h-4 w-4" />,
+  },
+];
+
+const quickActions = [
+  {
+    title: 'דוח טרום משחק',
+    description: 'הכנה למשחק הבא',
+    path: '/pre-match-report',
+    icon: <FileText className="h-5 w-5" />,
+    gradient: 'from-blue-500 to-blue-600',
+  },
+  {
+    title: 'מעקב משחק',
+    description: 'תיעוד ומעקב אחר משחקים',
+    path: '/game-history',
+    icon: <History className="h-5 w-5" />,
+    gradient: 'from-green-500 to-green-600',
+  },
+  {
+    title: 'סיכום אימון',
+    description: 'סיכום והערכת אימונים',
+    path: '/training-summary',
+    icon: <Dumbbell className="h-5 w-5" />,
+    gradient: 'from-purple-500 to-purple-600',
+  },
+];
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [selectedChatType, setSelectedChatType] = useState<string | null>(null);
@@ -55,7 +97,7 @@ const Dashboard = () => {
       return data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 
   const isAdmin = profile?.email === "socr.co.il@gmail.com";

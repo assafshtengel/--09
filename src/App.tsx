@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState, Suspense, lazy } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/Navigation";
+import { AdminRoute } from "@/components/AdminRoute";
 
 // Lazy load components
 const Index = lazy(() => import("./pages/Index"));
