@@ -16,11 +16,34 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const preMatchQuestions = [
+  {
+    id: "mental_preparation",
+    question: "איך אתה מרגיש מבחינה מנטלית לקראת המשחק?"
+  },
+  {
+    id: "physical_condition",
+    question: "איך אתה מרגיש מבחינה פיזית לקראת המשחק?"
+  },
+  {
+    id: "team_confidence",
+    question: "מה רמת הביטחון שלך ביכולת הקבוצה להשיג את המטרות במשחק?"
+  },
+  {
+    id: "personal_goals",
+    question: "מהם היעדים האישיים שלך למשחק הזה?"
+  },
+  {
+    id: "opponent_analysis",
+    question: "מה אתה יודע על היריב ואיך אתה מתכונן להתמודד איתו?"
+  }
+];
+
 export const PreMatchQuestionnaire = ({ onSubmit, onNext }: PreMatchQuestionnaireProps) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      answers: {}
+      answers: preMatchQuestions.reduce((acc, q) => ({ ...acc, [q.id]: "" }), {})
     }
   });
 
@@ -34,29 +57,26 @@ export const PreMatchQuestionnaire = ({ onSubmit, onNext }: PreMatchQuestionnair
       <h2 className="text-2xl font-bold text-center">שאלון טרום משחק</h2>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          {/* Example form fields */}
-          <FormField
-            control={form.control}
-            name="answers.question1"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>שאלה 1</FormLabel>
-                <Textarea {...field} className="mt-1" dir="rtl" />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="answers.question2"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>שאלה 2</FormLabel>
-                <Textarea {...field} className="mt-1" dir="rtl" />
-              </FormItem>
-            )}
-          />
+          {preMatchQuestions.map((q) => (
+            <FormField
+              key={q.id}
+              control={form.control}
+              name={`answers.${q.id}`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">{q.question}</FormLabel>
+                  <Textarea 
+                    {...field} 
+                    className="mt-2 min-h-[100px]" 
+                    dir="rtl"
+                    placeholder="הכנס את תשובתך כאן..."
+                  />
+                </FormItem>
+              )}
+            />
+          ))}
           
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-4">
             <Button 
               type="submit"
               size="lg"
