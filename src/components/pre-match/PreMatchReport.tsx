@@ -324,7 +324,10 @@ export const PreMatchReport = () => {
 
         {currentStep === "questions" && (
           <motion.div {...commonProps} key="questions">
-            <PreMatchQuestionnaire onSubmit={handleQuestionsSubmit} />
+            <PreMatchQuestionnaire 
+              onSubmit={handleQuestionsSubmit}
+              onNext={() => setCurrentStep("summary")}
+            />
           </motion.div>
         )}
 
