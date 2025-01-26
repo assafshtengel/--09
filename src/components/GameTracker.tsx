@@ -468,3 +468,5 @@ export const GameTracker = () => {
     </GameLayout>
   );
 };
+
+export default GameTracker;
