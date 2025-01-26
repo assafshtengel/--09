@@ -1,57 +1,72 @@
 import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
-import { useState } from "react";
+import { Form, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface PreMatchQuestionnaireProps {
   onSubmit: (answers: Record<string, string>) => void;
   onNext: () => void;
 }
 
-export const PreMatchQuestionnaire = ({ onSubmit, onNext }: PreMatchQuestionnaireProps) => {
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+const formSchema = z.object({
+  answers: z.record(z.string())
+});
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(answers);
-    onNext(); // Call onNext after submitting
+type FormValues = z.infer<typeof formSchema>;
+
+export const PreMatchQuestionnaire = ({ onSubmit, onNext }: PreMatchQuestionnaireProps) => {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      answers: {}
+    }
+  });
+
+  const handleSubmit = (values: FormValues) => {
+    onSubmit(values.answers);
+    onNext();
   };
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-center">שאלון טרום משחק</h2>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Form>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           {/* Example form fields */}
-          <div>
-            <label htmlFor="question1" className="block text-sm font-medium text-gray-700">שאלה 1</label>
-            <input
-              id="question1"
-              type="text"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-opacity-50"
-              onChange={(e) => setAnswers({ ...answers, question1: e.target.value })}
-            />
+          <FormField
+            control={form.control}
+            name="answers.question1"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>שאלה 1</FormLabel>
+                <Textarea {...field} className="mt-1" dir="rtl" />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="answers.question2"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>שאלה 2</FormLabel>
+                <Textarea {...field} className="mt-1" dir="rtl" />
+              </FormItem>
+            )}
+          />
+          
+          <div className="flex justify-end">
+            <Button 
+              type="submit"
+              size="lg"
+              className="w-full md:w-auto"
+            >
+              המשך
+            </Button>
           </div>
-          <div>
-            <label htmlFor="question2" className="block text-sm font-medium text-gray-700">שאלה 2</label>
-            <input
-              id="question2"
-              type="text"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-opacity-50"
-              onChange={(e) => setAnswers({ ...answers, question2: e.target.value })}
-            />
-          </div>
-        </Form>
-        
-        <div className="flex justify-end">
-          <Button 
-            type="submit"
-            size="lg"
-            className="w-full md:w-auto"
-          >
-            המשך
-          </Button>
-        </div>
-      </form>
+        </form>
+      </Form>
     </div>
   );
 };
