@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Link } from "lucide-react";
 
 interface PreMatchQuestionnaireProps {
   onSubmit: (answers: Record<string, string>) => void;
@@ -17,6 +18,18 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const preMatchQuestions = [
+  {
+    id: "mental_video_reflection",
+    question: "לאחר צפייה בסרטון המנטאלי, מה הדבר העיקרי שלמדת ואיך תיישם אותו במשחק הקרוב?",
+    videoLink: "https://example.com/mental-video",
+    isFixed: true
+  },
+  {
+    id: "physical_video_reflection",
+    question: "לאחר צפייה בסרטון הפיזי, איך אתה מתכנן ליישם את הטכניקות שראית במשחק?",
+    videoLink: "https://example.com/physical-video",
+    isFixed: true
+  },
   {
     id: "mental_preparation",
     question: "איך אתה מרגיש מבחינה מנטלית לקראת המשחק?"
@@ -64,7 +77,20 @@ export const PreMatchQuestionnaire = ({ onSubmit, onNext }: PreMatchQuestionnair
               name={`answers.${q.id}`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">{q.question}</FormLabel>
+                  <FormLabel className="text-base font-medium">
+                    {q.question}
+                    {q.isFixed && q.videoLink && (
+                      <a 
+                        href={q.videoLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 mr-2 text-primary hover:text-primary/80"
+                      >
+                        <Link className="h-4 w-4" />
+                        צפה בסרטון
+                      </a>
+                    )}
+                  </FormLabel>
                   <Textarea 
                     {...field} 
                     className="mt-2 min-h-[100px]" 
