@@ -108,7 +108,19 @@ const GameHistory = () => {
     try {
       console.log('Starting deletion process for game:', gameToDelete.id);
 
-      // First, delete post-game feedback
+      // First, delete pre-match attribute selections
+      console.log('Deleting pre-match attribute selections...');
+      const { error: attributeSelectionsError } = await supabase
+        .from("pre_match_attribute_selections")
+        .delete()
+        .eq("match_id", gameToDelete.id);
+
+      if (attributeSelectionsError) {
+        console.error('Error deleting pre-match attribute selections:', attributeSelectionsError);
+        throw new Error(`Failed to delete pre-match attribute selections: ${attributeSelectionsError.message}`);
+      }
+
+      // Then delete post-game feedback
       console.log('Deleting post-game feedback...');
       const { error: feedbackError } = await supabase
         .from("post_game_feedback")
