@@ -4,11 +4,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Eye, RefreshCw, Target, ChartBar } from "lucide-react";
+import { Eye, RefreshCw, Target, ChartBar, Trash2 } from "lucide-react";
 import { GameHistoryItem } from "@/components/game/history/types";
 import { GameDetailsDialog } from "@/components/game/history/GameDetailsDialog";
 import { PreMatchGoalsDialog } from "@/components/game/history/PreMatchGoalsDialog";
 import { GameSummaryDialog } from "@/components/game/history/GameSummaryDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const GameHistory = () => {
   const navigate = useNavigate();
@@ -18,6 +28,8 @@ const GameHistory = () => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showGoalsDialog, setShowGoalsDialog] = useState(false);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [gameToDelete, setGameToDelete] = useState<GameHistoryItem | null>(null);
 
   useEffect(() => {
     fetchGames();
@@ -50,7 +62,6 @@ const GameHistory = () => {
 
       if (error) throw error;
       
-      // Transform the data to match GameHistoryItem type
       const transformedData: GameHistoryItem[] = (data || []).map(item => {
         const preMatchReport = item.pre_match_report ? {
           actions: Array.isArray(item.pre_match_report.actions) 
@@ -83,6 +94,50 @@ const GameHistory = () => {
       toast.error("שגיאה בטעינת המשחקים");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteGame = async (game: GameHistoryItem) => {
+    setGameToDelete(game);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!gameToDelete) return;
+
+    try {
+      // Delete match actions
+      const { error: actionsError } = await supabase
+        .from("match_actions")
+        .delete()
+        .eq("match_id", gameToDelete.id);
+
+      if (actionsError) throw actionsError;
+
+      // Delete match notes
+      const { error: notesError } = await supabase
+        .from("match_notes")
+        .delete()
+        .eq("match_id", gameToDelete.id);
+
+      if (notesError) throw notesError;
+
+      // Delete the match itself
+      const { error: matchError } = await supabase
+        .from("matches")
+        .delete()
+        .eq("id", gameToDelete.id);
+
+      if (matchError) throw matchError;
+
+      setGames(prevGames => prevGames.filter(g => g.id !== gameToDelete.id));
+      toast.success("המשחק נמחק בהצלחה");
+    } catch (error) {
+      console.error("Error deleting game:", error);
+      toast.error("שגיאה במחיקת המשחק");
+    } finally {
+      setShowDeleteDialog(false);
+      setGameToDelete(null);
     }
   };
 
@@ -174,6 +229,14 @@ const GameHistory = () => {
                   >
                     <RefreshCw className="h-4 w-4" />
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="text-red-500 hover:text-white hover:bg-red-500"
+                    onClick={() => handleDeleteGame(game)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -215,6 +278,23 @@ const GameHistory = () => {
           />
         </>
       )}
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>האם אתה בטוח שברצונך למחוק את המשחק?</AlertDialogTitle>
+            <AlertDialogDescription>
+              פעולה זו תמחק את המשחק ואת כל הנתונים הקשורים אליו. לא ניתן לבטל פעולה זו.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
+              מחק משחק
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
