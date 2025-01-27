@@ -20,6 +20,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+type TableInfo = {
+  name: "pre_match_attribute_selections" | "post_game_feedback" | "match_actions" | 
+        "match_notes" | "match_mental_feedback" | "match_substitutions" | "match_halftime_notes";
+  displayName: string;
+};
+
 const GameHistory = () => {
   const navigate = useNavigate();
   const [games, setGames] = useState<GameHistoryItem[]>([]);
@@ -108,8 +114,7 @@ const GameHistory = () => {
     try {
       console.log('Starting deletion process for game:', gameToDelete.id);
 
-      // Delete in correct order to handle foreign key constraints
-      const tables = [
+      const tables: TableInfo[] = [
         { name: "pre_match_attribute_selections", displayName: "pre-match attribute selections" },
         { name: "post_game_feedback", displayName: "post-game feedback" },
         { name: "match_actions", displayName: "match actions" },
