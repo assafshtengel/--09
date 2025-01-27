@@ -16,6 +16,7 @@ export interface GameHistoryItem {
   id: string;
   match_date: string;
   opponent: string | null;
+  status: string;
   pre_match_report?: {
     actions: Action[];
     questions_answers: QuestionAnswer[];
