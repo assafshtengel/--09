@@ -26,6 +26,8 @@ type TableInfo = {
   displayName: string;
 };
 
+const GAMES_PER_PAGE = 5;
+
 const GameHistory = () => {
   const navigate = useNavigate();
   const [games, setGames] = useState<GameHistoryItem[]>([]);
@@ -36,18 +38,27 @@ const GameHistory = () => {
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [gameToDelete, setGameToDelete] = useState<GameHistoryItem | null>(null);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   useEffect(() => {
     fetchGames();
   }, []);
 
-  const fetchGames = async () => {
+  const fetchGames = async (fromStart: boolean = true) => {
     try {
+      setIsLoadingMore(!fromStart);
+      setIsLoading(fromStart);
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         navigate("/auth");
         return;
       }
+
+      const currentPage = fromStart ? 0 : page;
+      const start = currentPage * GAMES_PER_PAGE;
 
       const { data, error } = await supabase
         .from("matches")
@@ -64,7 +75,8 @@ const GameHistory = () => {
         `)
         .eq("player_id", user.id)
         .eq("status", "ended")
-        .order("match_date", { ascending: false });
+        .order("match_date", { ascending: false })
+        .range(start, start + GAMES_PER_PAGE - 1);
 
       if (error) throw error;
       
@@ -94,12 +106,22 @@ const GameHistory = () => {
         };
       });
 
-      setGames(transformedData);
+      if (fromStart) {
+        setGames(transformedData);
+      } else {
+        setGames(prev => [...prev, ...transformedData]);
+      }
+
+      setHasMore(data?.length === GAMES_PER_PAGE);
+      if (!fromStart) {
+        setPage(currentPage + 1);
+      }
     } catch (error) {
       console.error("Error fetching games:", error);
       toast.error("שגיאה בטעינת המשחקים");
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
   };
 
@@ -273,6 +295,18 @@ const GameHistory = () => {
           </div>
         )}
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center mt-6">
+          <Button
+            onClick={() => fetchGames(false)}
+            disabled={isLoadingMore}
+            className="w-full max-w-xs"
+          >
+            {isLoadingMore ? "טוען..." : "טען משחקים נוספים"}
+          </Button>
+        </div>
+      )}
 
       {selectedGame && (
         <>
