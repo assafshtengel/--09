@@ -214,7 +214,7 @@ export const MatchQuestionDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto" hideCloseButton>
+      <DialogContent className="max-w-md mx-auto">
         <DialogHeader>
           <DialogTitle className="text-xl text-center mb-6">
             {question.label}
