@@ -21,13 +21,13 @@ const preMatchQuestions = [
   {
     id: "self_talk_word",
     question: "מה המילה שמחזירה לך ? ( המילה שאתה אומר לעצמך ברגע שהביטחון מעט יורד)",
-    videoLink: "https://example.com/mental-video",
+    videoLink: "https://www.youtube.com/watch?v=Ks-_Mh1QhMc",
     isFixed: true
   },
   {
     id: "pre_game_pressure",
     question: "איך אתה מתייחס ללחץ לפני משחק ?",
-    videoLink: "https://example.com/physical-video",
+    videoLink: "https://www.kapwing.com/",
     isFixed: true
   },
   {
