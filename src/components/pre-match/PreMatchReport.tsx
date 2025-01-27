@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
-import { ChevronRight, ChevronLeft, Link, Pencil } from "lucide-react";
+import { ChevronRight, ChevronLeft, Link } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -183,29 +183,24 @@ export const PreMatchReport = () => {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-lg p-4 shadow-sm border border-gray-100"
+        className="bg-white rounded-lg p-6 shadow-md border border-gray-100"
       >
-        <h3 className="text-lg font-semibold text-center mb-3">
+        <h3 className="text-xl font-semibold text-center mb-4 text-primary">
           ההוויות שבחרת למשחק
         </h3>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {rows.map((row, rowIndex) => (
-            <div key={rowIndex} className="grid grid-cols-2 gap-3">
+            <div key={rowIndex} className="grid grid-cols-2 gap-4">
               {row.map(([category]) => (
                 havayot[category] && (
-                  <div key={category} className="flex items-center justify-between space-x-2 bg-gray-50/50 rounded-lg p-2">
-                    <button
-                      onClick={() => handleEditHavaya(category)}
-                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                    >
-                      <Pencil className="h-3 w-3 text-gray-400" />
-                    </button>
-                    <div className="flex items-center justify-end flex-grow">
-                      <div
-                        className={`text-xs px-3 py-1 rounded-full border transition-colors`}
-                      >
+                  <div 
+                    key={category} 
+                    className="flex items-center justify-end bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 shadow-sm transition-all duration-200 hover:shadow-md"
+                  >
+                    <div className="text-right">
+                      <span className="text-lg font-medium px-4 py-2 rounded-full bg-white/80 text-primary shadow-sm border border-primary/10">
                         {havayot[category]}
-                      </div>
+                      </span>
                     </div>
                   </div>
                 )
@@ -398,3 +393,4 @@ export const PreMatchReport = () => {
     </div>
   );
 };
+
