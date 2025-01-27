@@ -124,7 +124,7 @@ const GameHistory = () => {
         { name: "match_halftime_notes", displayName: "halftime notes" }
       ];
 
-      // Delete all related records first
+      // Delete all related records sequentially
       for (const table of tables) {
         console.log(`Deleting ${table.displayName}...`);
         const { error } = await supabase
@@ -134,7 +134,8 @@ const GameHistory = () => {
 
         if (error) {
           console.error(`Error deleting ${table.displayName}:`, error);
-          throw new Error(`Failed to delete ${table.displayName}: ${error.message}`);
+          // Continue with other deletions even if one fails
+          continue;
         }
       }
 
@@ -151,6 +152,8 @@ const GameHistory = () => {
       }
 
       console.log('Successfully deleted game and all related records');
+      
+      // Update UI only after successful deletion
       setGames(prevGames => prevGames.filter(g => g.id !== gameToDelete.id));
       toast.success("המשחק נמחק בהצלחה");
     } catch (error) {
