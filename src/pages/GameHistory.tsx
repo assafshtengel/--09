@@ -66,6 +66,7 @@ const GameHistory = () => {
           id,
           match_date,
           opponent,
+          status,
           pre_match_report:pre_match_report_id (
             actions,
             questions_answers,
@@ -74,7 +75,7 @@ const GameHistory = () => {
           match_actions (*)
         `)
         .eq("player_id", user.id)
-        .eq("status", "ended")
+        .or('status.eq.ended,status.eq.preview,status.eq.in_progress')
         .order("match_date", { ascending: false })
         .range(start, start + GAMES_PER_PAGE - 1);
 
@@ -101,6 +102,7 @@ const GameHistory = () => {
           id: item.id,
           match_date: item.match_date,
           opponent: item.opponent,
+          status: item.status,
           pre_match_report: preMatchReport,
           match_actions: item.match_actions
         };
@@ -235,6 +237,11 @@ const GameHistory = () => {
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     {new Date(game.match_date).toLocaleDateString("he-IL")}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {game.status === 'ended' ? 'הסתיים' : 
+                     game.status === 'preview' ? 'טרם התחיל' : 
+                     'בתהליך'}
                   </p>
                 </div>
                 <div className="flex gap-2">
