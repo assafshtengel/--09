@@ -21,7 +21,7 @@ const preMatchQuestions = [
   {
     id: "self_talk_word",
     question: "מה המילה שמחזירה לך ? ( המילה שאתה אומר לעצמך ברגע שהביטחון מעט יורד)",
-    videoLink: "https://www.youtube.com/watch?v=Ks-_Mh1QhMc",
+    videoLink: "https://www.youtube.com/watch?v=Anu7qc0KVgI",
     isFixed: true
   },
   {
