@@ -27,7 +27,7 @@ const preMatchQuestions = [
   {
     id: "pre_game_pressure",
     question: "איך אתה מתייחס ללחץ לפני משחק ?",
-    videoLink: "https://www.kapwing.com/",
+    videoLink: "https://did.li/videoai1",
     isFixed: true
   },
   {
