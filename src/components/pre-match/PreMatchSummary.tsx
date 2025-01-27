@@ -95,6 +95,27 @@ export const PreMatchSummary = ({
     });
   };
 
+  const getQuestionText = (questionId: string) => {
+    switch (questionId) {
+      case "self_talk_word":
+        return "מה המילה שמחזירה לך ? (המילה שאתה אומר לעצמך ברגע שהביטחון מעט יורד)";
+      case "pre_game_pressure":
+        return "איך אתה מתייחס ללחץ לפני משחק ?";
+      case "mental_preparation":
+        return "איך אתה מרגיש מבחינה מנטלית לקראת המשחק?";
+      case "physical_condition":
+        return "איך אתה מרגיש מבחינה פיזית לקראת המשחק?";
+      case "team_confidence":
+        return "מה רמת הביטחון שלך ביכולת הקבוצה להשיג את המטרות במשחק?";
+      case "personal_goals":
+        return "מהם היעדים האישיים שלך למשחק הזה?";
+      case "opponent_analysis":
+        return "מה אתה יודע על היריב ואיך אתה מתכונן להתמודד איתו?";
+      default:
+        return questionId;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div id="pre-match-summary">
@@ -157,11 +178,17 @@ export const PreMatchSummary = ({
         <div className="mt-8">
           <h3 className="text-lg font-semibold mb-4 text-right">תשובות לשאלות</h3>
           <div className="space-y-4">
-            {Object.entries(answers).map(([question, answer], index) => (
-              <div key={index} className="border p-3 rounded-lg">
-                <p className="font-medium text-right">{question}</p>
-                <p className="text-muted-foreground text-right">{answer}</p>
-              </div>
+            {Object.entries(answers).map(([questionId, answer], index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="border p-4 rounded-lg bg-white shadow-sm"
+              >
+                <p className="font-medium text-right mb-2 text-primary">{getQuestionText(questionId)}</p>
+                <p className="text-gray-700 text-right whitespace-pre-wrap">{answer}</p>
+              </motion.div>
             ))}
           </div>
         </div>
