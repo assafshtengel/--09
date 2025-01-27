@@ -22,7 +22,7 @@ interface HavayotPopupProps {
 export const HavayotPopup = ({ isOpen, onClose, category }: HavayotPopupProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader className="flex justify-between items-center">
           <Button
             variant="ghost"
@@ -39,11 +39,11 @@ export const HavayotPopup = ({ isOpen, onClose, category }: HavayotPopupProps) =
           <div className="space-y-4">
             <p className="text-gray-600 text-right">{category.description}</p>
             
-            <div className="grid gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {category.havayot.map((havaya, index) => (
                 <div 
                   key={index}
-                  className="bg-gray-50 p-4 rounded-lg space-y-2"
+                  className="bg-gray-50 hover:bg-gray-100 transition-colors p-4 rounded-lg space-y-2"
                 >
                   <h3 className="font-medium text-right">{havaya.name}</h3>
                   <p className="text-sm text-gray-600 text-right">{havaya.description}</p>

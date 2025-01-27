@@ -32,7 +32,11 @@ export const havayotCategories: Record<CategoryKeyType, CategoryType> = {
       { name: "חודר", description: "יכולת חדירה מהירה עם כדור דרך מרחבים צרים" },
       { name: "בולם", description: "יכולת עצירת כדור והשתלטות מיידית" },
       { name: "מוביל", description: "הובלת כדור מהירה תוך שמירה על שליטה מלאה" },
-      { name: "מגן", description: "טכניקת הגנה מתקדמת על הכדור מול לחץ" }
+      { name: "מגן", description: "טכניקת הגנה מתקדמת על הכדור מול לחץ" },
+      { name: "ממוקד", description: "שמירה על ריכוז ודיוק בביצוע פעולות טכניות" },
+      { name: "יעיל", description: "ביצוע מהלכים טכניים בצורה חסכונית ומדויקת" },
+      { name: "מנהיג", description: "יכולת הובלה והכוונה של המשחק הקבוצתי" },
+      { name: "אקטיבי", description: "השתתפות פעילה ודינמית במהלכי המשחק" }
     ]
   },
   mental: {
