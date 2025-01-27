@@ -106,67 +106,98 @@ const GameHistory = () => {
     if (!gameToDelete) return;
 
     try {
+      console.log('Starting deletion process for game:', gameToDelete.id);
+
       // First, delete post-game feedback
+      console.log('Deleting post-game feedback...');
       const { error: feedbackError } = await supabase
         .from("post_game_feedback")
         .delete()
         .eq("match_id", gameToDelete.id);
 
-      if (feedbackError) throw feedbackError;
+      if (feedbackError) {
+        console.error('Error deleting post-game feedback:', feedbackError);
+        throw new Error(`Failed to delete post-game feedback: ${feedbackError.message}`);
+      }
 
       // Delete match actions
+      console.log('Deleting match actions...');
       const { error: actionsError } = await supabase
         .from("match_actions")
         .delete()
         .eq("match_id", gameToDelete.id);
 
-      if (actionsError) throw actionsError;
+      if (actionsError) {
+        console.error('Error deleting match actions:', actionsError);
+        throw new Error(`Failed to delete match actions: ${actionsError.message}`);
+      }
 
       // Delete match notes
+      console.log('Deleting match notes...');
       const { error: notesError } = await supabase
         .from("match_notes")
         .delete()
         .eq("match_id", gameToDelete.id);
 
-      if (notesError) throw notesError;
+      if (notesError) {
+        console.error('Error deleting match notes:', notesError);
+        throw new Error(`Failed to delete match notes: ${notesError.message}`);
+      }
 
       // Delete match mental feedback
+      console.log('Deleting mental feedback...');
       const { error: mentalFeedbackError } = await supabase
         .from("match_mental_feedback")
         .delete()
         .eq("match_id", gameToDelete.id);
 
-      if (mentalFeedbackError) throw mentalFeedbackError;
+      if (mentalFeedbackError) {
+        console.error('Error deleting mental feedback:', mentalFeedbackError);
+        throw new Error(`Failed to delete mental feedback: ${mentalFeedbackError.message}`);
+      }
 
       // Delete match substitutions
+      console.log('Deleting substitutions...');
       const { error: substitutionsError } = await supabase
         .from("match_substitutions")
         .delete()
         .eq("match_id", gameToDelete.id);
 
-      if (substitutionsError) throw substitutionsError;
+      if (substitutionsError) {
+        console.error('Error deleting substitutions:', substitutionsError);
+        throw new Error(`Failed to delete substitutions: ${substitutionsError.message}`);
+      }
 
       // Delete match halftime notes
+      console.log('Deleting halftime notes...');
       const { error: halftimeNotesError } = await supabase
         .from("match_halftime_notes")
         .delete()
         .eq("match_id", gameToDelete.id);
 
-      if (halftimeNotesError) throw halftimeNotesError;
+      if (halftimeNotesError) {
+        console.error('Error deleting halftime notes:', halftimeNotesError);
+        throw new Error(`Failed to delete halftime notes: ${halftimeNotesError.message}`);
+      }
 
       // Finally, delete the match itself
+      console.log('Deleting match...');
       const { error: matchError } = await supabase
         .from("matches")
         .delete()
         .eq("id", gameToDelete.id);
 
-      if (matchError) throw matchError;
+      if (matchError) {
+        console.error('Error deleting match:', matchError);
+        throw new Error(`Failed to delete match: ${matchError.message}`);
+      }
 
+      console.log('Successfully deleted game and all related records');
       setGames(prevGames => prevGames.filter(g => g.id !== gameToDelete.id));
       toast.success("המשחק נמחק בהצלחה");
     } catch (error) {
-      console.error("Error deleting game:", error);
-      toast.error("שגיאה במחיקת המשחק");
+      console.error("Error in deletion process:", error);
+      toast.error(error instanceof Error ? error.message : "שגיאה במחיקת המשחק");
     } finally {
       setShowDeleteDialog(false);
       setGameToDelete(null);
