@@ -13,7 +13,7 @@ const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Player = lazy(() => import("./pages/Player"));
 const Profile = lazy(() => import("./pages/Profile"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Dashboard = lazy(() => import("./pages/Dashboard").then(module => ({ default: module.Dashboard })));
 const Admin = lazy(() => import("./pages/Admin"));
 const MentalLearning = lazy(() => import("./pages/MentalLearning"));
 const GameHistory = lazy(() => import("./pages/GameHistory"));

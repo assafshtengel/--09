@@ -251,4 +251,5 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+// Change default export to named export
+export { Dashboard };
