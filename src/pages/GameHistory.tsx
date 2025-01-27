@@ -106,6 +106,14 @@ const GameHistory = () => {
     if (!gameToDelete) return;
 
     try {
+      // First, delete post-game feedback
+      const { error: feedbackError } = await supabase
+        .from("post_game_feedback")
+        .delete()
+        .eq("match_id", gameToDelete.id);
+
+      if (feedbackError) throw feedbackError;
+
       // Delete match actions
       const { error: actionsError } = await supabase
         .from("match_actions")
@@ -122,7 +130,31 @@ const GameHistory = () => {
 
       if (notesError) throw notesError;
 
-      // Delete the match itself
+      // Delete match mental feedback
+      const { error: mentalFeedbackError } = await supabase
+        .from("match_mental_feedback")
+        .delete()
+        .eq("match_id", gameToDelete.id);
+
+      if (mentalFeedbackError) throw mentalFeedbackError;
+
+      // Delete match substitutions
+      const { error: substitutionsError } = await supabase
+        .from("match_substitutions")
+        .delete()
+        .eq("match_id", gameToDelete.id);
+
+      if (substitutionsError) throw substitutionsError;
+
+      // Delete match halftime notes
+      const { error: halftimeNotesError } = await supabase
+        .from("match_halftime_notes")
+        .delete()
+        .eq("match_id", gameToDelete.id);
+
+      if (halftimeNotesError) throw halftimeNotesError;
+
+      // Finally, delete the match itself
       const { error: matchError } = await supabase
         .from("matches")
         .delete()
