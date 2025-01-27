@@ -214,7 +214,7 @@ export const MatchQuestionDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto">
+      <DialogContent className="max-w-md mx-auto" hideCloseButton>
         <DialogHeader>
           <DialogTitle className="text-xl text-center mb-6">
             {question.label}
@@ -264,8 +264,8 @@ export const MatchQuestionDialog = ({
             )}
           </form>
           
-          {!isFirstQuestion && (
-            <div className="mt-4">
+          <div className="mt-4 space-y-2">
+            {!isFirstQuestion && (
               <Button
                 variant="ghost"
                 onClick={onBack}
@@ -274,8 +274,16 @@ export const MatchQuestionDialog = ({
                 <ChevronRight className="w-4 h-4" />
                 חזור
               </Button>
-            </div>
-          )}
+            )}
+            
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="w-full"
+            >
+              סגור
+            </Button>
+          </div>
         </motion.div>
       </DialogContent>
     </Dialog>
