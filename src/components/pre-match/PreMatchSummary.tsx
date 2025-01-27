@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Action } from "@/components/ActionSelector";
-import { Mail, Printer, ExternalLink, Calendar } from "lucide-react";
+import { Mail, Printer, ExternalLink, Calendar, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import html2canvas from "html2canvas";
@@ -99,27 +99,26 @@ export const PreMatchSummary = ({
     if (!answers || typeof answers !== 'object') return [];
     
     return Object.entries(answers).map(([key, value]) => {
-      // Format the question based on the key
       let question = key;
       if (key === 'stressLevel') {
         return {
           question: "מה רמת הלחץ שבה היית לפני המשחק?",
-          answer: `${value}/10`
+          answer: String(value)
         };
       }
       if (key === 'selfRating') {
         return {
           question: "איזה ציון אתה נותן לעצמך על המשחק?",
-          answer: `${value}/10`
+          answer: String(value)
         };
       }
       if (key === 'openEndedAnswers' && typeof value === 'object') {
-        return Object.entries(value).map(([q, a]) => ({
+        return Object.entries(value as Record<string, string>).map(([q, a]) => ({
           question: q,
-          answer: a
+          answer: String(a)
         }));
       }
-      return { question, answer: value };
+      return { question, answer: String(value) };
     }).flat();
   };
 
