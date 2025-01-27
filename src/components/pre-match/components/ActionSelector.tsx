@@ -42,7 +42,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
       <motion.h2 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-2xl font-semibold text-right text-primary mb-6"
+        className="text-2xl font-semibold text-right text-primary mb-6 bg-gradient-to-r from-primary/5 to-transparent p-4 rounded-lg"
       >
         בחר את הפעולות שלך למשחק
       </motion.h2>
@@ -66,14 +66,19 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
               )}
               onClick={() => handleActionToggle(action)}
             >
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-right">{action.name}</h3>
+              <div className="space-y-4 text-right">
+                <h3 className="text-lg font-medium bg-gradient-to-r from-primary/10 to-transparent inline-block px-3 py-1 rounded-lg">
+                  {action.name}
+                </h3>
                 {selectedActions.includes(action) && (
                   <motion.div 
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
-                    className="flex items-center gap-3 mt-4"
+                    className="flex items-center gap-3 mt-4 justify-end"
                   >
+                    <span className="text-base text-gray-600 font-medium bg-gray-50 px-3 py-1 rounded-lg">
+                      יעד לביצוע
+                    </span>
                     <input
                       type="number"
                       min="1"
@@ -84,9 +89,6 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
                                transition-all duration-200"
                       placeholder="יעד"
                     />
-                    <span className="text-base text-gray-600 font-medium">
-                      יעד לביצוע
-                    </span>
                   </motion.div>
                 )}
               </div>
