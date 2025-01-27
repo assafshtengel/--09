@@ -253,15 +253,17 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
                 onClick={() => handleActionToggle(action.id)}
                 className="w-full text-right"
               >
-                <div className="flex items-start gap-3 mb-2">
-                  {getActionIcon(index)}
-                  <div className="flex-grow">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-2">
+                    {action.isSelected && (
+                      <Check className="h-5 w-5 text-primary shrink-0" />
+                    )}
+                    {getActionIcon(index)}
+                  </div>
+                  <div className="flex-grow text-right">
                     <h3 className="font-medium text-lg">{action.name}</h3>
                     <p className="text-sm text-muted-foreground">{action.description}</p>
                   </div>
-                  {action.isSelected && (
-                    <Check className="h-5 w-5 text-primary shrink-0" />
-                  )}
                 </div>
               </button>
             </motion.div>
