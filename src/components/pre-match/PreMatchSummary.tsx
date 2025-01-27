@@ -95,25 +95,32 @@ export const PreMatchSummary = ({
     });
   };
 
-  const getQuestionText = (questionId: string) => {
-    switch (questionId) {
-      case "self_talk_word":
-        return "מה המילה שמחזירה לך ? (המילה שאתה אומר לעצמך ברגע שהביטחון מעט יורד)";
-      case "pre_game_pressure":
-        return "איך אתה מתייחס ללחץ לפני משחק ?";
-      case "mental_preparation":
-        return "איך אתה מרגיש מבחינה מנטלית לקראת המשחק?";
-      case "physical_condition":
-        return "איך אתה מרגיש מבחינה פיזית לקראת המשחק?";
-      case "team_confidence":
-        return "מה רמת הביטחון שלך ביכולת הקבוצה להשיג את המטרות במשחק?";
-      case "personal_goals":
-        return "מהם היעדים האישיים שלך למשחק הזה?";
-      case "opponent_analysis":
-        return "מה אתה יודע על היריב ואיך אתה מתכונן להתמודד איתו?";
-      default:
-        return questionId;
-    }
+  const formatQuestionsAndAnswers = () => {
+    if (!answers || typeof answers !== 'object') return [];
+    
+    return Object.entries(answers).map(([key, value]) => {
+      // Format the question based on the key
+      let question = key;
+      if (key === 'stressLevel') {
+        return {
+          question: "מה רמת הלחץ שבה היית לפני המשחק?",
+          answer: `${value}/10`
+        };
+      }
+      if (key === 'selfRating') {
+        return {
+          question: "איזה ציון אתה נותן לעצמך על המשחק?",
+          answer: `${value}/10`
+        };
+      }
+      if (key === 'openEndedAnswers' && typeof value === 'object') {
+        return Object.entries(value).map(([q, a]) => ({
+          question: q,
+          answer: a
+        }));
+      }
+      return { question, answer: value };
+    }).flat();
   };
 
   return (
@@ -176,35 +183,26 @@ export const PreMatchSummary = ({
         </div>
 
         <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-4 text-right">תשובות לשאלות</h3>
+          <h3 className="text-lg font-semibold mb-4 text-right flex items-center gap-2 justify-end">
+            <MessageSquare className="h-5 w-5" />
+            תשובות לשאלות
+          </h3>
           <div className="space-y-4">
-            {Object.entries(answers).map(([questionId, answer], index) => (
+            {formatQuestionsAndAnswers().map((qa, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="border p-4 rounded-lg bg-white shadow-sm"
+                className="border p-4 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100/50"
               >
-                <p className="font-medium text-right mb-2 text-primary">{getQuestionText(questionId)}</p>
-                <p className="text-gray-700 text-right whitespace-pre-wrap">{answer}</p>
+                <p className="font-medium text-right mb-2 text-primary">{qa.question}</p>
+                <p className="text-gray-700 text-right whitespace-pre-wrap">{qa.answer}</p>
               </motion.div>
             ))}
           </div>
         </div>
 
-        {aiInsights.length > 0 && (
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-4 text-right">תובנות AI</h3>
-            <ul className="space-y-2">
-              {aiInsights.map((insight, index) => (
-                <li key={index} className="text-muted-foreground text-right">
-                  {insight}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
 
       <SummaryWorkflow reportId={reportId || ""} />
