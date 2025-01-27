@@ -19,14 +19,14 @@ type FormValues = z.infer<typeof formSchema>;
 
 const preMatchQuestions = [
   {
-    id: "mental_video_reflection",
-    question: "צפה בסרטון המנטאלי, מה הדבר העיקרי שאתה לומד ואיך תיישם אותו במשחק הקרוב?",
+    id: "self_talk_word",
+    question: "מה המילה שמחזירה לך ? ( המילה שאתה אומר לעצמך ברגע שהביטחון מעט יורד)",
     videoLink: "https://example.com/mental-video",
     isFixed: true
   },
   {
-    id: "physical_video_reflection",
-    question: "צפה בסרטון הפיזי, איך אתה מתכנן ליישם את הטכניקות במשחק?",
+    id: "pre_game_pressure",
+    question: "איך אתה מתייחס ללחץ לפני משחק ?",
     videoLink: "https://example.com/physical-video",
     isFixed: true
   },
