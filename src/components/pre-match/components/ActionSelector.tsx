@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Action } from "@/components/ActionSelector";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface ActionSelectorProps {
   position: string;
@@ -37,8 +38,16 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="space-y-8">
+      <motion.h2 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-2xl font-semibold text-right text-primary mb-6"
+      >
+        בחר את הפעולות שלך למשחק
+      </motion.h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {actions.map((action, index) => (
           <motion.div
             key={action.id}
@@ -47,27 +56,38 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
             transition={{ delay: index * 0.1 }}
           >
             <Card
-              className={`p-4 cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                action.isSelected
-                  ? "border-2 border-primary bg-primary/5"
-                  : "hover:border-primary/50"
-              }`}
+              className={cn(
+                "p-6 cursor-pointer transition-all duration-300",
+                "hover:shadow-lg hover:scale-[1.02] transform",
+                "bg-gradient-to-br from-white to-gray-50",
+                selectedActions.includes(action)
+                  ? "border-2 border-primary/50 bg-primary/5 shadow-md"
+                  : "hover:border-primary/30"
+              )}
               onClick={() => handleActionToggle(action)}
             >
-              <div className="space-y-2">
-                <h3 className="font-semibold text-right">{action.name}</h3>
-                {action.isSelected && (
-                  <div className="flex items-center gap-2 mt-2">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-right">{action.name}</h3>
+                {selectedActions.includes(action) && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="flex items-center gap-3 mt-4"
+                  >
                     <input
                       type="number"
                       min="1"
                       value={action.goal || ""}
                       onChange={(e) => handleGoalChange(action.id, e.target.value)}
-                      className="w-20 p-2 text-sm border rounded-md text-right"
+                      className="w-24 p-2 text-base border rounded-lg text-right bg-white/80 
+                               focus:ring-2 focus:ring-primary/20 focus:border-primary/30 
+                               transition-all duration-200"
                       placeholder="יעד"
                     />
-                    <span className="text-sm text-gray-600">יעד לביצוע</span>
-                  </div>
+                    <span className="text-base text-gray-600 font-medium">
+                      יעד לביצוע
+                    </span>
+                  </motion.div>
                 )}
               </div>
             </Card>
