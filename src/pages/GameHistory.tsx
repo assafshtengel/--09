@@ -108,91 +108,32 @@ const GameHistory = () => {
     try {
       console.log('Starting deletion process for game:', gameToDelete.id);
 
-      // First, delete pre-match attribute selections
-      console.log('Deleting pre-match attribute selections...');
-      const { error: attributeSelectionsError } = await supabase
-        .from("pre_match_attribute_selections")
-        .delete()
-        .eq("match_id", gameToDelete.id);
+      // Delete in correct order to handle foreign key constraints
+      const tables = [
+        { name: "pre_match_attribute_selections", displayName: "pre-match attribute selections" },
+        { name: "post_game_feedback", displayName: "post-game feedback" },
+        { name: "match_actions", displayName: "match actions" },
+        { name: "match_notes", displayName: "match notes" },
+        { name: "match_mental_feedback", displayName: "mental feedback" },
+        { name: "match_substitutions", displayName: "substitutions" },
+        { name: "match_halftime_notes", displayName: "halftime notes" }
+      ];
 
-      if (attributeSelectionsError) {
-        console.error('Error deleting pre-match attribute selections:', attributeSelectionsError);
-        throw new Error(`Failed to delete pre-match attribute selections: ${attributeSelectionsError.message}`);
+      // Delete all related records first
+      for (const table of tables) {
+        console.log(`Deleting ${table.displayName}...`);
+        const { error } = await supabase
+          .from(table.name)
+          .delete()
+          .eq("match_id", gameToDelete.id);
+
+        if (error) {
+          console.error(`Error deleting ${table.displayName}:`, error);
+          throw new Error(`Failed to delete ${table.displayName}: ${error.message}`);
+        }
       }
 
-      // Then delete post-game feedback
-      console.log('Deleting post-game feedback...');
-      const { error: feedbackError } = await supabase
-        .from("post_game_feedback")
-        .delete()
-        .eq("match_id", gameToDelete.id);
-
-      if (feedbackError) {
-        console.error('Error deleting post-game feedback:', feedbackError);
-        throw new Error(`Failed to delete post-game feedback: ${feedbackError.message}`);
-      }
-
-      // Delete match actions
-      console.log('Deleting match actions...');
-      const { error: actionsError } = await supabase
-        .from("match_actions")
-        .delete()
-        .eq("match_id", gameToDelete.id);
-
-      if (actionsError) {
-        console.error('Error deleting match actions:', actionsError);
-        throw new Error(`Failed to delete match actions: ${actionsError.message}`);
-      }
-
-      // Delete match notes
-      console.log('Deleting match notes...');
-      const { error: notesError } = await supabase
-        .from("match_notes")
-        .delete()
-        .eq("match_id", gameToDelete.id);
-
-      if (notesError) {
-        console.error('Error deleting match notes:', notesError);
-        throw new Error(`Failed to delete match notes: ${notesError.message}`);
-      }
-
-      // Delete match mental feedback
-      console.log('Deleting mental feedback...');
-      const { error: mentalFeedbackError } = await supabase
-        .from("match_mental_feedback")
-        .delete()
-        .eq("match_id", gameToDelete.id);
-
-      if (mentalFeedbackError) {
-        console.error('Error deleting mental feedback:', mentalFeedbackError);
-        throw new Error(`Failed to delete mental feedback: ${mentalFeedbackError.message}`);
-      }
-
-      // Delete match substitutions
-      console.log('Deleting substitutions...');
-      const { error: substitutionsError } = await supabase
-        .from("match_substitutions")
-        .delete()
-        .eq("match_id", gameToDelete.id);
-
-      if (substitutionsError) {
-        console.error('Error deleting substitutions:', substitutionsError);
-        throw new Error(`Failed to delete substitutions: ${substitutionsError.message}`);
-      }
-
-      // Delete match halftime notes
-      console.log('Deleting halftime notes...');
-      const { error: halftimeNotesError } = await supabase
-        .from("match_halftime_notes")
-        .delete()
-        .eq("match_id", gameToDelete.id);
-
-      if (halftimeNotesError) {
-        console.error('Error deleting halftime notes:', halftimeNotesError);
-        throw new Error(`Failed to delete halftime notes: ${halftimeNotesError.message}`);
-      }
-
-      // Finally, delete the match itself
+      // Finally delete the match itself
       console.log('Deleting match...');
       const { error: matchError } = await supabase
         .from("matches")
