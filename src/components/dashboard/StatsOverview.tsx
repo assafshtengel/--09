@@ -11,10 +11,12 @@ import {
   ResponsiveContainer
 } from "recharts";
 import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
 export const StatsOverview = () => {
   const [stats, setStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -35,6 +37,11 @@ export const StatsOverview = () => {
 
         if (error) {
           console.error("Error fetching stats:", error);
+          toast({
+            title: "שגיאה",
+            description: "אירעה שגיאה בטעינת הנתונים",
+            variant: "destructive",
+          });
           return;
         }
 
@@ -51,13 +58,18 @@ export const StatsOverview = () => {
         });
       } catch (error) {
         console.error("Error in fetchStats:", error);
+        toast({
+          title: "שגיאה",
+          description: "אירעה שגיאה בטעינת הנתונים",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchStats();
-  }, []);
+  }, [toast]);
 
   const chartData = stats ? [
     { name: "דקות משחק", value: stats.minutes_played },
