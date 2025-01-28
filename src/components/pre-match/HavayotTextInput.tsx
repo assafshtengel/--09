@@ -29,10 +29,7 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
       const currentIndex = categories.indexOf(currentCategory);
       
       if (currentCategory === "social") {
-        const allHavayotFilled = Object.values(havayot).every(v => v.trim());
-        if (allHavayotFilled) {
-          onSubmit(havayot);
-        }
+        handleFinish();
       } else {
         setCurrentCategory(categories[currentIndex + 1]);
       }
@@ -68,11 +65,9 @@ export const HavayotTextInput = ({ onSubmit }: HavayotTextInputProps) => {
   };
 
   const handleFinish = () => {
-    if (havayot[currentCategory].trim()) {
-      const allHavayotFilled = Object.values(havayot).every(v => v.trim());
-      if (allHavayotFilled) {
-        onSubmit(havayot);
-      }
+    const allHavayotFilled = Object.values(havayot).every(v => v.trim());
+    if (allHavayotFilled) {
+      onSubmit(havayot);
     }
   };
 
