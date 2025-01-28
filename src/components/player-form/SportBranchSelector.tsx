@@ -21,16 +21,19 @@ const SPORT_OPTIONS = [
 ];
 
 export const SportBranchSelector = ({
-  value,
+  value = [], // Add default empty array
   onChange,
   isPlayer,
 }: SportBranchSelectorProps) => {
+  // Ensure value is always an array
+  const safeValue = Array.isArray(value) ? value : [];
+
   if (isPlayer) {
     return (
       <div className="space-y-2">
         <Label>ענף ספורט</Label>
         <Select
-          value={value[0] || ""}
+          value={safeValue[0] || ""}
           onValueChange={(newValue) => onChange([newValue])}
         >
           <SelectTrigger>
@@ -56,12 +59,12 @@ export const SportBranchSelector = ({
           <div key={sport.id} className="flex items-center space-x-2 space-x-reverse">
             <Checkbox
               id={sport.id}
-              checked={value.includes(sport.id)}
+              checked={safeValue.includes(sport.id)}
               onCheckedChange={(checked) => {
                 if (checked) {
-                  onChange([...value, sport.id]);
+                  onChange([...safeValue, sport.id]);
                 } else {
-                  onChange(value.filter((v) => v !== sport.id));
+                  onChange(safeValue.filter((v) => v !== sport.id));
                 }
               }}
             />
