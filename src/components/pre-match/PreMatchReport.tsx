@@ -73,23 +73,14 @@ export const PreMatchReport = () => {
 
   const sportBranch = profile?.sport_branches?.[0];
 
-  const stepsConfig = [
-    { id: "dashboard", label: "התחלה" },
-    ...(sportBranch === 'basketball' ? [] : [{ id: "details", label: "פרטי משחק" }]),
-    { id: "intro", label: "הקדמה" },
-    { id: "havayot", label: "הוויות" },
-    { id: "actions", label: "יעדים" },
-    { id: "questions", label: "שאלון" },
-    { id: "summary", label: "סיכום" },
-  ];
-
-  const currentStepIndex = stepsConfig.findIndex(step => step.id === currentStep);
-  const progress = ((currentStepIndex + 1) / stepsConfig.length) * 100;
-
   const handleMatchDetailsSubmit = async (details: any) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No authenticated user");
+      if (!user) {
+        toast.error("לא נמצא משתמש מחובר");
+        navigate("/");
+        return;
+      }
 
       const { data: report, error } = await supabase
         .from("pre_match_reports")
@@ -175,6 +166,19 @@ export const PreMatchReport = () => {
       toast.error("שגיאה בשמירת הדוח");
     }
   };
+
+  const stepsConfig = [
+    { id: "dashboard", label: "התחלה" },
+    ...(sportBranch === 'basketball' ? [] : [{ id: "details", label: "פרטי משחק" }]),
+    { id: "intro", label: "הקדמה" },
+    { id: "havayot", label: "הוויות" },
+    { id: "actions", label: "יעדים" },
+    { id: "questions", label: "שאלון" },
+    { id: "summary", label: "סיכום" },
+  ];
+
+  const currentStepIndex = stepsConfig.findIndex(step => step.id === currentStep);
+  const progress = ((currentStepIndex + 1) / stepsConfig.length) * 100;
 
   const renderStep = () => {
     const commonProps = {
