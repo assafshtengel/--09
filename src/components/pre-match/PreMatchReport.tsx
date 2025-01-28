@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { basketballActions } from "@/utils/sportActions";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export const PreMatchReport = () => {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ export const PreMatchReport = () => {
   const [showObserverLink, setShowObserverLink] = useState(false);
   const [observerToken, setObserverToken] = useState<string | null>(null);
 
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading: isProfileLoading, error: profileError } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -50,6 +51,25 @@ export const PreMatchReport = () => {
       return data;
     }
   });
+
+  // If profile is loading, show loading spinner
+  if (isProfileLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  // If there's an error loading the profile, show error message
+  if (profileError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <p className="text-red-500">שגיאה בטעינת הפרופיל</p>
+        <Button onClick={() => navigate("/dashboard")}>חזור לדף הבית</Button>
+      </div>
+    );
+  }
 
   const sportBranch = profile?.sport_branches?.[0];
 
