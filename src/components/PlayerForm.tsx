@@ -8,6 +8,7 @@ import { PersonalInfoSection } from "./player-form/sections/PersonalInfoSection"
 import { ClubInfoSection } from "./player-form/sections/ClubInfoSection";
 import { RoleAndSportSection } from "./player-form/sections/RoleAndSportSection";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 interface PlayerFormProps {
   initialData?: PlayerFormData | null;
@@ -17,6 +18,8 @@ interface PlayerFormProps {
 export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState<PlayerFormData>({
     fullName: "",
     roles: [],
@@ -73,6 +76,8 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       onSubmit?.();
+      // Navigate to dashboard after successful save
+      navigate("/dashboard");
     },
     onError: (error: any) => {
       console.error("Error updating profile:", error);
