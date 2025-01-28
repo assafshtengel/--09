@@ -56,8 +56,8 @@ export const MatchQuestionDialog = ({
     }
 
     if (question.type === "select" && !selectedOption) {
-      setError("אנא בחר תפקיד לפני שתמשיך");
-      toast.error("אנא בחר תפקיד לפני שתמשיך");
+      setError("אנא בחר אפשרות לפני שתמשיך");
+      toast.error("אנא בחר אפשרות לפני שתמשיך");
       return;
     }
 
@@ -72,10 +72,6 @@ export const MatchQuestionDialog = ({
       e.preventDefault();
       handleSubmit();
     }
-  };
-
-  const formatDateWithDay = (date: Date) => {
-    return format(date, "EEEE, d בMMMM", { locale: he });
   };
 
   const handleQuickDateSelect = (daysToAdd: number) => {
@@ -103,8 +99,8 @@ export const MatchQuestionDialog = ({
     setInputValue(optionValue);
     setError(null);
     
-    // If this is the position selection question, submit immediately
-    if (question.id === "position") {
+    // If this is the position selection or match type selection question, submit immediately
+    if (question.id === "position" || question.id === "match_type") {
       setTimeout(() => {
         onSubmit(optionValue);
       }, 100);
