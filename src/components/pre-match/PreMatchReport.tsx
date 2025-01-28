@@ -34,7 +34,6 @@ export const PreMatchReport = () => {
   const [showObserverLink, setShowObserverLink] = useState(false);
   const [observerToken, setObserverToken] = useState<string | null>(null);
 
-  // Add query to fetch user's sport branch
   const { data: profile } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
@@ -54,7 +53,6 @@ export const PreMatchReport = () => {
 
   const sportBranch = profile?.sport_branches?.[0];
 
-  // Define steps based on sport branch
   const stepsConfig = [
     { id: "dashboard", label: "התחלה" },
     ...(sportBranch === 'basketball' ? [] : [{ id: "details", label: "פרטי משחק" }]),
@@ -289,12 +287,21 @@ export const PreMatchReport = () => {
       <div className="max-w-4xl mx-auto">
         {currentStep !== "dashboard" && (
           <div className="mb-8 space-y-4">
-            <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-right">
-                {stepsConfig.find(step => step.id === currentStep)?.label}
-              </h1>
-              <div className="text-sm text-gray-500">
-                שלב {currentStepIndex + 1} מתוך {stepsConfig.length}
+            <div className="flex flex-col gap-2">
+              {sportBranch && (
+                <div className="flex justify-end">
+                  <span className="text-sm font-medium px-3 py-1 bg-primary/10 text-primary rounded-full">
+                    {sportBranch === 'basketball' ? 'כדורסל' : 'כדורגל'}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
+                <h1 className="text-2xl font-bold text-right">
+                  {stepsConfig.find(step => step.id === currentStep)?.label}
+                </h1>
+                <div className="text-sm text-gray-500">
+                  שלב {currentStepIndex + 1} מתוך {stepsConfig.length}
+                </div>
               </div>
             </div>
             
