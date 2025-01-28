@@ -253,7 +253,6 @@ export const PreMatchReport = () => {
               <ActionSelector
                 position={matchDetails.position || "forward"}
                 onSubmit={handleActionsSubmit}
-                actions={sportBranch === 'basketball' ? basketballActions : undefined}
               />
               <SocialShareGoals goals={selectedActions} />
             </div>
