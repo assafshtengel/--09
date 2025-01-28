@@ -68,7 +68,7 @@ export const PreMatchReport = () => {
   const currentStepIndex = stepsConfig.findIndex(step => step.id === currentStep);
   const progress = ((currentStepIndex + 1) / stepsConfig.length) * 100;
 
-  const handleMatchDetailsSubmit = async (details) => {
+  const handleMatchDetailsSubmit = async (details: any) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No authenticated user");
@@ -137,7 +137,11 @@ export const PreMatchReport = () => {
       const { error } = await supabase
         .from("pre_match_reports")
         .update({
-          actions: selectedActions,
+          actions: selectedActions.map(action => ({
+            name: action.name,
+            goal: action.goal,
+            isSelected: action.isSelected
+          })),
           questions_answers: questionsAnswers,
           havaya: JSON.stringify(havayot),
           status: "completed"
