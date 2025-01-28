@@ -4,6 +4,9 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { Check, Plus, Target, Activity, Shield, Goal, CircleDot } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { basketballActions } from "@/utils/sportActions";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Action {
   id: string;
@@ -19,7 +22,17 @@ const getActionIcon = (index: number) => {
   return <Icon className="h-6 w-6" />;
 };
 
-const getPositionActions = (position: string): Action[] => {
+const getPositionActions = async (position: string, sportBranch?: string): Promise<Action[]> => {
+  // If it's basketball, return basketball-specific actions
+  if (sportBranch === 'basketball') {
+    return basketballActions.map((action, index) => ({
+      id: (index + 1).toString(),
+      name: action.name,
+      description: action.description,
+      isSelected: false
+    }));
+  }
+
   const actions: { [key: string]: Array<{ name: string; description: string }> } = {
     havaya: [
       { name: "מנהיג", description: "מוביל ומנחה את הקבוצה בזמן אמת" },
@@ -154,13 +167,40 @@ interface ActionSelectorProps {
 
 export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
   const { toast } = useToast();
-  const [actions, setActions] = useState<Action[]>(getPositionActions(position));
   const [customAction, setCustomAction] = useState("");
   const [customDescription, setCustomDescription] = useState("");
   const [showCustomForm, setShowCustomForm] = useState(false);
 
+  // Fetch user's sport branch from profile
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No authenticated user");
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('sport_branches')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const sportBranch = profile?.sport_branches?.[0];
+
+  // Fetch actions based on position and sport branch
+  const { data: actions = [], isLoading } = useQuery({
+    queryKey: ['actions', position, sportBranch],
+    queryFn: () => getPositionActions(position, sportBranch)
+  });
+
+  const [selectedActions, setSelectedActions] = useState<Action[]>([]);
+
   const handleActionToggle = (actionId: string) => {
-    setActions(actions.map(action => 
+    setSelectedActions(selectedActions.map(action => 
       action.id === actionId 
         ? { ...action, isSelected: !action.isSelected }
         : action
@@ -168,7 +208,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
   };
 
   const handleGoalChange = (actionId: string, goal: string) => {
-    setActions(actions.map(action => 
+    setSelectedActions(selectedActions.map(action => 
       action.id === actionId 
         ? { ...action, goal }
         : action
@@ -186,14 +226,14 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
     }
 
     const newAction: Action = {
-      id: `custom-${actions.length + 1}`,
+      id: `custom-${selectedActions.length + 1}`,
       name: customAction,
       description: customDescription,
       isSelected: true,
       goal: "",
     };
 
-    setActions([...actions, newAction]);
+    setSelectedActions([...selectedActions, newAction]);
     setCustomAction("");
     setCustomDescription("");
     setShowCustomForm(false);
@@ -205,9 +245,9 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const selectedActions = actions.filter(action => action.isSelected);
+    const selectedActionsToSubmit = selectedActions.filter(action => action.isSelected);
     
-    if (selectedActions.length === 0) {
+    if (selectedActionsToSubmit.length === 0) {
       toast({
         title: "שגיאה",
         description: "אנא בחר לפחות פעולה אחת",
@@ -216,7 +256,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
       return;
     }
 
-    const missingGoals = selectedActions.some(action => !action.goal);
+    const missingGoals = selectedActionsToSubmit.some(action => !action.goal);
     if (missingGoals) {
       toast({
         title: "שגיאה",
@@ -226,8 +266,12 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
       return;
     }
 
-    onSubmit(selectedActions);
+    onSubmit(selectedActionsToSubmit);
   };
+
+  if (isLoading) {
+    return <div>טוען...</div>;
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 w-full max-w-4xl mx-auto p-6">

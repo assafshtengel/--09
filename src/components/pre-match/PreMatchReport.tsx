@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Action, ActionSelector } from "@/components/ActionSelector";
 import { PreMatchQuestionnaire } from "./PreMatchQuestionnaire";
 import { MatchDetailsForm } from "./MatchDetailsForm";
@@ -8,7 +10,6 @@ import { SocialShareGoals } from "./SocialShareGoals";
 import { HavayotTextInput } from "./HavayotTextInput";
 import { ObserverLinkDialog } from "./ObserverLinkDialog";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { ChevronRight, ChevronLeft, Link } from "lucide-react";
@@ -44,6 +45,26 @@ export const PreMatchReport = () => {
 
   const currentStepIndex = steps.findIndex(step => step.id === currentStep);
   const progress = ((currentStepIndex + 1) / steps.length) * 100;
+
+  // Add query to fetch user's sport branch
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No authenticated user");
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('sport_branches')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const sportBranch = profile?.sport_branches?.[0];
 
   const handleMatchDetailsSubmit = async (details) => {
     try {
@@ -83,7 +104,13 @@ export const PreMatchReport = () => {
       setReportId(report.id);
       setMatchDetails(details);
       setObserverToken(match.observer_token);
-      setCurrentStep("intro");
+      
+      // If sport branch is basketball, skip to intro
+      if (sportBranch === 'basketball') {
+        setCurrentStep("intro");
+      } else {
+        setCurrentStep("details");
+      }
       
       toast.success("פרטי המשחק נשמרו");
     } catch (error) {
@@ -92,125 +119,16 @@ export const PreMatchReport = () => {
     }
   };
 
-  const handleHavayotSubmit = async (havayotInputs: Record<string, string>) => {
-    if (!reportId) return;
-
-    try {
-      const { error } = await supabase
-        .from("pre_match_reports")
-        .update({
-          havaya: JSON.stringify(havayotInputs)
-        })
-        .eq("id", reportId);
-
-      if (error) throw error;
-
-      setHavayot(havayotInputs);
-      setCurrentStep("actions");
-      toast.success("ההוויות נשמרו");
-    } catch (error) {
-      console.error("Error saving havayot:", error);
-      toast.error("שגיאה בשמירת ההוויות");
-    }
-  };
-
-  const handleActionsSubmit = async (actions: Action[]) => {
-    if (!reportId) return;
-
-    try {
-      const { error } = await supabase
-        .from("pre_match_reports")
-        .update({
-          actions: JSON.stringify(actions)
-        })
-        .eq("id", reportId);
-
-      if (error) throw error;
-
-      setSelectedActions(actions);
-      setCurrentStep("questions");
-      toast.success("הפעולות נשמרו");
-    } catch (error) {
-      console.error("Error saving actions:", error);
-      toast.error("שגיאה בשמירת הפעולות");
-    }
-  };
-
-  const handleQuestionsSubmit = async (answers: Record<string, string>) => {
-    if (!reportId) return;
-
-    try {
-      const { error } = await supabase
-        .from("pre_match_reports")
-        .update({
-          questions_answers: answers,
-          status: "completed"
-        })
-        .eq("id", reportId);
-
-      if (error) throw error;
-
-      setQuestionsAnswers(answers);
-      setCurrentStep("summary");
-      toast.success("התשובות נשמרו");
-    } catch (error) {
-      console.error("Error saving questions:", error);
-      toast.error("שגיאה בשמירת התשובות");
-    }
-  };
-
-  const handleFinalSubmit = async () => {
-    await Promise.resolve();
-    navigate("/dashboard");
-  };
-
-  const handleEditHavaya = (category: string) => {
-    setCurrentStep("havayot");
-  };
-
-  const renderHavayotByCategory = () => {
-    if (Object.entries(havayot).length === 0) return null;
-
-    const categories = Object.entries(havayot).filter(([category]) => havayot[category]);
-    const rows = [];
-    
-    for (let i = 0; i < categories.length; i += 2) {
-      const row = categories.slice(i, i + 2);
-      rows.push(row);
-    }
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-lg p-6 shadow-md border border-gray-100"
-      >
-        <h3 className="text-xl font-semibold text-center mb-4 text-primary">
-          ההוויות שבחרת למשחק
-        </h3>
-        <div className="space-y-3">
-          {rows.map((row, rowIndex) => (
-            <div key={rowIndex} className="grid grid-cols-2 gap-4">
-              {row.map(([category]) => (
-                havayot[category] && (
-                  <div 
-                    key={category} 
-                    className="flex items-center justify-end bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 shadow-sm transition-all duration-200 hover:shadow-md"
-                  >
-                    <div className="text-right">
-                      <span className="text-lg font-medium px-4 py-2 rounded-full bg-white/80 text-primary shadow-sm border border-primary/10">
-                        {havayot[category]}
-                      </span>
-                    </div>
-                  </div>
-                )
-              ))}
-            </div>
-          ))}
-        </div>
-      </motion.div>
-    );
-  };
+  // Update steps based on sport branch
+  const steps = [
+    { id: "dashboard", label: "התחלה" },
+    ...(sportBranch === 'basketball' ? [] : [{ id: "details", label: "פרטי משחק" }]),
+    { id: "intro", label: "הקדמה" },
+    { id: "havayot", label: "הוויות" },
+    { id: "actions", label: "יעדים" },
+    { id: "questions", label: "שאלון" },
+    { id: "summary", label: "סיכום" },
+  ];
 
   const renderStep = () => {
     const commonProps = {
@@ -393,4 +311,3 @@ export const PreMatchReport = () => {
     </div>
   );
 };
-
