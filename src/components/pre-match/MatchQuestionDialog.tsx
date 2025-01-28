@@ -74,6 +74,10 @@ export const MatchQuestionDialog = ({
     }
   };
 
+  const formatDateWithDay = (date: Date) => {
+    return format(date, "EEEE, d בMMMM", { locale: he });
+  };
+
   const handleQuickDateSelect = (daysToAdd: number) => {
     const selectedDate = addDays(new Date(), daysToAdd);
     const formattedDate = format(selectedDate, "yyyy-MM-dd");
