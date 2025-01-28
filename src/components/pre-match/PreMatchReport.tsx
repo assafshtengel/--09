@@ -16,6 +16,7 @@ import { ChevronRight, ChevronLeft, Link } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { basketballActions } from "@/utils/sportActions";
 
 export const PreMatchReport = () => {
   const navigate = useNavigate();
@@ -32,19 +33,6 @@ export const PreMatchReport = () => {
   const [reportId, setReportId] = useState<string | null>(null);
   const [showObserverLink, setShowObserverLink] = useState(false);
   const [observerToken, setObserverToken] = useState<string | null>(null);
-
-  const steps = [
-    { id: "dashboard", label: "התחלה" },
-    { id: "details", label: "פרטי משחק" },
-    { id: "intro", label: "הקדמה" },
-    { id: "havayot", label: "הוויות" },
-    { id: "actions", label: "יעדים" },
-    { id: "questions", label: "שאלון" },
-    { id: "summary", label: "סיכום" },
-  ];
-
-  const currentStepIndex = steps.findIndex(step => step.id === currentStep);
-  const progress = ((currentStepIndex + 1) / steps.length) * 100;
 
   // Add query to fetch user's sport branch
   const { data: profile } = useQuery({
@@ -65,6 +53,20 @@ export const PreMatchReport = () => {
   });
 
   const sportBranch = profile?.sport_branches?.[0];
+
+  // Define steps based on sport branch
+  const stepsConfig = [
+    { id: "dashboard", label: "התחלה" },
+    ...(sportBranch === 'basketball' ? [] : [{ id: "details", label: "פרטי משחק" }]),
+    { id: "intro", label: "הקדמה" },
+    { id: "havayot", label: "הוויות" },
+    { id: "actions", label: "יעדים" },
+    { id: "questions", label: "שאלון" },
+    { id: "summary", label: "סיכום" },
+  ];
+
+  const currentStepIndex = stepsConfig.findIndex(step => step.id === currentStep);
+  const progress = ((currentStepIndex + 1) / stepsConfig.length) * 100;
 
   const handleMatchDetailsSubmit = async (details) => {
     try {
@@ -104,13 +106,7 @@ export const PreMatchReport = () => {
       setReportId(report.id);
       setMatchDetails(details);
       setObserverToken(match.observer_token);
-      
-      // If sport branch is basketball, skip to intro
-      if (sportBranch === 'basketball') {
-        setCurrentStep("intro");
-      } else {
-        setCurrentStep("details");
-      }
+      setCurrentStep("intro");
       
       toast.success("פרטי המשחק נשמרו");
     } catch (error) {
@@ -119,16 +115,44 @@ export const PreMatchReport = () => {
     }
   };
 
-  // Update steps based on sport branch
-  const steps = [
-    { id: "dashboard", label: "התחלה" },
-    ...(sportBranch === 'basketball' ? [] : [{ id: "details", label: "פרטי משחק" }]),
-    { id: "intro", label: "הקדמה" },
-    { id: "havayot", label: "הוויות" },
-    { id: "actions", label: "יעדים" },
-    { id: "questions", label: "שאלון" },
-    { id: "summary", label: "סיכום" },
-  ];
+  const handleHavayotSubmit = (values: Record<string, string>) => {
+    setHavayot(values);
+    setCurrentStep("actions");
+  };
+
+  const handleActionsSubmit = (actions: Action[]) => {
+    setSelectedActions(actions);
+    setCurrentStep("questions");
+  };
+
+  const handleQuestionsSubmit = (answers: Record<string, string>) => {
+    setQuestionsAnswers(answers);
+    setCurrentStep("summary");
+  };
+
+  const handleFinalSubmit = async () => {
+    try {
+      if (!reportId) return;
+
+      const { error } = await supabase
+        .from("pre_match_reports")
+        .update({
+          actions: selectedActions,
+          questions_answers: questionsAnswers,
+          havaya: JSON.stringify(havayot),
+          status: "completed"
+        })
+        .eq("id", reportId);
+
+      if (error) throw error;
+      
+      navigate("/dashboard");
+      toast.success("הדוח נשמר בהצלחה");
+    } catch (error) {
+      console.error("Error saving report:", error);
+      toast.error("שגיאה בשמירת הדוח");
+    }
+  };
 
   const renderStep = () => {
     const commonProps = {
@@ -150,10 +174,7 @@ export const PreMatchReport = () => {
         {currentStep === "details" && (
           <motion.div {...commonProps} key="details">
             <MatchDetailsForm
-              onSubmit={(details) => {
-                handleMatchDetailsSubmit(details);
-                setCurrentStep("intro");
-              }}
+              onSubmit={handleMatchDetailsSubmit}
               initialData={matchDetails}
             />
           </motion.div>
@@ -225,10 +246,10 @@ export const PreMatchReport = () => {
         {currentStep === "actions" && (
           <motion.div {...commonProps} key="actions">
             <div className="space-y-8">
-              {renderHavayotByCategory()}
               <ActionSelector
                 position={matchDetails.position || "forward"}
                 onSubmit={handleActionsSubmit}
+                actions={sportBranch === 'basketball' ? basketballActions : undefined}
               />
               <SocialShareGoals goals={selectedActions} />
             </div>
@@ -267,10 +288,10 @@ export const PreMatchReport = () => {
           <div className="mb-8 space-y-4">
             <div className="flex justify-between items-center">
               <h1 className="text-2xl font-bold text-right">
-                {steps.find(step => step.id === currentStep)?.label}
+                {stepsConfig.find(step => step.id === currentStep)?.label}
               </h1>
               <div className="text-sm text-gray-500">
-                שלב {currentStepIndex + 1} מתוך {steps.length}
+                שלב {currentStepIndex + 1} מתוך {stepsConfig.length}
               </div>
             </div>
             
@@ -279,7 +300,7 @@ export const PreMatchReport = () => {
             <div className="flex justify-between mt-4">
               {currentStepIndex > 0 && (
                 <button
-                  onClick={() => setCurrentStep(steps[currentStepIndex - 1].id as any)}
+                  onClick={() => setCurrentStep(stepsConfig[currentStepIndex - 1].id as any)}
                   className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -287,9 +308,9 @@ export const PreMatchReport = () => {
                 </button>
               )}
               
-              {currentStep !== "summary" && currentStepIndex < steps.length - 1 && (
+              {currentStep !== "summary" && currentStepIndex < stepsConfig.length - 1 && (
                 <button
-                  onClick={() => setCurrentStep(steps[currentStepIndex + 1].id as any)}
+                  onClick={() => setCurrentStep(stepsConfig[currentStepIndex + 1].id as any)}
                   className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mr-auto"
                 >
                   המשך
