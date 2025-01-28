@@ -7,6 +7,7 @@ import type { PlayerFormData } from "./player-form/types";
 import { PersonalInfoSection } from "./player-form/sections/PersonalInfoSection";
 import { ClubInfoSection } from "./player-form/sections/ClubInfoSection";
 import { RoleAndSportSection } from "./player-form/sections/RoleAndSportSection";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface PlayerFormProps {
   initialData?: PlayerFormData | null;
@@ -15,7 +16,7 @@ interface PlayerFormProps {
 
 export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState<PlayerFormData>({
     fullName: "",
     roles: [],
@@ -32,58 +33,60 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
     }
   }, [initialData]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: PlayerFormData) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error("משתמש לא מחובר");
       }
 
       // Validate required fields
-      if (!formData.fullName) {
+      if (!data.fullName) {
         throw new Error("שם מלא הוא שדה חובה");
       }
 
-      if (formData.roles.length === 0) {
+      if (data.roles.length === 0) {
         throw new Error("יש לבחור לפחות תפקיד אחד");
       }
 
       // Validate sport branches based on role
-      const isPlayer = formData.roles.includes("player");
-      const hasCoachRole = formData.roles.includes("מאמן");
+      const isPlayer = data.roles.includes("player");
+      const hasCoachRole = data.roles.includes("מאמן");
 
-      if (isPlayer && formData.sportBranches.length !== 1) {
+      if (isPlayer && data.sportBranches.length !== 1) {
         throw new Error("שחקן חייב לבחור ענף ספורט אחד בדיוק");
       }
 
-      if (hasCoachRole && formData.sportBranches.length === 0) {
+      if (hasCoachRole && data.sportBranches.length === 0) {
         throw new Error("מאמן חייב לבחור לפחות ענף ספורט אחד");
       }
 
       await ProfileUpdateService.updateProfile({
-        ...formData,
+        ...data,
         id: user.id,
       });
-
+    },
+    onSuccess: () => {
       toast({
         title: "הצלחה",
         description: "הפרופיל עודכן בהצלחה",
       });
-
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
       onSubmit?.();
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       console.error("Error updating profile:", error);
       toast({
         title: "שגיאה",
         description: error.message || "אירעה שגיאה בעדכון הפרופיל",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProfileMutation.mutate(formData);
   };
 
   const handleInputChange = (field: keyof PlayerFormData, value: any) => {
@@ -110,8 +113,12 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
         onInputChange={handleInputChange}
       />
 
-      <Button type="submit" disabled={isLoading} className="w-full">
-        {isLoading ? "שומר..." : "שמור"}
+      <Button 
+        type="submit" 
+        disabled={updateProfileMutation.isPending} 
+        className="w-full"
+      >
+        {updateProfileMutation.isPending ? "שומר..." : "שמור"}
       </Button>
     </form>
   );

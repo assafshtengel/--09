@@ -7,37 +7,34 @@ import type { PlayerFormData } from "@/components/player-form/types";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 
 const Profile = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [profileData, setProfileData] = useState<PlayerFormData | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
-  const MAX_RETRIES = 3;
 
-  const loadProfile = async () => {
-    try {
+  const { data: profileData, isLoading, error } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
       console.log("[Profile] Loading profile data...");
-      const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (refreshError) {
-        console.error("[Profile] Session refresh error:", refreshError);
+      if (sessionError) {
+        console.error("[Profile] Session error:", sessionError);
         throw new Error("אירעה שגיאה באימות המשתמש");
       }
 
       if (!session) {
         console.log("[Profile] No active session found");
         navigate("/auth");
-        return;
+        return null;
       }
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error("[Profile] Profile fetch error:", profileError);
@@ -46,7 +43,7 @@ const Profile = () => {
 
       if (profile) {
         console.log("[Profile] Profile loaded successfully");
-        setProfileData({
+        return {
           fullName: profile.full_name || "",
           roles: profile.roles || [],
           phoneNumber: profile.phone_number || "",
@@ -54,48 +51,22 @@ const Profile = () => {
           dateOfBirth: profile.date_of_birth || "",
           coachEmail: profile.coach_email || "",
           sportBranches: profile.sport_branches || [],
-        });
-      }
-    } catch (error: any) {
-      console.error("[Profile] Error loading profile:", error);
-      
-      if (retryCount < MAX_RETRIES) {
-        console.log(`[Profile] Retrying... (${retryCount + 1}/${MAX_RETRIES})`);
-        setRetryCount(prev => prev + 1);
-        setTimeout(loadProfile, 1000 * (retryCount + 1));
-        return;
+        };
       }
 
-      toast({
-        title: "שגיאה",
-        description: error.message || "אירעה שגיאה בטעינת הפרופיל",
-        variant: "destructive",
-      });
-      
-      navigate("/auth");
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
+      return null;
+    },
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        navigate('/auth');
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setIsRefreshing(true);
-        loadProfile();
-      }
+  if (error) {
+    toast({
+      title: "שגיאה",
+      description: error instanceof Error ? error.message : "אירעה שגיאה בטעינת הפרופיל",
+      variant: "destructive",
     });
-
-    loadProfile();
-
-    return () => {
-      console.log("[Profile] Cleaning up auth subscription");
-      subscription.unsubscribe();
-    };
-  }, [navigate, toast, retryCount]);
+  }
 
   if (isLoading) {
     return (
