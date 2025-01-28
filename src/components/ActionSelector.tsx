@@ -200,19 +200,27 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
 
   const handleActionToggle = (actionId: string) => {
-    setSelectedActions(selectedActions.map(action => 
-      action.id === actionId 
-        ? { ...action, isSelected: !action.isSelected }
-        : action
-    ));
+    setSelectedActions(prevActions => {
+      const action = actions.find(a => a.id === actionId);
+      if (!action) return prevActions;
+
+      const isCurrentlySelected = prevActions.some(a => a.id === actionId);
+      if (isCurrentlySelected) {
+        return prevActions.filter(a => a.id !== actionId);
+      } else {
+        return [...prevActions, { ...action, isSelected: true }];
+      }
+    });
   };
 
   const handleGoalChange = (actionId: string, goal: string) => {
-    setSelectedActions(selectedActions.map(action => 
-      action.id === actionId 
-        ? { ...action, goal }
-        : action
-    ));
+    setSelectedActions(prevActions => 
+      prevActions.map(action => 
+        action.id === actionId 
+          ? { ...action, goal }
+          : action
+      )
+    );
   };
 
   const addCustomAction = () => {
@@ -226,14 +234,14 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
     }
 
     const newAction: Action = {
-      id: `custom-${selectedActions.length + 1}`,
+      id: `custom-${Date.now()}`,
       name: customAction,
       description: customDescription,
       isSelected: true,
       goal: "",
     };
 
-    setSelectedActions([...selectedActions, newAction]);
+    setSelectedActions(prev => [...prev, newAction]);
     setCustomAction("");
     setCustomDescription("");
     setShowCustomForm(false);
@@ -245,9 +253,8 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const selectedActionsToSubmit = selectedActions.filter(action => action.isSelected);
     
-    if (selectedActionsToSubmit.length === 0) {
+    if (selectedActions.length === 0) {
       toast({
         title: "שגיאה",
         description: "אנא בחר לפחות פעולה אחת",
@@ -256,7 +263,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
       return;
     }
 
-    const missingGoals = selectedActionsToSubmit.some(action => !action.goal);
+    const missingGoals = selectedActions.some(action => !action.goal);
     if (missingGoals) {
       toast({
         title: "שגיאה",
@@ -266,7 +273,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
       return;
     }
 
-    onSubmit(selectedActionsToSubmit);
+    onSubmit(selectedActions);
   };
 
   if (isLoading) {
@@ -281,37 +288,40 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {actions.map((action, index) => (
-            <motion.div
-              key={action.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className={`
-                relative p-4 rounded-lg border transition-all duration-200
-                ${action.isSelected ? 'border-primary bg-primary/5 shadow-lg' : 'border-border hover:border-primary/50'}
-              `}
-            >
-              <button
-                type="button"
-                onClick={() => handleActionToggle(action.id)}
-                className="w-full text-right"
+          {actions.map((action, index) => {
+            const isSelected = selectedActions.some(a => a.id === action.id);
+            return (
+              <motion.div
+                key={action.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className={`
+                  relative p-4 rounded-lg border transition-all duration-200
+                  ${isSelected ? 'border-primary bg-primary/5 shadow-lg' : 'border-border hover:border-primary/50'}
+                `}
               >
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <div className="flex items-center gap-2">
-                    {action.isSelected && (
-                      <Check className="h-5 w-5 text-primary shrink-0" />
-                    )}
-                    {getActionIcon(index)}
+                <button
+                  type="button"
+                  onClick={() => handleActionToggle(action.id)}
+                  className="w-full text-right"
+                >
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2">
+                      {isSelected && (
+                        <Check className="h-5 w-5 text-primary shrink-0" />
+                      )}
+                      {getActionIcon(index)}
+                    </div>
+                    <div className="flex-grow text-right">
+                      <h3 className="font-medium text-lg">{action.name}</h3>
+                      <p className="text-sm text-muted-foreground">{action.description}</p>
+                    </div>
                   </div>
-                  <div className="flex-grow text-right">
-                    <h3 className="font-medium text-lg">{action.name}</h3>
-                    <p className="text-sm text-muted-foreground">{action.description}</p>
-                  </div>
-                </div>
-              </button>
-            </motion.div>
-          ))}
+                </button>
+              </motion.div>
+            );
+          })}
         </div>
 
         <div className="mt-8">
@@ -363,7 +373,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
           )}
         </div>
 
-        {actions.some(action => action.isSelected) && (
+        {selectedActions.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -371,7 +381,7 @@ export const ActionSelector = ({ position, onSubmit }: ActionSelectorProps) => {
           >
             <h3 className="font-medium mb-3 text-right">פעולות נבחרות:</h3>
             <div className="space-y-4">
-              {actions.filter(a => a.isSelected).map(action => (
+              {selectedActions.map(action => (
                 <div key={action.id} className="bg-white p-4 rounded-lg shadow-sm">
                   <div className="flex items-center justify-between mb-2">
                     <Check className="h-4 w-4 text-primary" />
