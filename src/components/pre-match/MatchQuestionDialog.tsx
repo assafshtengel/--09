@@ -103,8 +103,8 @@ export const MatchQuestionDialog = ({
     setInputValue(optionValue);
     setError(null);
     
-    // If this is the position selection or match type selection question, submit immediately
-    if (question.id === "position" || question.id === "match_type") {
+    // If this is the match type selection, submit immediately after a short delay
+    if (question.id === "match_type") {
       setTimeout(() => {
         onSubmit(optionValue);
       }, 100);
@@ -192,11 +192,10 @@ export const MatchQuestionDialog = ({
         ))}
         
         {/* Show continue button only for position selection and when an option is selected */}
-        {question.id === "position" && (
+        {question.id === "position" && selectedOption && (
           <Button
             onClick={() => handleSubmit()}
             className="w-full mt-4 bg-primary hover:bg-primary/90"
-            disabled={!selectedOption}
           >
             המשך
             <ChevronLeft className="w-4 h-4 mr-2" />
