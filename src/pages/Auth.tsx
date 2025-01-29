@@ -17,8 +17,14 @@ const Auth = () => {
     if (error instanceof AuthApiError) {
       switch (error.status) {
         case 400:
+          if (error.message.includes("Email not confirmed")) {
+            return "המייל טרם אומת. אנא בדוק את תיבת הדואר שלך לקבלת הוראות אימות.";
+          }
           if (error.message.includes("Invalid login credentials")) {
             return "שם משתמש או סיסמה שגויים. אנא נסה שוב.";
+          }
+          if (error.message.includes("User not found")) {
+            return "לא נמצא משתמש עם כתובת המייל הזו. אנא הירשם תחילה.";
           }
           if (error.message.includes("Email rate limit exceeded")) {
             return "נשלחו יותר מדי בקשות לאיפוס סיסמה. אנא נסה שוב מאוחר יותר.";
@@ -49,6 +55,11 @@ const Auth = () => {
         
         if (error) {
           console.error("[Auth] Session check error:", error);
+          toast({
+            title: "שגיאת התחברות",
+            description: getErrorMessage(error),
+            variant: "destructive",
+          });
           if (error.message.includes("refresh_token_not_found")) {
             await supabase.auth.signOut();
           }
@@ -63,6 +74,11 @@ const Auth = () => {
         }
       } catch (error) {
         console.error("[Auth] Unexpected error during session check:", error);
+        toast({
+          title: "שגיאה",
+          description: "אירעה שגיאה בבדיקת החיבור. אנא נסה שוב.",
+          variant: "destructive",
+        });
       }
     };
 
@@ -85,6 +101,12 @@ const Auth = () => {
         toast({
           title: "נשלח מייל לאיפוס סיסמה",
           description: "בדוק את תיבת הדואר שלך",
+        });
+      } else if (event === "USER_UPDATED") {
+        console.log("[Auth] User details updated");
+        toast({
+          title: "החשבון עודכן",
+          description: "פרטי החשבון עודכנו בהצלחה",
         });
       }
     });
