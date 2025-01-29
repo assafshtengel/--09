@@ -80,6 +80,12 @@ const Auth = () => {
         if (session) {
           navigate("/");
         }
+      } else if (event === "PASSWORD_RECOVERY") {
+        console.log("[Auth] Password recovery email sent");
+        toast({
+          title: "נשלח מייל לאיפוס סיסמה",
+          description: "בדוק את תיבת הדואר שלך",
+        });
       }
     });
 
@@ -89,7 +95,7 @@ const Auth = () => {
       console.log("[Auth] Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, toast]);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-md min-h-screen flex items-center justify-center">
