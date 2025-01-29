@@ -2,6 +2,9 @@ import { useState } from "react";
 import { MatchQuestionDialog } from "./MatchQuestionDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface MatchDetails {
   date: string;
@@ -17,6 +20,7 @@ interface MatchDetailsFormProps {
 }
 
 export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProps) => {
+  const navigate = useNavigate();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [answers, setAnswers] = useState<MatchDetails>({
@@ -26,11 +30,13 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
     match_type: initialData.match_type || "friendly",
   });
 
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading, error } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No authenticated user");
+      if (!user) {
+        throw new Error("No authenticated user");
+      }
 
       const { data, error } = await supabase
         .from('profiles')
@@ -42,6 +48,25 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
       return data;
     }
   });
+
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[200px]">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 min-h-[200px]">
+        <p className="text-red-500">שגיאה בטעינת הנתונים</p>
+        <Button onClick={() => navigate("/dashboard")}>חזור לדף הבית</Button>
+      </div>
+    );
+  }
 
   const sportBranch = profile?.sport_branches?.[0];
 
@@ -82,6 +107,8 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
   ];
 
   const handleQuestionSubmit = (value: string) => {
+    if (!QUESTIONS[currentQuestionIndex]) return;
+    
     const currentQuestion = QUESTIONS[currentQuestionIndex];
     setAnswers((prev) => ({
       ...prev,
@@ -104,6 +131,11 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
       setCurrentQuestionIndex((prev) => prev - 1);
     }
   };
+
+  // Only render if we have valid questions
+  if (!QUESTIONS[currentQuestionIndex]) {
+    return null;
+  }
 
   return (
     <div className="space-y-4">
