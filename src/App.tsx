@@ -7,10 +7,10 @@ import { useEffect, useState, Suspense, lazy } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/Navigation";
 import { AdminRoute } from "@/components/AdminRoute";
+import Auth from "./pages/Auth"; // Import directly instead of lazy loading
 
-// Lazy load components
+// Lazy load other components
 const Index = lazy(() => import("./pages/Index"));
-const Auth = lazy(() => import("./pages/Auth"));
 const Player = lazy(() => import("./pages/Player"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Dashboard = lazy(() => import("./pages/Dashboard").then(module => ({ default: module.Dashboard })));
@@ -175,168 +175,204 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter basename="/">
-            <Suspense fallback={<LoadingSpinner />}>
-              <Routes>
-                <Route path="/auth" element={<Auth />} />
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
+            <Routes>
+              <Route path="/auth" element={<Auth />} /> {/* Direct component usage */}
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <AdminRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <AdminRoute>
+                      <Suspense fallback={<LoadingSpinner />}>
                         <AdminDashboard />
-                      </AdminRoute>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute>
+                      </Suspense>
+                    </AdminRoute>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <Admin />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/player"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/player"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <Player />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <Profile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/mental-learning"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/mental-learning"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <MentalLearning />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/pre-match-report"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/pre-match-report"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <PreMatchReport />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/schedule"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/schedule"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <WeeklyScheduleWizard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/daily-routine"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/daily-routine"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <DailyRoutineForm />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/game-history"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/game-history"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <GameHistory />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/game-selection"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/game-selection"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <GameSelection />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/match/:id"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/match/:id"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <GameTracker />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/notifications"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <NotificationsManager />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/portfolio"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/portfolio"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <PlayerPortfolio />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/training-summary"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/training-summary"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <TrainingSummaryDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/pre-game-planner"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/pre-game-planner"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <PreGamePlanner />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/havayot-categories"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/havayot-categories"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <HavayotCategories />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/pre-match-reports-list"
-                  element={
-                    <ProtectedRoute>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/pre-match-reports-list"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
                       <PreMatchReportsList />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/coach" element={<Navigate to="/" replace />} />
-                <Route path="/analyst" element={<Navigate to="/" replace />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/coach" element={<Navigate to="/" replace />} />
+              <Route path="/analyst" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
           </BrowserRouter>
         </div>
       </div>
