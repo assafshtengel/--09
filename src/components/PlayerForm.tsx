@@ -32,8 +32,8 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
 
   // Update form data when initialData changes
   useEffect(() => {
+    console.log("Initial data received:", initialData);
     if (initialData) {
-      console.log("Setting initial form data:", initialData);
       setFormData({
         fullName: initialData.fullName || "",
         roles: initialData.roles || [],
@@ -43,6 +43,42 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
         coachEmail: initialData.coachEmail || "",
         sportBranches: initialData.sportBranches || [],
       });
+    } else {
+      // If no initial data, try to fetch from Supabase
+      const fetchProfile = async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: profile, error } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", user.id)
+              .single();
+
+            if (error) {
+              console.error("Error fetching profile:", error);
+              return;
+            }
+
+            if (profile) {
+              console.log("Profile data fetched:", profile);
+              setFormData({
+                fullName: profile.full_name || "",
+                roles: profile.roles || [],
+                phoneNumber: profile.phone_number || "",
+                club: profile.club || "",
+                dateOfBirth: profile.date_of_birth || "",
+                coachEmail: profile.coach_email || "",
+                sportBranches: profile.sport_branches || [],
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Error in fetchProfile:", error);
+        }
+      };
+
+      fetchProfile();
     }
   }, [initialData]);
 
