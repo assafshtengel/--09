@@ -131,22 +131,8 @@ export const MatchQuestionDialog = ({
     setInputValue(optionValue);
     setError(null);
     
-    // If this is the match type selection
-    if (question.id === "match_type") {
-      // For basketball, submit immediately
-      if (sportBranch === 'basketball') {
-        setTimeout(() => {
-          onSubmit(optionValue);
-        }, 100);
-      } else {
-        // For football, continue to position selection
-        setTimeout(() => {
-          onSubmit(optionValue);
-        }, 100);
-      }
-    }
-    // If this is position selection, submit after selecting
-    else if (question.id === "position") {
+    // Only auto-submit for match type if it's basketball
+    if (question.id === "match_type" && sportBranch === 'basketball') {
       setTimeout(() => {
         onSubmit(optionValue);
       }, 100);
