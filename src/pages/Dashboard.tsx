@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -27,6 +27,8 @@ const GoalsSection = lazy(() =>
 );
 
 const Dashboard = () => {
+  const [isMotivationalPopupOpen, setIsMotivationalPopupOpen] = useState(true);
+  
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
@@ -58,7 +60,10 @@ const Dashboard = () => {
     <div className="container mx-auto p-4 space-y-8 min-h-screen bg-gradient-to-b from-background to-background/80">
       <AnimatePresence mode="wait">
         <Suspense fallback={<LoadingScreen />}>
-          <MotivationalPopup />
+          <MotivationalPopup 
+            isOpen={isMotivationalPopupOpen} 
+            onClose={() => setIsMotivationalPopupOpen(false)} 
+          />
         </Suspense>
       
         {isAdmin && <AdminSection />}
