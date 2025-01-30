@@ -1,15 +1,15 @@
 import { Json } from "@/integrations/supabase/types";
 
-interface Action {
-  [key: string]: Json;
+export interface Action {
   name: string;
   goal?: string;
+  [key: string]: Json;
 }
 
-interface QuestionAnswer {
-  [key: string]: Json;
+export interface QuestionAnswer {
   question: string;
   answer: string;
+  [key: string]: Json;
 }
 
 export interface GameHistoryItem {
@@ -18,8 +18,8 @@ export interface GameHistoryItem {
   opponent: string | null;
   status: string;
   pre_match_report?: {
-    actions: Action[];
-    questions_answers: QuestionAnswer[];
+    actions: Action[] | Json;
+    questions_answers: QuestionAnswer[] | Json;
     havaya?: string;
   };
   match_actions?: {
