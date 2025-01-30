@@ -43,7 +43,7 @@ export const MatchQuestionDialog = ({
   const [error, setError] = useState<string | null>(null);
 
   const { data: profile } = useQuery({
-    queryKey: ['profile'],
+    queryKey: ['profile', question.id], // Add question.id to force refetch when question changes
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No authenticated user");
@@ -55,20 +55,24 @@ export const MatchQuestionDialog = ({
         .single();
 
       if (error) throw error;
+      console.log("[MatchQuestionDialog] Profile data loaded:", data);
       return data;
-    }
+    },
+    staleTime: 0, // Always fetch fresh data
+    enabled: isOpen && question.id === "position" // Only fetch when dialog is open and it's position question
   });
 
   const sportBranch = profile?.sport_branches?.[0];
+  console.log("[MatchQuestionDialog] Current sport branch:", sportBranch, "Question ID:", question.id);
 
+  // Effect to handle basketball position auto-submit
   useEffect(() => {
-    // If this is a position question and the sport is basketball,
-    // automatically submit and skip the dialog
-    if (question.id === "position" && sportBranch === "basketball") {
+    if (isOpen && question.id === "position" && sportBranch === "basketball") {
+      console.log("[MatchQuestionDialog] Auto-submitting position for basketball");
       onSubmit("not_applicable");
       onClose();
     }
-  }, [question.id, sportBranch, onSubmit, onClose]);
+  }, [isOpen, question.id, sportBranch, onSubmit, onClose]);
 
   useEffect(() => {
     setInputValue("");
@@ -208,6 +212,7 @@ export const MatchQuestionDialog = ({
   const renderOptionButtons = () => {
     // Skip position selection for basketball players
     if (question.id === "position" && sportBranch === 'basketball') {
+      console.log("[MatchQuestionDialog] Skipping position selection for basketball");
       return null;
     }
 
@@ -284,6 +289,7 @@ export const MatchQuestionDialog = ({
 
   // Don't render the dialog at all for position selection in basketball
   if (question.id === "position" && sportBranch === "basketball") {
+    console.log("[MatchQuestionDialog] Not rendering dialog for basketball position");
     return null;
   }
 
