@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { queryClient } from "@/lib/react-query";
 import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
-import Dashboard from "@/pages/Dashboard";
+import { Dashboard } from "@/pages/Dashboard";
 import Profile from "@/pages/Profile";
 import Portfolio from "@/pages/Portfolio";
 import PreMatchReport from "@/pages/PreMatchReport";
