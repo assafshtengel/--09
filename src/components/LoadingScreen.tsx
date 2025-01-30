@@ -10,8 +10,30 @@ export const LoadingScreen = () => {
         transition={{ duration: 0.5 }}
         className="text-center space-y-6"
       >
-        <LoadingSpinner size="lg" />
-        <h2 className="text-2xl font-semibold text-primary">טוען את המערכת...</h2>
+        <motion.div
+          animate={{ 
+            scale: [1, 1.1, 1],
+            opacity: [1, 0.8, 1]
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        >
+          <LoadingSpinner />
+        </motion.div>
+        <motion.h2 
+          className="text-2xl font-semibold text-primary"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        >
+          טוען את המערכת...
+        </motion.h2>
         <p className="text-muted-foreground">אנא המתן</p>
       </motion.div>
     </div>

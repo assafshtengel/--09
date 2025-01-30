@@ -9,15 +9,16 @@ import { AdminRoute } from "@/components/AdminRoute";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-// Lazy load components with loading priority
+// Prioritize loading the Dashboard component
 const Dashboard = lazy(() => 
   Promise.all([
     import("@/pages/Dashboard").then(module => ({ default: module.Dashboard })),
-    new Promise(resolve => setTimeout(resolve, 1000)) // Minimum loading time
+    // Reduced minimum loading time to improve perceived performance
+    new Promise(resolve => setTimeout(resolve, 500))
   ]).then(([module]) => module)
 );
 
-// Lazy load other components
+// Lazy load other components with lower priority
 const GameHistory = lazy(() => import("@/pages/GameHistory"));
 const PreMatchReport = lazy(() => import("@/pages/PreMatchReport"));
 const Match = lazy(() => import("@/pages/Match").then(module => ({ default: module.Match })));
@@ -27,10 +28,11 @@ const Portfolio = lazy(() => import("@/pages/Portfolio"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const PreGamePlanner = lazy(() => import("@/pages/PreGamePlanner"));
 
-// Loading fallback component for route transitions
+// Enhanced loading fallback with better visual feedback
 const LoadingFallback = () => (
-  <div className="flex justify-center items-center min-h-[50vh]">
+  <div className="flex flex-col justify-center items-center min-h-[50vh] space-y-4">
     <LoadingSpinner />
+    <p className="text-muted-foreground animate-pulse">טוען...</p>
   </div>
 );
 
@@ -44,7 +46,7 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main>
+      <main className="container mx-auto px-4">
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
