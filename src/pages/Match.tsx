@@ -61,7 +61,7 @@ export const Match = () => {
         .single();
 
       if (error) throw error;
-      return data as MatchData;
+      return data as unknown as MatchData;
     },
   });
 
