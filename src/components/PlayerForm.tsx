@@ -36,7 +36,7 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       try {
         // If we have initialData, use it
         if (initialData) {
-          console.log("Setting form data from initialData:", initialData);
+          console.log("[PlayerForm] Setting form data from initialData:", initialData);
           setFormData({
             fullName: initialData.fullName || "",
             roles: initialData.roles || [],
@@ -52,10 +52,11 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
         // If no initialData, fetch from Supabase
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          console.log("No user found");
+          console.log("[PlayerForm] No user found");
           return;
         }
 
+        console.log("[PlayerForm] Fetching profile for user:", user.id);
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("*")
@@ -63,12 +64,12 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
           .single();
 
         if (error) {
-          console.error("Error fetching profile:", error);
+          console.error("[PlayerForm] Error fetching profile:", error);
           return;
         }
 
         if (profile) {
-          console.log("Setting form data from profile:", profile);
+          console.log("[PlayerForm] Setting form data from profile:", profile);
           setFormData({
             fullName: profile.full_name || "",
             roles: Array.isArray(profile.roles) ? profile.roles : [],
@@ -80,7 +81,7 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
           });
         }
       } catch (error) {
-        console.error("Error in loadProfileData:", error);
+        console.error("[PlayerForm] Error in loadProfileData:", error);
       }
     };
 
@@ -89,17 +90,24 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: PlayerFormData) => {
+      console.log("[PlayerForm] Starting profile update with data:", data);
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        console.error("[PlayerForm] No authenticated user found");
         throw new Error("משתמש לא מחובר");
       }
 
+      console.log("[PlayerForm] Authenticated user:", user.id);
+
       // Validate required fields
       if (!data.fullName) {
+        console.error("[PlayerForm] Missing required field: fullName");
         throw new Error("שם מלא הוא שדה חובה");
       }
 
       if (data.roles.length === 0) {
+        console.error("[PlayerForm] Missing required field: roles");
         throw new Error("יש לבחור לפחות תפקיד אחד");
       }
 
@@ -107,20 +115,34 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       const isPlayer = data.roles.includes("player");
       const hasCoachRole = data.roles.includes("מאמן");
 
+      console.log("[PlayerForm] Role validation - isPlayer:", isPlayer, "hasCoachRole:", hasCoachRole);
+      console.log("[PlayerForm] Sport branches:", data.sportBranches);
+
       if (isPlayer && data.sportBranches.length !== 1) {
+        console.error("[PlayerForm] Invalid sport branches for player role");
         throw new Error("שחקן חייב לבחור ענף ספורט אחד בדיוק");
       }
 
       if (hasCoachRole && data.sportBranches.length === 0) {
+        console.error("[PlayerForm] Invalid sport branches for coach role");
         throw new Error("מאמן חייב לבחור לפחות ענף ספורט אחד");
       }
 
-      await ProfileUpdateService.updateProfile({
-        ...data,
-        id: user.id,
-      });
+      console.log("[PlayerForm] Validation passed, updating profile...");
+      
+      try {
+        await ProfileUpdateService.updateProfile({
+          ...data,
+          id: user.id,
+        });
+        console.log("[PlayerForm] Profile updated successfully");
+      } catch (error) {
+        console.error("[PlayerForm] Error updating profile:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
+      console.log("[PlayerForm] Update successful, invalidating queries");
       toast({
         title: "הצלחה",
         description: "הפרופיל עודכן בהצלחה",
@@ -130,7 +152,7 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       navigate("/dashboard");
     },
     onError: (error: any) => {
-      console.error("Error updating profile:", error);
+      console.error("[PlayerForm] Mutation error:", error);
       toast({
         title: "שגיאה",
         description: error.message || "אירעה שגיאה בעדכון הפרופיל",
@@ -141,10 +163,12 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[PlayerForm] Form submitted with data:", formData);
     updateProfileMutation.mutate(formData);
   };
 
   const handleInputChange = (field: keyof PlayerFormData, value: any) => {
+    console.log("[PlayerForm] Input changed:", field, value);
     setFormData((prev) => ({
       ...prev,
       [field]: value,

@@ -3,6 +3,8 @@ import type { PlayerFormData, ProfileUpdateData } from "./types";
 
 export class ProfileUpdateService {
   static async updateProfile(data: ProfileUpdateData): Promise<void> {
+    console.log("[ProfileUpdateService] Updating profile with data:", data);
+    
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -17,11 +19,16 @@ export class ProfileUpdateService {
       .eq("id", data.id);
 
     if (error) {
+      console.error("[ProfileUpdateService] Error updating profile:", error);
       throw error;
     }
+
+    console.log("[ProfileUpdateService] Profile updated successfully");
   }
 
   static async getProfile(userId: string): Promise<PlayerFormData | null> {
+    console.log("[ProfileUpdateService] Fetching profile for user:", userId);
+    
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
@@ -29,13 +36,17 @@ export class ProfileUpdateService {
       .single();
 
     if (error) {
+      console.error("[ProfileUpdateService] Error fetching profile:", error);
       throw error;
     }
 
     if (!data) {
+      console.log("[ProfileUpdateService] No profile found for user:", userId);
       return null;
     }
 
+    console.log("[ProfileUpdateService] Profile fetched successfully:", data);
+    
     return {
       fullName: data.full_name || "",
       roles: data.roles || [],
