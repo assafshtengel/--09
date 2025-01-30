@@ -8,7 +8,7 @@ import GameHistory from "@/pages/GameHistory";
 import { AdminRoute } from "@/components/AdminRoute";
 import PreMatchReport from "@/pages/PreMatchReport";
 import { Match } from "@/pages/Match";
-import Dashboard from "@/pages/Dashboard";
+import { Dashboard } from "@/pages/Dashboard";  // Changed to named import
 import Auth from "@/pages/Auth";
 import Profile from "@/pages/Profile";
 import Portfolio from "@/pages/Portfolio";

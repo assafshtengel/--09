@@ -14,6 +14,33 @@ import {
   Heart
 } from "lucide-react";
 
+interface PreMatchReport {
+  actions: Array<{
+    name: string;
+    goal?: string;
+  }>;
+  questions_answers: Record<string, any>;
+  havaya?: string;
+}
+
+interface MatchData {
+  id: string;
+  player_id: string;
+  created_at: string;
+  match_date: string;
+  opponent: string | null;
+  location: string | null;
+  status: string;
+  pre_match_report_id: string | null;
+  match_type: string | null;
+  final_score: string | null;
+  player_position: string | null;
+  team: string | null;
+  team_name: string | null;
+  player_role: string | null;
+  pre_match_report?: PreMatchReport;
+}
+
 export const Match = () => {
   const { id } = useParams<{ id: string }>();
 
@@ -34,7 +61,7 @@ export const Match = () => {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as MatchData;
     },
   });
 
@@ -49,7 +76,7 @@ export const Match = () => {
   const havayot = match.pre_match_report?.havaya ? 
     JSON.parse(match.pre_match_report.havaya) : {};
 
-  const havayotArray = Object.values(havayot).filter(h => h);
+  const havayotArray = Object.values(havayot).filter(Boolean) as string[];
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -89,7 +116,7 @@ export const Match = () => {
             </div>
             <ScrollArea className="h-[200px]">
               <div className="space-y-3">
-                {match.pre_match_report.actions.map((action: any, index: number) => (
+                {match.pre_match_report.actions.map((action, index) => (
                   <div key={index} className="border p-3 rounded-lg">
                     <h3 className="font-semibold text-right">{action.name}</h3>
                     {action.goal && (
@@ -114,9 +141,9 @@ export const Match = () => {
             </div>
             <ScrollArea className="h-[300px]">
               <div className="space-y-4">
-                {Object.entries(match.pre_match_report.questions_answers).map(([key, value]: [string, any], index) => {
+                {Object.entries(match.pre_match_report.questions_answers).map(([key, value], index) => {
                   if (key === 'openEndedAnswers' && typeof value === 'object') {
-                    return Object.entries(value).map(([question, answer], subIndex) => (
+                    return Object.entries(value as Record<string, string>).map(([question, answer], subIndex) => (
                       <div key={`${index}-${subIndex}`} className="border p-4 rounded-lg">
                         <p className="font-medium text-right mb-2">{question}</p>
                         <p className="text-muted-foreground text-right">{answer}</p>
@@ -126,7 +153,7 @@ export const Match = () => {
                   return (
                     <div key={index} className="border p-4 rounded-lg">
                       <p className="font-medium text-right mb-2">{key}</p>
-                      <p className="text-muted-foreground text-right">{value}</p>
+                      <p className="text-muted-foreground text-right">{String(value)}</p>
                     </div>
                   );
                 })}
