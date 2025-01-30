@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Target, Send } from "lucide-react";
+import { Target, Send, Edit } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface Goal {
@@ -93,6 +93,10 @@ export const GoalsSection = () => {
     });
   };
 
+  const handleEditLongTermGoal = () => {
+    setIsLongTermDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div id="goals-section" className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -132,6 +136,13 @@ export const GoalsSection = () => {
                     <h4 className="font-semibold mb-1 text-primary">מוטיבציה</h4>
                     <p>{longTermGoal.motivation}</p>
                   </div>
+                  <Button 
+                    onClick={handleEditLongTermGoal}
+                    className="w-full mt-4 bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    ערוך יעד
+                  </Button>
                 </div>
               ) : (
                 <Dialog open={isLongTermDialogOpen} onOpenChange={setIsLongTermDialogOpen}>
@@ -142,7 +153,7 @@ export const GoalsSection = () => {
                     <DialogHeader>
                       <DialogTitle>הגדרת יעד ארוך טווח</DialogTitle>
                     </DialogHeader>
-                    <LongTermGoalForm onSave={handleSaveGoal} />
+                    <LongTermGoalForm onSave={handleSaveGoal} initialData={longTermGoal} />
                   </DialogContent>
                 </Dialog>
               )}
@@ -192,14 +203,14 @@ export const GoalsSection = () => {
   );
 };
 
-const LongTermGoalForm = ({ onSave }: { onSave: (goal: Goal) => void }) => {
+const LongTermGoalForm = ({ onSave, initialData }: { onSave: (goal: Goal) => void, initialData?: Goal | null }) => {
   const [formData, setFormData] = useState<Goal>({
     goal_type: 'long_term',
-    target_position: '',
-    target_team: '',
-    inspiration: '',
-    required_skills: '',
-    motivation: '',
+    target_position: initialData?.target_position || '',
+    target_team: initialData?.target_team || '',
+    inspiration: initialData?.inspiration || '',
+    required_skills: initialData?.required_skills || '',
+    motivation: initialData?.motivation || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
