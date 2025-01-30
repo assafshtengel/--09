@@ -15,6 +15,7 @@ import { he } from "date-fns/locale";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface MatchQuestionDialogProps {
   isOpen: boolean;
@@ -40,12 +41,12 @@ export const MatchQuestionDialog = ({
   onBack,
   isFirstQuestion = false,
 }: MatchQuestionDialogProps) => {
+  const navigate = useNavigate();
   const [inputValue, setInputValue] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch player's sport branch
   const { data: profile } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
@@ -105,6 +106,11 @@ export const MatchQuestionDialog = ({
     const formattedDate = format(selectedDate, "yyyy-MM-dd");
     setInputValue(formattedDate);
     handleSubmit();
+  };
+
+  const handleClose = () => {
+    onClose();
+    navigate("/dashboard");
   };
 
   const getMatchTypeIcon = (type: string) => {
@@ -242,7 +248,7 @@ export const MatchQuestionDialog = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md mx-auto">
         <DialogHeader>
           <DialogTitle className="text-xl text-center mb-6">
@@ -307,7 +313,7 @@ export const MatchQuestionDialog = ({
             
             <Button
               variant="outline"
-              onClick={onClose}
+              onClick={handleClose}
               className="w-full"
             >
               סגור
