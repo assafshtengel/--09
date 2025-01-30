@@ -91,7 +91,7 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
         { value: "cup", label: "גביע" },
       ],
     },
-    ...(sportBranch !== 'basketball' ? [{
+    ...(sportBranch === 'basketball' ? [] : [{
       id: "position",
       label: "באיזה תפקיד תשחק במשחק?",
       type: "select" as const,
@@ -103,7 +103,7 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
         { value: "centerback", label: "בלם" },
         { value: "winger", label: "כנף" },
       ],
-    }] : []),
+    }]),
   ];
 
   const handleQuestionSubmit = (value: string) => {

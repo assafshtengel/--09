@@ -39,7 +39,7 @@ export const MatchQuestionDialog = ({
   value,
   onSubmit,
   onBack,
-  isFirstQuestion = false,
+  isFirstQuestion,
 }: MatchQuestionDialogProps) => {
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState("");
@@ -225,15 +225,15 @@ export const MatchQuestionDialog = ({
             <Button
               key={option.value}
               onClick={() => handleOptionSelect(option.value)}
-              className={`h-12 relative w-full ${
+              className={`h-14 relative w-full ${
                 selectedOption === option.value
                   ? "bg-primary text-white"
-                  : "bg-blue-50 hover:bg-blue-100 text-primary"
-              } justify-between px-4`}
+                  : "bg-blue-50/50 hover:bg-blue-100/50 text-primary"
+              } justify-end px-6 text-lg font-medium`}
             >
-              <span>{option.label}</span>
+              {option.label}
               {selectedOption === option.value && (
-                <span className="absolute left-4">✓</span>
+                <span className="absolute left-4 text-white">✓</span>
               )}
             </Button>
           ))}
@@ -241,10 +241,10 @@ export const MatchQuestionDialog = ({
           {selectedOption && (
             <Button
               onClick={() => handleSubmit()}
-              className="w-full mt-4 bg-primary hover:bg-primary/90"
+              className="w-full mt-4 bg-primary/20 hover:bg-primary/30 text-primary h-14 text-lg"
             >
               המשך
-              <ChevronLeft className="w-4 h-4 mr-2" />
+              <ChevronLeft className="w-5 h-5 mr-2" />
             </Button>
           )}
         </div>
