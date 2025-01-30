@@ -5,9 +5,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText } from "lucide-react";
+import { FileText, Target, Heart, MessageSquare } from "lucide-react";
 import { GameHistoryItem } from "./types";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface GameDetailsDialogProps {
   isOpen: boolean;
@@ -29,29 +31,67 @@ export const GameDetailsDialog = ({ isOpen, onClose, game }: GameDetailsDialogPr
         <ScrollArea className="h-[500px]">
           <div className="space-y-6">
             {game.pre_match_report && (
-              <div>
-                <h3 className="font-semibold mb-2">נתוני טרום משחק</h3>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-sm font-medium">יעדים</h4>
-                    <ul className="list-disc list-inside">
+              <div className="space-y-6">
+                {/* Havayot Section */}
+                {game.pre_match_report.havaya && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Heart className="h-5 w-5 text-primary" />
+                        הוויות נבחרות
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {game.pre_match_report.havaya.split(',').map((havaya, index) => (
+                          <Badge key={index} variant="secondary">
+                            {havaya.trim()}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Goals Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="h-5 w-5 text-primary" />
+                      יעדים למשחק
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
                       {Array.isArray(game.pre_match_report.actions) &&
                         game.pre_match_report.actions.map((action: any, index: number) => (
-                          <li key={index}>
-                            {action.name} - יעד: {action.goal || "לא הוגדר"}
-                          </li>
+                          <div
+                            key={index}
+                            className="border p-3 rounded-lg bg-muted/50"
+                          >
+                            <div className="font-medium">{action.name}</div>
+                            {action.goal && (
+                              <div className="text-sm text-muted-foreground mt-1">
+                                יעד: {action.goal}
+                              </div>
+                            )}
+                          </div>
                         ))}
-                    </ul>
-                  </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-                  {Array.isArray(game.pre_match_report.questions_answers) && 
-                   game.pre_match_report.questions_answers.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-6"
-                    >
-                      <h4 className="text-sm font-medium mb-3">תשובות לשאלון טרום משחק</h4>
+                {/* Questions & Answers Section */}
+                {Array.isArray(game.pre_match_report.questions_answers) && 
+                 game.pre_match_report.questions_answers.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <MessageSquare className="h-5 w-5 text-primary" />
+                        תשובות לשאלון טרום משחק
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
                       <div className="space-y-4">
                         {game.pre_match_report.questions_answers.map((qa: any, index: number) => (
                           <motion.div
@@ -66,27 +106,32 @@ export const GameDetailsDialog = ({ isOpen, onClose, game }: GameDetailsDialogPr
                           </motion.div>
                         ))}
                       </div>
-                    </motion.div>
-                  )}
-                </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             )}
 
-            <div>
-              <h3 className="font-semibold mb-2">נתוני משחק</h3>
-              {game.match_actions && game.match_actions.length > 0 ? (
-                <ul className="space-y-2">
-                  {game.match_actions.map((action) => (
-                    <li key={action.id} className="flex justify-between">
-                      <span>{action.result}</span>
-                      <span>דקה {action.minute}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-muted-foreground">אין נתוני משחק</p>
-              )}
-            </div>
+            {/* Match Actions Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>נתוני משחק</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {game.match_actions && game.match_actions.length > 0 ? (
+                  <ul className="space-y-2">
+                    {game.match_actions.map((action) => (
+                      <li key={action.id} className="flex justify-between">
+                        <span>{action.result}</span>
+                        <span>דקה {action.minute}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-muted-foreground">אין נתוני משחק</p>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </ScrollArea>
       </DialogContent>
