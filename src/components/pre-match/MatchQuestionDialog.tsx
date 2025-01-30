@@ -1,9 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -133,6 +128,11 @@ export const MatchQuestionDialog = ({
     
     // Only auto-submit for match type if it's basketball
     if (question.id === "match_type" && sportBranch === 'basketball') {
+      setTimeout(() => {
+        onSubmit(optionValue);
+      }, 100);
+    } else if (question.id === "position") {
+      // Auto-submit for position selection after a brief delay
       setTimeout(() => {
         onSubmit(optionValue);
       }, 100);
