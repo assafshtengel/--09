@@ -126,13 +126,13 @@ export const MatchQuestionDialog = ({
     setInputValue(optionValue);
     setError(null);
     
-    // Only auto-submit for match type if it's basketball
+    // Auto-submit for match type if it's basketball
     if (question.id === "match_type" && sportBranch === 'basketball') {
       setTimeout(() => {
         onSubmit(optionValue);
       }, 100);
-    } else if (question.id === "position") {
-      // Auto-submit for position selection after a brief delay
+    } else if (question.id === "position" && sportBranch !== 'basketball') {
+      // Auto-submit for position selection after a brief delay (only for football)
       setTimeout(() => {
         onSubmit(optionValue);
       }, 100);
@@ -197,6 +197,14 @@ export const MatchQuestionDialog = ({
   };
 
   const renderOptionButtons = () => {
+    if (question.id === "position" && sportBranch === 'basketball') {
+      // Skip position selection for basketball players by auto-submitting
+      setTimeout(() => {
+        onSubmit("not_applicable");
+      }, 0);
+      return null;
+    }
+
     if (question.id === "position") {
       return (
         <div className="grid grid-cols-1 gap-2">
