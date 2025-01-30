@@ -33,6 +33,7 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
+      console.log("[MatchDetailsForm] Fetching profile data...");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error("No authenticated user");
@@ -45,6 +46,7 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
         .single();
 
       if (error) throw error;
+      console.log("[MatchDetailsForm] Profile data:", data);
       return data;
     }
   });
@@ -69,6 +71,7 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
   }
 
   const sportBranch = profile?.sport_branches?.[0];
+  console.log("[MatchDetailsForm] Sport branch:", sportBranch);
 
   // Define questions based on sport branch
   const QUESTIONS = [
@@ -122,7 +125,11 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
     } else {
       setIsTransitioning(true);
       setTimeout(() => {
-        onSubmit(answers);
+        // If it's basketball, add a default position
+        const finalAnswers = sportBranch === 'basketball' 
+          ? { ...answers, position: 'not_applicable' }
+          : answers;
+        onSubmit(finalAnswers);
         setIsTransitioning(false);
       }, 100);
     }
