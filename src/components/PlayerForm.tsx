@@ -7,8 +7,9 @@ import type { PlayerFormData } from "./player-form/types";
 import { PersonalInfoSection } from "./player-form/sections/PersonalInfoSection";
 import { ClubInfoSection } from "./player-form/sections/ClubInfoSection";
 import { RoleAndSportSection } from "./player-form/sections/RoleAndSportSection";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface PlayerFormProps {
   initialData?: PlayerFormData | null;
@@ -30,7 +31,23 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
     sportBranches: [],
   });
 
-  // Update form data when initialData changes
+  // Query for profile data
+  const { data: profileData, isLoading: isLoadingProfile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log("[PlayerForm] No user found");
+        return null;
+      }
+
+      console.log("[PlayerForm] Fetching profile for user:", user.id);
+      return ProfileUpdateService.getProfile(user.id);
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
+  // Update form data when initialData or profileData changes
   useEffect(() => {
     const loadProfileData = async () => {
       try {
@@ -49,19 +66,18 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
           return;
         }
 
-        // If no initialData, fetch from Supabase
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          console.log("[PlayerForm] No user found");
-          return;
-        }
-
-        console.log("[PlayerForm] Fetching profile for user:", user.id);
-        const profile = await ProfileUpdateService.getProfile(user.id);
-
-        if (profile) {
-          console.log("[PlayerForm] Setting form data from profile:", profile);
-          setFormData(profile);
+        // If we have profileData from the query, use it
+        if (profileData) {
+          console.log("[PlayerForm] Setting form data from profileData:", profileData);
+          setFormData({
+            fullName: profileData.fullName || "",
+            roles: profileData.roles || [],
+            phoneNumber: profileData.phoneNumber || "",
+            club: profileData.club || "",
+            dateOfBirth: profileData.dateOfBirth || "",
+            coachEmail: profileData.coachEmail || "",
+            sportBranches: profileData.sportBranches || [],
+          });
         }
       } catch (error) {
         console.error("[PlayerForm] Error in loadProfileData:", error);
@@ -74,7 +90,7 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
     };
 
     loadProfileData();
-  }, [initialData, toast]);
+  }, [initialData, profileData, toast]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: PlayerFormData) => {
@@ -164,6 +180,14 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       [field]: value,
     }));
   };
+
+  if (isLoadingProfile) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
