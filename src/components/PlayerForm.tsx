@@ -31,10 +31,11 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
     sportBranches: [],
   });
 
-  // Query for profile data
+  // Query for profile data with immediate execution
   const { data: profileData, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
+      console.log("[PlayerForm] Starting profile data fetch");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         console.log("[PlayerForm] No user found");
@@ -42,55 +43,46 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       }
 
       console.log("[PlayerForm] Fetching profile for user:", user.id);
-      return ProfileUpdateService.getProfile(user.id);
+      const profile = await ProfileUpdateService.getProfile(user.id);
+      console.log("[PlayerForm] Profile data fetched:", profile);
+      return profile;
     },
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 0, // Disable caching to ensure fresh data
+    refetchOnMount: true, // Always refetch on mount
+    retry: 2, // Retry failed requests twice
   });
 
   // Update form data when initialData or profileData changes
   useEffect(() => {
-    const loadProfileData = async () => {
-      try {
-        // If we have initialData, use it
-        if (initialData) {
-          console.log("[PlayerForm] Setting form data from initialData:", initialData);
-          setFormData({
-            fullName: initialData.fullName || "",
-            roles: initialData.roles || [],
-            phoneNumber: initialData.phoneNumber || "",
-            club: initialData.club || "",
-            dateOfBirth: initialData.dateOfBirth || "",
-            coachEmail: initialData.coachEmail || "",
-            sportBranches: initialData.sportBranches || [],
-          });
-          return;
-        }
+    console.log("[PlayerForm] Effect triggered with:", { initialData, profileData });
+    
+    if (initialData) {
+      console.log("[PlayerForm] Setting form data from initialData");
+      setFormData({
+        fullName: initialData.fullName || "",
+        roles: initialData.roles || [],
+        phoneNumber: initialData.phoneNumber || "",
+        club: initialData.club || "",
+        dateOfBirth: initialData.dateOfBirth || "",
+        coachEmail: initialData.coachEmail || "",
+        sportBranches: initialData.sportBranches || [],
+      });
+      return;
+    }
 
-        // If we have profileData from the query, use it
-        if (profileData) {
-          console.log("[PlayerForm] Setting form data from profileData:", profileData);
-          setFormData({
-            fullName: profileData.fullName || "",
-            roles: profileData.roles || [],
-            phoneNumber: profileData.phoneNumber || "",
-            club: profileData.club || "",
-            dateOfBirth: profileData.dateOfBirth || "",
-            coachEmail: profileData.coachEmail || "",
-            sportBranches: profileData.sportBranches || [],
-          });
-        }
-      } catch (error) {
-        console.error("[PlayerForm] Error in loadProfileData:", error);
-        toast({
-          title: "שגיאה",
-          description: "אירעה שגיאה בטעינת הפרופיל",
-          variant: "destructive",
-        });
-      }
-    };
-
-    loadProfileData();
-  }, [initialData, profileData, toast]);
+    if (profileData) {
+      console.log("[PlayerForm] Setting form data from profileData");
+      setFormData({
+        fullName: profileData.fullName || "",
+        roles: profileData.roles || [],
+        phoneNumber: profileData.phoneNumber || "",
+        club: profileData.club || "",
+        dateOfBirth: profileData.dateOfBirth || "",
+        coachEmail: profileData.coachEmail || "",
+        sportBranches: profileData.sportBranches || [],
+      });
+    }
+  }, [initialData, profileData]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: PlayerFormData) => {
@@ -181,9 +173,10 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
     }));
   };
 
+  // Show loading spinner while fetching initial data
   if (isLoadingProfile) {
     return (
-      <div className="flex justify-center items-center p-8">
+      <div className="flex justify-center items-center min-h-[200px]">
         <LoadingSpinner />
       </div>
     );
