@@ -6,7 +6,7 @@ import { Navigation } from "@/components/Navigation";
 import { useAuthState } from "@/hooks/use-auth-state";
 import GameHistory from "@/pages/GameHistory";
 
-function App() {
+function AppContent() {
   const { isLoading } = useAuthState();
 
   if (isLoading) {
@@ -14,16 +14,22 @@ function App() {
   }
 
   return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <main>
+        <Routes>
+          <Route path="/game-history" element={<GameHistory />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
+
+function App() {
+  return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <div className="min-h-screen bg-background">
-          <Navigation />
-          <main>
-            <Routes>
-              <Route path="/game-history" element={<GameHistory />} />
-            </Routes>
-          </main>
-        </div>
+        <AppContent />
         <Toaster />
       </Router>
     </QueryClientProvider>
