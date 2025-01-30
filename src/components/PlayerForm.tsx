@@ -57,36 +57,24 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
         }
 
         console.log("[PlayerForm] Fetching profile for user:", user.id);
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-
-        if (error) {
-          console.error("[PlayerForm] Error fetching profile:", error);
-          return;
-        }
+        const profile = await ProfileUpdateService.getProfile(user.id);
 
         if (profile) {
           console.log("[PlayerForm] Setting form data from profile:", profile);
-          setFormData({
-            fullName: profile.full_name || "",
-            roles: Array.isArray(profile.roles) ? profile.roles : [],
-            phoneNumber: profile.phone_number || "",
-            club: profile.club || "",
-            dateOfBirth: profile.date_of_birth || "",
-            coachEmail: profile.coach_email || "",
-            sportBranches: Array.isArray(profile.sport_branches) ? profile.sport_branches : [],
-          });
+          setFormData(profile);
         }
       } catch (error) {
         console.error("[PlayerForm] Error in loadProfileData:", error);
+        toast({
+          title: "שגיאה",
+          description: "אירעה שגיאה בטעינת הפרופיל",
+          variant: "destructive",
+        });
       }
     };
 
     loadProfileData();
-  }, [initialData]);
+  }, [initialData, toast]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: PlayerFormData) => {
@@ -131,23 +119,25 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       console.log("[PlayerForm] Validation passed, updating profile...");
       
       try {
-        await ProfileUpdateService.updateProfile({
+        const updatedProfile = await ProfileUpdateService.updateProfile({
           ...data,
           id: user.id,
         });
-        console.log("[PlayerForm] Profile updated successfully");
+        console.log("[PlayerForm] Profile updated successfully:", updatedProfile);
+        return updatedProfile;
       } catch (error) {
         console.error("[PlayerForm] Error updating profile:", error);
         throw error;
       }
     },
-    onSuccess: () => {
-      console.log("[PlayerForm] Update successful, invalidating queries");
+    onSuccess: (updatedProfile) => {
+      console.log("[PlayerForm] Update successful, updating form data:", updatedProfile);
+      setFormData(updatedProfile);
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
       toast({
         title: "הצלחה",
         description: "הפרופיל עודכן בהצלחה",
       });
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
       onSubmit?.();
       navigate("/dashboard");
     },

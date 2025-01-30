@@ -2,13 +2,13 @@ import { supabase } from "@/integrations/supabase/client";
 import type { PlayerFormData, ProfileUpdateData } from "./types";
 
 export class ProfileUpdateService {
-  static async updateProfile(data: ProfileUpdateData): Promise<void> {
+  static async updateProfile(data: ProfileUpdateData): Promise<PlayerFormData> {
     console.log("[ProfileUpdateService] Starting profile update with data:", {
       ...data,
       id: data.id.slice(0, 8) + '...' // Log partial ID for privacy
     });
     
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from("profiles")
       .update({
         full_name: data.fullName,
@@ -21,12 +21,39 @@ export class ProfileUpdateService {
       })
       .eq("id", data.id);
 
-    if (error) {
-      console.error("[ProfileUpdateService] Error updating profile:", error);
-      throw error;
+    if (updateError) {
+      console.error("[ProfileUpdateService] Error updating profile:", updateError);
+      throw updateError;
     }
 
-    console.log("[ProfileUpdateService] Profile updated successfully");
+    console.log("[ProfileUpdateService] Profile updated successfully, fetching latest data");
+
+    // Fetch the updated profile data
+    const { data: updatedProfile, error: fetchError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", data.id)
+      .single();
+
+    if (fetchError) {
+      console.error("[ProfileUpdateService] Error fetching updated profile:", fetchError);
+      throw fetchError;
+    }
+
+    console.log("[ProfileUpdateService] Latest profile data fetched:", {
+      ...updatedProfile,
+      id: data.id.slice(0, 8) + '...'
+    });
+
+    return {
+      fullName: updatedProfile.full_name || "",
+      roles: updatedProfile.roles || [],
+      phoneNumber: updatedProfile.phone_number || "",
+      club: updatedProfile.club || "",
+      dateOfBirth: updatedProfile.date_of_birth || "",
+      coachEmail: updatedProfile.coach_email || "",
+      sportBranches: updatedProfile.sport_branches || [],
+    };
   }
 
   static async getProfile(userId: string): Promise<PlayerFormData | null> {
