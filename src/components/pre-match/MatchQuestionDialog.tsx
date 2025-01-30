@@ -36,18 +36,15 @@ export const MatchQuestionDialog = ({
   onBack,
   isFirstQuestion,
 }: MatchQuestionDialogProps) => {
-  console.log("[MatchQuestionDialog] Rendering with question:", question);
-  
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
-      console.log("[MatchQuestionDialog] Fetching profile data...");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No authenticated user");
 
@@ -58,13 +55,20 @@ export const MatchQuestionDialog = ({
         .single();
 
       if (error) throw error;
-      console.log("[MatchQuestionDialog] Profile data:", data);
       return data;
     }
   });
 
   const sportBranch = profile?.sport_branches?.[0];
-  console.log("[MatchQuestionDialog] Sport branch:", sportBranch);
+
+  useEffect(() => {
+    // If this is a position question and the sport is basketball,
+    // automatically submit and skip the dialog
+    if (question.id === "position" && sportBranch === "basketball") {
+      onSubmit("not_applicable");
+      onClose();
+    }
+  }, [question.id, sportBranch, onSubmit, onClose]);
 
   useEffect(() => {
     setInputValue("");
@@ -204,8 +208,6 @@ export const MatchQuestionDialog = ({
   const renderOptionButtons = () => {
     // Skip position selection for basketball players
     if (question.id === "position" && sportBranch === 'basketball') {
-      console.log("[MatchQuestionDialog] Skipping position selection for basketball");
-      onSubmit("not_applicable");
       return null;
     }
 
@@ -280,6 +282,11 @@ export const MatchQuestionDialog = ({
     );
   };
 
+  // Don't render the dialog at all for position selection in basketball
+  if (question.id === "position" && sportBranch === "basketball") {
+    return null;
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md mx-auto">
@@ -320,7 +327,6 @@ export const MatchQuestionDialog = ({
               </div>
             )}
 
-            {/* Continue button for text input only */}
             {question.type === "text" && (
               <Button
                 type="submit"
