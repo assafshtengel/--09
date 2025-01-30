@@ -9,10 +9,14 @@ import { he } from "date-fns/locale";
 import { 
   Target, 
   Calendar,
-  User,
+  Heart,
   MessageSquare,
-  Heart
+  User,
+  MapPin,
+  Trophy,
+  Users
 } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface PreMatchReport {
   actions: Array<{
@@ -44,7 +48,7 @@ interface MatchData {
 export const Match = () => {
   const { id } = useParams<{ id: string }>();
 
-  const { data: match, isLoading } = useQuery({
+  const { data: match, isLoading, error } = useQuery({
     queryKey: ['match', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -66,11 +70,19 @@ export const Match = () => {
   });
 
   if (isLoading) {
-    return <div className="container mx-auto p-4">טוען...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
-  if (!match) {
-    return <div className="container mx-auto p-4">לא נמצא משחק</div>;
+  if (error || !match) {
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <p className="text-red-500">שגיאה בטעינת המשחק</p>
+      </div>
+    );
   }
 
   const havayot = match.pre_match_report?.havaya ? 
@@ -84,10 +96,37 @@ export const Match = () => {
         <h1 className="text-2xl font-bold mb-2">
           {match.opponent ? `משחק נגד ${match.opponent}` : 'משחק'}
         </h1>
-        <p className="text-muted-foreground">
-          {format(new Date(match.match_date), "dd/MM/yyyy", { locale: he })}
-        </p>
+        <div className="flex flex-wrap gap-4 justify-end items-center text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            {format(new Date(match.match_date), "dd/MM/yyyy", { locale: he })}
+          </div>
+          {match.location && (
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              {match.location}
+            </div>
+          )}
+          {match.match_type && (
+            <div className="flex items-center gap-2">
+              <Trophy className="h-4 w-4" />
+              {match.match_type === 'friendly' ? 'ידידות' : 'ליגה'}
+            </div>
+          )}
+        </div>
       </div>
+
+      {match.player_position && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <User className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">תפקיד במשחק</h2>
+            </div>
+            <p className="text-right">{match.player_position}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {havayotArray.length > 0 && (
         <Card>
@@ -98,7 +137,7 @@ export const Match = () => {
             </div>
             <div className="flex flex-wrap gap-2">
               {havayotArray.map((havaya, index) => (
-                <Badge key={index} variant="secondary">
+                <Badge key={index} variant="secondary" className="text-base py-2">
                   {havaya}
                 </Badge>
               ))}
@@ -107,7 +146,7 @@ export const Match = () => {
         </Card>
       )}
 
-      {match.pre_match_report?.actions && (
+      {match.pre_match_report?.actions && match.pre_match_report.actions.length > 0 && (
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
@@ -149,13 +188,22 @@ export const Match = () => {
                         <p className="text-muted-foreground text-right">{answer}</p>
                       </div>
                     ));
+                  } else if (key === 'stressLevel') {
+                    return (
+                      <div key={index} className="border p-4 rounded-lg">
+                        <p className="font-medium text-right mb-2">רמת הלחץ לפני המשחק</p>
+                        <p className="text-muted-foreground text-right">{value} מתוך 10</p>
+                      </div>
+                    );
+                  } else if (key === 'selfRating') {
+                    return (
+                      <div key={index} className="border p-4 rounded-lg">
+                        <p className="font-medium text-right mb-2">ציון עצמי למשחק</p>
+                        <p className="text-muted-foreground text-right">{value} מתוך 10</p>
+                      </div>
+                    );
                   }
-                  return (
-                    <div key={index} className="border p-4 rounded-lg">
-                      <p className="font-medium text-right mb-2">{key}</p>
-                      <p className="text-muted-foreground text-right">{String(value)}</p>
-                    </div>
-                  );
+                  return null;
                 })}
               </div>
             </ScrollArea>
