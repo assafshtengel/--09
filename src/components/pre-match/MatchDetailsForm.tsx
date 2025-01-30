@@ -70,6 +70,7 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
 
   const sportBranch = profile?.sport_branches?.[0];
 
+  // Define questions based on sport branch
   const QUESTIONS = [
     {
       id: "date",
@@ -91,7 +92,8 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
         { value: "cup", label: "גביע" },
       ],
     },
-    ...(sportBranch === 'basketball' ? [] : [{
+    // Only include position question for football
+    ...(sportBranch !== 'basketball' ? [{
       id: "position",
       label: "באיזה תפקיד תשחק במשחק?",
       type: "select" as const,
@@ -103,7 +105,7 @@ export const MatchDetailsForm = ({ onSubmit, initialData }: MatchDetailsFormProp
         { value: "centerback", label: "בלם" },
         { value: "winger", label: "כנף" },
       ],
-    }]),
+    }] : []),
   ];
 
   const handleQuestionSubmit = (value: string) => {
