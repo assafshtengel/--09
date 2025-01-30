@@ -36,15 +36,18 @@ export const MatchQuestionDialog = ({
   onBack,
   isFirstQuestion,
 }: MatchQuestionDialogProps) => {
+  console.log("[MatchQuestionDialog] Rendering with question:", question);
+  
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
+      console.log("[MatchQuestionDialog] Fetching profile data...");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No authenticated user");
 
@@ -55,11 +58,13 @@ export const MatchQuestionDialog = ({
         .single();
 
       if (error) throw error;
+      console.log("[MatchQuestionDialog] Profile data:", data);
       return data;
     }
   });
 
   const sportBranch = profile?.sport_branches?.[0];
+  console.log("[MatchQuestionDialog] Sport branch:", sportBranch);
 
   useEffect(() => {
     setInputValue("");
@@ -197,11 +202,10 @@ export const MatchQuestionDialog = ({
   };
 
   const renderOptionButtons = () => {
+    // Skip position selection for basketball players
     if (question.id === "position" && sportBranch === 'basketball') {
-      // Skip position selection for basketball players by auto-submitting
-      setTimeout(() => {
-        onSubmit("not_applicable");
-      }, 0);
+      console.log("[MatchQuestionDialog] Skipping position selection for basketball");
+      onSubmit("not_applicable");
       return null;
     }
 
