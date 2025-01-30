@@ -13,6 +13,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, addDays } from "date-fns";
 import { he } from "date-fns/locale";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MatchQuestionDialogProps {
   isOpen: boolean;
@@ -42,6 +44,26 @@ export const MatchQuestionDialog = ({
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch player's sport branch
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No authenticated user");
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('sport_branches')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const sportBranch = profile?.sport_branches?.[0];
 
   useEffect(() => {
     setInputValue("");
@@ -103,11 +125,19 @@ export const MatchQuestionDialog = ({
     setInputValue(optionValue);
     setError(null);
     
-    // If this is the match type selection, submit immediately after a short delay
+    // If this is the match type selection, submit immediately
     if (question.id === "match_type") {
-      setTimeout(() => {
-        onSubmit(optionValue);
-      }, 100);
+      // For basketball, submit immediately to skip position selection
+      if (sportBranch === 'basketball') {
+        setTimeout(() => {
+          onSubmit(optionValue);
+        }, 100);
+      } else {
+        // For football, continue to position selection
+        setTimeout(() => {
+          onSubmit(optionValue);
+        }, 100);
+      }
     }
   };
 
