@@ -211,6 +211,46 @@ export const MatchQuestionDialog = ({
   };
 
   const renderOptionButtons = () => {
+    if (question.id === "position") {
+      return (
+        <div className="grid grid-cols-1 gap-2">
+          {[
+            { value: "forward", label: "חלוץ" },
+            { value: "midfielder", label: "קשר" },
+            { value: "defender", label: "מגן" },
+            { value: "goalkeeper", label: "שוער" },
+            { value: "centerback", label: "בלם" },
+            { value: "winger", label: "כנף" },
+          ].map((option) => (
+            <Button
+              key={option.value}
+              onClick={() => handleOptionSelect(option.value)}
+              className={`h-12 relative w-full ${
+                selectedOption === option.value
+                  ? "bg-primary text-white"
+                  : "bg-blue-50 hover:bg-blue-100 text-primary"
+              } justify-between px-4`}
+            >
+              <span>{option.label}</span>
+              {selectedOption === option.value && (
+                <span className="absolute left-4">✓</span>
+              )}
+            </Button>
+          ))}
+          
+          {selectedOption && (
+            <Button
+              onClick={() => handleSubmit()}
+              className="w-full mt-4 bg-primary hover:bg-primary/90"
+            >
+              המשך
+              <ChevronLeft className="w-4 h-4 mr-2" />
+            </Button>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div className="grid grid-cols-1 gap-3">
         {question.options?.map((option) => (
@@ -233,17 +273,6 @@ export const MatchQuestionDialog = ({
           </Button>
         ))}
         
-        {/* Show continue button only for position selection and when an option is selected */}
-        {question.id === "position" && selectedOption && (
-          <Button
-            onClick={() => handleSubmit()}
-            className="w-full mt-4 bg-primary hover:bg-primary/90"
-          >
-            המשך
-            <ChevronLeft className="w-4 h-4 mr-2" />
-          </Button>
-        )}
-
         {error && (
           <p className="text-destructive text-sm mt-2 text-center">
             {error}
