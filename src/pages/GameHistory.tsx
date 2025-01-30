@@ -4,27 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { he } from "date-fns/locale";
 import { Eye, RefreshCw, Target, ChartBar, Trash2 } from "lucide-react";
 import { GameHistoryItem } from "@/components/game/history/types";
-import { GameDetailsDialog } from "@/components/game/history/GameDetailsDialog";
-import { PreMatchGoalsDialog } from "@/components/game/history/PreMatchGoalsDialog";
-import { GameSummaryDialog } from "@/components/game/history/GameSummaryDialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
-type TableInfo = {
-  name: "pre_match_attribute_selections" | "post_game_feedback" | "match_actions" | 
-        "match_notes" | "match_mental_feedback" | "match_substitutions" | "match_halftime_notes";
-  displayName: string;
-};
 
 const GAMES_PER_PAGE = 5;
 
@@ -32,12 +15,6 @@ const GameHistory = () => {
   const navigate = useNavigate();
   const [games, setGames] = useState<GameHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedGame, setSelectedGame] = useState<GameHistoryItem | null>(null);
-  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-  const [showGoalsDialog, setShowGoalsDialog] = useState(false);
-  const [showSummaryDialog, setShowSummaryDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [gameToDelete, setGameToDelete] = useState<GameHistoryItem | null>(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -71,42 +48,21 @@ const GameHistory = () => {
             actions,
             questions_answers,
             havaya
-          ),
-          match_actions (*)
+          )
         `)
         .eq("player_id", user.id)
-        .or('status.eq.ended,status.eq.preview,status.eq.in_progress')
         .order("match_date", { ascending: false })
         .range(start, start + GAMES_PER_PAGE - 1);
 
       if (error) throw error;
-      
-      const transformedData: GameHistoryItem[] = (data || []).map(item => {
-        const preMatchReport = item.pre_match_report ? {
-          actions: Array.isArray(item.pre_match_report.actions) 
-            ? item.pre_match_report.actions.map((action: any) => ({
-                name: String(action.name || ''),
-                goal: action.goal ? String(action.goal) : undefined
-              }))
-            : [],
-          questions_answers: Array.isArray(item.pre_match_report.questions_answers)
-            ? item.pre_match_report.questions_answers.map((qa: any) => ({
-                question: String(qa.question || ''),
-                answer: String(qa.answer || '')
-              }))
-            : [],
-          havaya: item.pre_match_report.havaya
-        } : undefined;
 
-        return {
-          id: item.id,
-          match_date: item.match_date,
-          opponent: item.opponent,
-          status: item.status,
-          pre_match_report: preMatchReport,
-          match_actions: item.match_actions
-        };
-      });
+      const transformedData: GameHistoryItem[] = data.map(item => ({
+        id: item.id,
+        match_date: item.match_date,
+        opponent: item.opponent,
+        status: item.status,
+        pre_match_report: item.pre_match_report
+      }));
 
       if (fromStart) {
         setGames(transformedData);
@@ -114,7 +70,7 @@ const GameHistory = () => {
         setGames(prev => [...prev, ...transformedData]);
       }
 
-      setHasMore(data?.length === GAMES_PER_PAGE);
+      setHasMore(data.length === GAMES_PER_PAGE);
       if (!fromStart) {
         setPage(currentPage + 1);
       }
@@ -124,92 +80,6 @@ const GameHistory = () => {
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
-    }
-  };
-
-  const handleDeleteGame = async (game: GameHistoryItem) => {
-    setGameToDelete(game);
-    setShowDeleteDialog(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!gameToDelete) return;
-
-    try {
-      console.log('Starting deletion process for game:', gameToDelete.id);
-
-      const tables: TableInfo[] = [
-        { name: "pre_match_attribute_selections", displayName: "pre-match attribute selections" },
-        { name: "post_game_feedback", displayName: "post-game feedback" },
-        { name: "match_actions", displayName: "match actions" },
-        { name: "match_notes", displayName: "match notes" },
-        { name: "match_mental_feedback", displayName: "mental feedback" },
-        { name: "match_substitutions", displayName: "substitutions" },
-        { name: "match_halftime_notes", displayName: "halftime notes" }
-      ];
-
-      // Delete all related records sequentially
-      for (const table of tables) {
-        console.log(`Deleting ${table.displayName}...`);
-        const { error } = await supabase
-          .from(table.name)
-          .delete()
-          .eq("match_id", gameToDelete.id);
-
-        if (error) {
-          console.error(`Error deleting ${table.displayName}:`, error);
-          // Continue with other deletions even if one fails
-          continue;
-        }
-      }
-
-      // Finally delete the match itself
-      console.log('Deleting match...');
-      const { error: matchError } = await supabase
-        .from("matches")
-        .delete()
-        .eq("id", gameToDelete.id);
-
-      if (matchError) {
-        console.error('Error deleting match:', matchError);
-        throw new Error(`Failed to delete match: ${matchError.message}`);
-      }
-
-      console.log('Successfully deleted game and all related records');
-      
-      // Update UI only after successful deletion
-      setGames(prevGames => prevGames.filter(g => g.id !== gameToDelete.id));
-      toast.success("המשחק נמחק בהצלחה");
-    } catch (error) {
-      console.error("Error in deletion process:", error);
-      toast.error(error instanceof Error ? error.message : "שגיאה במחיקת המשחק");
-    } finally {
-      setShowDeleteDialog(false);
-      setGameToDelete(null);
-    }
-  };
-
-  const handleResetGame = async (gameId: string) => {
-    try {
-      const { error: deleteError } = await supabase
-        .from("match_actions")
-        .delete()
-        .eq("match_id", gameId);
-
-      if (deleteError) throw deleteError;
-
-      const { error: updateError } = await supabase
-        .from("matches")
-        .update({ status: "preview" })
-        .eq("id", gameId);
-
-      if (updateError) throw updateError;
-
-      toast.success("המשחק אופס בהצלחה");
-      navigate(`/match/${gameId}`);
-    } catch (error) {
-      console.error("Error resetting game:", error);
-      toast.error("שגיאה באיפוס המשחק");
     }
   };
 
@@ -236,7 +106,7 @@ const GameHistory = () => {
                     {game.opponent ? `נגד ${game.opponent}` : "משחק"}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {new Date(game.match_date).toLocaleDateString("he-IL")}
+                    {format(new Date(game.match_date), "dd/MM/yyyy", { locale: he })}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {game.status === 'ended' ? 'הסתיים' : 
@@ -248,47 +118,23 @@ const GameHistory = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => {
-                      setSelectedGame(game);
-                      setShowDetailsDialog(true);
-                    }}
+                    onClick={() => navigate(`/match/${game.id}`)}
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => {
-                      setSelectedGame(game);
-                      setShowGoalsDialog(true);
-                    }}
+                    onClick={() => navigate(`/pre-match-report/${game.id}`)}
                   >
                     <Target className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => {
-                      setSelectedGame(game);
-                      setShowSummaryDialog(true);
-                    }}
+                    onClick={() => navigate(`/game-summary/${game.id}`)}
                   >
                     <ChartBar className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleResetGame(game.id)}
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="text-red-500 hover:text-white hover:bg-red-500"
-                    onClick={() => handleDeleteGame(game)}
-                  >
-                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -314,52 +160,6 @@ const GameHistory = () => {
           </Button>
         </div>
       )}
-
-      {selectedGame && (
-        <>
-          <GameDetailsDialog
-            isOpen={showDetailsDialog}
-            onClose={() => {
-              setShowDetailsDialog(false);
-              setSelectedGame(null);
-            }}
-            game={selectedGame}
-          />
-          <PreMatchGoalsDialog
-            isOpen={showGoalsDialog}
-            onClose={() => {
-              setShowGoalsDialog(false);
-              setSelectedGame(null);
-            }}
-            preMatchReport={selectedGame.pre_match_report}
-          />
-          <GameSummaryDialog
-            isOpen={showSummaryDialog}
-            onClose={() => {
-              setShowSummaryDialog(false);
-              setSelectedGame(null);
-            }}
-            game={selectedGame}
-          />
-        </>
-      )}
-
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>האם אתה בטוח שברצונך למחוק את המשחק?</AlertDialogTitle>
-            <AlertDialogDescription>
-              פעולה זו תמחק את המשחק ואת כל הנתונים הקשורים אליו. לא ניתן לבטל פעולה זו.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>ביטול</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
-              מחק משחק
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
