@@ -91,23 +91,31 @@ const Auth = () => {
       } else if (event === "SIGNED_OUT") {
         console.log("[Auth] User signed out, clearing session data");
         localStorage.removeItem('supabase.auth.token');
-      } else if (event === "TOKEN_REFRESHED") {
-        console.log("[Auth] Token refreshed");
-        if (session) {
-          navigate("/");
-        }
       } else if (event === "PASSWORD_RECOVERY") {
-        console.log("[Auth] Password recovery email sent");
-        toast({
-          title: "נשלח מייל לאיפוס סיסמה",
-          description: "בדוק את תיבת הדואר שלך",
-        });
-      } else if (event === "USER_UPDATED") {
-        console.log("[Auth] User details updated");
-        toast({
-          title: "החשבון עודכן",
-          description: "פרטי החשבון עודכנו בהצלחה",
-        });
+        console.log("[Auth] Password recovery initiated");
+        const token = session?.access_token;
+        if (token) {
+          try {
+            // Create a password reset request record
+            const { error: insertError } = await supabase
+              .from("password_reset_requests")
+              .insert([{ user_id: session.user.id }]);
+
+            if (insertError) {
+              console.error("[Auth] Error creating reset request:", insertError);
+              throw insertError;
+            }
+
+            navigate("/auth/reset-password");
+          } catch (error) {
+            console.error("[Auth] Error in password recovery:", error);
+            toast({
+              title: "שגיאה",
+              description: "אירעה שגיאה בתהליך איפוס הסיסמה",
+              variant: "destructive",
+            });
+          }
+        }
       }
     });
 
