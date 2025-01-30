@@ -30,9 +30,19 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
     sportBranches: [],
   });
 
+  // Update form data when initialData changes
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      console.log("Setting initial form data:", initialData);
+      setFormData({
+        fullName: initialData.fullName || "",
+        roles: initialData.roles || [],
+        phoneNumber: initialData.phoneNumber || "",
+        club: initialData.club || "",
+        dateOfBirth: initialData.dateOfBirth || "",
+        coachEmail: initialData.coachEmail || "",
+        sportBranches: initialData.sportBranches || [],
+      });
     }
   }, [initialData]);
 

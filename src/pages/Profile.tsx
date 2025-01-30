@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { PlayerForm } from "@/components/PlayerForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -42,7 +41,7 @@ const Profile = () => {
       }
 
       if (profile) {
-        console.log("[Profile] Profile loaded successfully");
+        console.log("[Profile] Profile loaded successfully:", profile);
         return {
           fullName: profile.full_name || "",
           roles: profile.roles || [],
