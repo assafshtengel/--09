@@ -6,20 +6,28 @@ import { queryClient } from "@/lib/react-query";
 import { Navigation } from "@/components/Navigation";
 import { useAuthState } from "@/hooks/use-auth-state";
 import { AdminRoute } from "@/components/AdminRoute";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-// Lazy load components
+// Lazy load components with loading priority
+const Dashboard = lazy(() => 
+  Promise.all([
+    import("@/pages/Dashboard").then(module => ({ default: module.Dashboard })),
+    new Promise(resolve => setTimeout(resolve, 1000)) // Minimum loading time
+  ]).then(([module]) => module)
+);
+
+// Lazy load other components
 const GameHistory = lazy(() => import("@/pages/GameHistory"));
 const PreMatchReport = lazy(() => import("@/pages/PreMatchReport"));
 const Match = lazy(() => import("@/pages/Match").then(module => ({ default: module.Match })));
-const Dashboard = lazy(() => import("@/pages/Dashboard").then(module => ({ default: module.Dashboard })));
 const Auth = lazy(() => import("@/pages/Auth"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Portfolio = lazy(() => import("@/pages/Portfolio"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const PreGamePlanner = lazy(() => import("@/pages/PreGamePlanner"));
 
-// Loading fallback component
+// Loading fallback component for route transitions
 const LoadingFallback = () => (
   <div className="flex justify-center items-center min-h-[50vh]">
     <LoadingSpinner />
@@ -30,7 +38,7 @@ function AppContent() {
   const { isLoading } = useAuthState();
 
   if (isLoading) {
-    return <LoadingFallback />;
+    return <LoadingScreen />;
   }
 
   return (
