@@ -5,64 +5,63 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isValidating, setIsValidating] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    const checkToken = async () => {
-      console.log("[ResetPassword] Checking token validity...");
-      const token = searchParams.get("token");
-      
-      if (!token) {
-        console.error("[ResetPassword] No token found in URL");
-        toast({
-          title: "שגיאה",
-          description: "קישור לא תקין. אנא נסה שוב או צור קישור חדש.",
-          variant: "destructive",
-        });
-        navigate("/auth");
-        return;
-      }
-
+    const validateToken = async () => {
+      console.log("[ResetPassword] Starting token validation...");
       try {
+        const token = searchParams.get("token");
+        
+        if (!token) {
+          console.error("[ResetPassword] No token found in URL");
+          throw new Error("קישור לא תקין");
+        }
+
+        // Validate token in the database
         const { data, error } = await supabase
           .from("password_reset_requests")
           .select("*")
           .eq("token", token)
           .single();
 
-        if (error) {
-          console.error("[ResetPassword] Error checking token:", error);
-          throw error;
+        if (error || !data) {
+          console.error("[ResetPassword] Token validation error:", error);
+          throw new Error("הקישור אינו תקף");
         }
 
-        if (!data || data.used || new Date(data.expires_at) < new Date()) {
-          console.error("[ResetPassword] Token invalid or expired");
-          toast({
-            title: "שגיאה",
-            description: "הקישור פג תוקף או כבר נוצל. אנא צור קישור חדש.",
-            variant: "destructive",
-          });
-          navigate("/auth");
+        if (data.used) {
+          console.error("[ResetPassword] Token already used");
+          throw new Error("הקישור כבר נוצל");
         }
-      } catch (error) {
-        console.error("[ResetPassword] Error:", error);
+
+        if (new Date(data.expires_at) < new Date()) {
+          console.error("[ResetPassword] Token expired");
+          throw new Error("תוקף הקישור פג");
+        }
+
+        setIsValidating(false);
+      } catch (error: any) {
+        console.error("[ResetPassword] Validation error:", error);
         toast({
           title: "שגיאה",
-          description: "אירעה שגיאה בבדיקת תוקף הקישור",
+          description: error.message || "אירעה שגיאה באימות הקישור",
           variant: "destructive",
         });
         navigate("/auth");
       }
     };
 
-    checkToken();
+    validateToken();
   }, [searchParams, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -122,13 +121,21 @@ const ResetPassword = () => {
       console.error("[ResetPassword] Error in password reset:", error);
       toast({
         title: "שגיאה",
-        description: "אירעה שגיאה בעדכון הסיסמה",
+        description: error.message || "אירעה שגיאה בעדכון הסיסמה",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isValidating) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-md min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-md min-h-screen flex items-center justify-center">
