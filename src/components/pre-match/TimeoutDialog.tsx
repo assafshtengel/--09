@@ -9,7 +9,7 @@ interface TimeoutDialogProps {
 
 export const TimeoutDialog = ({ isOpen, onClose }: TimeoutDialogProps) => {
   const handleExternalClick = () => {
-    window.open("https://did.li/Kld6q", "_blank");
+    window.open("https://chatgpt.com/g/g-678dbc160ba48191aa5eff1f083a51b4-tknvn-48-sh-vt-lpny-mshkhq", "_blank");
     onClose();
   };
 
