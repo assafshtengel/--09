@@ -47,9 +47,9 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       console.log("[PlayerForm] Profile data fetched:", profile);
       return profile;
     },
-    staleTime: 0, // Disable caching to ensure fresh data
-    refetchOnMount: true, // Always refetch on mount
-    retry: 2, // Retry failed requests twice
+    staleTime: 0,
+    refetchOnMount: true,
+    retry: 2,
   });
 
   // Update form data when initialData or profileData changes
@@ -102,7 +102,7 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
         throw new Error("שם מלא הוא שדה חובה");
       }
 
-      if (data.roles.length === 0) {
+      if (!data.roles || data.roles.length === 0) {
         console.error("[PlayerForm] Missing required field: roles");
         throw new Error("יש לבחור לפחות תפקיד אחד");
       }
@@ -114,12 +114,12 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
       console.log("[PlayerForm] Role validation - isPlayer:", isPlayer, "hasCoachRole:", hasCoachRole);
       console.log("[PlayerForm] Sport branches:", data.sportBranches);
 
-      if (isPlayer && data.sportBranches.length !== 1) {
+      if (isPlayer && (!data.sportBranches || data.sportBranches.length !== 1)) {
         console.error("[PlayerForm] Invalid sport branches for player role");
         throw new Error("שחקן חייב לבחור ענף ספורט אחד בדיוק");
       }
 
-      if (hasCoachRole && data.sportBranches.length === 0) {
+      if (hasCoachRole && (!data.sportBranches || data.sportBranches.length === 0)) {
         console.error("[PlayerForm] Invalid sport branches for coach role");
         throw new Error("מאמן חייב לבחור לפחות ענף ספורט אחד");
       }
@@ -201,7 +201,7 @@ export const PlayerForm = ({ initialData, onSubmit }: PlayerFormProps) => {
 
       <Button 
         type="submit" 
-        disabled={updateProfileMutation.isPending} 
+        disabled={updateProfileMutation.isPending}
         className="w-full"
       >
         {updateProfileMutation.isPending ? "שומר..." : "שמור"}
