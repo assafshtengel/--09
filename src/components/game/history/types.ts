@@ -17,6 +17,8 @@ export interface GameHistoryItem {
   match_date: string;
   opponent: string | null;
   status: string;
+  location?: string | null;
+  match_type?: string | null;
   pre_match_report?: {
     actions: Action[] | Json;
     questions_answers: QuestionAnswer[] | Json;
@@ -30,18 +32,4 @@ export interface GameHistoryItem {
     result: string;
     note: string | null;
   }[];
-}
-
-export interface PreMatchReport {
-  id: string;
-  match_date: string;
-  match_time?: string | null;
-  opponent: string | null;
-  actions: Action[];
-  questions_answers: QuestionAnswer[];
-  havaya?: string;
-  status: 'draft' | 'completed';
-  created_at?: string;
-  updated_at?: string;
-  ai_insights?: string[] | null;
 }

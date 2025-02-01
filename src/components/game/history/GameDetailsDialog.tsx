@@ -5,11 +5,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, Target, Heart, MessageSquare } from "lucide-react";
+import { FileText, Target, Heart, MessageSquare, Clock, MapPin, Trophy, User } from "lucide-react";
 import { GameHistoryItem } from "./types";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { format } from "date-fns";
+import { he } from "date-fns/locale";
 
 interface GameDetailsDialogProps {
   isOpen: boolean;
@@ -30,6 +32,34 @@ export const GameDetailsDialog = ({ isOpen, onClose, game }: GameDetailsDialogPr
 
         <ScrollArea className="h-[500px]">
           <div className="space-y-6">
+            {/* Basic Match Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-primary" />
+                  מידע בסיסי
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span>{format(new Date(game.match_date), "dd/MM/yyyy", { locale: he })}</span>
+                </div>
+                {game.opponent && (
+                  <div className="flex items-center justify-between">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span>נגד: {game.opponent}</span>
+                  </div>
+                )}
+                {game.location && (
+                  <div className="flex items-center justify-between">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{game.location}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {game.pre_match_report && (
               <div className="space-y-6">
                 {/* Havayot Section */}
@@ -54,17 +84,17 @@ export const GameDetailsDialog = ({ isOpen, onClose, game }: GameDetailsDialogPr
                 )}
 
                 {/* Goals Section */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Target className="h-5 w-5 text-primary" />
-                      יעדים למשחק
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {Array.isArray(game.pre_match_report.actions) &&
-                        game.pre_match_report.actions.map((action: any, index: number) => (
+                {Array.isArray(game.pre_match_report.actions) && game.pre_match_report.actions.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Target className="h-5 w-5 text-primary" />
+                        יעדים למשחק
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {game.pre_match_report.actions.map((action: any, index: number) => (
                           <div
                             key={index}
                             className="border p-3 rounded-lg bg-muted/50"
@@ -77,9 +107,10 @@ export const GameDetailsDialog = ({ isOpen, onClose, game }: GameDetailsDialogPr
                             )}
                           </div>
                         ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Questions & Answers Section */}
                 {Array.isArray(game.pre_match_report.questions_answers) && 
@@ -113,25 +144,33 @@ export const GameDetailsDialog = ({ isOpen, onClose, game }: GameDetailsDialogPr
             )}
 
             {/* Match Actions Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>נתוני משחק</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {game.match_actions && game.match_actions.length > 0 ? (
-                  <ul className="space-y-2">
-                    {game.match_actions.map((action) => (
-                      <li key={action.id} className="flex justify-between">
-                        <span>{action.result}</span>
+            {game.match_actions && game.match_actions.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>נתוני משחק</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {game.match_actions.map((action, index) => (
+                      <div 
+                        key={index} 
+                        className={`flex justify-between p-2 rounded-lg ${
+                          action.result === 'success' ? 'bg-green-50' : 'bg-red-50'
+                        }`}
+                      >
+                        <span className={action.result === 'success' ? 'text-green-600' : 'text-red-600'}>
+                          {action.result === 'success' ? 'הצלחה' : 'כישלון'}
+                        </span>
                         <span>דקה {action.minute}</span>
-                      </li>
+                        {action.note && (
+                          <span className="text-sm text-muted-foreground">{action.note}</span>
+                        )}
+                      </div>
                     ))}
-                  </ul>
-                ) : (
-                  <p className="text-muted-foreground">אין נתוני משחק</p>
-                )}
-              </CardContent>
-            </Card>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </ScrollArea>
       </DialogContent>
