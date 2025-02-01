@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Progress } from "@/components/ui/progress";
+import { Json } from "@/integrations/supabase/types";
 
 interface MatchData {
   id: string;
@@ -44,11 +45,8 @@ interface MatchData {
     note: string | null;
   }>;
   pre_match_report?: {
-    actions: Array<{
-      name: string;
-      goal?: string;
-    }>;
-    questions_answers: Record<string, any>;
+    actions: Json;
+    questions_answers: Json;
     havaya?: string;
   };
 }
