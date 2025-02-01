@@ -14,18 +14,12 @@ import {
   User,
   MapPin,
   Trophy,
-  Users
+  Clock,
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-
-interface PreMatchReport {
-  actions: Array<{
-    name: string;
-    goal?: string;
-  }>;
-  questions_answers: Record<string, any>;
-  havaya?: string;
-}
+import { Progress } from "@/components/ui/progress";
 
 interface MatchData {
   id: string;
@@ -42,7 +36,21 @@ interface MatchData {
   team: string | null;
   team_name: string | null;
   player_role: string | null;
-  pre_match_report?: PreMatchReport;
+  match_actions?: Array<{
+    id: string;
+    action_id: string;
+    minute: number;
+    result: string;
+    note: string | null;
+  }>;
+  pre_match_report?: {
+    actions: Array<{
+      name: string;
+      goal?: string;
+    }>;
+    questions_answers: Record<string, any>;
+    havaya?: string;
+  };
 }
 
 export const Match = () => {
@@ -55,6 +63,13 @@ export const Match = () => {
         .from('matches')
         .select(`
           *,
+          match_actions (
+            id,
+            action_id,
+            minute,
+            result,
+            note
+          ),
           pre_match_report:pre_match_report_id (
             actions,
             questions_answers,
@@ -65,7 +80,7 @@ export const Match = () => {
         .single();
 
       if (error) throw error;
-      return data as unknown as MatchData;
+      return data as MatchData;
     },
   });
 
@@ -86,9 +101,21 @@ export const Match = () => {
   }
 
   const havayot = match.pre_match_report?.havaya ? 
-    JSON.parse(match.pre_match_report.havaya) : {};
+    match.pre_match_report.havaya.split(',').map(h => h.trim()) : [];
 
-  const havayotArray = Object.values(havayot).filter(Boolean) as string[];
+  const calculateActionStats = (actionName: string) => {
+    if (!match.match_actions) return { success: 0, total: 0, rate: 0 };
+    
+    const actionAttempts = match.match_actions.filter(a => a.action_id === actionName);
+    const successCount = actionAttempts.filter(a => a.result === 'success').length;
+    const total = actionAttempts.length;
+    
+    return {
+      success: successCount,
+      total,
+      rate: total > 0 ? (successCount / total) * 100 : 0
+    };
+  };
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -128,7 +155,7 @@ export const Match = () => {
         </Card>
       )}
 
-      {havayotArray.length > 0 && (
+      {havayot.length > 0 && (
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
@@ -136,7 +163,7 @@ export const Match = () => {
               <h2 className="text-xl font-semibold">הוויות נבחרות</h2>
             </div>
             <div className="flex flex-wrap gap-2">
-              {havayotArray.map((havaya, index) => (
+              {havayot.map((havaya, index) => (
                 <Badge key={index} variant="secondary" className="text-base py-2">
                   {havaya}
                 </Badge>
@@ -151,16 +178,61 @@ export const Match = () => {
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <Target className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">יעדים למשחק</h2>
+              <h2 className="text-xl font-semibold">יעדים והישגים במשחק</h2>
             </div>
-            <ScrollArea className="h-[200px]">
+            <ScrollArea className="h-[300px]">
+              <div className="space-y-4">
+                {match.pre_match_report.actions.map((action, index) => {
+                  const stats = calculateActionStats(action.name);
+                  return (
+                    <div key={index} className="border p-4 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <span>{stats.success}/{stats.total}</span>
+                        </div>
+                        <h3 className="font-semibold">{action.name}</h3>
+                      </div>
+                      <Progress value={stats.rate} className="h-2 mb-2" />
+                      {action.goal && (
+                        <p className="text-sm text-muted-foreground text-right mt-2">
+                          יעד: {action.goal}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      )}
+
+      {match.match_actions && match.match_actions.length > 0 && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Clock className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">פעולות במשחק</h2>
+            </div>
+            <ScrollArea className="h-[300px]">
               <div className="space-y-3">
-                {match.pre_match_report.actions.map((action, index) => (
+                {match.match_actions.map((action, index) => (
                   <div key={index} className="border p-3 rounded-lg">
-                    <h3 className="font-semibold text-right">{action.name}</h3>
-                    {action.goal && (
-                      <p className="text-sm text-muted-foreground text-right mt-1">
-                        יעד: {action.goal}
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        {action.result === 'success' ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        )}
+                        <span className="text-sm">{action.minute}'</span>
+                      </div>
+                      <span className="font-medium">{action.action_id}</span>
+                    </div>
+                    {action.note && (
+                      <p className="text-sm text-muted-foreground mt-2 text-right">
+                        {action.note}
                       </p>
                     )}
                   </div>
