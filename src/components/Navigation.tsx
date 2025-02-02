@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
-import { Home, LayoutDashboard, LogOut, FileText } from "lucide-react";
+import { Home, LayoutDashboard, LogOut, FileText, Activity } from "lucide-react";
 
 export const Navigation = () => {
   const navigate = useNavigate();
@@ -184,6 +184,16 @@ export const Navigation = () => {
             >
               <FileText className="h-4 w-4" />
               הכנה למשחק
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 hover:bg-gray-100"
+              onClick={() => navigate("/game-history")}
+            >
+              <Activity className="h-4 w-4" />
+              עדכון משחק
             </Button>
           </div>
 
