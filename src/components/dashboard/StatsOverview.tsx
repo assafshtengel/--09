@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -15,13 +15,16 @@ import { useToast } from "@/hooks/use-toast";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { useQuery } from "@tanstack/react-query";
 
-const fetchPlayerStats = async (userId: string | undefined) => {
-  if (!userId) return null;
+const fetchPlayerStats = async () => {
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+  if (userError) throw userError;
+  if (!user) return null;
   
   const { data, error } = await supabase
     .from("player_stats")
     .select("*")
-    .eq("player_id", userId)
+    .eq("player_id", user.id)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -44,13 +47,10 @@ const fetchPlayerStats = async (userId: string | undefined) => {
 
 export const StatsOverview = () => {
   const { toast } = useToast();
-
-  const { data: user } = await supabase.auth.getUser();
   
   const { data: stats, isLoading, error } = useQuery({
-    queryKey: ['playerStats', user?.user?.id],
-    queryFn: () => fetchPlayerStats(user?.user?.id),
-    enabled: !!user?.user?.id,
+    queryKey: ['playerStats'],
+    queryFn: fetchPlayerStats,
   });
 
   useEffect(() => {
