@@ -67,7 +67,7 @@ function AppContent() {
             <Route path="/notifications" element={<NotificationsManager />} />
             <Route path="/havayot-categories" element={<HavayotCategories />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/game-summary" element={<GameSummary />} />
+            <Route path="/game-summary/:id?" element={<GameSummary />} />
             <Route 
               path="/admin" 
               element={

@@ -16,31 +16,34 @@ import { AchievementsSection } from "./summary/AchievementsSection";
 import { generateEmailContent } from "./summary/EmailTemplate";
 import { HavayaRatings } from "./summary/HavayaRatings";
 import debounce from 'lodash/debounce';
+import { useNavigate, useParams } from 'react-router-dom';
 
-interface GameSummaryProps {
-  actions: any[];
-  actionLogs: any[];
-  generalNotes: any[];
-  substitutions: any[];
-  onClose: () => void;
-  gamePhase: string;
-  matchId: string | undefined;
-  opponent: string | null;
+export interface GameSummaryProps {
+  actions?: any[];
+  actionLogs?: any[];
+  generalNotes?: any[];
+  substitutions?: any[];
+  onClose?: () => void;
+  gamePhase?: string;
+  matchId?: string;
+  opponent?: string | null;
   matchDate?: string;
 }
 
 export const GameSummary = ({
-  actions,
-  actionLogs,
-  generalNotes,
-  substitutions,
+  actions = [],
+  actionLogs = [],
+  generalNotes = [],
+  substitutions = [],
   onClose,
-  gamePhase,
-  matchId,
-  opponent,
-  matchDate,
+  gamePhase = "ended",
+  matchId: propMatchId,
+  opponent: propOpponent,
+  matchDate: propMatchDate,
 }: GameSummaryProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { id: urlMatchId } = useParams();
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [insights, setInsights] = useState<string>("");
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
@@ -49,35 +52,33 @@ export const GameSummary = ({
   const [showCaptionPopup, setShowCaptionPopup] = useState(false);
   const [havayaRatings, setHavayaRatings] = useState<Record<string, number>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [matchData, setMatchData] = useState<any>(null);
+
+  const matchId = propMatchId || urlMatchId;
+  const opponent = propOpponent || matchData?.opponent;
+  const matchDate = propMatchDate || matchData?.match_date;
 
   useEffect(() => {
-    const loadInsights = async () => {
+    const loadMatchData = async () => {
       if (!matchId) return;
       
-      setIsLoadingInsights(true);
       try {
-        const response = await supabase.functions.invoke('generate-game-insights', {
-          body: { matchId },
-        });
+        const { data, error } = await supabase
+          .from('matches')
+          .select('*')
+          .eq('id', matchId)
+          .single();
 
-        if (response.error) throw response.error;
-        setInsights(response.data.insights);
+        if (error) throw error;
+        setMatchData(data);
       } catch (error) {
-        console.error('Error loading insights:', error);
-        toast({
-          title: "שגיאה",
-          description: "לא ניתן לטעון את התובנות",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoadingInsights(false);
+        console.error('Error loading match data:', error);
       }
     };
 
-    loadInsights();
+    loadMatchData();
   }, [matchId]);
 
-  // Debounced save function to prevent multiple rapid saves
   const debouncedSave = useCallback(
     debounce(async (
       ratings: Record<string, number>,
@@ -209,8 +210,16 @@ export const GameSummary = ({
     }
   };
 
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
-    <Dialog open onOpenChange={onClose}>
+    <Dialog open onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl mx-auto h-[90vh]">
         <ScrollArea className="h-full pr-4">
           <div id="game-summary-content" className="space-y-6">
@@ -263,7 +272,11 @@ export const GameSummary = ({
             <NotesSection notes={generalNotes} />
 
             <SharingSection
-              onEmailSend={handleEmailSend}
+              onEmailSend={(type) => {
+                setIsSendingEmail(true);
+                handleEmailSend(type)
+                  .finally(() => setIsSendingEmail(false));
+              }}
               onShareSocial={(platform) => {
                 toast({
                   title: "שיתוף",
