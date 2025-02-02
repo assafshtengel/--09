@@ -43,7 +43,7 @@ export const GameSummary = ({
 }: GameSummaryProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { id: urlMatchId } = useParams();
+  const { id } = useParams();
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [insights, setInsights] = useState<string>("");
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
@@ -57,13 +57,13 @@ export const GameSummary = ({
   const [matchActionLogs, setMatchActionLogs] = useState<any[]>([]);
   const [matchNotes, setMatchNotes] = useState<any[]>([]);
 
-  const matchId = propMatchId || urlMatchId;
+  const matchId = propMatchId || id;
   const opponent = propOpponent || matchData?.opponent;
   const matchDate = propMatchDate || matchData?.match_date;
 
   useEffect(() => {
     const loadMatchData = async () => {
-      if (!matchId) return;
+      if (!matchId || matchId === ':id?') return;
       
       try {
         // Load match data
@@ -106,7 +106,7 @@ export const GameSummary = ({
     };
 
     loadMatchData();
-  }, [matchId]);
+  }, [matchId, toast]);
 
   const debouncedSave = useCallback(
     debounce(async (
@@ -246,6 +246,10 @@ export const GameSummary = ({
       navigate(-1);
     }
   };
+
+  if (!matchId || matchId === ':id?') {
+    return null;
+  }
 
   return (
     <Dialog open onOpenChange={handleClose}>
