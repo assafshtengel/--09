@@ -57,6 +57,8 @@ export const Match = () => {
   const { data: match, isLoading, error } = useQuery({
     queryKey: ['match', id],
     queryFn: async () => {
+      if (!id) throw new Error('No match ID provided');
+      
       const { data, error } = await supabase
         .from('matches')
         .select(`
@@ -75,11 +77,12 @@ export const Match = () => {
           )
         `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data as MatchData;
     },
+    enabled: !!id
   });
 
   if (isLoading) {

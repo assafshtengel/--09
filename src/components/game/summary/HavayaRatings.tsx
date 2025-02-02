@@ -35,8 +35,9 @@ export const HavayaRatings = ({ matchId, onRatingsChange }: HavayaRatingsProps) 
           .single();
 
         if (error) throw error;
-        if (data?.havaya_ratings) {
-          setRatings(data.havaya_ratings);
+        
+        if (data?.havaya_ratings && typeof data.havaya_ratings === 'object') {
+          setRatings(data.havaya_ratings as Record<string, number>);
         }
       } catch (error) {
         console.error('Error loading havaya ratings:', error);
