@@ -95,7 +95,14 @@ export const Match = () => {
       return data as MatchData;
     },
     enabled: Boolean(id),
-    retry: 1
+    retry: 1,
+    onError: () => {
+      toast({
+        title: "שגיאה",
+        description: "שגיאה בטעינת המשחק",
+        variant: "destructive",
+      });
+    }
   });
 
   if (isLoading) {
@@ -107,11 +114,6 @@ export const Match = () => {
   }
 
   if (error) {
-    toast({
-      title: "שגיאה",
-      description: "שגיאה בטעינת המשחק",
-      variant: "destructive",
-    });
     return (
       <div className="container mx-auto p-4 text-center">
         <p className="text-red-500">שגיאה בטעינת המשחק</p>
