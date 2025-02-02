@@ -96,12 +96,14 @@ export const Match = () => {
     },
     enabled: Boolean(id),
     retry: 1,
-    onError: () => {
-      toast({
-        title: "שגיאה",
-        description: "שגיאה בטעינת המשחק",
-        variant: "destructive",
-      });
+    meta: {
+      onError: () => {
+        toast({
+          title: "שגיאה",
+          description: "שגיאה בטעינת המשחק",
+          variant: "destructive",
+        });
+      }
     }
   });
 
