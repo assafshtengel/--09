@@ -1,76 +1,110 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/providers/AuthProvider";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Suspense, lazy } from "react";
-import { Toaster } from "@/components/ui/sonner";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "@/lib/react-query";
-import { Navigation } from "@/components/Navigation";
-import { useAuthState } from "@/hooks/use-auth-state";
-import { AdminRoute } from "@/components/AdminRoute";
-import { LoadingScreen } from "@/components/LoadingScreen";
+import { Loader2 } from "lucide-react";
+import GameTracker from "@/components/GameTracker";
 
-// Prioritize loading the Dashboard component with reduced minimum time
-const Dashboard = lazy(() => 
-  Promise.all([
-    import("@/pages/Dashboard").then(module => ({ default: module.Dashboard })),
-    new Promise(resolve => setTimeout(resolve, 300)) // Reduced from 500ms
-  ]).then(([module]) => module)
-);
-
-// Lazy load other components
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const Auth = lazy(() => import("@/pages/Auth"));
 const GameHistory = lazy(() => import("@/pages/GameHistory"));
 const PreMatchReport = lazy(() => import("@/pages/PreMatchReport"));
-const Match = lazy(() => import("@/pages/Match").then(module => ({ default: module.Match })));
-const Auth = lazy(() => import("@/pages/Auth"));
+const GameSummary = lazy(() => import("@/pages/GameSummary"));
 const Profile = lazy(() => import("@/pages/Profile"));
-const Portfolio = lazy(() => import("@/pages/Portfolio"));
-const Admin = lazy(() => import("@/pages/Admin"));
-const PreGamePlanner = lazy(() => import("@/pages/PreGamePlanner"));
+const Match = lazy(() => import("@/pages/Match"));
 
-function AppContent() {
-  const { isLoading } = useAuthState();
-
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-
-  return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="container mx-auto px-4">
-        <Suspense fallback={<LoadingScreen />}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/game-history" element={<GameHistory />} />
-            <Route path="/match/:id" element={<Match />} />
-            <Route path="/pre-match-report" element={<PreMatchReport />} />
-            <Route path="/pre-match-report/:id" element={<PreMatchReport />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/portfolio" element={<Portfolio />} />
-            <Route path="/pre-game-planner" element={<PreGamePlanner />} />
-            <Route 
-              path="/admin" 
-              element={
-                <AdminRoute>
-                  <Admin />
-                </AdminRoute>
-              } 
-            />
-          </Routes>
-        </Suspense>
-      </main>
-    </div>
-  );
-}
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <AppContent />
-        <Toaster />
-      </Router>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <AuthProvider>
+          <Router>
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center h-screen">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              }
+            >
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/game-history"
+                  element={
+                    <ProtectedRoute>
+                      <GameHistory />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/pre-match-report/:id"
+                  element={
+                    <ProtectedRoute>
+                      <PreMatchReport />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/game-summary/:id"
+                  element={
+                    <ProtectedRoute>
+                      <GameSummary />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/match/:id"
+                  element={
+                    <ProtectedRoute>
+                      <Match />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/game/:id"
+                  element={
+                    <ProtectedRoute>
+                      <GameTracker />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </Suspense>
+          </Router>
+          <Toaster />
+        </AuthProvider>
+      </ThemeProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }

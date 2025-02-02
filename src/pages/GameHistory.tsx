@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
-import { Eye, RefreshCw, Target, ChartBar, Trash2 } from "lucide-react";
+import { Eye, RefreshCw, Target, ChartBar, Trash2, PlayCircle } from "lucide-react";
 import { GameHistoryItem } from "@/components/game/history/types";
 
 const GAMES_PER_PAGE = 5;
@@ -115,6 +115,15 @@ const GameHistory = () => {
                   </p>
                 </div>
                 <div className="flex gap-2">
+                  {/* Add new button for GameTracker */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => navigate(`/game/${game.id}`)}
+                    title="מעקב משחק"
+                  >
+                    <PlayCircle className="h-4 w-4" />
+                  </Button>
                   <Button
                     variant="outline"
                     size="icon"
