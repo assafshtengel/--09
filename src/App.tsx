@@ -9,6 +9,11 @@ import GameSummary from "@/pages/GameSummary";
 import Admin from "@/pages/Admin";
 import Auth from "@/pages/Auth";
 import { GameTracker } from "@/components/GameTracker";
+import PlayerPortfolio from "@/pages/PlayerPortfolio";
+import MentalLearning from "@/pages/MentalLearning";
+import NotificationsManager from "@/pages/NotificationsManager";
+import Profile from "@/pages/Profile";
+import ResetPassword from "@/pages/ResetPassword";
 
 function App() {
   return (
@@ -49,6 +54,39 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/portfolio"
+            element={
+              <ProtectedRoute>
+                <PlayerPortfolio />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mental-learning"
+            element={
+              <ProtectedRoute>
+                <MentalLearning />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <NotificationsManager />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route
             path="/admin"
             element={
