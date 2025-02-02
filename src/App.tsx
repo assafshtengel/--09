@@ -16,6 +16,13 @@ const PreMatchReport = lazy(() => import("@/pages/PreMatchReport"));
 const GameSummary = lazy(() => import("@/pages/GameSummary"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Match = lazy(() => import("@/pages/Match"));
+const Admin = lazy(() => import("@/pages/Admin"));
+const Portfolio = lazy(() => import("@/pages/Portfolio"));
+const PlayerPortfolio = lazy(() => import("@/pages/PlayerPortfolio"));
+const MentalLearning = lazy(() => import("@/pages/MentalLearning"));
+const NotificationsManager = lazy(() => import("@/pages/NotificationsManager"));
+const PreGamePlanner = lazy(() => import("@/pages/PreGamePlanner"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 
 const queryClient = new QueryClient();
 
@@ -34,6 +41,8 @@ function App() {
             >
               <Routes>
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                
                 <Route
                   path="/"
                   element={
@@ -42,6 +51,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                
                 <Route
                   path="/dashboard"
                   element={
@@ -50,6 +60,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                
                 <Route
                   path="/game-history"
                   element={
@@ -58,14 +69,16 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                
                 <Route
-                  path="/pre-match-report/:id"
+                  path="/pre-match-report/:id?"
                   element={
                     <ProtectedRoute>
                       <PreMatchReport />
                     </ProtectedRoute>
                   }
                 />
+                
                 <Route
                   path="/game-summary/:id"
                   element={
@@ -74,6 +87,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                
                 <Route
                   path="/profile"
                   element={
@@ -82,6 +96,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                
                 <Route
                   path="/match/:id"
                   element={
@@ -90,11 +105,66 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                
                 <Route
                   path="/game/:id"
                   element={
                     <ProtectedRoute>
                       <GameTracker />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute>
+                      <Admin />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/portfolio"
+                  element={
+                    <ProtectedRoute>
+                      <Portfolio />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/player/:id"
+                  element={
+                    <ProtectedRoute>
+                      <PlayerPortfolio />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/mental-learning"
+                  element={
+                    <ProtectedRoute>
+                      <MentalLearning />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/notifications"
+                  element={
+                    <ProtectedRoute>
+                      <NotificationsManager />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/pre-game-planner"
+                  element={
+                    <ProtectedRoute>
+                      <PreGamePlanner />
                     </ProtectedRoute>
                   }
                 />
