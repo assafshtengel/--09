@@ -56,6 +56,7 @@ export const GameSummary = ({
   const [matchActions, setMatchActions] = useState<any[]>([]);
   const [matchActionLogs, setMatchActionLogs] = useState<any[]>([]);
   const [matchNotes, setMatchNotes] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const matchId = propMatchId || id;
   const opponent = propOpponent || matchData?.opponent;
@@ -63,15 +64,20 @@ export const GameSummary = ({
 
   useEffect(() => {
     const loadMatchData = async () => {
-      if (!matchId || matchId === ':id?') return;
+      if (!matchId || matchId === ':id?') {
+        setIsLoading(false);
+        return;
+      }
       
       try {
+        setIsLoading(true);
+        
         // Load match data
         const { data: match, error: matchError } = await supabase
           .from('matches')
           .select('*')
           .eq('id', matchId)
-          .single();
+          .maybeSingle();
 
         if (matchError) throw matchError;
         setMatchData(match);
@@ -102,6 +108,8 @@ export const GameSummary = ({
           description: "לא ניתן לטעון את נתוני המשחק",
           variant: "destructive",
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -249,6 +257,21 @@ export const GameSummary = ({
 
   if (!matchId || matchId === ':id?') {
     return null;
+  }
+
+  if (isLoading) {
+    return (
+      <Dialog open onOpenChange={handleClose}>
+        <DialogContent className="max-w-4xl mx-auto h-[90vh]">
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-lg">טוען נתוני משחק...</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   return (
