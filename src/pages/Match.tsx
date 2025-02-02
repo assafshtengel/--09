@@ -115,6 +115,11 @@ export const Match = () => {
     };
   };
 
+  // Type guard to check if the value is an array
+  const isJsonArray = (value: Json): value is Json[] => {
+    return Array.isArray(value);
+  };
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="text-right">
@@ -171,7 +176,7 @@ export const Match = () => {
         </Card>
       )}
 
-      {match.pre_match_report?.actions && match.pre_match_report.actions.length > 0 && (
+      {match.pre_match_report?.actions && isJsonArray(match.pre_match_report.actions) && (
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
@@ -180,7 +185,7 @@ export const Match = () => {
             </div>
             <ScrollArea className="h-[300px]">
               <div className="space-y-4">
-                {match.pre_match_report.actions.map((action, index) => {
+                {match.pre_match_report.actions.map((action: any, index: number) => {
                   const stats = calculateActionStats(action.name);
                   return (
                     <div key={index} className="border p-4 rounded-lg">
@@ -250,7 +255,7 @@ export const Match = () => {
             </div>
             <ScrollArea className="h-[300px]">
               <div className="space-y-4">
-                {Object.entries(match.pre_match_report.questions_answers).map(([key, value], index) => {
+                {Object.entries(match.pre_match_report.questions_answers as Record<string, any>).map(([key, value], index) => {
                   if (key === 'openEndedAnswers' && typeof value === 'object') {
                     return Object.entries(value as Record<string, string>).map(([question, answer], subIndex) => (
                       <div key={`${index}-${subIndex}`} className="border p-4 rounded-lg">
