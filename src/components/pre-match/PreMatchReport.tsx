@@ -12,11 +12,10 @@ import { ObserverLinkDialog } from "./ObserverLinkDialog";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
-import { ChevronRight, ChevronLeft, Link } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { basketballActions } from "@/utils/sportActions";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export const PreMatchReport = () => {
@@ -35,9 +34,11 @@ export const PreMatchReport = () => {
   const [showObserverLink, setShowObserverLink] = useState(false);
   const [observerToken, setObserverToken] = useState<string | null>(null);
 
+  // Add profile query with proper error handling and loading state
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
+      console.log("[PreMatchReport] Fetching profile data...");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No authenticated user");
 
@@ -48,11 +49,14 @@ export const PreMatchReport = () => {
         .single();
 
       if (error) throw error;
+      console.log("[PreMatchReport] Profile data loaded:", data);
       return data;
-    }
+    },
+    retry: 1,
+    staleTime: 30000, // Cache data for 30 seconds
   });
 
-  // If profile is loading, show loading spinner
+  // Show loading spinner while profile is loading
   if (isProfileLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -61,8 +65,9 @@ export const PreMatchReport = () => {
     );
   }
 
-  // If there's an error loading the profile, show error message
+  // Handle profile error
   if (profileError) {
+    console.error("[PreMatchReport] Error loading profile:", profileError);
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <p className="text-red-500">שגיאה בטעינת הפרופיל</p>
@@ -72,9 +77,11 @@ export const PreMatchReport = () => {
   }
 
   const sportBranch = profile?.sport_branches?.[0];
+  console.log("[PreMatchReport] Current sport branch:", sportBranch);
 
   const handleMatchDetailsSubmit = async (details: any) => {
     try {
+      console.log("[PreMatchReport] Submitting match details:", details);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error("לא נמצא משתמש מחובר");
@@ -118,8 +125,9 @@ export const PreMatchReport = () => {
       setCurrentStep("intro");
       
       toast.success("פרטי המשחק נשמרו");
+      console.log("[PreMatchReport] Match details saved successfully");
     } catch (error) {
-      console.error("Error saving match details:", error);
+      console.error("[PreMatchReport] Error saving match details:", error);
       toast.error("שגיאה בשמירת פרטי המשחק");
     }
   };
@@ -302,6 +310,7 @@ export const PreMatchReport = () => {
             />
           </motion.div>
         )}
+
       </AnimatePresence>
     );
   };
