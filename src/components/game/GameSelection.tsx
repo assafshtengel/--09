@@ -60,30 +60,12 @@ export const GameSelection = () => {
 
   const handleGameSelect = async (game: Game) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No authenticated user");
-
       if (game.status === "completed" && game.match_id) {
-        navigate(`/match/${game.match_id}`);
+        navigate(`/game-summary/${game.match_id}`);
         return;
       }
 
-      const { data: newMatch, error: createError } = await supabase
-        .from("matches")
-        .insert({
-          match_date: game.match_date,
-          opponent: game.opponent,
-          pre_match_report_id: game.id,
-          player_id: user.id,
-          status: "preview"
-        })
-        .select()
-        .single();
-
-      if (createError) throw createError;
-      if (newMatch) {
-        navigate(`/match/${newMatch.id}`);
-      }
+      navigate(`/pre-match-report/${game.id}`);
     } catch (error) {
       console.error("Error handling game selection:", error);
       toast.error("שגיאה בבחירת המשחק");
@@ -162,10 +144,6 @@ export const GameSelection = () => {
     }
   };
 
-  const handleNewGame = () => {
-    navigate("/pre-match-report");
-  };
-
   if (isLoading) {
     return <div className="text-center p-8">טוען...</div>;
   }
@@ -193,7 +171,7 @@ export const GameSelection = () => {
 
         <Button 
           className="w-full mt-4"
-          onClick={handleNewGame}
+          onClick={() => navigate("/pre-match-report")}
         >
           צור משחק חדש
         </Button>

@@ -53,6 +53,9 @@ export const GameSummary = ({
   const [havayaRatings, setHavayaRatings] = useState<Record<string, number>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [matchData, setMatchData] = useState<any>(null);
+  const [matchActions, setMatchActions] = useState<any[]>([]);
+  const [matchActionLogs, setMatchActionLogs] = useState<any[]>([]);
+  const [matchNotes, setMatchNotes] = useState<any[]>([]);
 
   const matchId = propMatchId || urlMatchId;
   const opponent = propOpponent || matchData?.opponent;
@@ -63,16 +66,42 @@ export const GameSummary = ({
       if (!matchId) return;
       
       try {
-        const { data, error } = await supabase
+        // Load match data
+        const { data: match, error: matchError } = await supabase
           .from('matches')
           .select('*')
           .eq('id', matchId)
           .single();
 
-        if (error) throw error;
-        setMatchData(data);
+        if (matchError) throw matchError;
+        setMatchData(match);
+
+        // Load match actions
+        const { data: actions, error: actionsError } = await supabase
+          .from('match_actions')
+          .select('*')
+          .eq('match_id', matchId);
+
+        if (actionsError) throw actionsError;
+        setMatchActions(actions || []);
+        setMatchActionLogs(actions || []);
+
+        // Load match notes
+        const { data: notes, error: notesError } = await supabase
+          .from('match_notes')
+          .select('*')
+          .eq('match_id', matchId);
+
+        if (notesError) throw notesError;
+        setMatchNotes(notes || []);
+
       } catch (error) {
         console.error('Error loading match data:', error);
+        toast({
+          title: "שגיאה",
+          description: "לא ניתן לטעון את נתוני המשחק",
+          variant: "destructive",
+        });
       }
     };
 
@@ -243,8 +272,8 @@ export const GameSummary = ({
             )}
 
             <StatisticsSection
-              actions={actions}
-              actionLogs={actionLogs}
+              actions={matchActions}
+              actionLogs={matchActionLogs}
             />
 
             <InsightsSection
@@ -253,13 +282,13 @@ export const GameSummary = ({
             />
 
             <ActionsLogSection
-              actions={actions}
-              actionLogs={actionLogs}
+              actions={matchActions}
+              actionLogs={matchActionLogs}
             />
 
             <GoalsComparison
-              actions={actions}
-              actionLogs={actionLogs}
+              actions={matchActions}
+              actionLogs={matchActionLogs}
             />
 
             {gamePhase === "ended" && (
@@ -269,7 +298,7 @@ export const GameSummary = ({
               </>
             )}
 
-            <NotesSection notes={generalNotes} />
+            <NotesSection notes={matchNotes} />
 
             <SharingSection
               onEmailSend={(type) => {
@@ -284,8 +313,8 @@ export const GameSummary = ({
                 });
               }}
               isSendingEmail={isSendingEmail}
-              actions={actions}
-              actionLogs={actionLogs}
+              actions={matchActions}
+              actionLogs={matchActionLogs}
               insights={insights}
               matchId={matchId}
               opponent={opponent}
