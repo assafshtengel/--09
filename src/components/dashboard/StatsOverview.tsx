@@ -83,6 +83,8 @@ export const StatsOverview = () => {
     queryFn: fetchPlayerStats,
     retry: 2,
     staleTime: 30000, // Consider data fresh for 30 seconds
+    refetchOnMount: true, // Add this to ensure data is fetched when component mounts
+    refetchOnWindowFocus: false // Disable refetch on window focus to prevent unnecessary requests
   });
 
   useEffect(() => {
@@ -116,13 +118,21 @@ export const StatsOverview = () => {
     );
   }
 
-  const chartData = stats ? [
+  if (!stats) {
+    return (
+      <div className="text-center p-6">
+        <p className="text-lg text-muted-foreground">לא נמצאו נתונים</p>
+      </div>
+    );
+  }
+
+  const chartData = [
     { name: "דקות משחק", value: stats.minutes_played },
     { name: "שערים", value: stats.goals },
     { name: "בישולים", value: stats.assists },
     { name: "בעיטות למסגרת", value: stats.shots_on_target },
     { name: "פעולות הגנתיות", value: stats.defensive_actions },
-  ] : [];
+  ];
 
   return (
     <div className="space-y-6">
