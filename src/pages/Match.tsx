@@ -59,7 +59,12 @@ export const Match = () => {
   const { data: match, isLoading, error } = useQuery({
     queryKey: ['match', id],
     queryFn: async () => {
-      if (!id) throw new Error('No match ID provided');
+      // Validate id parameter
+      if (!id || !/^[0-9a-fA-F-]{36}$/.test(id)) {
+        throw new Error('Invalid match ID format');
+      }
+
+      console.log('Fetching match with ID:', id);
 
       const { data, error } = await supabase
         .from('matches')
