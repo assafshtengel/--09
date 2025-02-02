@@ -11,12 +11,10 @@ import { GameNotes } from "./game/GameNotes";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { HalftimeSummary } from "./game/HalftimeSummary";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match } from "@/types/game";
 
 export const GameTracker = () => {
   const { id } = useParams<{ id: string }>();
-  const { toast } = useToast();
   const [gamePhase, setGamePhase] = useState<GamePhase>("preview");
   const [minute, setMinute] = useState(0);
   const [actionLogs, setActionLogs] = useState<ActionLog[]>([]);
@@ -73,9 +71,18 @@ export const GameTracker = () => {
           )
         `)
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (matchError) throw matchError;
+
+      if (!match) {
+        toast({
+          title: "שגיאה",
+          description: "לא נמצא משחק",
+          variant: "destructive",
+        });
+        return;
+      }
 
       console.log("Fetched match data:", match);
 
@@ -113,9 +120,6 @@ export const GameTracker = () => {
           
         console.log("Parsed actions:", validActions);
         setActions(validActions);
-      } else {
-        console.log("No actions found in pre_match_reports");
-        setActions([]);
       }
 
       // Load existing action logs
@@ -288,7 +292,6 @@ export const GameTracker = () => {
 
       if (error) {
         console.error("Error updating match status:", error);
-        // Revert the UI state if the update fails
         setGamePhase(prevPhase => {
           console.log("Reverting game phase to:", prevPhase);
           return prevPhase;
@@ -430,7 +433,7 @@ export const GameTracker = () => {
           actions={actions}
           onActionAdd={handleAddAction}
           onStartMatch={startMatch}
-          matchId={id}
+          matchId={id || ""}
         />
       )}
 
