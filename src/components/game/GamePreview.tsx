@@ -4,7 +4,6 @@ import { AdditionalActions } from "./AdditionalActions";
 import { GameNotes } from "./GameNotes";
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -12,10 +11,10 @@ interface GamePreviewProps {
   actions: Action[];
   onActionAdd: (action: Action) => void;
   onStartMatch: () => void;
+  matchId: string;
 }
 
-export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewProps) => {
-  const { id: matchId } = useParams<{ id: string }>();
+export const GamePreview = ({ actions, onActionAdd, onStartMatch, matchId }: GamePreviewProps) => {
   const [insights, setInsights] = useState<string>("");
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
   const [generalNote, setGeneralNote] = useState<string>("");
@@ -31,7 +30,6 @@ export const GamePreview = ({ actions, onActionAdd, onStartMatch }: GamePreviewP
         });
 
         if (response.error) throw response.error;
-        // Ensure insights is a string
         setInsights(response.data?.insights || "");
       } catch (error) {
         console.error('Error loading insights:', error);

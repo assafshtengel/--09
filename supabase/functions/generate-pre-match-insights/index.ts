@@ -55,7 +55,7 @@ serve(async (req) => {
       "התכונן למשחק עם מיקוד ואנרגיה חיובית",
       "זכור את המטרות שהצבת לעצמך",
       "תן את המקסימום שלך בכל רגע במשחק"
-    ];
+    ].join('\n\n');
 
     return new Response(
       JSON.stringify({ insights }),
