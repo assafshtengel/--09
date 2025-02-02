@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<{ full_name?: string; role?: string } | null>(null);
+  const [isMotivationalPopupOpen, setIsMotivationalPopupOpen] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -47,6 +48,13 @@ export default function Dashboard() {
     loadProfile();
   }, [user, navigate]);
 
+  // Show motivational popup when component mounts
+  useEffect(() => {
+    if (!isLoading) {
+      setIsMotivationalPopupOpen(true);
+    }
+  }, [isLoading]);
+
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -67,7 +75,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <MotivationalPopup />
+      <MotivationalPopup 
+        isOpen={isMotivationalPopupOpen} 
+        onClose={() => setIsMotivationalPopupOpen(false)} 
+      />
     </div>
   );
 }
