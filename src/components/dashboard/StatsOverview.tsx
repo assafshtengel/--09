@@ -12,64 +12,61 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { LoadingScreen } from "@/components/LoadingScreen";
+import { useQuery } from "@tanstack/react-query";
+
+const fetchPlayerStats = async (userId: string | undefined) => {
+  if (!userId) return null;
+  
+  const { data, error } = await supabase
+    .from("player_stats")
+    .select("*")
+    .eq("player_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data || {
+    minutes_played: 0,
+    goals: 0,
+    assists: 0,
+    shots_on_target: 0,
+    defensive_actions: 0,
+    speed_record: 0,
+    jump_height: 0,
+    endurance_score: 0
+  };
+};
 
 export const StatsOverview = () => {
-  const [stats, setStats] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  const { data: user } = await supabase.auth.getUser();
+  
+  const { data: stats, isLoading, error } = useQuery({
+    queryKey: ['playerStats', user?.user?.id],
+    queryFn: () => fetchPlayerStats(user?.user?.id),
+    enabled: !!user?.user?.id,
+  });
+
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          setIsLoading(false);
-          return;
-        }
+    if (error) {
+      console.error("Error fetching stats:", error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בטעינת הנתונים",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
-        const { data, error } = await supabase
-          .from("player_stats")
-          .select("*")
-          .eq("player_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (error) {
-          console.error("Error fetching stats:", error);
-          toast({
-            title: "שגיאה",
-            description: "אירעה שגיאה בטעינת הנתונים",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        // If no stats exist, create default stats object
-        setStats(data || {
-          minutes_played: 0,
-          goals: 0,
-          assists: 0,
-          shots_on_target: 0,
-          defensive_actions: 0,
-          speed_record: 0,
-          jump_height: 0,
-          endurance_score: 0
-        });
-      } catch (error) {
-        console.error("Error in fetchStats:", error);
-        toast({
-          title: "שגיאה",
-          description: "אירעה שגיאה בטעינת הנתונים",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, [toast]);
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   const chartData = stats ? [
     { name: "דקות משחק", value: stats.minutes_played },
@@ -78,14 +75,6 @@ export const StatsOverview = () => {
     { name: "בעיטות למסגרת", value: stats.shots_on_target },
     { name: "פעולות הגנתיות", value: stats.defensive_actions },
   ] : [];
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-64 bg-muted rounded-lg"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
