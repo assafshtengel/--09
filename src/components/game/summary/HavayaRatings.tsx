@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface HavayaRatingsProps {
   matchId: string | undefined;
@@ -10,72 +11,86 @@ interface HavayaRatingsProps {
 }
 
 export const HavayaRatings = ({ matchId, onRatingsChange }: HavayaRatingsProps) => {
-  const { toast } = useToast();
+  const [havayot, setHavayot] = useState<string[]>([]);
   const [ratings, setRatings] = useState<Record<string, number>>({});
+  const { toast } = useToast();
 
   useEffect(() => {
-    const loadRatings = async () => {
+    const fetchHavayot = async () => {
       if (!matchId) return;
 
       try {
-        const { data, error } = await supabase
-          .from('post_game_feedback')
-          .select('havaya_ratings')
-          .eq('match_id', matchId)
-          .maybeSingle();
+        const { data: match } = await supabase
+          .from('matches')
+          .select('pre_match_report_id')
+          .eq('id', matchId)
+          .single();
 
-        if (error) throw error;
-        
-        if (data?.havaya_ratings && typeof data.havaya_ratings === 'object') {
-          setRatings(data.havaya_ratings as Record<string, number>);
+        if (match?.pre_match_report_id) {
+          const { data: report } = await supabase
+            .from('pre_match_reports')
+            .select('havaya')
+            .eq('id', match.pre_match_report_id)
+            .single();
+
+          if (report?.havaya) {
+            const havayaList = report.havaya.split(',').map(h => h.trim());
+            setHavayot(havayaList);
+            
+            // Initialize ratings with 5 as default value
+            const initialRatings = Object.fromEntries(
+              havayaList.map(h => [h, 5])
+            );
+            setRatings(initialRatings);
+            onRatingsChange(initialRatings);
+          }
         }
       } catch (error) {
-        console.error('Error loading havaya ratings:', error);
+        console.error('Error fetching havayot:', error);
         toast({
           title: "שגיאה",
-          description: "לא ניתן לטעון את דירוגי ההוויה",
+          description: "לא ניתן לטעון את ההוויות",
           variant: "destructive",
         });
       }
     };
 
-    loadRatings();
+    fetchHavayot();
   }, [matchId]);
 
-  const handleRatingChange = (havaya: string, value: number) => {
-    const newRatings = { ...ratings, [havaya]: value };
+  const handleRatingChange = (havaya: string, value: number[]) => {
+    const newRatings = { ...ratings, [havaya]: value[0] };
     setRatings(newRatings);
     onRatingsChange(newRatings);
   };
 
-  const havayotList = [
-    "הנאה",
-    "מוטיבציה",
-    "ביטחון",
-    "מיקוד",
-    "רוגע",
-    "אנרגיה"
-  ];
+  if (havayot.length === 0) return null;
 
   return (
     <Card>
-      <CardContent className="p-6 space-y-4">
-        <h3 className="text-xl font-semibold text-right mb-4">דירוג הוויות במשחק</h3>
+      <CardHeader>
+        <CardTitle className="text-right">דירוג הוויות</CardTitle>
+      </CardHeader>
+      <CardContent>
         <div className="space-y-6">
-          {havayotList.map((havaya) => (
+          <p className="text-right text-muted-foreground">
+            דרג עד כמה הצלחת להגשים כל אחת מההוויות שבחרת למשחק
+          </p>
+          {havayot.map((havaya) => (
             <div key={havaya} className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">
-                  {ratings[havaya] || 0}/10
+                  {ratings[havaya] || 5}/10
                 </span>
-                <label className="text-sm font-medium">{havaya}</label>
+                <Label className="text-right">{havaya}</Label>
               </div>
               <Slider
-                value={[ratings[havaya] || 0]}
-                min={0}
+                value={[ratings[havaya] || 5]}
+                onValueChange={(value) => handleRatingChange(havaya, value)}
                 max={10}
+                min={1}
                 step={1}
-                onValueChange={(value) => handleRatingChange(havaya, value[0])}
+                className="mt-2"
               />
             </div>
           ))}

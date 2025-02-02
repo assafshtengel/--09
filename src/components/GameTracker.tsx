@@ -11,10 +11,12 @@ import { GameNotes } from "./game/GameNotes";
 import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { HalftimeSummary } from "./game/HalftimeSummary";
 import { supabase } from "@/integrations/supabase/client";
-import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match } from "@/types/game";
+import { useToast } from "@/components/ui/use-toast";
+import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match, PreMatchReport } from "@/types/game";
 
 export const GameTracker = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: matchId } = useParams<{ id: string }>();
+  const { toast } = useToast();
   const [gamePhase, setGamePhase] = useState<GamePhase>("preview");
   const [minute, setMinute] = useState(0);
   const [actionLogs, setActionLogs] = useState<ActionLog[]>([]);
@@ -43,24 +45,14 @@ export const GameTracker = () => {
   });
 
   useEffect(() => {
-    if (id) {
-      loadMatchData();
-    }
-  }, [id]);
+    loadMatchData();
+  }, [matchId]);
 
   const loadMatchData = async () => {
-    if (!id) {
-      console.error("No match ID provided");
-      toast({
-        title: "שגיאה",
-        description: "לא נמצא מזהה משחק",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!matchId) return;
 
     try {
-      console.log("Loading match data for ID:", id);
+      console.log("Loading match data for ID:", matchId);
       
       const { data: match, error: matchError } = await supabase
         .from("matches")
@@ -70,19 +62,10 @@ export const GameTracker = () => {
             *
           )
         `)
-        .eq("id", id)
-        .maybeSingle();
+        .eq("id", matchId)
+        .single();
 
       if (matchError) throw matchError;
-
-      if (!match) {
-        toast({
-          title: "שגיאה",
-          description: "לא נמצא משחק",
-          variant: "destructive",
-        });
-        return;
-      }
 
       console.log("Fetched match data:", match);
 
@@ -120,13 +103,16 @@ export const GameTracker = () => {
           
         console.log("Parsed actions:", validActions);
         setActions(validActions);
+      } else {
+        console.log("No actions found in pre_match_reports");
+        setActions([]);
       }
 
       // Load existing action logs
       const { data: existingLogs, error: logsError } = await supabase
         .from('match_actions')
         .select('*')
-        .eq('match_id', id);
+        .eq('match_id', matchId);
 
       if (logsError) throw logsError;
 
@@ -143,7 +129,7 @@ export const GameTracker = () => {
       const { data: existingNotes, error: notesError } = await supabase
         .from('match_notes')
         .select('*')
-        .eq('match_id', id);
+        .eq('match_id', matchId);
 
       if (notesError) throw notesError;
 
@@ -158,7 +144,7 @@ export const GameTracker = () => {
       const { data: existingSubs, error: subsError } = await supabase
         .from('match_substitutions')
         .select('*')
-        .eq('match_id', id);
+        .eq('match_id', matchId);
 
       if (subsError) throw subsError;
 
@@ -182,14 +168,14 @@ export const GameTracker = () => {
   };
 
   const saveActionLog = async (actionId: string, result: "success" | "failure", note?: string) => {
-    if (!id) return;
+    if (!matchId) return;
 
     try {
       const { error } = await supabase
         .from('match_actions')
         .insert([
           {
-            match_id: id,
+            match_id: matchId,
             action_id: actionId,
             minute,
             result,
@@ -209,14 +195,14 @@ export const GameTracker = () => {
   };
 
   const saveNote = async (note: string) => {
-    if (!id) return;
+    if (!matchId) return;
 
     try {
       const { error } = await supabase
         .from('match_notes')
         .insert([
           {
-            match_id: id,
+            match_id: matchId,
             minute,
             note
           }
@@ -234,14 +220,14 @@ export const GameTracker = () => {
   };
 
   const saveSubstitution = async (sub: SubstitutionLog) => {
-    if (!id) return;
+    if (!matchId) return;
 
     try {
       const { error } = await supabase
         .from('match_substitutions')
         .insert([
           {
-            match_id: id,
+            match_id: matchId,
             minute: sub.minute,
             player_in: sub.playerIn,
             player_out: sub.playerOut
@@ -259,15 +245,15 @@ export const GameTracker = () => {
     }
   };
 
-  const updateMatchStatus = async (newGamePhase: GamePhase) => {
-    if (!id) return;
+  const updateMatchStatus = async (gamePhase: GamePhase) => {
+    if (!matchId) return;
 
     try {
-      console.log("Updating match status to:", newGamePhase);
+      console.log("Updating match status to:", gamePhase);
       
       // Map GamePhase to valid database status values
       const dbStatus = (() => {
-        switch(newGamePhase) {
+        switch(gamePhase) {
           case "preview":
             return "preview";
           case "playing":
@@ -279,7 +265,7 @@ export const GameTracker = () => {
           case "ended":
             return "completed";
           default:
-            throw new Error(`Invalid game phase: ${newGamePhase}`);
+            throw new Error(`Invalid game phase: ${gamePhase}`);
         }
       })();
 
@@ -288,10 +274,11 @@ export const GameTracker = () => {
       const { error } = await supabase
         .from('matches')
         .update({ status: dbStatus })
-        .eq('id', id);
+        .eq('id', matchId);
 
       if (error) {
         console.error("Error updating match status:", error);
+        // Revert the UI state if the update fails
         setGamePhase(prevPhase => {
           console.log("Reverting game phase to:", prevPhase);
           return prevPhase;
@@ -408,13 +395,6 @@ export const GameTracker = () => {
     });
   };
 
-  const handleEndMatch = async () => {
-    setIsTimerRunning(false);
-    setGamePhase("ended");
-    await updateMatchStatus("ended");
-    setShowSummary(true);
-  };
-
   return (
     <GameLayout
       gamePhase={gamePhase}
@@ -426,14 +406,13 @@ export const GameTracker = () => {
       onStartMatch={startMatch}
       onEndHalf={endHalf}
       onStartSecondHalf={startSecondHalf}
-      onEndMatch={handleEndMatch}
+      onEndMatch={endMatch}
     >
       {gamePhase === "preview" && (
         <GamePreview
           actions={actions}
           onActionAdd={handleAddAction}
           onStartMatch={startMatch}
-          matchId={id || ""}
         />
       )}
 
@@ -480,9 +459,8 @@ export const GameTracker = () => {
               substitutions={substitutions}
               onClose={() => setShowSummary(false)}
               gamePhase="ended"
-              matchId={id}
+              matchId={matchId}
               opponent={matchDetails.opponent}
-              matchDate={matchDetails.match_date}
             />
           </DialogContent>
         </Dialog>

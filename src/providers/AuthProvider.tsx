@@ -1,42 +1,59 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { User } from "@supabase/supabase-js";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-}
-
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  loading: true,
+const AuthContext = createContext<{
+  isAuthenticated: boolean;
+  isLoading: boolean;
+}>({
+  isAuthenticated: false,
+  isLoading: true,
 });
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsAuthenticated(!!session);
+      } catch (error) {
+        console.error("Auth error:", error);
+        toast({
+          title: "שגיאת התחברות",
+          description: "אנא התחבר מחדש",
+          variant: "destructive",
+        });
+        navigate("/auth");
+      } finally {
+        setIsLoading(false);
       }
-    );
+    };
 
-    return () => subscription.unsubscribe();
-  }, []);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN") {
+        setIsAuthenticated(true);
+      } else if (event === "SIGNED_OUT") {
+        setIsAuthenticated(false);
+        navigate("/auth");
+      }
+    });
+
+    checkAuth();
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, toast]);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ isAuthenticated, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

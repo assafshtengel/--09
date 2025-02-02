@@ -1,12 +1,7 @@
-import { useParams } from "react-router-dom";
+import { Match as MatchComponent } from "@/components/match/MatchComponent";
 
-export default function Match() {
-  const { id } = useParams();
-  
-  return (
-    <div>
-      <h1>Match Details</h1>
-      <p>Match ID: {id}</p>
-    </div>
-  );
-}
+const Match = () => {
+  return <MatchComponent />;
+};
+
+export default Match;

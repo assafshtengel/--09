@@ -3,7 +3,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export const LoadingScreen = () => {
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center min-h-screen z-50">
+    <div className="fixed inset-0 bg-background flex flex-col items-center justify-center min-h-screen">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -21,7 +21,7 @@ export const LoadingScreen = () => {
             ease: "easeInOut"
           }}
         >
-          <LoadingSpinner size="lg" />
+          <LoadingSpinner />
         </motion.div>
         <motion.h2 
           className="text-2xl font-semibold text-primary"

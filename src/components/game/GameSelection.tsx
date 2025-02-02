@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Game } from "@/types/game";
 import { GameCard } from "./GameCard";
-import { LoadingScreen } from "@/components/LoadingScreen";
 
 export const GameSelection = () => {
   const navigate = useNavigate();
@@ -99,6 +98,7 @@ export const GameSelection = () => {
     try {
       setIsDeleting(true);
       
+      // First, delete all related match_actions if there's a match
       if (matchId) {
         const { error: actionsError } = await supabase
           .from("match_actions")
@@ -109,6 +109,7 @@ export const GameSelection = () => {
           console.error("Error deleting match actions:", actionsError);
         }
 
+        // Delete match notes
         const { error: notesError } = await supabase
           .from("match_notes")
           .delete()
@@ -118,6 +119,7 @@ export const GameSelection = () => {
           console.error("Error deleting match notes:", notesError);
         }
 
+        // Delete match substitutions
         const { error: subsError } = await supabase
           .from("match_substitutions")
           .delete()
@@ -127,6 +129,7 @@ export const GameSelection = () => {
           console.error("Error deleting substitutions:", subsError);
         }
 
+        // Delete the match itself
         const { error: matchError } = await supabase
           .from("matches")
           .delete()
@@ -138,6 +141,7 @@ export const GameSelection = () => {
         }
       }
 
+      // Finally, delete the pre-match report
       const { error: reportError } = await supabase
         .from("pre_match_reports")
         .delete()
@@ -163,7 +167,7 @@ export const GameSelection = () => {
   };
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <div className="text-center p-8">טוען...</div>;
   }
 
   return (
