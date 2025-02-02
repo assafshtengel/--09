@@ -12,7 +12,7 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 const Dashboard = lazy(() => 
   Promise.all([
     import("@/pages/Dashboard").then(module => ({ default: module.Dashboard })),
-    new Promise(resolve => setTimeout(resolve, 300)) // Reduced from 500ms
+    new Promise(resolve => setTimeout(resolve, 300))
   ]).then(([module]) => module)
 );
 
@@ -34,6 +34,7 @@ const NotificationsManager = lazy(() => import("@/pages/NotificationsManager"));
 const HavayotCategories = lazy(() => import("@/pages/HavayotCategories"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const PreMatchReportsList = lazy(() => import("@/pages/PreMatchReportsList"));
+const GameSummary = lazy(() => import("@/components/game/GameSummary"));
 
 function AppContent() {
   const { isLoading } = useAuthState();
@@ -66,6 +67,7 @@ function AppContent() {
             <Route path="/notifications" element={<NotificationsManager />} />
             <Route path="/havayot-categories" element={<HavayotCategories />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/game-summary" element={<GameSummary />} />
             <Route 
               path="/admin" 
               element={

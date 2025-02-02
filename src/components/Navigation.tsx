@@ -185,6 +185,16 @@ export const Navigation = () => {
               <FileText className="h-4 w-4" />
               הכנה למשחק
             </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 hover:bg-gray-100"
+              onClick={() => navigate("/game-summary")}
+            >
+              <FileText className="h-4 w-4" />
+              סיכום משחק
+            </Button>
           </div>
 
           <div className="flex items-center gap-4">
