@@ -99,9 +99,9 @@ function App() {
                   }
                 />
               </Routes>
+              <Toaster />
             </Suspense>
           </Router>
-          <Toaster />
         </AuthProvider>
       </ThemeProvider>
       <ReactQueryDevtools initialIsOpen={false} />
