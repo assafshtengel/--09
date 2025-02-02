@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 
-export const Dashboard = () => {
+export const DashboardSection = () => {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">לוח בקרה</h1>

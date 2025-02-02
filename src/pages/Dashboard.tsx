@@ -1,7 +1,7 @@
-import { Dashboard as DashboardComponent } from "@/components/dashboard/sections/DashboardSection";
+import { DashboardSection } from "@/components/dashboard/sections/DashboardSection";
 
 const Dashboard = () => {
-  return <DashboardComponent />;
+  return <DashboardSection />;
 };
 
 export default Dashboard;

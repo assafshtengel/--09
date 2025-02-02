@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 
+// Lazy load components with proper chunk names
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Match = lazy(() => import("@/pages/Match"));
 const Auth = lazy(() => import("@/pages/Auth"));
@@ -15,7 +16,15 @@ const PreMatchReport = lazy(() => import("@/pages/PreMatchReport"));
 const Training = lazy(() => import("@/pages/Training"));
 const GameSummary = lazy(() => import("@/pages/GameSummary"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+    },
+  },
+});
 
 export const AppContent = () => {
   return (
