@@ -80,6 +80,8 @@ export const Match = () => {
         .maybeSingle();
 
       if (error) throw error;
+      if (!data) throw new Error('Match not found');
+      
       return data as MatchData;
     },
     enabled: !!id

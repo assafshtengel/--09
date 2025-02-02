@@ -1,19 +1,8 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
-
-const HAVAYA_ASPECTS = [
-  "הנאה",
-  "מוטיבציה",
-  "ביטחון",
-  "מיקוד",
-  "רוגע",
-  "אנרגיה",
-  "תקשורת",
-  "מנהיגות"
-];
+import { Card, CardContent } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
+import { useToast } from "@/components/ui/use-toast";
 
 interface HavayaRatingsProps {
   matchId: string | undefined;
@@ -21,10 +10,11 @@ interface HavayaRatingsProps {
 }
 
 export const HavayaRatings = ({ matchId, onRatingsChange }: HavayaRatingsProps) => {
+  const { toast } = useToast();
   const [ratings, setRatings] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    const loadExistingRatings = async () => {
+    const loadRatings = async () => {
       if (!matchId) return;
 
       try {
@@ -32,7 +22,7 @@ export const HavayaRatings = ({ matchId, onRatingsChange }: HavayaRatingsProps) 
           .from('post_game_feedback')
           .select('havaya_ratings')
           .eq('match_id', matchId)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
         
@@ -41,40 +31,55 @@ export const HavayaRatings = ({ matchId, onRatingsChange }: HavayaRatingsProps) 
         }
       } catch (error) {
         console.error('Error loading havaya ratings:', error);
+        toast({
+          title: "שגיאה",
+          description: "לא ניתן לטעון את דירוגי ההוויה",
+          variant: "destructive",
+        });
       }
     };
 
-    loadExistingRatings();
+    loadRatings();
   }, [matchId]);
 
-  const handleRatingChange = (aspect: string, value: number[]) => {
-    const newRatings = { ...ratings, [aspect]: value[0] };
+  const handleRatingChange = (havaya: string, value: number) => {
+    const newRatings = { ...ratings, [havaya]: value };
     setRatings(newRatings);
     onRatingsChange(newRatings);
   };
 
+  const havayotList = [
+    "הנאה",
+    "מוטיבציה",
+    "ביטחון",
+    "מיקוד",
+    "רוגע",
+    "אנרגיה"
+  ];
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>דירוג חוויות</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {HAVAYA_ASPECTS.map(aspect => (
-          <div key={aspect} className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">
-                {ratings[aspect] || 0}/10
-              </span>
-              <Label>{aspect}</Label>
+      <CardContent className="p-6 space-y-4">
+        <h3 className="text-xl font-semibold text-right mb-4">דירוג הוויות במשחק</h3>
+        <div className="space-y-6">
+          {havayotList.map((havaya) => (
+            <div key={havaya} className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">
+                  {ratings[havaya] || 0}/10
+                </span>
+                <label className="text-sm font-medium">{havaya}</label>
+              </div>
+              <Slider
+                value={[ratings[havaya] || 0]}
+                min={0}
+                max={10}
+                step={1}
+                onValueChange={(value) => handleRatingChange(havaya, value[0])}
+              />
             </div>
-            <Slider
-              value={[ratings[aspect] || 0]}
-              onValueChange={(value) => handleRatingChange(aspect, value)}
-              max={10}
-              step={1}
-            />
-          </div>
-        ))}
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
