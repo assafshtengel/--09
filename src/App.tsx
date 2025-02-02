@@ -25,6 +25,15 @@ const Profile = lazy(() => import("@/pages/Profile"));
 const Portfolio = lazy(() => import("@/pages/Portfolio"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const PreGamePlanner = lazy(() => import("@/pages/PreGamePlanner"));
+const Home = lazy(() => import("@/pages/Home"));
+const Player = lazy(() => import("@/pages/Player"));
+const Coach = lazy(() => import("@/pages/Coach"));
+const Analyst = lazy(() => import("@/pages/Analyst"));
+const MentalLearning = lazy(() => import("@/pages/MentalLearning"));
+const NotificationsManager = lazy(() => import("@/pages/NotificationsManager"));
+const HavayotCategories = lazy(() => import("@/pages/HavayotCategories"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
+const PreMatchReportsList = lazy(() => import("@/pages/PreMatchReportsList"));
 
 function AppContent() {
   const { isLoading } = useAuthState();
@@ -39,16 +48,24 @@ function AppContent() {
       <main className="container mx-auto px-4">
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/game-history" element={<GameHistory />} />
             <Route path="/match/:id" element={<Match />} />
             <Route path="/pre-match-report" element={<PreMatchReport />} />
             <Route path="/pre-match-report/:id" element={<PreMatchReport />} />
+            <Route path="/pre-match-reports" element={<PreMatchReportsList />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/pre-game-planner" element={<PreGamePlanner />} />
+            <Route path="/player" element={<Player />} />
+            <Route path="/coach" element={<Coach />} />
+            <Route path="/analyst" element={<Analyst />} />
+            <Route path="/mental-learning" element={<MentalLearning />} />
+            <Route path="/notifications" element={<NotificationsManager />} />
+            <Route path="/havayot-categories" element={<HavayotCategories />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route 
               path="/admin" 
               element={
