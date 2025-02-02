@@ -21,6 +21,7 @@ import {
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Progress } from "@/components/ui/progress";
 import { Json } from "@/integrations/supabase/types";
+import { useToast } from "@/hooks/use-toast";
 
 interface MatchData {
   id: string;
@@ -53,12 +54,15 @@ interface MatchData {
 
 export const Match = () => {
   const { id } = useParams<{ id: string }>();
+  const { toast } = useToast();
 
   const { data: match, isLoading, error } = useQuery({
     queryKey: ['match', id],
     queryFn: async () => {
-      if (!id) throw new Error('No match ID provided');
-      
+      if (!id) {
+        throw new Error('No match ID provided');
+      }
+
       const { data, error } = await supabase
         .from('matches')
         .select(`
@@ -79,12 +83,19 @@ export const Match = () => {
         .eq('id', id)
         .maybeSingle();
 
-      if (error) throw error;
-      if (!data) throw new Error('Match not found');
-      
+      if (error) {
+        console.error('Error fetching match:', error);
+        throw error;
+      }
+
+      if (!data) {
+        throw new Error('Match not found');
+      }
+
       return data as MatchData;
     },
-    enabled: !!id
+    enabled: Boolean(id),
+    retry: 1
   });
 
   if (isLoading) {
@@ -95,10 +106,23 @@ export const Match = () => {
     );
   }
 
-  if (error || !match) {
+  if (error) {
+    toast({
+      title: "שגיאה",
+      description: "שגיאה בטעינת המשחק",
+      variant: "destructive",
+    });
     return (
       <div className="container mx-auto p-4 text-center">
         <p className="text-red-500">שגיאה בטעינת המשחק</p>
+      </div>
+    );
+  }
+
+  if (!match) {
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <p className="text-muted-foreground">לא נמצא משחק</p>
       </div>
     );
   }
