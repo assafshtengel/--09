@@ -34,7 +34,7 @@ const NotificationsManager = lazy(() => import("@/pages/NotificationsManager"));
 const HavayotCategories = lazy(() => import("@/pages/HavayotCategories"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const PreMatchReportsList = lazy(() => import("@/pages/PreMatchReportsList"));
-const GameSummary = lazy(() => import("@/components/game/GameSummary"));
+const GameSummary = lazy(() => import("@/components/game/GameSummary").then(module => ({ default: module.GameSummary })));
 
 function AppContent() {
   const { isLoading } = useAuthState();
