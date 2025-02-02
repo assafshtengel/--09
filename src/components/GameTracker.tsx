@@ -12,7 +12,7 @@ import { PlayerSubstitution } from "./game/PlayerSubstitution";
 import { HalftimeSummary } from "./game/HalftimeSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match, PreMatchReport } from "@/types/game";
+import { GamePhase, PreMatchReportActions, ActionLog, SubstitutionLog, Match } from "@/types/game";
 
 export const GameTracker = () => {
   const { id: matchId } = useParams<{ id: string }>();
@@ -395,6 +395,13 @@ export const GameTracker = () => {
     });
   };
 
+  const handleEndMatch = async () => {
+    setIsTimerRunning(false);
+    setGamePhase("ended");
+    await updateMatchStatus("ended");
+    setShowSummary(true);
+  };
+
   return (
     <GameLayout
       gamePhase={gamePhase}
@@ -406,7 +413,7 @@ export const GameTracker = () => {
       onStartMatch={startMatch}
       onEndHalf={endHalf}
       onStartSecondHalf={startSecondHalf}
-      onEndMatch={endMatch}
+      onEndMatch={handleEndMatch}
     >
       {gamePhase === "preview" && (
         <GamePreview
@@ -461,6 +468,7 @@ export const GameTracker = () => {
               gamePhase="ended"
               matchId={matchId}
               opponent={matchDetails.opponent}
+              matchDate={matchDetails.match_date}
             />
           </DialogContent>
         </Dialog>

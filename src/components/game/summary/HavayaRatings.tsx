@@ -2,8 +2,18 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+
+const HAVAYA_ASPECTS = [
+  "הנאה",
+  "מוטיבציה",
+  "ביטחון",
+  "מיקוד",
+  "רוגע",
+  "אנרגיה",
+  "תקשורת",
+  "מנהיגות"
+];
 
 interface HavayaRatingsProps {
   matchId: string | undefined;
@@ -11,90 +21,59 @@ interface HavayaRatingsProps {
 }
 
 export const HavayaRatings = ({ matchId, onRatingsChange }: HavayaRatingsProps) => {
-  const [havayot, setHavayot] = useState<string[]>([]);
   const [ratings, setRatings] = useState<Record<string, number>>({});
-  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchHavayot = async () => {
+    const loadExistingRatings = async () => {
       if (!matchId) return;
 
       try {
-        const { data: match } = await supabase
-          .from('matches')
-          .select('pre_match_report_id')
-          .eq('id', matchId)
+        const { data, error } = await supabase
+          .from('post_game_feedback')
+          .select('havaya_ratings')
+          .eq('match_id', matchId)
           .single();
 
-        if (match?.pre_match_report_id) {
-          const { data: report } = await supabase
-            .from('pre_match_reports')
-            .select('havaya')
-            .eq('id', match.pre_match_report_id)
-            .single();
-
-          if (report?.havaya) {
-            const havayaList = report.havaya.split(',').map(h => h.trim());
-            setHavayot(havayaList);
-            
-            // Initialize ratings with 5 as default value
-            const initialRatings = Object.fromEntries(
-              havayaList.map(h => [h, 5])
-            );
-            setRatings(initialRatings);
-            onRatingsChange(initialRatings);
-          }
+        if (error) throw error;
+        if (data?.havaya_ratings) {
+          setRatings(data.havaya_ratings);
         }
       } catch (error) {
-        console.error('Error fetching havayot:', error);
-        toast({
-          title: "שגיאה",
-          description: "לא ניתן לטעון את ההוויות",
-          variant: "destructive",
-        });
+        console.error('Error loading havaya ratings:', error);
       }
     };
 
-    fetchHavayot();
+    loadExistingRatings();
   }, [matchId]);
 
-  const handleRatingChange = (havaya: string, value: number[]) => {
-    const newRatings = { ...ratings, [havaya]: value[0] };
+  const handleRatingChange = (aspect: string, value: number[]) => {
+    const newRatings = { ...ratings, [aspect]: value[0] };
     setRatings(newRatings);
     onRatingsChange(newRatings);
   };
 
-  if (havayot.length === 0) return null;
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-right">דירוג הוויות</CardTitle>
+        <CardTitle>דירוג חוויות</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          <p className="text-right text-muted-foreground">
-            דרג עד כמה הצלחת להגשים כל אחת מההוויות שבחרת למשחק
-          </p>
-          {havayot.map((havaya) => (
-            <div key={havaya} className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">
-                  {ratings[havaya] || 5}/10
-                </span>
-                <Label className="text-right">{havaya}</Label>
-              </div>
-              <Slider
-                value={[ratings[havaya] || 5]}
-                onValueChange={(value) => handleRatingChange(havaya, value)}
-                max={10}
-                min={1}
-                step={1}
-                className="mt-2"
-              />
+      <CardContent className="space-y-6">
+        {HAVAYA_ASPECTS.map(aspect => (
+          <div key={aspect} className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">
+                {ratings[aspect] || 0}/10
+              </span>
+              <Label>{aspect}</Label>
             </div>
-          ))}
-        </div>
+            <Slider
+              value={[ratings[aspect] || 0]}
+              onValueChange={(value) => handleRatingChange(aspect, value)}
+              max={10}
+              step={1}
+            />
+          </div>
+        ))}
       </CardContent>
     </Card>
   );
