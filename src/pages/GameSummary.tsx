@@ -1,79 +1,48 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { GameSummary as GameSummaryComponent } from "@/components/game/GameSummary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { GameSummary as GameSummaryComponent } from "@/components/game/GameSummary";
+import { useNavigate } from "react-router-dom";
 
-export const GameSummary = () => {
-  const { id } = useParams<{ id: string }>();
+const GameSummary = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
 
   const { data: match, isLoading } = useQuery({
-    queryKey: ['match', id],
+    queryKey: ["match", id],
     queryFn: async () => {
-      const { data: matchData, error: matchError } = await supabase
-        .from('matches')
-        .select(`
-          *,
-          match_actions (
-            id,
-            action_id,
-            minute,
-            result,
-            note
-          ),
-          match_notes (
-            minute,
-            note
-          ),
-          match_substitutions (
-            minute,
-            player_in,
-            player_out
-          ),
-          pre_match_report:pre_match_report_id (
-            actions,
-            questions_answers,
-            havaya
-          )
-        `)
-        .eq('id', id)
+      const { data, error } = await supabase
+        .from("matches")
+        .select("*, match_actions(*), match_notes(*), match_substitutions(*)")
+        .eq("id", id)
         .single();
 
-      if (matchError) throw matchError;
-      return matchData;
+      if (error) throw error;
+      return data;
     },
   });
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <LoadingSpinner />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (!match) {
-    return (
-      <div className="container mx-auto p-4 text-center">
-        <p className="text-red-500">לא נמצא משחק</p>
-      </div>
-    );
+    return <div>Match not found</div>;
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <GameSummaryComponent
-        actions={match.pre_match_report?.actions || []}
-        actionLogs={match.match_actions || []}
-        generalNotes={match.match_notes || []}
-        substitutions={match.match_substitutions || []}
-        onClose={() => {}}
-        gamePhase="ended"
-        matchId={match.id}
-        opponent={match.opponent}
-        matchDate={match.match_date}
-      />
-    </div>
+    <GameSummaryComponent
+      actions={match.match_actions || []}
+      actionLogs={[]} // This will be populated from match data
+      generalNotes={match.match_notes || []}
+      substitutions={match.match_substitutions || []}
+      onClose={() => navigate("/game-history")}
+      gamePhase="ended"
+      matchId={id}
+      opponent={match.opponent}
+      matchDate={match.match_date}
+    />
   );
 };
 
