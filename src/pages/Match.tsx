@@ -59,9 +59,7 @@ export const Match = () => {
   const { data: match, isLoading, error } = useQuery({
     queryKey: ['match', id],
     queryFn: async () => {
-      if (!id) {
-        throw new Error('No match ID provided');
-      }
+      if (!id) throw new Error('No match ID provided');
 
       const { data, error } = await supabase
         .from('matches')
@@ -95,7 +93,6 @@ export const Match = () => {
       return data as MatchData;
     },
     enabled: Boolean(id),
-    retry: 1,
     meta: {
       onError: () => {
         toast({
@@ -148,7 +145,6 @@ export const Match = () => {
     };
   };
 
-  // Type guard to check if the value is an array
   const isJsonArray = (value: Json): value is Json[] => {
     return Array.isArray(value);
   };
