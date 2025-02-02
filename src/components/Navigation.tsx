@@ -1,105 +1,80 @@
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
-import { Home, LayoutDashboard, LogOut, FileText, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Home,
+  ClipboardList,
+  Settings,
+  LogOut,
+  Activity,
+  Trophy,
+  Calendar,
+  Bell,
+  User,
+} from "lucide-react";
 
 export const Navigation = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [userRole, setUserRole] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-        setUserRole(profile?.role || null);
-      }
-    };
-
-    fetchUserRole();
-  }, []);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "התנתקת בהצלחה",
-      description: "תודה שבחרת בנו!",
-    });
-    navigate("/auth");
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate("/auth");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן להתנתק כרגע, נסה שוב מאוחר יותר",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <nav className="flex justify-between items-center p-4 bg-white border-b">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex items-center gap-2 hover:bg-gray-100"
-          onClick={() => navigate("/")}
-        >
-          <Home className="h-4 w-4" />
-          דף הבית
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex items-center gap-2 hover:bg-gray-100"
-          onClick={() => navigate("/dashboard")}
-        >
-          <LayoutDashboard className="h-4 w-4" />
-          לוח בקרה
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex items-center gap-2 hover:bg-gray-100"
-          onClick={() => navigate("/pre-match-report")}
-        >
-          <FileText className="h-4 w-4" />
-          הכנה למשחק
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex items-center gap-2 hover:bg-gray-100"
-          onClick={() => navigate("/game-summary")}
-        >
-          <Activity className="h-4 w-4" />
-          סיכום משחק
-        </Button>
-      </div>
-
-      <div className="flex items-center gap-4">
-        {userRole === 'admin' && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex items-center gap-2 hover:bg-gray-100"
-            onClick={() => navigate("/admin")}
-          >
-            ניהול
-          </Button>
-        )}
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex items-center gap-2 hover:bg-gray-100"
-          onClick={handleLogout}
-        >
-          <LogOut className="h-4 w-4" />
-          התנתק
-        </Button>
+    <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 max-w-screen-2xl items-center">
+        <div className="flex flex-1 items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Link to="/dashboard">
+              <Button variant="ghost" size="icon">
+                <Home className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/pre-match-report">
+              <Button variant="ghost" size="icon">
+                <ClipboardList className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/game-summary">
+              <Button variant="ghost" size="icon">
+                <Trophy className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/schedule">
+              <Button variant="ghost" size="icon">
+                <Calendar className="h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link to="/notifications">
+              <Button variant="ghost" size="icon">
+                <Bell className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/profile">
+              <Button variant="ghost" size="icon">
+                <User className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Button variant="ghost" size="icon" onClick={handleSignOut}>
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
       </div>
     </nav>
   );
