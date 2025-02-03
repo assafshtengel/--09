@@ -8,7 +8,6 @@ import { useAuthState } from "@/hooks/use-auth-state";
 import { AdminRoute } from "@/components/AdminRoute";
 import { LoadingScreen } from "@/components/LoadingScreen";
 
-// Prioritize loading the Dashboard component with reduced minimum time
 const Dashboard = lazy(() => 
   Promise.all([
     import("@/pages/Dashboard").then(module => ({ default: module.Dashboard })),
@@ -36,6 +35,8 @@ const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const PreMatchReportsList = lazy(() => import("@/pages/PreMatchReportsList"));
 const GameSummary = lazy(() => import("@/components/game/GameSummary").then(module => ({ default: module.GameSummary })));
 
+const GameSelection = lazy(() => import("@/pages/GameSelection"));
+
 function AppContent() {
   const { isLoading } = useAuthState();
 
@@ -53,6 +54,7 @@ function AppContent() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/game-history" element={<GameHistory />} />
+            <Route path="/game-selection" element={<GameSelection />} />
             <Route path="/match/:id" element={<Match />} />
             <Route path="/pre-match-report" element={<PreMatchReport />} />
             <Route path="/pre-match-report/:id" element={<PreMatchReport />} />

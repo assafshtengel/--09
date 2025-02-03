@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, History, Dumbbell, Calendar } from "lucide-react";
+import { FileText, History, Dumbbell, Calendar, List } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -14,6 +14,13 @@ const quickActions = [
   {
     title: 'מעקב משחק',
     description: 'תיעוד ומעקב אחר משחקים',
+    path: '/game-selection',
+    icon: <List className="h-5 w-5" />,
+    gradient: 'from-purple-500 to-purple-600',
+  },
+  {
+    title: 'היסטוריית משחקים',
+    description: 'צפייה בהיסטוריית משחקים',
     path: '/game-history',
     icon: <History className="h-5 w-5" />,
     gradient: 'from-green-500 to-green-600',
