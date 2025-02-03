@@ -10,8 +10,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Define the fixed questions without the two that were moved
+// Define the fixed questions
 const OPEN_ENDED_QUESTIONS = [
+  "מה רמת הלחץ שבה היית לפני המשחק?",
+  "איזה ציון אתה נותן לעצמך על המשחק?",
   "רשום את נקודות החוזקה שלך במשחק",
   "רשום את נקודות התורפה שלך במשחק",
   "מהו הדבר / הרגע האחד שהיה נקודת השיא שלך במשחק?",
@@ -63,11 +65,8 @@ export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => 
   const [selfRating, setSelfRating] = useState<string>("5");
   const [openEndedAnswers, setOpenEndedAnswers] = useState<Record<string, string>>({});
   
-  // Select 3 random questions (in addition to the two fixed questions)
-  const [selectedQuestions] = useState(() => {
-    const shuffled = [...OPEN_ENDED_QUESTIONS].sort(() => 0.5 - Math.random());
-    return [...shuffled.slice(0, 3)];
-  });
+  // Select all questions (no random selection anymore)
+  const selectedQuestions = OPEN_ENDED_QUESTIONS;
 
   const handleAnswerChange = (question: string, answer: string) => {
     const newAnswers = {
@@ -104,12 +103,12 @@ export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => 
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle>שאלות נוספות</CardTitle>
+        <CardTitle className="text-right">שאלות נוספות</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>מה רמת הלחץ שבה היית לפני המשחק?</Label>
+            <Label className="block text-right">מה רמת הלחץ שבה היית לפני המשחק?</Label>
             <Select
               value={stressLevel}
               onValueChange={handleStressLevelChange}
@@ -128,7 +127,7 @@ export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => 
           </div>
 
           <div className="space-y-2">
-            <Label>איזה ציון אתה נותן לעצמך על המשחק?</Label>
+            <Label className="block text-right">איזה ציון אתה נותן לעצמך על המשחק?</Label>
             <Select
               value={selfRating}
               onValueChange={handleSelfRatingChange}
@@ -150,12 +149,13 @@ export const QuestionsSection = ({ onAnswersChange }: QuestionsSectionProps) => 
         <div className="space-y-4">
           {selectedQuestions.map((question, index) => (
             <div key={index} className="space-y-2">
-              <Label>{question}</Label>
+              <Label className="block text-right">{question}</Label>
               <Textarea
                 value={openEndedAnswers[question] || ""}
                 onChange={(e) => handleAnswerChange(question, e.target.value)}
-                className="mt-2"
+                className="mt-2 text-right"
                 dir="rtl"
+                rows={4}
               />
             </div>
           ))}
