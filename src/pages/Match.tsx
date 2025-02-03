@@ -155,6 +155,11 @@ export const Match = () => {
     };
   };
 
+  const transformedActions = match.match_actions?.map(action => ({
+    actionId: action.action_id,
+    result: action.result === 'success' ? 'success' as const : 'failure' as const
+  })) || [];
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <motion.div 
@@ -202,7 +207,7 @@ export const Match = () => {
               {match.match_actions && (
                 <GameStats 
                   actions={match.pre_match_report?.actions || []} 
-                  actionLogs={match.match_actions}
+                  actionLogs={transformedActions}
                 />
               )}
             </CardContent>
@@ -223,7 +228,7 @@ export const Match = () => {
             </CardHeader>
             <CardContent>
               {match.match_actions && (
-                <GameInsights actionLogs={match.match_actions} />
+                <GameInsights actionLogs={transformedActions} />
               )}
             </CardContent>
           </Card>
@@ -354,22 +359,16 @@ export const Match = () => {
                     if (key === 'openEndedAnswers' && typeof value === 'object') {
                       return Object.entries(value as Record<string, string>).map(([question, answer], subIndex) => (
                         <div key={`${index}-${subIndex}`} className="border p-4 rounded-lg">
-                          <p className="font-medium text-right mb-2">{question}</p>
-                          <p className="text-muted-foreground text-right">{answer}</p>
+                          <p className="font-medium text-right mb-2">{String(question)}</p>
+                          <p className="text-muted-foreground text-right">{String(answer)}</p>
                         </div>
                       ));
-                    } else if (key === 'stressLevel') {
+                    } else if (key === 'stressLevel' || key === 'selfRating') {
+                      const label = key === 'stressLevel' ? 'רמת הלחץ לפני המשחק' : 'ציון עצמי למשחק';
                       return (
                         <div key={index} className="border p-4 rounded-lg">
-                          <p className="font-medium text-right mb-2">רמת הלחץ לפני המשחק</p>
-                          <p className="text-muted-foreground text-right">{value} מתוך 10</p>
-                        </div>
-                      );
-                    } else if (key === 'selfRating') {
-                      return (
-                        <div key={index} className="border p-4 rounded-lg">
-                          <p className="font-medium text-right mb-2">ציון עצמי למשחק</p>
-                          <p className="text-muted-foreground text-right">{value} מתוך 10</p>
+                          <p className="font-medium text-right mb-2">{label}</p>
+                          <p className="text-muted-foreground text-right">{String(value)} מתוך 10</p>
                         </div>
                       );
                     }
