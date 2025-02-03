@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -16,11 +16,20 @@ import {
   Trophy,
   Clock,
   CheckCircle,
-  XCircle
+  XCircle,
+  Activity,
+  BarChart,
+  Lightbulb
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Progress } from "@/components/ui/progress";
-import { Json } from "@/integrations/supabase/types";
+import { GameStats } from "@/components/game/GameStats";
+import { GameInsights } from "@/components/game/GameInsights";
+import { GameScore } from "@/components/game/GameScore";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 interface MatchData {
   id: string;
@@ -45,14 +54,27 @@ interface MatchData {
     note: string | null;
   }>;
   pre_match_report?: {
-    actions: Json;
-    questions_answers: Json;
+    actions: any;
+    questions_answers: any;
     havaya?: string;
   };
+  match_notes?: Array<{
+    id: string;
+    note: string;
+    minute: number;
+  }>;
+  match_substitutions?: Array<{
+    id: string;
+    player_in: string;
+    player_out: string;
+    minute: number;
+  }>;
 }
 
 export const Match = () => {
   const { id } = useParams<{ id: string }>();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const { data: match, isLoading, error } = useQuery({
     queryKey: ['match', id],
@@ -68,6 +90,17 @@ export const Match = () => {
             result,
             note
           ),
+          match_notes (
+            id,
+            note,
+            minute
+          ),
+          match_substitutions (
+            id,
+            player_in,
+            player_out,
+            minute
+          ),
           pre_match_report:pre_match_report_id (
             actions,
             questions_answers,
@@ -75,7 +108,7 @@ export const Match = () => {
           )
         `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data as MatchData;
@@ -94,6 +127,13 @@ export const Match = () => {
     return (
       <div className="container mx-auto p-4 text-center">
         <p className="text-red-500">שגיאה בטעינת המשחק</p>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate(-1)}
+          className="mt-4"
+        >
+          חזור
+        </Button>
       </div>
     );
   }
@@ -115,16 +155,15 @@ export const Match = () => {
     };
   };
 
-  // Type guard to check if the value is an array
-  const isJsonArray = (value: Json): value is Json[] => {
-    return Array.isArray(value);
-  };
-
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <div className="text-right">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-right"
+      >
         <h1 className="text-2xl font-bold mb-2">
-          {match.opponent ? `משחק נגד ${match.opponent}` : 'משחק'}
+          {match.opponent ? `סיכום משחק נגד ${match.opponent}` : 'סיכום משחק'}
         </h1>
         <div className="flex flex-wrap gap-4 justify-end items-center text-muted-foreground">
           <div className="flex items-center gap-2">
@@ -144,147 +183,214 @@ export const Match = () => {
             </div>
           )}
         </div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-primary" />
+                סטטיסטיקות משחק
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {match.match_actions && (
+                <GameStats 
+                  actions={match.pre_match_report?.actions || []} 
+                  actionLogs={match.match_actions}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-primary" />
+                תובנות
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {match.match_actions && (
+                <GameInsights actionLogs={match.match_actions} />
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
-      {match.player_position && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <User className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">תפקיד במשחק</h2>
-            </div>
-            <p className="text-right">{match.player_position}</p>
-          </CardContent>
-        </Card>
-      )}
-
       {havayot.length > 0 && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Heart className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">הוויות נבחרות</h2>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {havayot.map((havaya, index) => (
-                <Badge key={index} variant="secondary" className="text-base py-2">
-                  {havaya}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Heart className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-semibold">הוויות נבחרות</h2>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {havayot.map((havaya, index) => (
+                  <Badge key={index} variant="secondary" className="text-base py-2">
+                    {havaya}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
 
-      {match.pre_match_report?.actions && isJsonArray(match.pre_match_report.actions) && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Target className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">יעדים והישגים במשחק</h2>
-            </div>
-            <ScrollArea className="h-[300px]">
-              <div className="space-y-4">
-                {match.pre_match_report.actions.map((action: any, index: number) => {
-                  const stats = calculateActionStats(action.name);
-                  return (
-                    <div key={index} className="border p-4 rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                          <span>{stats.success}/{stats.total}</span>
-                        </div>
-                        <h3 className="font-semibold">{action.name}</h3>
-                      </div>
-                      <Progress value={stats.rate} className="h-2 mb-2" />
-                      {action.goal && (
-                        <p className="text-sm text-muted-foreground text-right mt-2">
-                          יעד: {action.goal}
-                        </p>
-                      )}
-                    </div>
-                  );
-                })}
+      {match.pre_match_report?.actions && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Target className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-semibold">יעדים והישגים במשחק</h2>
               </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+              <ScrollArea className="h-[300px]">
+                <div className="space-y-4">
+                  {match.pre_match_report.actions.map((action: any, index: number) => {
+                    const stats = calculateActionStats(action.name);
+                    return (
+                      <div key={index} className="border p-4 rounded-lg">
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <span>{stats.success}/{stats.total}</span>
+                          </div>
+                          <h3 className="font-semibold">{action.name}</h3>
+                        </div>
+                        <Progress value={stats.rate} className="h-2 mb-2" />
+                        {action.goal && (
+                          <p className="text-sm text-muted-foreground text-right mt-2">
+                            יעד: {action.goal}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
 
       {match.match_actions && match.match_actions.length > 0 && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Clock className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">פעולות במשחק</h2>
-            </div>
-            <ScrollArea className="h-[300px]">
-              <div className="space-y-3">
-                {match.match_actions.map((action, index) => (
-                  <div key={index} className="border p-3 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        {action.result === 'success' ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-red-500" />
-                        )}
-                        <span className="text-sm">{action.minute}'</span>
-                      </div>
-                      <span className="font-medium">{action.action_id}</span>
-                    </div>
-                    {action.note && (
-                      <p className="text-sm text-muted-foreground mt-2 text-right">
-                        {action.note}
-                      </p>
-                    )}
-                  </div>
-                ))}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Clock className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-semibold">פעולות במשחק</h2>
               </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+              <ScrollArea className="h-[300px]">
+                <div className="space-y-3">
+                  {match.match_actions.map((action, index) => (
+                    <div key={index} className="border p-3 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          {action.result === 'success' ? (
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-red-500" />
+                          )}
+                          <span className="text-sm">{action.minute}'</span>
+                        </div>
+                        <span className="font-medium">{action.action_id}</span>
+                      </div>
+                      {action.note && (
+                        <p className="text-sm text-muted-foreground mt-2 text-right">
+                          {action.note}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
 
       {match.pre_match_report?.questions_answers && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <MessageSquare className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">תשובות לשאלון</h2>
-            </div>
-            <ScrollArea className="h-[300px]">
-              <div className="space-y-4">
-                {Object.entries(match.pre_match_report.questions_answers as Record<string, any>).map(([key, value], index) => {
-                  if (key === 'openEndedAnswers' && typeof value === 'object') {
-                    return Object.entries(value as Record<string, string>).map(([question, answer], subIndex) => (
-                      <div key={`${index}-${subIndex}`} className="border p-4 rounded-lg">
-                        <p className="font-medium text-right mb-2">{question}</p>
-                        <p className="text-muted-foreground text-right">{answer}</p>
-                      </div>
-                    ));
-                  } else if (key === 'stressLevel') {
-                    return (
-                      <div key={index} className="border p-4 rounded-lg">
-                        <p className="font-medium text-right mb-2">רמת הלחץ לפני המשחק</p>
-                        <p className="text-muted-foreground text-right">{value} מתוך 10</p>
-                      </div>
-                    );
-                  } else if (key === 'selfRating') {
-                    return (
-                      <div key={index} className="border p-4 rounded-lg">
-                        <p className="font-medium text-right mb-2">ציון עצמי למשחק</p>
-                        <p className="text-muted-foreground text-right">{value} מתוך 10</p>
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <MessageSquare className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-semibold">תשובות לשאלון</h2>
               </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+              <ScrollArea className="h-[300px]">
+                <div className="space-y-4">
+                  {Object.entries(match.pre_match_report.questions_answers).map(([key, value], index) => {
+                    if (key === 'openEndedAnswers' && typeof value === 'object') {
+                      return Object.entries(value as Record<string, string>).map(([question, answer], subIndex) => (
+                        <div key={`${index}-${subIndex}`} className="border p-4 rounded-lg">
+                          <p className="font-medium text-right mb-2">{question}</p>
+                          <p className="text-muted-foreground text-right">{answer}</p>
+                        </div>
+                      ));
+                    } else if (key === 'stressLevel') {
+                      return (
+                        <div key={index} className="border p-4 rounded-lg">
+                          <p className="font-medium text-right mb-2">רמת הלחץ לפני המשחק</p>
+                          <p className="text-muted-foreground text-right">{value} מתוך 10</p>
+                        </div>
+                      );
+                    } else if (key === 'selfRating') {
+                      return (
+                        <div key={index} className="border p-4 rounded-lg">
+                          <p className="font-medium text-right mb-2">ציון עצמי למשחק</p>
+                          <p className="text-muted-foreground text-right">{value} מתוך 10</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
+
+      <div className="flex justify-end mt-8">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate(-1)}
+          className="ml-4"
+        >
+          חזור לרשימת המשחקים
+        </Button>
+      </div>
     </div>
   );
 };
