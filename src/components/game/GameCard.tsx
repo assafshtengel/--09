@@ -45,7 +45,7 @@ export const GameCard = ({ game, onSelect, onDelete, isDeleting }: GameCardProps
           >
             <Trash2 className="h-5 w-5" />
           </Button>
-          <p>נגד: {game.opponent || "לא צוין"}</p>
+          <p>נגד: {game.opponent}</p>
         </div>
       </CardContent>
     </Card>

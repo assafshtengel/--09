@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Game } from "@/types/game";
 import { GameCard } from "./GameCard";
+import { LoadingScreen } from "@/components/LoadingScreen";
 
 export const GameSelection = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ export const GameSelection = () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          navigate("/");
+          navigate("/auth");
           return;
         }
 
@@ -33,7 +34,6 @@ export const GameSelection = () => {
             )
           `)
           .eq("player_id", user.id)
-          .eq("status", "completed")
           .order("match_date", { ascending: false });
 
         if (error) throw error;
@@ -41,7 +41,7 @@ export const GameSelection = () => {
         const formattedGames: Game[] = (data || []).map(game => ({
           id: game.id,
           match_date: game.match_date,
-          opponent: game.opponent,
+          opponent: game.opponent || "לא צוין",
           match_id: game.matches?.[0]?.id,
           status: game.matches?.[0]?.status === "ended" ? "completed" : "preview"
         }));
@@ -77,62 +77,49 @@ export const GameSelection = () => {
     
     if (isDeleting) return;
     
+    if (!window.confirm("האם אתה בטוח שברצונך למחוק את המשחק?")) {
+      return;
+    }
+    
     try {
       setIsDeleting(true);
       
-      // First, delete all related match_actions if there's a match
       if (matchId) {
         const { error: actionsError } = await supabase
           .from("match_actions")
           .delete()
           .eq("match_id", matchId);
 
-        if (actionsError) {
-          console.error("Error deleting match actions:", actionsError);
-        }
+        if (actionsError) throw actionsError;
 
-        // Delete match notes
         const { error: notesError } = await supabase
           .from("match_notes")
           .delete()
           .eq("match_id", matchId);
 
-        if (notesError) {
-          console.error("Error deleting match notes:", notesError);
-        }
+        if (notesError) throw notesError;
 
-        // Delete match substitutions
         const { error: subsError } = await supabase
           .from("match_substitutions")
           .delete()
           .eq("match_id", matchId);
 
-        if (subsError) {
-          console.error("Error deleting substitutions:", subsError);
-        }
+        if (subsError) throw subsError;
 
-        // Delete the match itself
         const { error: matchError } = await supabase
           .from("matches")
           .delete()
           .eq("id", matchId);
 
-        if (matchError) {
-          console.error("Error deleting match:", matchError);
-          throw matchError;
-        }
+        if (matchError) throw matchError;
       }
 
-      // Finally, delete the pre-match report
       const { error: reportError } = await supabase
         .from("pre_match_reports")
         .delete()
         .eq("id", gameId);
 
-      if (reportError) {
-        console.error("Error deleting pre-match report:", reportError);
-        throw reportError;
-      }
+      if (reportError) throw reportError;
 
       setGames(prevGames => prevGames.filter(game => game.id !== gameId));
       toast.success("המשחק נמחק בהצלחה");
@@ -145,7 +132,7 @@ export const GameSelection = () => {
   };
 
   if (isLoading) {
-    return <div className="text-center p-8">טוען...</div>;
+    return <LoadingScreen />;
   }
 
   return (
