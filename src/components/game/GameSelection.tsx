@@ -58,7 +58,7 @@ export const GameSelection = () => {
     fetchGames();
   }, [navigate]);
 
-  const handleGameSelect = async (game: Game) => {
+  const handleGameSelect = async (game: Game, isRecordedGame: boolean) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -80,7 +80,8 @@ export const GameSelection = () => {
           opponent: game.opponent,
           pre_match_report_id: game.id,
           player_id: user.id,
-          status: "preview"
+          status: "preview",
+          match_type: isRecordedGame ? "recorded" : "summary_only"
         })
         .select()
         .single();
